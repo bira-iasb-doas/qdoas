@@ -1563,51 +1563,6 @@ RC XSCONV_TypeI0Correction(MATRIX_OBJECT *pXsnew,MATRIX_OBJECT *pXshr,MATRIX_OBJ
   return rc;
  }
 
-// --------------------------------------------------------
-// XSCONV_RealTimeXs : real time cross sections convolution
-// --------------------------------------------------------
-
-// NOT used anymore RC XSCONV_RealTimeXs(MATRIX_OBJECT *pXshr,MATRIX_OBJECT *pXsI0,MATRIX_OBJECT *pSlit,MATRIX_OBJECT *pSlit2,double *IcVector,                         // high resolution cross section
-// NOT used anymore                      double *lambda,int NDET,INDEX indexLambdaMin,INDEX indexLambdaMax,               // final calibration wavelength scale
-// NOT used anymore                      double *newXs,                                                          // convoluted cross section
-// NOT used anymore                      int slitType,double slitParam,double slitParam2,int wveDptFlag)      // slit options
-// NOT used anymore  {
-// NOT used anymore   // Declarations
-// NOT used anymore
-// NOT used anymore   MATRIX_OBJECT xsnew;
-// NOT used anymore   int i;
-// NOT used anymore   RC rc;
-// NOT used anymore
-// NOT used anymore   // Initializations
-// NOT used anymore
-// NOT used anymore   memset(&xsnew,0,sizeof(MATRIX_OBJECT));
-// NOT used anymore   rc=ERROR_ID_NO;
-// NOT used anymore
-// NOT used anymore   // Use substitution variables
-// NOT used anymore
-// NOT used anymore   if (!(rc=MATRIX_Allocate(&xsnew,NDET,2,0,0,1,"XSCONV_RealTimeXs")))
-// NOT used anymore    {
-// NOT used anymore    	for (i=0;i<NDET;i++)
-// NOT used anymore    	 {
-// NOT used anymore    	 	xsnew.matrix[0][i]=lambda[i];
-// NOT used anymore    	 	xsnew.matrix[1][i]=(double)0.;
-// NOT used anymore    	 }
-// NOT used anymore
-// NOT used anymore     // process convolution
-// NOT used anymore
-// NOT used anymore     if ((pSlit==NULL) || !(rc=XSCONV_GetFwhm(pSlit->matrix[0],pSlit->matrix[1],pSlit->deriv2[1],pSlit->nl,slitType,&slitParam)))
-// NOT used anymore      rc=XSCONV_TypeStandard(&xsnew,indexLambdaMin,indexLambdaMax,pXshr,pSlit,pSlit2,(pXsI0==NULL)?pXshr:pXsI0,IcVector,slitType,slitParam,slitParam2,wveDptFlag);
-// NOT used anymore
-// NOT used anymore     memcpy(newXs,xsnew.matrix[1],sizeof(double)*NDET);
-// NOT used anymore    }
-// NOT used anymore
-// NOT used anymore   MATRIX_Free(&xsnew,"XSCONV_RealTimeXs");
-// NOT used anymore
-// NOT used anymore   // Return
-// NOT used anymore
-// NOT used anymore   return rc;
-// NOT used anymore  }
-
 // ---------------------------------------------------------------------------------
 // XsconvRebuildSlitFunction : Rebuild slit function onto a regular wavelength scale
 // ---------------------------------------------------------------------------------

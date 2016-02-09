@@ -38,6 +38,8 @@
 #include "winthrd.h"
 
 #include "omi_read.h"
+#include "tropomi_read.h"
+#include "apex_read.h"
 
 int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHandle)
  {
@@ -151,7 +153,9 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
 
   if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)
     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Record","%d/%d",pEngineContext->indexRecord,pEngineContext->recordNumber);
-  else if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI || pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_APEX)
+  else if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI ||
+           pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_TROPOMI ||
+           pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_APEX)
     {
       if (pInstrumental->averageFlag)
         mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Record","%d/%d (%d spectra averaged)",
@@ -397,6 +401,8 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
    pSpectra=&pProject->spectra;
    pInstrumental=&pProject->instrumental;
 
+   const int n_wavel = NDET[pRecord->i_crosstrack];
+
    fileName=pEngineContext->fileInfo.fileName;
 
    if (ANALYSE_plotRef) {
@@ -408,86 +414,81 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
 
    sprintf(tmpString,"Spectrum (%d/%d)",pEngineContext->indexRecord,pEngineContext->recordNumber);
 
-   if (pProject->spectra.displaySpectraFlag)
-    {
+   if (pProject->spectra.displaySpectraFlag) {
      double *tempSpectrum;
      int i;
 
-     if ((tempSpectrum=(double *)MEMORY_AllocDVector(__func__,"tempSpectrum",0,NDET-1))!=NULL)
-      {
-       memcpy(tempSpectrum,pBuffers->spectrum,sizeof(double)*NDET);
-
-       if (pEngineContext->buffers.instrFunction!=NULL)
-        {
-         for (i=0;i<NDET;i++)
-          if (pBuffers->instrFunction[i]==(double)0.)
-           tempSpectrum[i]=(double)0.;
-          else
-           tempSpectrum[i]/=pBuffers->instrFunction[i];
-        }
-
-       if ((pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_MFC_BIRA) || ((pEngineContext->recordInfo.mfcBira.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_DARK) && (pEngineContext->recordInfo.mfcBira.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_OFFSET)))
-        sprintf(tmpTitle,"Spectrum");
-       else if (pEngineContext->recordInfo.mfcBira.measurementType==PRJCT_INSTR_MAXDOAS_TYPE_DARK)
-        sprintf(tmpTitle,"Dark Current");
-       else if (pEngineContext->recordInfo.mfcBira.measurementType==PRJCT_INSTR_MAXDOAS_TYPE_OFFSET)
-        sprintf(tmpTitle,"Offset");
-
-       mediateAllocateAndSetPlotData(&spectrumData,tmpTitle,pBuffers->lambda, tempSpectrum, NDET, Line);
-
-       const char* y_units;
-       switch (pInstrumental->readOutFormat) {
-         // satellite formats have calibrated radiances:
-       case PRJCT_INSTR_FORMAT_GDP_ASCII:
-       case PRJCT_INSTR_FORMAT_GDP_BIN:
-       case PRJCT_INSTR_FORMAT_SCIA_PDS:
-       case PRJCT_INSTR_FORMAT_GOME2:
-       case PRJCT_INSTR_FORMAT_OMI:
-         y_units = "photons / (nm s cm<sup>2</sup> sr)";
-         break;
-       default:
-         y_units = "Counts";
-         break;
+     const char* y_units;
+     switch (pInstrumental->readOutFormat) {
+       // satellite formats have calibrated radiances:
+     case PRJCT_INSTR_FORMAT_GDP_ASCII:
+     case PRJCT_INSTR_FORMAT_GDP_BIN:
+     case PRJCT_INSTR_FORMAT_SCIA_PDS:
+     case PRJCT_INSTR_FORMAT_GOME2:
+     case PRJCT_INSTR_FORMAT_OMI:
+       y_units = "photons / (nm s cm<sup>2</sup>)";
+       break;
+     case PRJCT_INSTR_FORMAT_TROPOMI:
+       y_units = "10<sup>9</sup> mol photons / (m<sup>3</sup>s)";
+       break;
+     default:
+       y_units = "Counts";
+       break;
+     }
+     
+     if ((tempSpectrum=(double *)MEMORY_AllocDVector("mediateRequestPlotSpectra","tempSpectrum",0,n_wavel-1))!=NULL) {
+       memcpy(tempSpectrum,pBuffers->spectrum,sizeof(double)*n_wavel);
+       
+       if (pEngineContext->buffers.instrFunction!=NULL) {
+         for (i=0;i<n_wavel;i++)
+           if (pBuffers->instrFunction[i]==(double)0.)
+             tempSpectrum[i]=(double)0.;
+           else
+             tempSpectrum[i]/=pBuffers->instrFunction[i];
        }
 
+       if ((pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_MFC_BIRA) || ((pEngineContext->recordInfo.mfcBira.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_DARK) && (pEngineContext->recordInfo.mfcBira.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_OFFSET)))
+         sprintf(tmpTitle,"Spectrum");
+       else if (pEngineContext->recordInfo.mfcBira.measurementType==PRJCT_INSTR_MAXDOAS_TYPE_DARK)
+         sprintf(tmpTitle,"Dark Current");
+       else if (pEngineContext->recordInfo.mfcBira.measurementType==PRJCT_INSTR_MAXDOAS_TYPE_OFFSET)
+         sprintf(tmpTitle,"Offset");
+
+       mediateAllocateAndSetPlotData(&spectrumData,tmpTitle,pBuffers->lambda, tempSpectrum, n_wavel, Line);
        mediateResponsePlotData(plotPageSpectrum, &spectrumData, 1, Spectrum, allowFixedScale, tmpTitle, "Wavelength (nm)", y_units, responseHandle);
        mediateReleasePlotData(&spectrumData);
        mediateResponseLabelPage(plotPageSpectrum, fileName, tmpString, responseHandle);
 
        MEMORY_ReleaseDVector(__func__,"spectrum",tempSpectrum,0);
-      }
+     }
 
-     if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZY)
-      {
-       if ((pBuffers->offset!=NULL) && pEngineContext->recordInfo.mkzy.offsetFlag)
-        {
+     if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZY) {
+       if ((pBuffers->offset!=NULL) && pEngineContext->recordInfo.mkzy.offsetFlag) {
          sprintf(tmpString,"Offset");
 
-         mediateAllocateAndSetPlotData(&spectrumData, tmpString,pBuffers->lambda, pBuffers->offset, NDET, Line);
+         mediateAllocateAndSetPlotData(&spectrumData, tmpString,pBuffers->lambda, pBuffers->offset, n_wavel, Line);
          mediateResponsePlotData(plotPageOffset, &spectrumData, 1, Spectrum, forceAutoScale, tmpString, "Wavelength (nm)", "Counts", responseHandle);
          mediateReleasePlotData(&spectrumData);
          mediateResponseLabelPage(plotPageOffset, fileName, tmpString, responseHandle);
-        }
+       }
 
-       if ((pBuffers->darkCurrent!=NULL) && pEngineContext->recordInfo.mkzy.darkFlag)
-        {
+       if ((pBuffers->darkCurrent!=NULL) && pEngineContext->recordInfo.mkzy.darkFlag) {
          sprintf(tmpString,(pEngineContext->recordInfo.mkzy.offsetFlag)?"Dark current":"Offset");
-
-         mediateAllocateAndSetPlotData(&spectrumData,tmpString,pBuffers->lambda, pBuffers->darkCurrent, NDET, Line);
+         
+         mediateAllocateAndSetPlotData(&spectrumData,tmpString,pBuffers->lambda, pBuffers->darkCurrent, n_wavel, Line);
          mediateResponsePlotData(plotPageDarkCurrent, &spectrumData, 1, Spectrum, forceAutoScale,tmpString, "Wavelength (nm)", "Counts", responseHandle);
          mediateReleasePlotData(&spectrumData);
          mediateResponseLabelPage(plotPageDarkCurrent, fileName, tmpString, responseHandle);
-        }
+       }
 
-       if ((pBuffers->scanRef!=NULL) && pEngineContext->recordInfo.mkzy.skyFlag)
-        {
+       if ((pBuffers->scanRef!=NULL) && pEngineContext->recordInfo.mkzy.skyFlag) {
          sprintf(tmpString,"Sky spectrum");
 
-         mediateAllocateAndSetPlotData(&spectrumData, "Sky spectrum",pBuffers->lambda, pBuffers->scanRef, NDET, Line);
+         mediateAllocateAndSetPlotData(&spectrumData, "Sky spectrum",pBuffers->lambda, pBuffers->scanRef, n_wavel, Line);
          mediateResponsePlotData(plotPageIrrad, &spectrumData, 1, Spectrum, forceAutoScale, "Sky spectrum", "Wavelength (nm)", "Counts", responseHandle);
          mediateReleasePlotData(&spectrumData);
          mediateResponseLabelPage(plotPageIrrad, fileName, tmpString, responseHandle);
-        }
+       }
       }
 
      if (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG) ||
@@ -495,34 +496,33 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
           (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_ACTON) ||
           (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE) ||
           (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV)) &&
-         (pEngineContext->fileInfo.darkFp!=NULL) && (pBuffers->darkCurrent!=NULL))
-      {
+         (pEngineContext->fileInfo.darkFp!=NULL) && (pBuffers->darkCurrent!=NULL)) {
        sprintf(tmpString,"Dark current (%d/%d)",pEngineContext->indexRecord,pEngineContext->recordNumber);
-
-       mediateAllocateAndSetPlotData(&spectrumData, "Dark current",pBuffers->lambda, pBuffers->darkCurrent, NDET, Line);
+       
+       mediateAllocateAndSetPlotData(&spectrumData, "Dark current",pBuffers->lambda, pBuffers->darkCurrent, n_wavel, Line);
        mediateResponsePlotData(plotPageDarkCurrent, &spectrumData, 1, Spectrum, forceAutoScale, "Dark current", "Wavelength (nm)", "Counts", responseHandle);
        mediateReleasePlotData(&spectrumData);
        mediateResponseLabelPage(plotPageDarkCurrent, fileName, tmpString, responseHandle);
-      }
+     }
 
-     if (pBuffers->sigmaSpec!=NULL)
-      {
+     if (pBuffers->sigmaSpec!=NULL) {
        sprintf(tmpString,"Error (%d/%d)",pEngineContext->indexRecord,pEngineContext->recordNumber);
 
-       mediateAllocateAndSetPlotData(&spectrumData, "Error",pBuffers->lambda, pBuffers->sigmaSpec, NDET, Line);
+       mediateAllocateAndSetPlotData(&spectrumData, "Error",pBuffers->lambda, pBuffers->sigmaSpec, n_wavel, Line);
        mediateResponsePlotData(plotPageErrors, &spectrumData, 1, Spectrum, forceAutoScale, "Error", "Wavelength (nm)", "Counts", responseHandle);
        mediateReleasePlotData(&spectrumData);
        mediateResponseLabelPage(plotPageErrors, fileName, tmpString, responseHandle);
       }
 
      // satellite formats have an irradiance spectrum
-     if (pBuffers->irrad!=NULL &&
-         // for OMI, irradiance is stored in separate file, which is only read during analysis
-         (pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_OMI || THRD_id==THREAD_TYPE_ANALYSIS) ) {
+     if (pBuffers->irrad!=NULL
+         && ( !(pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI || // for OMI and Tropomi, irradiance is stored in separate file, which is only read during analysis
+                pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_TROPOMI)
+              || THRD_id==THREAD_TYPE_ANALYSIS) ) {
 
-       mediateAllocateAndSetPlotData(&spectrumData, "Irradiance spectrum", pBuffers->lambda_irrad, pBuffers->irrad, NDET, Line);
+       mediateAllocateAndSetPlotData(&spectrumData, "Irradiance spectrum", pBuffers->lambda_irrad, pBuffers->irrad, n_wavel, Line);
        mediateResponsePlotData(plotPageIrrad, &spectrumData, 1, Spectrum, forceAutoScale,
-                               "Irradiance spectrum", "Wavelength/(nm)", "photons/(nm s cm<sup>2</sup>)", responseHandle);
+                               "Irradiance spectrum", "Wavelength/(nm)", y_units, responseHandle);
        mediateReleasePlotData(&spectrumData);
        mediateResponseLabelPage(plotPageIrrad, fileName, "Irradiance", responseHandle);
      }
@@ -810,16 +810,15 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
  {
    INDEX indexCluster;
 
-   pEngineInstrumental->readOutFormat=(char)pMediateInstrumental->format;                           // File format
-   strcpy(pEngineInstrumental->observationSite,pMediateInstrumental->siteName); 		                   // Observation site
-   NDET=0;
+   pEngineInstrumental->readOutFormat=(char)pMediateInstrumental->format;       // File format
+   strcpy(pEngineInstrumental->observationSite,pMediateInstrumental->siteName); // Observation site
 
    switch (pEngineInstrumental->readOutFormat)
     {
      // ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_ACTON :                                                                 // Acton (NILU)
 
-      NDET=1024;                                                                     // size of the detector
+      NDET[0]=1024;                                                                     // size of the detector
 
       pEngineInstrumental->user=pMediateInstrumental->acton.niluType;                                // old or new format
 
@@ -830,7 +829,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       // ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_LOGGER :                                                                // Logger (PDA,CCD or HAMAMATSU)
 
-      NDET=1024;                                                                                     // size of the detector
+      NDET[0]=1024;                                                                                     // size of the detector
       pEngineInstrumental->azimuthFlag=(int)pMediateInstrumental->logger.flagAzimuthAngle;           // format including or not the azimuth angle
       pEngineInstrumental->user=pMediateInstrumental->logger.spectralType;                           // spectrum type (offaxis or zenith)
 
@@ -841,7 +840,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       // ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_ASCII :                                                                 // Format ASCII
 
-      NDET=pMediateInstrumental->ascii.detectorSize;                                                 // size of the detector
+      NDET[0]=pMediateInstrumental->ascii.detectorSize;                                                 // size of the detector
 
       pEngineInstrumental->ascii.format=pMediateInstrumental->ascii.format;                          // format line or column
       pEngineInstrumental->ascii.szaSaveFlag=pMediateInstrumental->ascii.flagZenithAngle;            // 1 if the solar zenith angle information is saved in the file
@@ -862,7 +861,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       // ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_PDAEGG_OLD :                                                            // PDA EG&G (spring 94)
 
-      NDET=1024;                                                                                     // size of the detector
+      NDET[0]=1024;                                                                                     // size of the detector
 
       pEngineInstrumental->azimuthFlag=(int)0;                                                       // format including or not the azimuth angle
       pEngineInstrumental->user=PRJCT_INSTR_IASB_TYPE_ALL;                                           // spectrum type (offaxis or zenith)
@@ -874,7 +873,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       // ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_PDAEGG :                                                                // PDA EG&G (sept. 94 until now)
 
-      NDET=1024;                                                                                     // size of the detector
+      NDET[0]=1024;                                                                                     // size of the detector
 
       pEngineInstrumental->azimuthFlag=(int)pMediateInstrumental->pdaegg.flagAzimuthAngle;           // format including or not the azimuth angle
       pEngineInstrumental->user=pMediateInstrumental->pdaegg.spectralType;                           // spectrum type (offaxis or zenith)
@@ -886,7 +885,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       // ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_PDASI_EASOE :                                                           // PDA SI (IASB)
 
-      NDET=1024;                                                                                     // size of the detector
+      NDET[0]=1024;                                                                                     // size of the detector
 
       pEngineInstrumental->offsetFlag=pMediateInstrumental->pdasieasoe.straylight;
       pEngineInstrumental->lambdaMin=pMediateInstrumental->pdasieasoe.lambdaMin;
@@ -899,7 +898,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       // ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_OCEAN_OPTICS :                                                                 // Format OCEAN OPTICS
 
-      NDET=pMediateInstrumental->oceanoptics.detectorSize;                                           // size of the detector
+      NDET[0]=pMediateInstrumental->oceanoptics.detectorSize;                                           // size of the detector
 
       pEngineInstrumental->offsetFlag=pMediateInstrumental->oceanoptics.straylight;
       pEngineInstrumental->lambdaMin=pMediateInstrumental->oceanoptics.lambdaMin;
@@ -912,7 +911,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       // ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_SAOZ_VIS :                                                              // SAOZ PCD/NMOS 512
 
-      NDET=512;                                                                                      // size of the detector
+      NDET[0]=512;                                                                                      // size of the detector
 
       pEngineInstrumental->saoz.spectralRegion=pMediateInstrumental->saozvis.spectralRegion;         // spectral region (UV or visible)
       pEngineInstrumental->saoz.spectralType=pMediateInstrumental->saozvis.spectralType;             // spectral type (zenith sky or pointed measuremets
@@ -924,7 +923,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       // ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_SAOZ_EFM :                                                              // SAOZ EFM 1024
 
-      NDET=1024;                                                                                     // size of the detector
+      NDET[0]=1024;                                                                                     // size of the detector
 
       pEngineInstrumental->offsetFlag=pMediateInstrumental->saozefm.straylight;
       pEngineInstrumental->lambdaMin=pMediateInstrumental->saozefm.lambdaMin;
@@ -938,7 +937,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
     case PRJCT_INSTR_FORMAT_BIRA_MOBILE :                                                              // BIRA MOBILE
     case PRJCT_INSTR_FORMAT_BIRA_AIRBORNE :                                                              // BIRA AIRBORNE
 
-      NDET=2048;                                                                                     // size of the detector
+      NDET[0]=2048;                                                                                     // size of the detector
 
       pEngineInstrumental->offsetFlag=pMediateInstrumental->biraairborne.straylight;
       pEngineInstrumental->lambdaMin=pMediateInstrumental->biraairborne.lambdaMin;
@@ -950,7 +949,10 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       break;
       // ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_APEX:
-      NDET = 1024;
+      for (int i=0; i<MAX_SWATHSIZE; ++i) {
+        NDET[i] = 1024;
+        pEngineInstrumental->use_row[i]=false;
+      }
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->apex.calibrationFile);
       strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->apex.transmissionFunctionFile);
@@ -958,7 +960,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       break;
     case PRJCT_INSTR_FORMAT_RASAS :                                                                 // Format RASAS (INTA)
 
-      NDET=1024;                                                                                     // size of the detector
+      NDET[0]=1024;                                                                                     // size of the detector
 
       pEngineInstrumental->offsetFlag=pMediateInstrumental->rasas.straylight;
       pEngineInstrumental->lambdaMin=pMediateInstrumental->rasas.lambdaMin;
@@ -971,7 +973,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       // ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_NOAA :                                                                  // NOAA
 
-      NDET=1024;                                                                                     // size of the detector
+      NDET[0]=1024;                                                                                     // size of the detector
 
       pEngineInstrumental->offsetFlag=pMediateInstrumental->noaa.straylight;
       pEngineInstrumental->lambdaMin=pMediateInstrumental->noaa.lambdaMin;
@@ -984,7 +986,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       // ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_SCIA_PDS :                                                              // SCIAMACHY calibrated Level 1 data in PDS format
 
-      NDET=1024;
+      NDET[0]=1024;
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->sciapds.calibrationFile);    // calibration file
       strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->sciapds.transmissionFunctionFile);    // instrumental function file
@@ -1005,7 +1007,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       // ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_GDP_ASCII :                                                               // GOME ASCII format
 
-      NDET=1024;                                                                                     // Could be reduced by Set function
+      NDET[0]=1024;                                                                                     // Could be reduced by Set function
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->gdpascii.calibrationFile);     // calibration file
       strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->gdpascii.transmissionFunctionFile);     // instrumental function file
@@ -1017,7 +1019,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       // ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_GDP_BIN :                                                               // GOME WinDOAS BINARY format
 
-      NDET=1024;                                                                                     // Could be reduced by Set function
+      NDET[0]=1024;                                                                                     // Could be reduced by Set function
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->gdpbin.calibrationFile);     // calibration file
       strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->gdpbin.transmissionFunctionFile);     // instrumental function file
@@ -1029,7 +1031,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_CCD_EEV :                                                               // CCD EEV 1340x400
 
-      NDET=(pMediateInstrumental->ccdeev.detectorSize)?pMediateInstrumental->ccdeev.detectorSize:1340;
+      NDET[0]=(pMediateInstrumental->ccdeev.detectorSize)?pMediateInstrumental->ccdeev.detectorSize:1340;
       pEngineInstrumental->user=pMediateInstrumental->ccdeev.spectralType;                           // spectrum type (offaxis or zenith)
 
       pEngineInstrumental->offsetFlag=pMediateInstrumental->ccdeev.straylight;
@@ -1052,7 +1054,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 
       pEngineInstrumental->user=pMediateInstrumental->gome2.bandType;
 
-      NDET=1024;
+      NDET[0]=1024;
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_UOFT :                             // University of Toronto
@@ -1064,12 +1066,12 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->uoft.calibrationFile);     // calibration file
       strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->uoft.transmissionFunctionFile);     // instrumental function file
 
-      NDET=2048;
+      NDET[0]=2048;
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_MFC :                              // MFC Heidelberg
 
-      NDET=pEngineInstrumental->detectorSize=pMediateInstrumental->mfc.detectorSize;
+      NDET[0]=pMediateInstrumental->mfc.detectorSize;
 
       pEngineInstrumental->mfcRevert=pMediateInstrumental->mfc.revert;
 
@@ -1090,7 +1092,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_MFC_STD :                          // MFC Heidelberg (ASCII)
 
-      NDET=pEngineInstrumental->detectorSize=pMediateInstrumental->mfcstd.detectorSize;
+      NDET[0]=pMediateInstrumental->mfcstd.detectorSize;
 
       pEngineInstrumental->mfcRevert=pMediateInstrumental->mfcstd.revert;
       pEngineInstrumental->offsetFlag=pMediateInstrumental->mfcstd.straylight;
@@ -1112,7 +1114,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       pEngineInstrumental->lambdaMin=pMediateInstrumental->mfcbira.lambdaMin;
       pEngineInstrumental->lambdaMax=pMediateInstrumental->mfcbira.lambdaMax;
 
-      NDET=pEngineInstrumental->detectorSize=pMediateInstrumental->mfcbira.detectorSize;
+      NDET[0]=pMediateInstrumental->mfcbira.detectorSize;
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->mfcbira.calibrationFile);     // calibration file
       strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->mfcbira.transmissionFunctionFile);       // instrumental function file
 
@@ -1120,7 +1122,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_MKZY :                                                                  // MKZY
 
-      NDET=2048;                                                                                     // size of the detector
+      NDET[0]=2048;                                                                                     // size of the detector
 
       pEngineInstrumental->offsetFlag=pMediateInstrumental->mkzy.straylight;
       pEngineInstrumental->lambdaMin=pMediateInstrumental->mkzy.lambdaMin;
@@ -1133,9 +1135,10 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       // ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_OMI :
 
-      NDET=1024;                                                                                  // Could be reduced by Set function
-
-      memset(pEngineInstrumental->omi.omiTracks,0,sizeof(int)*MAX_SWATHSIZE);
+      for(unsigned int i=0; i<MAX_SWATHSIZE; ++i) {
+        NDET[i]=1024;
+        pEngineInstrumental->use_row[i]=false;
+      }
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->omi.calibrationFile);     // calibration file
       strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->omi.transmissionFunctionFile);     // instrumental function file
@@ -1147,10 +1150,23 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       pEngineInstrumental->omi.pixelQFMask=pMediateInstrumental->omi.pixelQFMask;
       pEngineInstrumental->omi.xtrack_mode=pMediateInstrumental->omi.xtrack_mode;
 
-      OMI_TrackSelection((char *)pMediateInstrumental->omi.trackSelection,pEngineInstrumental->omi.omiTracks);
+      OMI_TrackSelection(pMediateInstrumental->omi.trackSelection,pEngineInstrumental->use_row);
 
       break;
       // ----------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_TROPOMI:
+
+      for (int i=0; i<MAX_SWATHSIZE; ++i) {
+        NDET[i]=1024;
+        pEngineInstrumental->use_row[i]=false;
+      }
+
+      pEngineInstrumental->tropomi.spectralBand = pMediateInstrumental->tropomi.spectralBand;
+
+      strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->tropomi.calibrationFile);     // calibration file
+      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->tropomi.instrFunctionFile);     // instrumental function file
+
+      break;
     }
  }
 
@@ -1523,6 +1539,11 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
    useKurucz=useUsamp=xsToConvolute=xsToConvoluteI0=0;
    indexKurucz=ITEM_NONE;
 
+   // for imagers, it is possible that errors occur for only some of
+   // the rows.  In that case, analysis can continue for the other
+   // rows, but we still want to display a warning message.
+   bool imager_err = false;
+
    memset(&calibWindows,0,sizeof(mediate_analysis_window_t));
    memset(&hr_solar_temp, 0, sizeof(hr_solar_temp));
 
@@ -1544,17 +1565,31 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
        goto handle_errors;
    }
 
-   if (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) {
+   switch(pEngineContext->project.instrumental.readOutFormat) {
+   case PRJCT_INSTR_FORMAT_OMI:
      ANALYSE_swathSize = 60;
+     break;
+   case PRJCT_INSTR_FORMAT_TROPOMI:
+     rc = tropomi_init(analysisWindows[0].refOneFile,pEngineContext);
+     break;
+   case PRJCT_INSTR_FORMAT_APEX:
+     rc = apex_init(analysisWindows[0].refOneFile,pEngineContext);
+     break;
+   default:
+     // for all non-imager instruments
+     pInstrumental->use_row[0]=true;
+   }
+   if (ANALYSE_swathSize > MAX_SWATHSIZE) {
+     rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_SWATHSIZE, ANALYSE_swathSize, MAX_SWATHSIZE);
+     goto handle_errors;
    }
 
    // Load analysis windows
 
    for (indexFenoColumn=0;(indexFenoColumn<ANALYSE_swathSize) && !rc;indexFenoColumn++) {
 
-     // for OMI: check if we have to skip this column
-     if (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI &&
-         !pEngineContext->project.instrumental.omi.omiTracks[indexFenoColumn]) {
+     // check if we have to skip this column
+     if (!pEngineContext->project.instrumental.use_row[indexFenoColumn]) {
        continue;
      }
 
@@ -1568,7 +1603,8 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
        pTabFeno->hidden=!indexFeno;
        pAnalysisWindows=(!pTabFeno->hidden)? &analysisWindows[indexFeno-1]: &calibWindows;
 
-       pTabFeno->NDET=NDET;
+       pTabFeno->NDET=NDET[indexFenoColumn];
+       const int n_wavel = pTabFeno->NDET;
 
        if ((pTabFeno->hidden<2) && ((THRD_id==THREAD_TYPE_ANALYSIS) || (pTabFeno->hidden==1))) {
          // QDOAS : avoid the load of disabled analysis windows with hidden==2
@@ -1657,31 +1693,32 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
 
          // spikes buffer
          if ((pTabFeno->spikes == NULL) &&
-             ((pTabFeno->spikes=(bool *)MEMORY_AllocBuffer("mediateRequestSetAnalysisWindows ","spikes",NDET,sizeof(int),0,MEMORY_TYPE_INT))==NULL)) {
+             ((pTabFeno->spikes=(bool *)MEMORY_AllocBuffer(__func__,"spikes",n_wavel,sizeof(int),0,MEMORY_TYPE_INT))==NULL)) {
            rc = ERROR_ID_ALLOC;
            break;
          }
 
          // Wavelength scales read out
 
-         if (((pTabFeno->Lambda==NULL) && ((pTabFeno->Lambda=MEMORY_AllocDVector("mediateRequestSetAnalysisWindows ","Lambda",0,NDET-1))==NULL)) ||
-             ((pTabFeno->LambdaK==NULL) && ((pTabFeno->LambdaK=MEMORY_AllocDVector("mediateRequestSetAnalysisWindows ","LambdaK",0,NDET-1))==NULL)) ||
-             ((pTabFeno->LambdaRef==NULL) && ((pTabFeno->LambdaRef=MEMORY_AllocDVector("mediateRequestSetAnalysisWindows ","LambdaRef",0,NDET-1))==NULL)) ||
+         if (((pTabFeno->Lambda==NULL) && ((pTabFeno->Lambda=MEMORY_AllocDVector(__func__,"Lambda",0,n_wavel-1))==NULL)) ||
+             ((pTabFeno->LambdaK==NULL) && ((pTabFeno->LambdaK=MEMORY_AllocDVector(__func__,"LambdaK",0,n_wavel-1))==NULL)) ||
+             ((pTabFeno->LambdaRef==NULL) && ((pTabFeno->LambdaRef=MEMORY_AllocDVector(__func__,"LambdaRef",0,n_wavel-1))==NULL)) ||
 
              // omi rejected pixels
 
              ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) && pEngineContext->project.instrumental.omi.pixelQFRejectionFlag &&
-              (pTabFeno->omiRejPixelsQF == NULL) && ((pTabFeno->omiRejPixelsQF=(bool *)MEMORY_AllocBuffer("mediateRequestSetAnalysisWindows ","omiRejPixelsQF",NDET,sizeof(int),0,MEMORY_TYPE_INT))==NULL))) {
+              (pTabFeno->omiRejPixelsQF == NULL) && ((pTabFeno->omiRejPixelsQF=(bool *)MEMORY_AllocBuffer(__func__,"omiRejPixelsQF",n_wavel,sizeof(int),0,MEMORY_TYPE_INT))==NULL))) {
            rc=ERROR_ID_ALLOC;
            break;
          }
 
-         for (i=0;i<NDET;i++)
+         for (i=0;i<n_wavel;i++)
            pTabFeno->LambdaRef[i]=i;  // NB : for satellites measurements, irradiance is retrieved later from spectra files
 
          if ( pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI
               && strlen(pInstrumental->calibrationFile) ) {
-           rc=OMI_GetReference(pInstrumental->omi.spectralType,pInstrumental->calibrationFile,indexFenoColumn,pEngineContext->buffers.lambda,pEngineContext->buffers.spectrum,pEngineContext->buffers.sigmaSpec);
+           int n_wavel_ref;
+           rc=OMI_GetReference(pInstrumental->omi.spectralType,pInstrumental->calibrationFile,indexFenoColumn,pEngineContext->buffers.lambda,pEngineContext->buffers.spectrum,pEngineContext->buffers.sigmaSpec, &n_wavel_ref);
 
            if (rc != 0) {
              break;
@@ -1689,9 +1726,10 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
 
          }
 
-         memcpy(pTabFeno->LambdaRef,pEngineContext->buffers.lambda,sizeof(double)*NDET);
-         memcpy(pTabFeno->Lambda,pEngineContext->buffers.lambda,sizeof(double)*NDET);
+         memcpy(pTabFeno->LambdaRef,pEngineContext->buffers.lambda,sizeof(double)*n_wavel);
+         memcpy(pTabFeno->Lambda,pEngineContext->buffers.lambda,sizeof(double)*n_wavel);
 
+         // TODO: ANALYSE_LoadRef can change NDET[] -> should n_wavel be updated here?
          if (!(rc=ANALYSE_LoadRef(pEngineContext,indexFenoColumn)) &&   // eventually, modify LambdaRef for continuous functions
              !(rc=ANALYSE_LoadCross(pEngineContext,pAnalysisWindows->crossSectionList.crossSection,pAnalysisWindows->crossSectionList.nCrossSection,pTabFeno->hidden,pTabFeno->LambdaRef,indexFenoColumn)) &&
              !(rc=mediateRequestSetAnalysisLinear(&pAnalysisWindows->linear,indexFenoColumn)) &&
@@ -1707,7 +1745,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
              (pTabFeno->hidden ||
               (!(rc=ANALYSE_LoadGaps(pEngineContext,pAnalysisWindows->gapList.gap,pAnalysisWindows->gapList.nGap,pTabFeno->LambdaRef,pAnalysisWindows->fitMinWavelength,pAnalysisWindows->fitMaxWavelength,indexFenoColumn)) &&
 
-               (!pTabFeno->gomeRefFlag || !(rc=SVD_LocalAlloc("ANALYSE_LoadData",&pTabFeno->svd)))
+               (!pTabFeno->gomeRefFlag || !(rc=SVD_LocalAlloc(__func__,&pTabFeno->svd)))
                ))) {
 
            if (pTabFeno->hidden==1) {
@@ -1718,10 +1756,10 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
              xsToConvoluteI0+=pTabFeno->xsToConvoluteI0;
 
              if (pTabFeno->gomeRefFlag || pEngineContext->refFlag) {
-               memcpy(pTabFeno->Lambda,pTabFeno->LambdaRef,sizeof(double)*NDET);
-               memcpy(pTabFeno->LambdaK,pTabFeno->LambdaRef,sizeof(double)*NDET);
+               memcpy(pTabFeno->Lambda,pTabFeno->LambdaRef,sizeof(double)*n_wavel);
+               memcpy(pTabFeno->LambdaK,pTabFeno->LambdaRef,sizeof(double)*n_wavel);
 
-               if (pTabFeno->LambdaRef[NDET-1]-pTabFeno->Lambda[0]+1!=NDET)
+               if (pTabFeno->LambdaRef[n_wavel-1]-pTabFeno->Lambda[0]+1!=n_wavel)
                  rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef,indexFenoColumn);
              }
            }
@@ -1730,7 +1768,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
 
            if (!pTabFeno->hidden) {
              lambdaMin=min(lambdaMin,pTabFeno->LambdaRef[0]);
-             lambdaMax=max(lambdaMax,pTabFeno->LambdaRef[NDET-1]);
+             lambdaMax=max(lambdaMax,pTabFeno->LambdaRef[n_wavel-1]);
            }
 
            NFeno++;
@@ -1739,9 +1777,15 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
      }  // for (indexFeno=0;(indexFeno<numberOfWindows+1) && !rc;indexFeno++)
    } // for (indexFenoColumn=0;(indexFenoColumn<ANALYSE_swathSize) && !rc;indexFenoColumn++)
 
+   int max_ndet = 0;
+   for (int i=0; i<ANALYSE_swathSize; ++i) {
+     if (NDET[i] > max_ndet)
+       max_ndet = NDET[i];
+   }
+
    if (lambdaMin>=lambdaMax) {
      lambdaMin=pEngineContext->buffers.lambda[0];
-     lambdaMax=pEngineContext->buffers.lambda[NDET-1];
+     lambdaMax=pEngineContext->buffers.lambda[max_ndet-1];
    }
 
    if (rc)
@@ -1782,47 +1826,46 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
 
    for (indexFenoColumn=0;(indexFenoColumn<ANALYSE_swathSize) && !rc;indexFenoColumn++) {
 
-     if ( (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) ||
-          pEngineContext->project.instrumental.omi.omiTracks[indexFenoColumn]) {
-       if ((xsToConvolute && !useKurucz) || !pKuruczOptions->fwhmFit)
-         for (indexWindow=0;(indexWindow<NFeno) && !rc;indexWindow++) {
-           pTabFeno=&TabFeno[indexFenoColumn][indexWindow];
-
-           if ((pSlitOptions->slitFunction.slitType==SLIT_TYPE_NONE) && pTabFeno->xsToConvolute)
-             rc = ERROR_SetLast("mediateRequestSetAnalysisWindows", ERROR_TYPE_FATAL, ERROR_ID_CONVOLUTION);
-           //
-           else if (pTabFeno->xsToConvolute && /* pTabFeno->useEtalon && */ (pTabFeno->gomeRefFlag || pEngineContext->refFlag) &&
-                    ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,&ANALYSIS_slit2,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,indexFenoColumn,pSlitOptions->slitFunction.slitWveDptFlag))!=0))
-
-             break;
-         }
-
-       if (!rc) {
-         // Allocate Kurucz buffers on Run Calibration or
-         //                            Run Analysis and wavelength calibration is different from None at least for one spectral window
-         //
-         // Apply the calibration procedure on the reference spectrum if the wavelength calibration is different from None at least for one spectral window
-         if ((THRD_id==THREAD_TYPE_KURUCZ) || useKurucz) {
-           rc=KURUCZ_Alloc(&pEngineContext->project,pEngineContext->buffers.lambda,indexKurucz,lambdaMin,lambdaMax,indexFenoColumn, &hr_solar_temp);
-           if (!rc && useKurucz) {
-             rc=KURUCZ_Reference(pEngineContext->buffers.instrFunction,0,saveFlag,1,responseHandle,indexFenoColumn);
-           }
-           // make failure of KURUCZ_Alloc on any row a fatal error? (only possible for configurations with errors/bad input files?)
-         }
-
-         if (!rc && (THRD_id!=THREAD_TYPE_KURUCZ)) {
-           rc=ANALYSE_AlignReference(pEngineContext,0,responseHandle,indexFenoColumn);
-         }
+     if (!pEngineContext->project.instrumental.use_row[indexFenoColumn])
+       continue;
+     
+     if ((xsToConvolute && !useKurucz) || !pKuruczOptions->fwhmFit)
+       for (indexWindow=0;(indexWindow<NFeno) && !rc;indexWindow++) {
+         pTabFeno=&TabFeno[indexFenoColumn][indexWindow];
+         
+         if ((pSlitOptions->slitFunction.slitType==SLIT_TYPE_NONE) && pTabFeno->xsToConvolute)
+           rc = ERROR_SetLast("mediateRequestSetAnalysisWindows", ERROR_TYPE_FATAL, ERROR_ID_CONVOLUTION);
+         else if (pTabFeno->xsToConvolute && /* pTabFeno->useEtalon && */ (pTabFeno->gomeRefFlag || pEngineContext->refFlag) &&
+                  ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,&ANALYSIS_slit2,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,indexFenoColumn,pSlitOptions->slitFunction.slitWveDptFlag))!=0))
+           
+           break;
        }
 
-       if ( (ANALYSE_swathSize > 1) && rc) {
-         // Error on one irradiance spectrum shouldn't stop the analysis of other spectra
-         ERROR_SetLast(__func__, ERROR_TYPE_WARNING, ERROR_ID_IMAGER_CALIB, 1+indexFenoColumn);
-         imager_err = true;
-         for (indexWindow=0;indexWindow<NFeno;indexWindow++)
-           TabFeno[indexFenoColumn][indexWindow].rcKurucz=rc;
-         rc=ERROR_ID_NO;
+     if (!rc) {
+       // Allocate Kurucz buffers on Run Calibration or
+       //                            Run Analysis and wavelength calibration is different from None at least for one spectral window
+       //
+       // Apply the calibration procedure on the reference spectrum if the wavelength calibration is different from None at least for one spectral window
+       if ((THRD_id==THREAD_TYPE_KURUCZ) || useKurucz) {
+         rc=KURUCZ_Alloc(&pEngineContext->project,pEngineContext->buffers.lambda,indexKurucz,lambdaMin,lambdaMax,indexFenoColumn, &hr_solar_temp);
+         if (!rc && useKurucz) {
+           rc=KURUCZ_Reference(pEngineContext->buffers.instrFunction,0,saveFlag,1,responseHandle,indexFenoColumn);
+         }
+         // make failure of KURUCZ_Alloc on any row a fatal error? (only possible for configurations with errors/bad input files?)
        }
+
+       if (!rc && (THRD_id!=THREAD_TYPE_KURUCZ)) {
+         rc=ANALYSE_AlignReference(pEngineContext,0,responseHandle,indexFenoColumn);
+       }
+     }
+
+     if ( (ANALYSE_swathSize > 1) && rc) {
+       // Error on one irradiance spectrum shouldn't stop the analysis of other spectra
+       ERROR_SetLast(__func__, ERROR_TYPE_WARNING, ERROR_ID_IMAGER_CALIB, 1+indexFenoColumn);
+       imager_err = true;
+       for (indexWindow=0;indexWindow<NFeno;indexWindow++)
+         TabFeno[indexFenoColumn][indexWindow].rcKurucz=rc;
+       rc=ERROR_ID_NO;
      }
    }
 
@@ -1830,7 +1873,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
 
    if (!rc && !(rc=OUTPUT_RegisterData(pEngineContext)) &&
        (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) && useUsamp &&
-       !(rc=ANALYSE_UsampGlobalAlloc(lambdaMin,lambdaMax,NDET)) &&
+       !(rc=ANALYSE_UsampGlobalAlloc(lambdaMin,lambdaMax,max_ndet)) &&
        !(rc=ANALYSE_UsampLocalAlloc(1)))
     rc=ANALYSE_UsampBuild(0,1);
 
@@ -2054,7 +2097,7 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
 
      // try the next record
      rec+=inc;
-   }
+    }
 
    if (rc != ERROR_ID_NO) {
     // search loop terminated due to fatal error - a message was already logged

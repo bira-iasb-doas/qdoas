@@ -1099,14 +1099,31 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
   }
   else if (element == "tropomi") {
     QString str = atts.value("band");
-#define EXPAND(LABEL)                           \
-      if(str == #LABEL)                         \
-        m_instrumental->tropomi.spectralBand = LABEL; \
-      else
-      TROPOMI_BANDS
+#define EXPAND(BAND, LABEL)                      \
+    if(str == LABEL || str == #BAND)                 \
+      m_instrumental->tropomi.spectralBand = BAND;   \
+    else
+    TROPOMI_BANDS
 #undef EXPAND
       return postErrorMessage("No Tropomi spectral band configured.");
 
+    str = atts.value("calib");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < sizeof(m_instrumental->tropomi.calibrationFile))
+	strcpy(m_instrumental->tropomi.calibrationFile, str.toAscii().data());
+      else
+	return postErrorMessage("Calibration Filename too long");
+    }
+    
+    str = atts.value("instr");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < sizeof(m_instrumental->tropomi.instrFunctionFile))
+	strcpy(m_instrumental->tropomi.instrFunctionFile, str.toAscii().data());
+      else
+	return postErrorMessage("Instrument Function  Filename too long");
+    }
   }
   else if (element == "gome2") { // GOME2
     helperLoadGome2(atts, &(m_instrumental->gome2));

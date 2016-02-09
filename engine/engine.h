@@ -32,5 +32,4 @@ RC              EngineEndCurrentSession(ENGINE_CONTEXT *pEngineContext);
 ENGINE_CONTEXT *EngineCreateContext(void);
 RC              EngineDestroyContext(ENGINE_CONTEXT *pEngineContext);
 
-
 #endif

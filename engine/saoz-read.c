@@ -313,6 +313,7 @@ RC ReliSAOZ(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
   RC                rc;                                                         // return code
 
   // Initializations
+  const int n_wavel = NDET[0];
 
   pRecord=&pEngineContext->recordInfo;
   pBuffers=&pEngineContext->buffers;
@@ -470,7 +471,7 @@ RC ReliSAOZ(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
 
       // Rebuild the original spectrum
 
-      VECTOR_Init ( spectrum, (double) 1., NDET );
+      VECTOR_Init ( spectrum, (double) 1., n_wavel );
 
       for ( i=0, k=(domain==PRJCT_INSTR_SAOZ_REGION_VIS)?45:30; i<k; IndSec[i] = (int)ind[i], i++ );
       for ( j=0, k=(domain==PRJCT_INSTR_SAOZ_REGION_VIS)?100:70; i<k; IndSec[i++] = (int)spec[j++] );
@@ -486,7 +487,7 @@ RC ReliSAOZ(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
        {
         InvCoef = (double) 1. / Coeff;
 
-        i=9; N=0; k=(domain==PRJCT_INSTR_SAOZ_REGION_VIS)?NDET:PIXMAXUV;
+        i=9; N=0; k=(domain==PRJCT_INSTR_SAOZ_REGION_VIS)?n_wavel:PIXMAXUV;
         do
          {
           L = (double) 32767. * (int) ( IndSec[N]/1000 );
@@ -509,7 +510,7 @@ RC ReliSAOZ(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
           i++;
          }
 
-        for (i=0,invSum=(double)1./pRecord->NSomme;i<NDET;i++)
+        for (i=0,invSum=(double)1./pRecord->NSomme;i<n_wavel;i++)
          {
           spectrum[i]*=invSum;
           if ( spectrum[i] < (double) 1. )
@@ -649,6 +650,7 @@ RC ReliSAOZEfm(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
   spectrum=(double *)pEngineContext->buffers.spectrum;
   SMax=(double)0.;
   rc=ERROR_ID_NO;
+  const int n_wavel = NDET[0];
 
   // Verify input
 
@@ -662,8 +664,8 @@ RC ReliSAOZEfm(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
     fseek(specFp,(int32_t)sizeof(unsigned int)+(recordNo-1)*sizeof(RCHEADER),SEEK_SET);
     fread(&header,sizeof(RCHEADER),1,specFp);
-    fseek(specFp,(int32_t)sizeof(unsigned int)+(recordNo-1)*sizeof(double)*NDET+pEngineContext->recordNumber*sizeof(RCHEADER),SEEK_SET);
-    fread(spectrum,sizeof(double)*NDET,1,specFp);
+    fseek(specFp,(int32_t)sizeof(unsigned int)+(recordNo-1)*sizeof(double)*n_wavel+pEngineContext->recordNumber*sizeof(RCHEADER),SEEK_SET);
+    fread(spectrum,sizeof(double)*n_wavel,1,specFp);
 
     if ((today.da_year=header.M_An)<30)
      today.da_year+= 2000;
@@ -678,7 +680,7 @@ RC ReliSAOZEfm(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
     // Build the spectrum
 
     if (header.N_somm>0)
-     for (i=1,SMax=(double)spectrum[0];i<NDET;i++)
+     for (i=1,SMax=(double)spectrum[0];i<n_wavel;i++)
       {
        if ((double)spectrum[i]>SMax)
         SMax=(double)spectrum[i];

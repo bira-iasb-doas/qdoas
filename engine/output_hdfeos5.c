@@ -63,7 +63,7 @@ RC hdfeos5_open(const ENGINE_CONTEXT *pEngineContext, char *filename) {
   // find first used row and get number of calibration windows
   for(int firstrow = 0; firstrow<ANALYSE_swathSize; firstrow++) {
     if ( pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI ||
-         pEngineContext->project.instrumental.omi.omiTracks[firstrow] ) {
+         pEngineContext->project.instrumental.use_row[firstrow] ) {
       nCalibWindows = KURUCZ_buffers[firstrow].Nb_Win;
       break;
     }

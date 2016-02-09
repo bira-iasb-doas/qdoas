@@ -161,6 +161,7 @@ RC RasReadRecord(char *fileName,double *spe,double *drk,ENGINE_CONTEXT *pEngineC
 
   // Initializations
 
+  const int n_wavel = NDET[0];
   pRecord=&pEngineContext->recordInfo;
 
   memset(fileLine,0,MAX_STR_SHORT_LEN+1);
@@ -185,11 +186,11 @@ RC RasReadRecord(char *fileName,double *spe,double *drk,ENGINE_CONTEXT *pEngineC
     // Spectrum and dark current read out
 
     if (drk!=NULL)
-     for (i=0;(i<NDET) && fgets(fileLine,MAX_STR_SHORT_LEN,fp) && sscanf(fileLine,"%lf %lf",&spe[i],&drk[i]);i++);
+     for (i=0;(i<n_wavel) && fgets(fileLine,MAX_STR_SHORT_LEN,fp) && sscanf(fileLine,"%lf %lf",&spe[i],&drk[i]);i++);
     else
-     for (i=0;(i<NDET) && fgets(fileLine,MAX_STR_SHORT_LEN,fp) && sscanf(fileLine,"%lf",&spe[i]);i++);
+     for (i=0;(i<n_wavel) && fgets(fileLine,MAX_STR_SHORT_LEN,fp) && sscanf(fileLine,"%lf",&spe[i]);i++);
 
-    if (i<NDET)
+    if (i<n_wavel)
      rc=ERROR_SetLast("RasReadRecord",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,fileName);
     else
 

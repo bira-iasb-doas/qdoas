@@ -28,7 +28,7 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext);
 RC OUTPUT_SaveResults(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn);
 
 RC OUTPUT_ReadAmf(const char *symbolName,const char *amfFileName,char amfType,INDEX *pIndexAmf);
-RC OUTPUT_GetWveAmf(CROSS_RESULTS *pResults,double Zm,double *lambda,double *xs);
+RC OUTPUT_GetWveAmf(CROSS_RESULTS *pResults,double Zm,double *lambda,double *xs,int n_wavel);
 RC OUTPUT_LocalAlloc(ENGINE_CONTEXT *pEngineContext);
 RC OUTPUT_Alloc(void);
 void OUTPUT_Free(void);

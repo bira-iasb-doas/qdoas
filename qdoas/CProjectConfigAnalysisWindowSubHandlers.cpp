@@ -586,4 +586,3 @@ bool CAnalysisWindowSfpSubHandler::start(const QXmlAttributes &atts)
 
   return postErrorMessage("Invalid SFP index");
 }
-

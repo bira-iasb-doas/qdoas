@@ -98,7 +98,8 @@ typedef struct _engineContext ENGINE_CONTEXT;
 // ----------------
 // GLOBAL VARIABLES
 // ----------------
-extern int NWorkSpace,NDET;
+extern int NWorkSpace;
+extern int NDET[MAX_SWATHSIZE];
 extern int           DimC,DimL,DimP,Z,NFeno,SvdPDeb,SvdPFin;
 extern WRK_SYMBOL   *WorkSpace;
 

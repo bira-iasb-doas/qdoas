@@ -768,7 +768,7 @@ RC GDP_ASC_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
       if (!pEngineContext->recordNumber)
        rc=ERROR_SetLast("SetGDP",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
 
-      NDET=pGome->nRef;
+      NDET[0]=pGome->nRef;
      }
    }
 
@@ -822,16 +822,16 @@ RC GDP_ASC_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,FILE *s
   pGome=&pRecord->gome;
   rc=ERROR_ID_NO;
 
+  const int n_wavel = NDET[0];
+
   // Goto the requested record
 
-  if ((recordNo<=0) || (recordNo>pEngineContext->recordNumber))
-   rc=ERROR_ID_FILE_END;
-
-  else if ((THRD_id==THREAD_TYPE_SPECTRA) && (THRD_browseType==THREAD_BROWSE_DARK))
-   {
-    memcpy(lambda,GDP_ASC_refL,sizeof(double)*NDET);
-    memcpy(spectrum,GDP_ASC_ref,sizeof(double)*NDET);
-    memcpy(errors,GDP_ASC_refE,sizeof(double)*NDET);
+  if ((recordNo<=0) || (recordNo>pEngineContext->recordNumber)) {
+    rc=ERROR_ID_FILE_END;
+  } else if ((THRD_id==THREAD_TYPE_SPECTRA) && (THRD_browseType==THREAD_BROWSE_DARK)) {
+    memcpy(lambda,GDP_ASC_refL,sizeof(double)*n_wavel);
+    memcpy(spectrum,GDP_ASC_ref,sizeof(double)*n_wavel);
+    memcpy(errors,GDP_ASC_refE,sizeof(double)*n_wavel);
    }
   else if ((recordNo-gdpLastRecord==1) ||                                       // for successive spectra, don't move file pointer
           !(rc=GotoSpectraNumber(specFp,band,recordNo-1)))
@@ -849,7 +849,7 @@ RC GDP_ASC_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,FILE *s
              ((specInt=(double *)MEMORY_AllocDVector("GDP_ASC_Read ","specInt",0,MAX_PIXELS-1))==NULL))
      rc=ERROR_ID_ALLOC;
     else if (!(rc=SPLINE_Deriv2(lambda,spectrum,spectrum2,npts,"GDP_ASC_Read ")) &&
-             !(rc=SPLINE_Vector(lambda,spectrum,spectrum2,npts,GDP_ASC_refL,specInt,NDET,SPLINE_CUBIC,"GDP_ASC_Read ")))
+             !(rc=SPLINE_Vector(lambda,spectrum,spectrum2,npts,GDP_ASC_refL,specInt,n_wavel,SPLINE_CUBIC,"GDP_ASC_Read ")))
 
     // Get information on the current GOME pixel
 
@@ -868,8 +868,8 @@ RC GDP_ASC_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,FILE *s
       pRecord->latitude     = pGome->latit[4];
       pRecord->altitude     = (double) 0.;
 
-      memcpy(lambda,GDP_ASC_refL,sizeof(double)*NDET);
-      memcpy(spectrum,specInt,sizeof(double)*NDET);
+      memcpy(lambda,GDP_ASC_refL,sizeof(double)*n_wavel);
+      memcpy(spectrum,specInt,sizeof(double)*n_wavel);
      }
    }
 
@@ -923,26 +923,28 @@ RC GDP_ASC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   rc=ERROR_ID_NO;
   useKurucz=useUsamp=0;
 
+  const int n_wavel = NDET[0];
+
   // Browse analysis windows and load missing data
 
   for (indexFeno=0;(indexFeno<NFeno) && !rc;indexFeno++)
    if (!TabFeno[0][indexFeno].hidden)
     {
      pTabFeno=&TabFeno[0][indexFeno];
-     pTabFeno->NDET=NDET;
+     pTabFeno->NDET=n_wavel;
 
      // Load calibration and reference spectra
 
      if (!pTabFeno->gomeRefFlag)
       {
-       memcpy(pTabFeno->LambdaRef,GDP_ASC_refL,sizeof(double)*NDET);
-       memcpy(pTabFeno->Sref,GDP_ASC_ref,sizeof(double)*NDET);
-       memcpy(pTabFeno->SrefSigma,GDP_ASC_refE,sizeof(double)*NDET);
+       memcpy(pTabFeno->LambdaRef,GDP_ASC_refL,sizeof(double)*n_wavel);
+       memcpy(pTabFeno->Sref,GDP_ASC_ref,sizeof(double)*n_wavel);
+       memcpy(pTabFeno->SrefSigma,GDP_ASC_refE,sizeof(double)*n_wavel);
 
-       if (!(rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,NDET,&pTabFeno->refNormFact,"GDP_ASC_LoadAnalysis (Reference) ")) &&
-           !(rc=VECTOR_NormalizeVector(pTabFeno->SrefSigma-1,NDET,&factTemp,"GDP_ASC_LoadAnalysis (RefError) ")))
+       if (!(rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,n_wavel,&pTabFeno->refNormFact,"GDP_ASC_LoadAnalysis (Reference) ")) &&
+           !(rc=VECTOR_NormalizeVector(pTabFeno->SrefSigma-1,n_wavel,&factTemp,"GDP_ASC_LoadAnalysis (RefError) ")))
         {
-         memcpy(pTabFeno->SrefEtalon,pTabFeno->Sref,sizeof(double)*NDET);
+         memcpy(pTabFeno->SrefEtalon,pTabFeno->Sref,sizeof(double)*n_wavel);
          pTabFeno->useEtalon=pTabFeno->displayRef=1;
 
          // Browse symbols
@@ -958,7 +960,7 @@ RC GDP_ASC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
                 ((pWrkSymbol->type==WRK_SYMBOL_PREDEFINED) &&
                 ((indexTabCross==pTabFeno->indexCommonResidual) ||
                (((indexTabCross==pTabFeno->indexUsamp1) || (indexTabCross==pTabFeno->indexUsamp2)) && (pUsamp->method==PRJCT_USAMP_FILE))))) &&
-                ((rc=ANALYSE_CheckLambda(pWrkSymbol,pTabFeno->LambdaRef,"GDP_ASC_LoadAnalysis "))!=ERROR_ID_NO))
+                ((rc=ANALYSE_CheckLambda(pWrkSymbol,pTabFeno->LambdaRef,pTabFeno->NDET,"GDP_ASC_LoadAnalysis "))!=ERROR_ID_NO))
 
             goto EndGDP_ASC_LoadAnalysis;
 
@@ -971,19 +973,9 @@ RC GDP_ASC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
              if (pWrkSymbol->symbolName[0]=='x')
               sscanf(pWrkSymbol->symbolName,"x%d",&degree);
 
-             // Not used anymore else
-             // Not used anymore  {
-             // Not used anymore   sscanf(pWrkSymbol->symbolName,"1/x%d",&degree);
-             // Not used anymore   invFlag=1;
-             // Not used anymore  }
-
              if (!invFlag)
-              for (i=0;i<NDET;i++)
+              for (i=0;i<n_wavel;i++)
                pTabCross->vector[i]=(double)pow(pTabFeno->LambdaRef[i],degree);
-
-             // Not used anymore else
-             // Not used anymore  for (i=0;i<NDET;i++)
-             // Not used anymore   pTabCross->vector[i]=(double)1./pow(pTabFeno->LambdaRef[i],degree);
             }
           }
 
@@ -1013,8 +1005,8 @@ RC GDP_ASC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
          pTabFeno->Decomp=1;
         }
 
-       memcpy(pTabFeno->LambdaK,pTabFeno->LambdaRef,sizeof(double)*NDET);
-       memcpy(pTabFeno->Lambda,pTabFeno->LambdaRef,sizeof(double)*NDET);
+       memcpy(pTabFeno->LambdaK,pTabFeno->LambdaRef,sizeof(double)*n_wavel);
+       memcpy(pTabFeno->Lambda,pTabFeno->LambdaRef,sizeof(double)*n_wavel);
 
        useUsamp+=pTabFeno->useUsamp;
        useKurucz+=pTabFeno->useKurucz;
@@ -1025,8 +1017,8 @@ RC GDP_ASC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
         {
          if (pTabFeno->LambdaRef[0]<lambdaMin)
           lambdaMin=pTabFeno->LambdaRef[0];
-         if (pTabFeno->LambdaRef[NDET-1]>lambdaMax)
-          lambdaMax=pTabFeno->LambdaRef[NDET-1];
+         if (pTabFeno->LambdaRef[n_wavel-1]>lambdaMax)
+          lambdaMax=pTabFeno->LambdaRef[n_wavel-1];
         }
       }
     }
@@ -1047,7 +1039,7 @@ RC GDP_ASC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
    {
      // ANALYSE_UsampLocalFree();
 
-    if (((rc=ANALYSE_UsampLocalAlloc(0 /* lambdaMin,lambdaMax,oldNDET */))!=ERROR_ID_NO) ||
+    if (((rc=ANALYSE_UsampLocalAlloc(0))!=ERROR_ID_NO) ||
         ((rc=ANALYSE_UsampBuild(0,0))!=ERROR_ID_NO) ||
         ((rc=ANALYSE_UsampBuild(1,ITEM_NONE))!=ERROR_ID_NO))
 

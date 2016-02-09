@@ -1919,7 +1919,7 @@ void CWInstrOmiEdit::apply(struct instrumental_omi *d) const
 
 //--------------------------------------------------------
 
-CWInstrTropomiEdit::CWInstrTropomiEdit(const struct instrumental_tropomi *d, QWidget *parent) : CWCalibInstrEdit(parent) {
+CWInstrTropomiEdit::CWInstrTropomiEdit(const struct instrumental_tropomi *pInstrTropomi, QWidget *parent) : CWCalibInstrEdit(parent) {
 
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
   QGridLayout *gridLayout = new QGridLayout;
@@ -1927,24 +1927,34 @@ CWInstrTropomiEdit::CWInstrTropomiEdit(const struct instrumental_tropomi *d, QWi
   mainLayout->addLayout(gridLayout);
 
   // spectral band
-  gridLayout->addWidget(new QLabel("Spectral Band", this));
+  int row = 0;
+  gridLayout->addWidget(new QLabel("Spectral Band", this), row, 0);
   m_spectralBandCombo = new QComboBox(this);
-#define EXPAND(BANDLABEL) m_spectralBandCombo->addItem(#BANDLABEL, QVariant(BANDLABEL));
+#define EXPAND(BAND, LABEL) m_spectralBandCombo->addItem(#BAND, QVariant(BAND));
   TROPOMI_BANDS
 #undef EXPAND
 
-  int index = m_spectralBandCombo->findData(QVariant(d->spectralBand));
+  int index = m_spectralBandCombo->findData(QVariant(pInstrTropomi->spectralBand));
   if (index != -1)
     m_spectralBandCombo->setCurrentIndex(index);
 
-  gridLayout->addWidget(m_spectralBandCombo);
+
+  gridLayout->addWidget(m_spectralBandCombo, row, 1);
+  ++row;
+  helperConstructCalInsFileWidgets(gridLayout, row,
+				   pInstrTropomi->calibrationFile, sizeof(pInstrTropomi->calibrationFile),
+				   pInstrTropomi->instrFunctionFile, sizeof(pInstrTropomi->instrFunctionFile));
+  
+
 
 }
 
-void CWInstrTropomiEdit::apply(struct instrumental_tropomi *d) const
+void CWInstrTropomiEdit::apply(struct instrumental_tropomi *pInstrTropomi) const
 {
-  // spectral
-  d->spectralBand = static_cast<tropomiSpectralBand>(m_spectralBandCombo->itemData(m_spectralBandCombo->currentIndex()).toInt());
+  strcpy(pInstrTropomi->calibrationFile, m_fileOneEdit->text().toAscii().data());
+  strcpy(pInstrTropomi->instrFunctionFile, m_fileTwoEdit->text().toAscii().data());
+  // spectral band
+  pInstrTropomi->spectralBand = static_cast<tropomiSpectralBand>(m_spectralBandCombo->itemData(m_spectralBandCombo->currentIndex()).toInt());
 }
 
 //--------------------------------------------------------

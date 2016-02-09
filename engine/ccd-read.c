@@ -487,6 +487,8 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
   darkCurrent=NULL;
   rc=ERROR_ID_NO;
 
+  const int n_wavel = NDET[0];
+
   // Verify input
 
   if (specFp==NULL)
@@ -495,7 +497,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
    rc=ERROR_ID_FILE_END;
   else
    {
-    for(i=0;i<NDET;i++)
+    for(i=0;i<n_wavel;i++)
      dspectrum[i]=(double)0.;
 
     // Set file pointers
@@ -531,7 +533,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
          memset(spectrum,0,sizeof(unsigned short)*spSize);
          memset(darkCurrent,0,sizeof(unsigned short)*spSize);
 
-         for(i=0;i<NDET;i++)
+         for(i=0;i<n_wavel;i++)
           tmpSpectrum[i]=(double)0.;
 
          rcFread=(header.doubleFlag==(char)1)?
@@ -559,11 +561,11 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
           	 {
              // Accumulate spectra
 
-             for (i=0;i<NDET;i++)
+             for (i=0;i<n_wavel;i++)
               {
                dspectrum[i]=(double)0.;
                for (j=0;j<ccdY;j++)
-                dspectrum[i]+=tmpSpectrum[NDET*j+i];
+                dspectrum[i]+=tmpSpectrum[n_wavel*j+i];
                dspectrum[i]/=ccdY;
               }
           	 }
@@ -571,11 +573,11 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
           	 {
              // Accumulate spectra
 
-             for (i=0;i<NDET;i++)
+             for (i=0;i<n_wavel;i++)
               {
                dspectrum[i]=(double)0.;
                for (j=0;j<ccdY;j++)
-                dspectrum[i]+=spectrum[NDET*j+i];
+                dspectrum[i]+=spectrum[n_wavel*j+i];
                dspectrum[i]/=ccdY;
               }
             }
@@ -705,7 +707,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
             rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_DIVISION_BY_0,"number of accumulations");
            else if ((pBuffers->darkCurrent!=NULL) && (darkFp!=NULL))
             {
-             for (i=0;i<NDET;i++)
+             for (i=0;i<n_wavel;i++)
               pBuffers->darkCurrent[i]=(double)0.;
 
              for (k=0;k<nTint;k++)
@@ -736,14 +738,14 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
                     	fread(darkCurrent,sizeof(unsigned short)*spSize,1,darkFp);
 
-                     for (i=0;i<NDET;i++)
+                     for (i=0;i<n_wavel;i++)
                       {
                        if (!header.saveTracks)
                         pBuffers->darkCurrent[i]+=darkCurrent[i]*ccdTabNTint[k];
                        else
                         {
                          for (j=0;j<ccdY;j++)
-                          pBuffers->darkCurrent[i]+=(double)darkCurrent[NDET*j+i]*ccdTabNTint[k];
+                          pBuffers->darkCurrent[i]+=(double)darkCurrent[n_wavel*j+i]*ccdTabNTint[k];
                          pBuffers->darkCurrent[i]/=ccdY;
                         }
                       }
@@ -753,7 +755,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
               }
 
              if (pRecord->NSomme)
-              for (i=0;i<NDET;i++)
+              for (i=0;i<n_wavel;i++)
                {
                	pBuffers->darkCurrent[i]/=(double)pRecord->NSomme;              // if we have different integration times for the spectrum
                 pBuffers->spectrum[i]-=pBuffers->darkCurrent[i];
@@ -789,14 +791,14 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
   if (!rc && (pRecord->ccd.vip.matrix!=NULL) && (THRD_browseType==THREAD_BROWSE_SPECTRA))
    {
-   	memcpy(tmpSpectrum,dspectrum,sizeof(double)*NDET);
+   	memcpy(tmpSpectrum,dspectrum,sizeof(double)*n_wavel);
 
-   	for (i=0;i<NDET;i++)
+   	for (i=0;i<n_wavel;i++)
    	 {
    	 	dspectrum[i]=(double)0.;
 
-   	 	for (j=0;j<NDET;j++)
-  	 	  dspectrum[i]+=pRecord->ccd.vip.matrix[j%NCURVE][(j/NCURVE)*NDET+i]*tmpSpectrum[j];
+   	 	for (j=0;j<n_wavel;j++)
+  	 	  dspectrum[i]+=pRecord->ccd.vip.matrix[j%NCURVE][(j/NCURVE)*n_wavel+i]*tmpSpectrum[j];
    	 }
    }
 
@@ -898,6 +900,7 @@ RC SetCCD (ENGINE_CONTEXT *pEngineContext,FILE *specFp,int flag)
   pEngineContext->recordNumber=0;
   recordSize=0L;
   rc=ERROR_ID_NO;
+  const int n_wavel = NDET[0];
 
   // Buffers allocation
 
@@ -925,9 +928,9 @@ RC SetCCD (ENGINE_CONTEXT *pEngineContext,FILE *specFp,int flag)
       // Calculate the size of a record (without SpecMax)
 
       if (flag==0)
-       recordSize=(int32_t)sizeof(CCD_1024)+44L*(sizeof(float)+sizeof(unsigned short)*NDET) + (int32_t)(sizeof(float)+sizeof(short))*300;
+       recordSize=(int32_t)sizeof(CCD_1024)+44L*(sizeof(float)+sizeof(unsigned short)*n_wavel) + (int32_t)(sizeof(float)+sizeof(short))*300;
       else if (flag==1)
-       recordSize=(int32_t)sizeof(CCD_1024)+(int32_t)sizeof(short)*NDET;
+       recordSize=(int32_t)sizeof(CCD_1024)+(int32_t)sizeof(short)*n_wavel;
 
       // Calculate the position in bytes from the beginning of the file for each spectra
 
@@ -994,6 +997,8 @@ RC ReliCCD(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
   ISpectre=ISpecMax=NULL;
   rc=ERROR_ID_NO;
 
+  const int n_wavel = NDET[0];
+
   // Verify input
 
   if (specFp==NULL)
@@ -1003,8 +1008,8 @@ RC ReliCCD(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
 
   // Buffers allocation
 
-  else if (((ISpectre=(unsigned short *)MEMORY_AllocBuffer("ReliCCD","ISpectre",NDET,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL) ||
-           ((ISpecMax=(unsigned short *)MEMORY_AllocBuffer("ReliCCD","ISpecMax",NDET,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL))
+  else if (((ISpectre=(unsigned short *)MEMORY_AllocBuffer("ReliCCD","ISpectre",n_wavel,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL) ||
+           ((ISpecMax=(unsigned short *)MEMORY_AllocBuffer("ReliCCD","ISpecMax",n_wavel,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL))
 
      rc=ERROR_ID_ALLOC;
   else
@@ -1020,7 +1025,7 @@ RC ReliCCD(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
 
     if (((namesFp!=NULL) && !fread(names,20,1,namesFp)) ||
          !fread(&DetInfo,sizeof(CCD_1024),1,specFp) ||
-         !fread(ISpectre,sizeof(unsigned short)*NDET,1,specFp) ||
+         !fread(ISpectre,sizeof(unsigned short)*n_wavel,1,specFp) ||
          !fread(ISpecMax,sizeof(unsigned short)*(DetInfo.Scans+DetInfo.rejected),1,specFp))
 
      rc=ERROR_ID_FILE_END;
@@ -1066,8 +1071,8 @@ RC ReliCCD(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
 
       // Rebuild spectrum
 
-      for (i=0;i<NDET;i++)
-       pBuffers->spectrum[NDET-i-1]=(double)ISpectre[i]*Max/65000.*176.-908.25*44.;
+      for (i=0;i<n_wavel;i++)
+       pBuffers->spectrum[n_wavel-i-1]=(double)ISpectre[i]*Max/65000.*176.-908.25*44.;
 
       if ((DetInfo.Scans<=0) || (dateFlag && (pRecord->localCalDay!=localDay)))
        rc=ERROR_ID_FILE_RECORD;
@@ -1139,6 +1144,8 @@ RC ReliCCDTrack(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
   varFp=NULL;
   rc=ERROR_ID_NO;
 
+  const int n_wavel = NDET[0];
+
   // Verify input
 
   if (specFp==NULL)
@@ -1148,10 +1155,10 @@ RC ReliCCDTrack(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
 
   // Buffers allocation
 
-  else if (((ISpectre=(unsigned short *)MEMORY_AllocBuffer("ReliCCDTrack","ISpectre",NDET,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL) ||
+  else if (((ISpectre=(unsigned short *)MEMORY_AllocBuffer("ReliCCDTrack","ISpectre",n_wavel,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL) ||
            ((ISpecMax=(unsigned short *)MEMORY_AllocBuffer("ReliCCDTrack","ISpecMax",2000,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL) ||
            ((MaxTrk=(float *)MEMORY_AllocBuffer("ReliCCDTrack","MaxTrk",44,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
-           ((varPix=(double *)MEMORY_AllocBuffer("ReliCCDTrack","varPix",NDET,sizeof(double),0,MEMORY_TYPE_DOUBLE))==NULL) ||
+           ((varPix=(double *)MEMORY_AllocBuffer("ReliCCDTrack","varPix",n_wavel,sizeof(double),0,MEMORY_TYPE_DOUBLE))==NULL) ||
            ((TabTint=(float *)MEMORY_AllocBuffer("ReliCCDTrack","TabTint",300,sizeof(float),0,MEMORY_TYPE_USHORT))==NULL) ||
            ((TabNSomme=(int *)MEMORY_AllocBuffer("ReliCCDTrack","TabNSomme",300,sizeof(int),0,MEMORY_TYPE_INT))==NULL))
 
@@ -1184,7 +1191,7 @@ RC ReliCCDTrack(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
         varFp=fopen(fileName,"rb");
        }
 
-      for (j=0;j<NDET;j++)
+      for (j=0;j<n_wavel;j++)
        {
         pBuffers->spectrum[j]=(double)0.;
         varPix[j]=(double)1.;
@@ -1194,14 +1201,14 @@ RC ReliCCDTrack(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
 
       for (i=0;(i<DetInfo.Tracks) && !rc;i++)
        {
-        if (!fread(ISpectre,sizeof(unsigned short)*NDET,1,specFp))
+        if (!fread(ISpectre,sizeof(unsigned short)*n_wavel,1,specFp))
          rc=ERROR_SetLast("ReliCCD_EEV",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
         else
          {
           if (varFp!=NULL)
-           fread(varPix,sizeof(double)*NDET,1,varFp);
+           fread(varPix,sizeof(double)*n_wavel,1,varFp);
 
-          for (j=0;j<NDET;j++)
+          for (j=0;j<n_wavel;j++)
            pBuffers->spectrum[j]+=(double)ISpectre[j]*MaxTrk[i]/varPix[j];
          }
        }
@@ -1256,12 +1263,12 @@ RC ReliCCDTrack(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
 
           memcpy(pRecord->Nom,names,20);
 
-          VECTOR_Invert(pBuffers->spectrum,NDET);
+          VECTOR_Invert(pBuffers->spectrum,n_wavel);
 
           // spectra mean calculation
 
           if (pRecord->NSomme)
-           for (i=0;i<NDET;i++)
+           for (i=0;i<n_wavel;i++)
             pBuffers->spectrum[i]/=(double)(44.*pRecord->NSomme);
 
           if ((DetInfo.Scans<=0) || (dateFlag && (pRecord->localCalDay!=localDay)))
@@ -1308,30 +1315,23 @@ RC ReliCCDTrack(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
 // -----------------------------------------------------------------------------
 
 RC CCD_LoadInstrumental(ENGINE_CONTEXT *pEngineContext)
- {
- 	// Declarations
-
-  PROJECT *pProject;                                                            // pointer to the project part of the engine context
-  PRJCT_INSTRUMENTAL *pInstrumental;                                            // pointer to the instrumental part of the project
-  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
-
+{
   char fileName[MAX_STR_LEN+1];                                                // the complete name (including path) of the file to load
-  RC rc;                                                                        // the return code
 
   // Initializations
 
-  pRecord=&pEngineContext->recordInfo;
-  pProject=&pEngineContext->project;
-  pInstrumental=&pProject->instrumental;
-
-  rc=ERROR_ID_NO;
+  const int n_wavel = NDET[0];
+  RECORD_INFO *pRecord=&pEngineContext->recordInfo;
+  PROJECT *pProject=&pEngineContext->project;
+  PRJCT_INSTRUMENTAL *pInstrumental=&pProject->instrumental;
+  RC rc=ERROR_ID_NO;
 
   // Offset
 
   if ((strlen(pInstrumental->instrFunction)>0) && (pRecord->ccd.drk.matrix==NULL) &&
      ((rc=MATRIX_Load(FILES_RebuildFileName(fileName,pInstrumental->instrFunction,1),
                      &pRecord->ccd.drk,
-                      NDET,NCURVE,
+                      n_wavel,NCURVE,
                       0.,0.,
                       0,0,"CCD_LoadInstrumental (offset)"))!=ERROR_ID_NO))
 

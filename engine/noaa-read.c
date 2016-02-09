@@ -519,6 +519,7 @@ RC ReliNOAA(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
 
   // Initializations
 
+  const int n_wavel = NDET[0];
   pRecord=&pEngineContext->recordInfo;
   pBuffers=&pEngineContext->buffers;
 
@@ -727,7 +728,7 @@ RC ReliNOAA(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
 
     // The spectrum
 
-    for (i=0;i<NDET;i++)
+    for (i=0;i<n_wavel;i++)
      pBuffers->spectrum[i]=(double)pRecordNoaa->dataRecord.spectralData[i];
 
     // Determine the local time

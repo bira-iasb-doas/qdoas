@@ -12,6 +12,8 @@
 #include "mediate_general.h"
 #include "matrix.h"
 
+#include "tropomi.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -131,7 +133,6 @@ typedef struct _prjctOmiFormat
    char refPath[MAX_STR_LEN+1];
    int spectralType;
    int averageFlag;
-   int   omiTracks[MAX_SWATHSIZE];
    int   pixelQFRejectionFlag,pixelQFMaxGaps,pixelQFMask;                       // pixel quality flags rejection
    enum omi_xtrack_mode xtrack_mode;                                            // how to use XTrackQualityFlags
  }
@@ -148,6 +149,7 @@ typedef struct _prjctInstrumental
   char       dnlFile[MAX_ITEM_TEXT_LEN];                                    // detector not linearity correction
   char       offsetFile[MAX_ITEM_TEXT_LEN];                                 // offset file
   char       imagePath[MAX_ITEM_TEXT_LEN];                                  // root path for camera pictures
+  bool        use_row[MAX_SWATHSIZE];                          // to skip rows of imager instruments
   int         detectorSize;                                                     // size of detector in pixels
   int         azimuthFlag;
   int         averageFlag;
@@ -156,6 +158,7 @@ typedef struct _prjctInstrumental
   PRJCT_GOME  gome;
   PRJCT_SCIA  scia;
   PRJCT_OMI   omi;
+  struct instrumental_tropomi tropomi;
   int         wavelength;
   unsigned int        mfcMaskOffset;
   unsigned int        mfcMaskDark;

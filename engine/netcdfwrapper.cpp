@@ -254,3 +254,15 @@ void NetCDFGroup::defVarDeflate(int varid, int shuffle, int deflate, int deflate
 void NetCDFGroup::defVarDeflate(const string& name, int shuffle, int deflate, int deflate_level) {
   defVarDeflate(varID(name), shuffle, deflate, deflate_level);
 }
+
+string NetCDFGroup::getAttText(const string& name, int varid) {
+  size_t len;
+  int status = nc_inq_att(groupid, varid, name.c_str(), NULL, &len);
+  if (status != NC_NOERR)
+    throw std::runtime_error("Error getting data for attribute '" + name + "'");
+
+  vector<char> charbuf(len+1); // len does not include terminating NULL string
+  charbuf[len] = '\0';
+  status = nc_get_att_text(groupid, varid, name.c_str(), charbuf.data());
+  return string(charbuf.data() );
+}

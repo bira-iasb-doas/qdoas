@@ -246,7 +246,7 @@ RC ReliActon_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int
   RC          rc;                                                               // return code
 
   // Initializations
-
+  const int n_wavel = NDET[0];
   pRecordInfo=&pEngineContext->recordInfo;
   pBuffers=&pEngineContext->buffers;
   pProject=&pEngineContext->project;
@@ -352,7 +352,7 @@ RC ReliActon_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int
 
       pRecord=Record2;
 
-      for (i=0;i<NDET;i++)
+      for (i=0;i<n_wavel;i++)
        {
         sscanf(pRecord,"%lf",&spectrum[i]);
         help=(unsigned int)spectrum[i];
@@ -380,7 +380,7 @@ RC ReliActon_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int
             found=1;
             pRecord=Record2;
 
-            for (i=0;i<NDET;i++)
+            for (i=0;i<n_wavel;i++)
              {
               sscanf(pRecord,"%lf",&pBuffers->darkCurrent[i]);
               help=(unsigned int)pBuffers->darkCurrent[i];
@@ -394,7 +394,7 @@ RC ReliActon_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int
 
         // Dark current subtraction
 
-        for (i=0;i<NDET;i++)
+        for (i=0;i<n_wavel;i++)
          pBuffers->spectrum[i]-=pBuffers->darkCurrent[i];
        }
 

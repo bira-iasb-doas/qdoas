@@ -5,9 +5,7 @@
 #include <ctime>
 
 #include "netcdfwrapper.h"
-
 #include "output_netcdf.h"
-
 #include "engine_context.h"
 
 using std::string;
@@ -321,7 +319,7 @@ RC netcdf_open(const ENGINE_CONTEXT *pEngineContext, const char *filename) {
     n_calib = 0;
     for (int firstrow = 0; firstrow<ANALYSE_swathSize; firstrow++) {
       if (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI ||
-          pEngineContext->project.instrumental.omi.omiTracks[firstrow] ) {
+          pEngineContext->project.instrumental.use_row[firstrow] ) {
         n_calib = KURUCZ_buffers[firstrow].Nb_Win;
         break;
       }

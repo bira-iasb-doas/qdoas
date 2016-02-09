@@ -103,6 +103,7 @@ ERROR_TABLE errorTable[]=
   { ERROR_ID_BUFFER_FULL               , "the buffer of %s is full"                                                                                           },
   { ERROR_ID_COMMANDLINE               , "syntax error in command line"                                                                                       },
   { ERROR_ID_MEDIATE                   , "Error with field \"%s\" - %s"                                                                                           },
+  { ERROR_ID_SWATHSIZE                 , "This file contains %d detector rows, but this version of Qdoas can only handle %d" },
 
   // File
 
@@ -208,6 +209,7 @@ ERROR_TABLE errorTable[]=
   { ERROR_ID_HDFEOS5_SETFILL           , "HDF-EOS5: error setting fill value for field %s"},
   { ERROR_ID_HDFEOS5_GETFILL           , "HDF-EOS5: error setting fill value for field %s"},
   { ERROR_ID_NETCDF                    , "%s"},
+  { ERROR_ID_TROPOMI_REF               , "Could not find Tropomi reference spectrum from file %s, row %d: %s"},
   // End of the table
 
   { ITEM_NONE                          , "Unknown error (%d)"                                                                                           }

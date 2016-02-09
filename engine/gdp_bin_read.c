@@ -427,7 +427,7 @@ RC GDP_BIN_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   GDP_BIN_currentFileIndex=ITEM_NONE;
   ANALYSE_oldLatitude=(double)99999.;                                           // in automatic reference selection, force the selection of a
   strcpy(fileName,pEngineContext->fileInfo.fileName);                                         // new reference spectrum
-  NDET=1024;
+  NDET[0]=1024;
   rc=ERROR_ID_NO;
 
   // In automatic reference selection, the file has maybe already loaded
@@ -595,7 +595,7 @@ RC GDP_BIN_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
         else
          {
-          NDET=pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].bandSize;
+          NDET[0]=pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].bandSize;
 
           // Read the irradiance spectrum
 
@@ -672,10 +672,10 @@ RC GDP_BIN_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
     pEngineContext->recordInfo.satellite.orbit_number= 1+pOrbitFile->gdpBinHeader.orbitNumber;
     pEngineContext->recordInfo.useErrors=((pOrbitFile->gdpBinHeader.mask&GDP_BIN_ERROR_ID_MASK)==GDP_BIN_ERROR_ID_MASK)?1:0;
-    NDET=pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].bandSize;
+    NDET[0]=pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].bandSize;
 
     GdpBinLambda(pEngineContext->buffers.lambda,GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex].gdpBinHeader.indexSpectralParam,GDP_BIN_currentFileIndex);
-    for (i=0; i<NDET; ++i) {
+    for (i=0; i<NDET[0]; ++i) {
       pEngineContext->buffers.lambda_irrad[i]=pEngineContext->buffers.lambda[i];
     }
 
@@ -1245,7 +1245,9 @@ RC GdpBinBuildRef(GDP_BIN_REF *refList,int nRef,int nSpectra,double *lambda,doub
   rc=ERROR_ID_NO;
   indexColumn=2;
 
-  for (i=0;i<NDET;i++)
+  const int n_wavel = NDET[0];
+
+  for (i=0;i<n_wavel;i++)
    lambda[i]=ref[i]=(double)0.;
 
   // Search for spectra matching latitudes and SZA conditions
@@ -1284,7 +1286,7 @@ RC GdpBinBuildRef(GDP_BIN_REF *refList,int nRef,int nSpectra,double *lambda,doub
 
       (*pIndexLine)++;
 
-      for (i=0;i<NDET;i++)
+      for (i=0;i<n_wavel;i++)
        {
         lambda[i]+=(double)pEngineContext->buffers.lambda[i];
         ref[i]+=(double)pEngineContext->buffers.spectrum[i];
@@ -1302,7 +1304,7 @@ RC GdpBinBuildRef(GDP_BIN_REF *refList,int nRef,int nSpectra,double *lambda,doub
    	strcpy(OUTPUT_refFile,GDP_BIN_orbitFiles[indexFile].gdpBinFileName);
    	OUTPUT_nRec=nRec;
 
-    for (i=0;i<NDET;i++)
+    for (i=0;i<n_wavel;i++)
      {
       lambda[i]/=nRec;
       ref[i]/=nRec;
@@ -1380,11 +1382,13 @@ RC GdpBinRefSelection(ENGINE_CONTEXT *pEngineContext,
 
   rc=ERROR_ID_NO;
 
-  memcpy(lambdaN,lambdaK,sizeof(double)*NDET);
-  memcpy(lambdaS,lambdaK,sizeof(double)*NDET);
+  const int n_wavel = NDET[0];
 
-  memcpy(refN,ref,sizeof(double)*NDET);
-  memcpy(refS,ref,sizeof(double)*NDET);
+  memcpy(lambdaN,lambdaK,sizeof(double)*n_wavel);
+  memcpy(lambdaS,lambdaK,sizeof(double)*n_wavel);
+
+  memcpy(refN,ref,sizeof(double)*n_wavel);
+  memcpy(refS,ref,sizeof(double)*n_wavel);
 
   nRefS=0;
   *pRefNormN=*pRefNormS=(double)1.;
@@ -1405,7 +1409,7 @@ RC GdpBinRefSelection(ENGINE_CONTEXT *pEngineContext,
        rc=GdpBinBuildRef(refList,nRefN,nSpectra,lambdaN,refN,pEngineContext,specFp,&indexLine,responseHandle);
 
       if (!rc)
-       memcpy(refS,refN,sizeof(double)*NDET);
+       memcpy(refS,refN,sizeof(double)*n_wavel);
      }
 
     // Search for records matching SZA conditions only
@@ -1416,7 +1420,7 @@ RC GdpBinRefSelection(ENGINE_CONTEXT *pEngineContext,
        rc=GdpBinBuildRef(refList,nRefN,nSpectra,lambdaN,refN,pEngineContext,specFp,&indexLine,responseHandle);
 
       if (!rc)
-       memcpy(refS,refN,sizeof(double)*NDET);
+       memcpy(refS,refN,sizeof(double)*n_wavel);
      }
 
     if (!rc)
@@ -1431,7 +1435,7 @@ RC GdpBinRefSelection(ENGINE_CONTEXT *pEngineContext,
       else if (!nRefN)
        {
        	mediateResponseCellDataString(plotPageRef,indexLine++,indexColumn,"No record selected for the northern hemisphere, use reference of the southern hemisphere",responseHandle);
-        memcpy(refN,refS,sizeof(double)*NDET);
+        memcpy(refN,refS,sizeof(double)*n_wavel);
        }
 
       // No reference spectrum found for Southern hemisphere -> use the reference found for Northern hemisphere
@@ -1439,13 +1443,13 @@ RC GdpBinRefSelection(ENGINE_CONTEXT *pEngineContext,
       else if (!nRefS)
        {
         mediateResponseCellDataString(plotPageRef,indexLine++,indexColumn,"No record selected for the southern hemisphere, use reference of the northern hemisphere",responseHandle);
-        memcpy(refS,refN,sizeof(double)*NDET);
+        memcpy(refS,refN,sizeof(double)*n_wavel);
        }
 
       if (nRefN || nRefS)   // if nor record selected, use ref (normalized as loaded)
        {
-        VECTOR_NormalizeVector(refN-1,NDET,pRefNormN,"GdpBinRefSelection (refN) ");
-        VECTOR_NormalizeVector(refS-1,NDET,pRefNormS,"GdpBinRefSelection (refS) ");
+        VECTOR_NormalizeVector(refN-1,n_wavel,pRefNormN,"GdpBinRefSelection (refN) ");
+        VECTOR_NormalizeVector(refS-1,n_wavel,pRefNormS,"GdpBinRefSelection (refS) ");
        }
      }
    }
@@ -1560,6 +1564,8 @@ RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp,void *respon
   saveFlag=(int)pEngineContext->project.spectra.displayDataFlag;
   pOrbitFile=&GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex];
 
+  const int n_wavel = NDET[0];
+
   if (!(rc=pOrbitFile->rc) && (gdpBinLoadReferenceFlag || !pEngineContext->analysisRef.refAuto))
    {
     lambdaMin=(double)9999.;
@@ -1573,13 +1579,13 @@ RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp,void *respon
     for (indexFeno=0;(indexFeno<NFeno) && !rc;indexFeno++)
       {
        pTabFeno=&TabFeno[0][indexFeno];
-       pTabFeno->NDET=NDET;
+       pTabFeno->NDET=n_wavel;
 
        // Load calibration and reference spectra
 
        if (!pTabFeno->gomeRefFlag)
         {
-         memcpy(pTabFeno->LambdaRef,pEngineContext->buffers.lambda,sizeof(double)*NDET);
+         memcpy(pTabFeno->LambdaRef,pEngineContext->buffers.lambda,sizeof(double)*n_wavel);
 
          for (i=0,j=pOrbitFile->gdpBinStartPixel[pOrbitFile->gdpBinBandIndex];
               j<pOrbitFile->gdpBinStartPixel[pOrbitFile->gdpBinBandIndex]+pOrbitFile->gdpBinBandInfo[pOrbitFile->gdpBinBandIndex].bandSize;i++,j++)
@@ -1610,7 +1616,7 @@ RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp,void *respon
                     ((pWrkSymbol->type==WRK_SYMBOL_PREDEFINED) &&
                     ((indexTabCross==pTabFeno->indexCommonResidual) ||
                    (((indexTabCross==pTabFeno->indexUsamp1) || (indexTabCross==pTabFeno->indexUsamp2)) && (pUsamp->method==PRJCT_USAMP_FILE))))) &&
-                    ((rc=ANALYSE_CheckLambda(pWrkSymbol,pTabFeno->LambdaRef,"GDP_BIN_LoadAnalysis "))!=ERROR_ID_NO))
+                    ((rc=ANALYSE_CheckLambda(pWrkSymbol,pTabFeno->LambdaRef,pTabFeno->NDET,"GDP_BIN_LoadAnalysis "))!=ERROR_ID_NO))
 
                 goto EndGOME_LoadAnalysis;
               }
@@ -1644,8 +1650,8 @@ RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp,void *respon
             }
           }
 
-         memcpy(pTabFeno->LambdaK,pTabFeno->LambdaRef,sizeof(double)*NDET);
-         memcpy(pTabFeno->Lambda,pTabFeno->LambdaRef,sizeof(double)*NDET);
+         memcpy(pTabFeno->LambdaK,pTabFeno->LambdaRef,sizeof(double)*n_wavel);
+         memcpy(pTabFeno->Lambda,pTabFeno->LambdaRef,sizeof(double)*n_wavel);
 
          useUsamp+=pTabFeno->useUsamp;
          useKurucz+=pTabFeno->useKurucz;
@@ -1654,8 +1660,8 @@ RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp,void *respon
           {
            if (pTabFeno->LambdaRef[0]<lambdaMin)
             lambdaMin=pTabFeno->LambdaRef[0];
-           if (pTabFeno->LambdaRef[NDET-1]>lambdaMax)
-            lambdaMax=pTabFeno->LambdaRef[NDET-1];
+           if (pTabFeno->LambdaRef[n_wavel-1]>lambdaMax)
+            lambdaMax=pTabFeno->LambdaRef[n_wavel-1];
           }
         }
       }
@@ -1676,9 +1682,9 @@ RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp,void *respon
      {
        // ANALYSE_UsampLocalFree();
 
-      if (((rc=ANALYSE_UsampLocalAlloc(0 /* lambdaMin,lambdaMax,oldNDET */))!=ERROR_ID_NO) ||
-          ((rc=ANALYSE_UsampBuild(0,0))!=ERROR_ID_NO) ||                     // ((analysisFlag==0) && (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_FILE) && (pUsamp->method==PRJCT_USAMP_FIXED))
-          ((rc=ANALYSE_UsampBuild(1,ITEM_NONE))!=ERROR_ID_NO))               // ((analysisFlag==1) && (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC) && (pUsamp->method==PRJCT_USAMP_FIXED))
+       if ( (rc=ANALYSE_UsampLocalAlloc(0) )!=ERROR_ID_NO ||
+            (rc=ANALYSE_UsampBuild(0,0))!=ERROR_ID_NO || 
+            (rc=ANALYSE_UsampBuild(1,ITEM_NONE))!=ERROR_ID_NO)
 
        goto EndGOME_LoadAnalysis;
      }

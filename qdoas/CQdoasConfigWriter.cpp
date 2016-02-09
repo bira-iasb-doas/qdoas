@@ -919,14 +919,21 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   switch(d->tropomi.spectralBand) {
     // use macro to generate expression for every value of the
     // tropomiSpectralBand enum:
-#define EXPAND(LABEL)                           \
-    case LABEL:                                 \
-      tropomiSpectralBand = #LABEL;             \
+#define EXPAND(BAND, LABEL)                    \
+    case BAND:                                 \
+      tropomiSpectralBand = LABEL;             \
       break;
     TROPOMI_BANDS
 #undef EXPAND
       }
-  fprintf(fp, "      <tropomi band=\"%s\" />\n", tropomiSpectralBand);
+  fprintf(fp, "      <tropomi band=\"%s\"", tropomiSpectralBand);
+
+  tmpStr = pathMgr->simplifyPath(QString(d->tropomi.calibrationFile));
+  fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());
+
+  tmpStr = pathMgr->simplifyPath(QString(d->tropomi.instrFunctionFile));
+  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
+
 
   // gome2
   fprintf(fp, "      <gome2 type=");

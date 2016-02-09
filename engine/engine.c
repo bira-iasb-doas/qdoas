@@ -66,6 +66,7 @@
 #include "stdfunc.h"
 #include "zenithal.h"
 #include "output.h"
+#include "tropomi_read.h"
 
 #include "omi_read.h"
 #include "gdp_bin_read.h"
@@ -74,7 +75,6 @@
 
 #include "coda.h"
 
-int  NDET;                                                                      // detector size
 int ENGINE_refStartDate=0;                                                      // automatic reference selection : 0 use localday of records, 1 use starting date and time of the first measurements
 
 ENGINE_CONTEXT engineContext,                                                   // engine context used to make the interface between the mediator and the engine
@@ -183,34 +183,42 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
    pBuffersSource=&pEngineContextSource->buffers;
    rc=ERROR_ID_NO;
 
+   // take maximum detector size to make sure that buffers allocated
+   // here are big enough
+   int max_ndet = 0;
+   for (int i=0; i<ANALYSE_swathSize; ++i) {
+     if (NDET[i] > max_ndet)
+       max_ndet = NDET[i];
+   }
+
    // Buffers allocation
 
    if (((pBuffersSource->lambda!=NULL) && (pBuffersTarget->lambda==NULL) &&
-        ((pBuffersTarget->lambda=(double *)MEMORY_AllocDVector("EngineCopyContext","lambda",0,NDET-1))==NULL)) ||
+        ((pBuffersTarget->lambda=(double *)MEMORY_AllocDVector("EngineCopyContext","lambda",0,max_ndet-1))==NULL)) ||
        ((pBuffersSource->lambda_irrad!=NULL) && (pBuffersTarget->lambda_irrad==NULL) &&
-        ((pBuffersTarget->lambda_irrad=(double *)MEMORY_AllocDVector("EngineCopyContext","lambda_irrad",0,NDET-1))==NULL)) ||
+        ((pBuffersTarget->lambda_irrad=(double *)MEMORY_AllocDVector("EngineCopyContext","lambda_irrad",0,max_ndet-1))==NULL)) ||
        ((pBuffersSource->instrFunction!=NULL) && (pBuffersTarget->instrFunction==NULL) &&
-        ((pBuffersTarget->instrFunction=(double *)MEMORY_AllocDVector("EngineCopyContext","instrFunction",0,NDET-1))==NULL)) ||
+        ((pBuffersTarget->instrFunction=(double *)MEMORY_AllocDVector("EngineCopyContext","instrFunction",0,max_ndet-1))==NULL)) ||
        ((pBuffersSource->spectrum!=NULL) && (pBuffersTarget->spectrum==NULL) &&
-        ((pBuffersTarget->spectrum=(double *)MEMORY_AllocDVector("EngineCopyContext","spectrum",0,NDET-1))==NULL)) ||
+        ((pBuffersTarget->spectrum=(double *)MEMORY_AllocDVector("EngineCopyContext","spectrum",0,max_ndet-1))==NULL)) ||
        ((pBuffersSource->sigmaSpec!=NULL) && (pBuffersTarget->sigmaSpec==NULL) &&
-        ((pBuffersTarget->sigmaSpec=(double *)MEMORY_AllocDVector("EngineCopyContext","sigmaSpec",0,NDET-1))==NULL)) ||
+        ((pBuffersTarget->sigmaSpec=(double *)MEMORY_AllocDVector("EngineCopyContext","sigmaSpec",0,max_ndet-1))==NULL)) ||
        ((pBuffersSource->irrad!=NULL) && (pBuffersTarget->irrad==NULL) &&
-        ((pBuffersTarget->irrad=(double *)MEMORY_AllocDVector("EngineCopyContext","irrad",0,NDET-1))==NULL)) ||
+        ((pBuffersTarget->irrad=(double *)MEMORY_AllocDVector("EngineCopyContext","irrad",0,max_ndet-1))==NULL)) ||
        ((pBuffersSource->darkCurrent!=NULL) && (pBuffersTarget->darkCurrent==NULL) &&
-        ((pBuffersTarget->darkCurrent=(double *)MEMORY_AllocDVector("EngineCopyContext","darkCurrent",0,NDET-1))==NULL)) ||
+        ((pBuffersTarget->darkCurrent=(double *)MEMORY_AllocDVector("EngineCopyContext","darkCurrent",0,max_ndet-1))==NULL)) ||
        ((pBuffersSource->offset!=NULL) && (pBuffersTarget->offset==NULL) &&
-        ((pBuffersTarget->offset=(double *)MEMORY_AllocDVector("EngineCopyContext","offset",0,NDET-1))==NULL)) ||
+        ((pBuffersTarget->offset=(double *)MEMORY_AllocDVector("EngineCopyContext","offset",0,max_ndet-1))==NULL)) ||
        ((pBuffersSource->scanRef!=NULL) && (pBuffersTarget->scanRef==NULL) &&
-        ((pBuffersTarget->scanRef=(double *)MEMORY_AllocDVector("EngineCopyContext","scanRef",0,NDET-1))==NULL)) ||
+        ((pBuffersTarget->scanRef=(double *)MEMORY_AllocDVector("EngineCopyContext","scanRef",0,max_ndet-1))==NULL)) ||
        ((pBuffersSource->varPix!=NULL) && (pBuffersTarget->varPix==NULL) &&
-        ((pBuffersTarget->varPix=(double *)MEMORY_AllocDVector("EngineCopyContext","varPix",0,NDET-1))==NULL)) ||
+        ((pBuffersTarget->varPix=(double *)MEMORY_AllocDVector("EngineCopyContext","varPix",0,max_ndet-1))==NULL)) ||
        ((pBuffersSource->specMaxx!=NULL) && (pBuffersTarget->specMaxx==NULL) &&
         ((pBuffersTarget->specMaxx=(double *)MEMORY_AllocDVector("EngineCopyContext","specMaxx",0,MAX_SPECMAX-1))==NULL)) ||
        ((pBuffersSource->specMax!=NULL) && (pBuffersTarget->specMax==NULL) &&
         ((pBuffersTarget->specMax=(double *)MEMORY_AllocDVector("EngineCopyContext","specMax",0,MAX_SPECMAX-1))==NULL)) ||
        ((pEngineContextSource->recordInfo.omi.omiPixelQF!=NULL) && (pEngineContextTarget->recordInfo.omi.omiPixelQF==NULL) &&
-        ((pEngineContextTarget->recordInfo.omi.omiPixelQF=(unsigned short *)MEMORY_AllocBuffer("EngineCopyContext","omiPixelQF",NDET,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL)) ||
+        ((pEngineContextTarget->recordInfo.omi.omiPixelQF=(unsigned short *)MEMORY_AllocBuffer("EngineCopyContext","omiPixelQF",max_ndet,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL)) ||
        ((pBuffersSource->recordIndexes!=NULL) && (pBuffersTarget->recordIndexes==NULL) &&
         ((pBuffersTarget->recordIndexes=(uint32_t *)MEMORY_AllocBuffer("THRD_CopySpecInfo","recordIndexes",
          (pEngineContextTarget->recordIndexesSize=pEngineContextSource->recordIndexesSize),sizeof(uint32_t),0,MEMORY_TYPE_ULONG))==NULL)) ||
@@ -228,31 +236,31 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
    else
     {
      if ((pBuffersTarget->lambda!=NULL) && (pBuffersSource->lambda!=NULL))
-      memcpy(pBuffersTarget->lambda,pBuffersSource->lambda,sizeof(double)*NDET);
+      memcpy(pBuffersTarget->lambda,pBuffersSource->lambda,sizeof(double)*max_ndet);
      if ((pBuffersTarget->lambda_irrad!=NULL) && (pBuffersSource->lambda_irrad!=NULL))
-      memcpy(pBuffersTarget->lambda_irrad,pBuffersSource->lambda_irrad,sizeof(double)*NDET);
+      memcpy(pBuffersTarget->lambda_irrad,pBuffersSource->lambda_irrad,sizeof(double)*max_ndet);
      if ((pBuffersTarget->instrFunction!=NULL) && (pBuffersSource->instrFunction!=NULL))
-      memcpy(pBuffersTarget->instrFunction,pBuffersSource->instrFunction,sizeof(double)*NDET);
+      memcpy(pBuffersTarget->instrFunction,pBuffersSource->instrFunction,sizeof(double)*max_ndet);
      if ((pBuffersTarget->spectrum!=NULL) && (pBuffersSource->spectrum!=NULL))
-      memcpy(pBuffersTarget->spectrum,pBuffersSource->spectrum,sizeof(double)*NDET);
+      memcpy(pBuffersTarget->spectrum,pBuffersSource->spectrum,sizeof(double)*max_ndet);
      if ((pBuffersTarget->sigmaSpec!=NULL) && (pBuffersSource->sigmaSpec!=NULL))
-      memcpy(pBuffersTarget->sigmaSpec,pBuffersSource->sigmaSpec,sizeof(double)*NDET);
+      memcpy(pBuffersTarget->sigmaSpec,pBuffersSource->sigmaSpec,sizeof(double)*max_ndet);
      if ((pBuffersTarget->irrad!=NULL) && (pBuffersSource->irrad!=NULL))
-      memcpy(pBuffersTarget->irrad,pBuffersSource->irrad,sizeof(double)*NDET);
+      memcpy(pBuffersTarget->irrad,pBuffersSource->irrad,sizeof(double)*max_ndet);
      if ((pBuffersTarget->darkCurrent!=NULL) && (pBuffersSource->darkCurrent!=NULL))
-      memcpy(pBuffersTarget->darkCurrent,pBuffersSource->darkCurrent,sizeof(double)*NDET);
+      memcpy(pBuffersTarget->darkCurrent,pBuffersSource->darkCurrent,sizeof(double)*max_ndet);
      if ((pBuffersTarget->offset!=NULL) && (pBuffersSource->offset!=NULL))
-      memcpy(pBuffersTarget->offset,pBuffersSource->offset,sizeof(double)*NDET);
+      memcpy(pBuffersTarget->offset,pBuffersSource->offset,sizeof(double)*max_ndet);
      if ((pBuffersTarget->scanRef!=NULL) && (pBuffersSource->scanRef!=NULL))
-      memcpy(pBuffersTarget->scanRef,pBuffersSource->scanRef,sizeof(double)*NDET);
+      memcpy(pBuffersTarget->scanRef,pBuffersSource->scanRef,sizeof(double)*max_ndet);
      if ((pBuffersTarget->varPix!=NULL) && (pBuffersSource->varPix!=NULL))
-      memcpy(pBuffersTarget->varPix,pBuffersSource->varPix,sizeof(double)*NDET);
+      memcpy(pBuffersTarget->varPix,pBuffersSource->varPix,sizeof(double)*max_ndet);
      if ((pBuffersTarget->specMaxx!=NULL) && (pBuffersSource->specMaxx!=NULL))
       memcpy(pBuffersTarget->specMaxx,pBuffersSource->specMaxx,sizeof(double)*MAX_SPECMAX);
      if ((pBuffersTarget->specMax!=NULL) && (pBuffersSource->specMax!=NULL))
       memcpy(pBuffersTarget->specMax,pBuffersSource->specMax,sizeof(double)*MAX_SPECMAX);
      if ((pEngineContextTarget->recordInfo.omi.omiPixelQF!=NULL) && (pEngineContextSource->recordInfo.omi.omiPixelQF!=NULL))
-      memcpy(pEngineContextTarget->recordInfo.omi.omiPixelQF,pEngineContextSource->recordInfo.omi.omiPixelQF,sizeof(unsigned short)*NDET);
+      memcpy(pEngineContextTarget->recordInfo.omi.omiPixelQF,pEngineContextSource->recordInfo.omi.omiPixelQF,sizeof(unsigned short)*max_ndet);
      if ((pBuffersTarget->recordIndexes!=NULL) && (pBuffersSource->recordIndexes!=NULL))
       memcpy(pBuffersTarget->recordIndexes,pBuffersSource->recordIndexes,sizeof(uint32_t)*pEngineContextSource->recordIndexesSize);
 
@@ -323,6 +331,12 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
 
    // Initializations
 
+   int max_ndet = 0;
+   for (int i=0; i<ANALYSE_swathSize; ++i) {
+     if (NDET[i] > max_ndet)
+       max_ndet = NDET[i];
+   }
+
    ANALYSE_plotKurucz=ANALYSE_plotRef=0;
    ANALYSE_indexLine=1;
    pBuffers=&pEngineContext->buffers;
@@ -341,6 +355,7 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
                                   (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
                                   (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
                                   (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI) ||
+                                  (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_TROPOMI) ||
                                   (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GOME2))?1:0;
 
    ENGINE_localNoon=(double)12.;
@@ -352,8 +367,8 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
 
    // Allocate buffers
 
-   if (((pBuffers->lambda=MEMORY_AllocDVector(__func__,"lambda",0,NDET-1))==NULL) ||
-       ((pBuffers->spectrum=MEMORY_AllocDVector(__func__,"spectrum",0,NDET-1))==NULL) ||
+   if (((pBuffers->lambda=MEMORY_AllocDVector(__func__,"lambda",0,max_ndet-1))==NULL) ||
+       ((pBuffers->spectrum=MEMORY_AllocDVector(__func__,"spectrum",0,max_ndet-1))==NULL) ||
 
        (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV) ||
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_OHP_96) ||
@@ -380,19 +395,20 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
            pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN ||
            pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS ||
            pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI ||
+           pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_TROPOMI ||
            pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GOME2 ) &&
 
-         ( (pBuffers->sigmaSpec=MEMORY_AllocDVector(__func__,"sigmaSpec",0,NDET-1))==NULL ||
-           (pBuffers->lambda_irrad=MEMORY_AllocDVector(__func__,"lambda_irrad",0,NDET-1))==NULL ||
-           (pBuffers->irrad=MEMORY_AllocDVector(__func__,"irrad",0,NDET-1))==NULL
+         ( (pBuffers->sigmaSpec=MEMORY_AllocDVector(__func__,"sigmaSpec",0,max_ndet-1))==NULL ||
+           (pBuffers->lambda_irrad=MEMORY_AllocDVector(__func__,"lambda_irrad",0,max_ndet-1))==NULL ||
+           (pBuffers->irrad=MEMORY_AllocDVector(__func__,"irrad",0,max_ndet-1))==NULL
            )
          ) ||
 
        ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI) &&
-        ((pRecord->omi.omiPixelQF=(unsigned short *)MEMORY_AllocBuffer(__func__,"omiPixelQF",NDET,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL)) ||
+        ((pRecord->omi.omiPixelQF=(unsigned short *)MEMORY_AllocBuffer(__func__,"omiPixelQF",max_ndet,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL)) ||
 
        ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZY) &&
-        ((pBuffers->scanRef=MEMORY_AllocDVector(__func__,"scanRef",0,NDET-1))==NULL)) ||
+        ((pBuffers->scanRef=MEMORY_AllocDVector(__func__,"scanRef",0,max_ndet-1))==NULL)) ||
 
        (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_ACTON) ||
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG) ||
@@ -400,19 +416,19 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDASI_EASOE) ||
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZY) ||
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV)) &&
-        ((pBuffers->darkCurrent=MEMORY_AllocDVector(__func__,"darkCurrent",0,NDET-1))==NULL)) ||
+        ((pBuffers->darkCurrent=MEMORY_AllocDVector(__func__,"darkCurrent",0,max_ndet-1))==NULL)) ||
 
        (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MKZY) ||
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC) ||
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD)||
          (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA)) &&
-        ((pBuffers->offset=MEMORY_AllocDVector(__func__,"offset",0,NDET-1))==NULL)) ||
+        ((pBuffers->offset=MEMORY_AllocDVector(__func__,"offset",0,max_ndet-1))==NULL)) ||
 
        ( ((((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC) ||
             (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD)) && strlen(pInstrumental->vipFile)) ||
             (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA)) &&
 
-         ((pBuffers->varPix=MEMORY_AllocDVector(__func__,"varPix",0,NDET-1))==NULL)) ||
+         ((pBuffers->varPix=MEMORY_AllocDVector(__func__,"varPix",0,max_ndet-1))==NULL)) ||
 
        // Load the detector non linearity file
 
@@ -436,26 +452,21 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
      // Load the wavelength calibration
 
      if (!strlen(pInstrumental->calibrationFile) || (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI))
-      for (i=0;i<NDET;i++)
-       pBuffers->lambda[i]=i+1;
+       for (i=0;i<max_ndet;i++)
+         pBuffers->lambda[i]=i+1;
      else if ((fp=fopen(pInstrumental->calibrationFile,"rt"))==NULL)
-      rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pInstrumental->calibrationFile);
-     else
-      {
-       for (i=0;i<NDET;)
-
-        if (!fgets(str,MAX_ITEM_TEXT_LEN,fp))
-         break;
-        else if ((strchr(str,';')==NULL) && (strchr(str,'*')==NULL))
-         {
-          sscanf(str,"%lf",&pBuffers->lambda[i]);
-
-          i++;
+       rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pInstrumental->calibrationFile);
+     else {
+       for (i=0;i<max_ndet;) {
+         if (!fgets(str,MAX_ITEM_TEXT_LEN,fp)) {
+           break;
+         } else if ((strchr(str,';')==NULL) && (strchr(str,'*')==NULL)) {
+           sscanf(str,"%lf",&pBuffers->lambda[i]);
+           i++;
          }
-
-       if (i!=NDET)
-        rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_EMPTY,pInstrumental->calibrationFile);
-
+       }
+       if (i!=max_ndet)
+         rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_EMPTY,pInstrumental->calibrationFile);
        fclose(fp);
       }
 
@@ -464,11 +475,11 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
        // Initialize buffers
 
        if (pBuffers->darkCurrent!=NULL)
-        VECTOR_Init(pBuffers->darkCurrent,(double)0.,NDET);                  // To check the initialization of the ANALYSE_zeros vector ...
+        VECTOR_Init(pBuffers->darkCurrent,(double)0.,max_ndet);                  // To check the initialization of the ANALYSE_zeros vector ...
        if (pBuffers->offset!=NULL)
-        VECTOR_Init(pBuffers->offset,(double)0.,NDET);                       // To check the initialization of the ANALYSE_zeros vector ...
+        VECTOR_Init(pBuffers->offset,(double)0.,max_ndet);                       // To check the initialization of the ANALYSE_zeros vector ...
        if (pBuffers->scanRef!=NULL)
-        VECTOR_Init(pBuffers->scanRef,(double)0.,NDET);                      // To check the initialization of the ANALYSE_zeros vector ...
+        VECTOR_Init(pBuffers->scanRef,(double)0.,max_ndet);                      // To check the initialization of the ANALYSE_zeros vector ...
 
        // Load the instrumental function                                           // QDOAS !!! LOAD vip + dnl
 
@@ -478,24 +489,24 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
 
          if ((fp=fopen(pInstrumental->instrFunction,"rt"))==NULL)
           rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pInstrumental->instrFunction);
-         else if (((pBuffers->instrFunction=MEMORY_AllocDVector(__func__,"instrFunction",0,NDET-1))==NULL) ||
-                  ((lambdaInstr=MEMORY_AllocDVector(__func__,"lambdaInstr",0,NDET-1))==NULL) ||
-                  ((instrFunction=MEMORY_AllocDVector(__func__,"instrFunction",0,NDET-1))==NULL) ||
-                  ((instrDeriv2=MEMORY_AllocDVector(__func__,"instrDeriv2",0,NDET-1))==NULL))
+         else if (((pBuffers->instrFunction=MEMORY_AllocDVector(__func__,"instrFunction",0,max_ndet-1))==NULL) ||
+                  ((lambdaInstr=MEMORY_AllocDVector(__func__,"lambdaInstr",0,max_ndet-1))==NULL) ||
+                  ((instrFunction=MEMORY_AllocDVector(__func__,"instrFunction",0,max_ndet-1))==NULL) ||
+                  ((instrDeriv2=MEMORY_AllocDVector(__func__,"instrDeriv2",0,max_ndet-1))==NULL))
 
           rc=ERROR_ID_ALLOC;
 
          else
           {
-           for (i=0;(i<NDET) && fgets(str,MAX_ITEM_TEXT_LEN,fp);)
+           for (i=0;(i<max_ndet) && fgets(str,MAX_ITEM_TEXT_LEN,fp);)
             if ((strchr(str,';')==NULL) && (strchr(str,'*')==NULL))
              {
               sscanf(str,"%lf %lf",&lambdaInstr[i],&instrFunction[i]);
               i++;
              }
 
-           if (!SPLINE_Deriv2(lambdaInstr,instrFunction,instrDeriv2,NDET,__func__))
-            rc=SPLINE_Vector(lambdaInstr,instrFunction,instrDeriv2,NDET,pBuffers->lambda,pBuffers->instrFunction,NDET,SPLINE_CUBIC,__func__);
+           if (!SPLINE_Deriv2(lambdaInstr,instrFunction,instrDeriv2,max_ndet,__func__))
+            rc=SPLINE_Vector(lambdaInstr,instrFunction,instrDeriv2,max_ndet,pBuffers->lambda,pBuffers->instrFunction,max_ndet,SPLINE_CUBIC,__func__);
           }
 
          if (fp!=NULL)
@@ -607,6 +618,7 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
    // Some satellite measurements have their own functions to open the file
 
    if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) &&
+       (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_TROPOMI) &&
        (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_SCIA_PDS) &&
        (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GOME2) &&
        ((pFile->specFp=fopen(pEngineContext->fileInfo.fileName,"rb"))==NULL))
@@ -688,6 +700,11 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
        rc=OMI_Set(pEngineContext);
        if(!rc)
          rc = OMI_load_analysis(pEngineContext, responseHandle);
+       break;
+       // ---------------------------------------------------------------------------
+     case PRJCT_INSTR_FORMAT_TROPOMI:
+       rc=tropomi_set(pEngineContext);
+       // todo: OMI_load_analysis
        break;
        // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_CCD_EEV :
@@ -866,6 +883,10 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
       rc=OMI_read_earth(pEngineContext,indexRecord);
       break;
       // ---------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_TROPOMI :
+      rc=tropomi_read(pEngineContext,indexRecord);
+      break;
+      // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_CCD_EEV :
       rc=ReliCCD_EEV(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pFile->darkFp);
       break;
@@ -904,30 +925,37 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
       // ---------------------------------------------------------------------------
     }
 
-   if (!rc && !(rc=THRD_SpectrumCorrection(pEngineContext,pEngineContext->buffers.spectrum)))
-    {
-     pEngineContext->indexRecord=indexRecord;
-     if (pRecord->oldZm<(double)0.)
-      pRecord->oldZm=pRecord->Zm;
+   if (rc)
+     return rc;
+   
+   int i_crosstrack = (indexRecord - 1) % ANALYSE_swathSize;
+   const int n_wavel = NDET[i_crosstrack];
 
-     // Correction of the solar zenith angle with the geolocation of the specified observation site
+   rc=THRD_SpectrumCorrection(pEngineContext,pEngineContext->buffers.spectrum,n_wavel);
 
-     if ((indexSite=SITES_GetIndex(pEngineContext->project.instrumental.observationSite))!=ITEM_NONE)
-      {
-       pSite=&SITES_itemList[indexSite];
+   if (rc)
+     return rc;
 
-       longit=-pSite->longitude;   // !!! sign is inverted
+   pEngineContext->indexRecord=indexRecord;
+   if (pRecord->oldZm<(double)0.)
+     pRecord->oldZm=pRecord->Zm;
 
-       pRecord->longitude=-longit;
-       pRecord->latitude=latit=(double)pSite->latitude;
-
-       if (pSite->altitude>(double)0.)
-        pRecord->altitude=pSite->altitude*0.001;
-
-       pRecord->Zm=(pRecord->Tm!=(double)0.)?ZEN_FNTdiz(ZEN_FNCrtjul(&pRecord->Tm),&longit,&latit,&pRecord->Azimuth):(double)-1.;
-      }
-    }
-
+   // Correction of the solar zenith angle with the geolocation of the specified observation site
+   
+   if ((indexSite=SITES_GetIndex(pEngineContext->project.instrumental.observationSite))!=ITEM_NONE) {
+     pSite=&SITES_itemList[indexSite];
+     
+     longit=-pSite->longitude;   // !!! sign is inverted
+       
+     pRecord->longitude=-longit;
+     pRecord->latitude=latit=(double)pSite->latitude;
+       
+     if (pSite->altitude>(double)0.)
+       pRecord->altitude=pSite->altitude*0.001;
+       
+     pRecord->Zm=(pRecord->Tm!=(double)0.)?ZEN_FNTdiz(ZEN_FNCrtjul(&pRecord->Tm),&longit,&latit,&pRecord->Azimuth):(double)-1.;
+   }
+   
    return rc;
  }
 
@@ -995,6 +1023,10 @@ RC EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *sp
      if (ANALYSE_plotKurucz)
        mediateResponseRetainPage(plotPageCalib,responseHandle);
     }
+
+   // retain calibration plot in case it is already there (e.g. for OMI)
+   if (ANALYSE_plotKurucz)
+     mediateResponseRetainPage(plotPageCalib,responseHandle);
 
    // Return
 
@@ -1084,6 +1116,7 @@ RC EngineEndCurrentSession(ENGINE_CONTEXT *pEngineContext)
      GDP_BIN_ReleaseBuffers();
      GOME2_ReleaseBuffers();
      OMI_ReleaseBuffers();
+     tropomi_cleanup();
      SCIA_ReleaseBuffers(pEngineContext->project.instrumental.readOutFormat);
      apex_clean();
 
@@ -1671,8 +1704,8 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
            if (!pTabFeno->useEtalon)
             {
-             memcpy(pTabFeno->LambdaK,ENGINE_contextRef.buffers.lambda,sizeof(double)*NDET);
-             memcpy(pTabFeno->LambdaRef,ENGINE_contextRef.buffers.lambda,sizeof(double)*NDET);
+             memcpy(pTabFeno->LambdaK,ENGINE_contextRef.buffers.lambda,sizeof(double)*pTabFeno->NDET);
+             memcpy(pTabFeno->LambdaRef,ENGINE_contextRef.buffers.lambda,sizeof(double)*pTabFeno->NDET);
 
              doas_spectrum *new_range = spectrum_new();
              for (indexWindow = 0, newDimL=0; indexWindow < pTabFeno->svd.Z; indexWindow++)
@@ -1710,8 +1743,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
             useUsamp++;
 
 
-
-           if ((rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,NDET,&pTabFeno->refNormFact,"EngineNewRef"))!=ERROR_ID_NO)
+           if ((rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,pTabFeno->NDET,&pTabFeno->refNormFact,"EngineNewRef"))!=ERROR_ID_NO)
             break;
 
            {

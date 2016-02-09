@@ -39,11 +39,12 @@ public:
   void defVarChunking(const std::string& name, int storage, size_t *chunksizes);
   void defVarDeflate(int varid, int shuffle=1, int deflate=1, int deflate_level=7);
   void defVarDeflate(const std::string& name, int shuffle=1, int deflate=1, int deflate_level=7);
+  std::string getAttText(const std::string& attrname, int varid=NC_GLOBAL);
 
   bool hasAttr(const std::string& name, int varid=NC_GLOBAL) const;
 
   template<typename T>
-  inline std::vector<T> getAttr(const std::string& attr_name, int varid=NC_GLOBAL) {
+  inline std::vector<T> getAttr(const std::string& attr_name, int varid=NC_GLOBAL) const {
     size_t len;
     int rc = nc_inq_attlen (groupid, varid, attr_name.c_str(), &len);
     if (rc != NC_NOERR) {
@@ -61,25 +62,30 @@ public:
     } else {
       return result;
     }
-  }
+  };
 
   template<typename T>
-  inline T getFillValue(int varid) {
+  inline T getFillValue(int varid) const {
     if (hasAttr("_FillValue", varid)) {
       return getAttr<T>("_FillValue", varid)[0];
     } else {
       return default_fillvalue<T>();
     }
-  }
+  };
+
+  template<typename T>
+  inline T getFillValue(const std::string& var_name) const {
+    return getFillValue<T>(varID(var_name));
+  };
 
   template<typename T>
   inline void getVar(int varid, const size_t start[], const size_t count[], T *out) const {
     if (ncGetVar(varid, start, count, out) != NC_NOERR) {
       throw std::runtime_error("Cannot read NetCDF variable '"+name+"/"+varName(varid)+"'");
-    } }
+    } };
   template<typename T>
   inline void getVar(const std::string& name, const size_t start[], const size_t count[], T *out) const {
-    getVar(varID(name), start, count, out);  }
+    getVar(varID(name), start, count, out);  };
 
   template<typename T>
   inline void putVar(int varid, const size_t start[], const size_t count[], T *in) {

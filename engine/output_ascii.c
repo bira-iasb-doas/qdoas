@@ -17,8 +17,8 @@ static void OutputAscPrintTitles(FILE *fp);
 
 RC ascii_open(const ENGINE_CONTEXT *pEngineContext,char *filename) {
 
-	 if (!strchr(filename,'.'))                            // ASCII format should accept any extension
-   strcat(filename, output_file_extensions[ASCII]);
+  if (!strchr(filename,'.'))                            // ASCII format should accept any extension
+    strcat(filename, output_file_extensions[ASCII]);
 
   const PROJECT *pProject= &pEngineContext->project;
 

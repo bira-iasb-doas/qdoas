@@ -252,6 +252,7 @@ RC ReliPDA_EGG_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,i
   pRecord=&pEngineContext->recordInfo;
   spectrum=pEngineContext->buffers.spectrum;
   rc=ERROR_ID_NO;
+  const int n_wavel = NDET[0];
 
   // Buffer allocation
 
@@ -317,33 +318,6 @@ RC ReliPDA_EGG_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,i
 
       // Build date and time of the current measurement
 
-/*      { // !!!!!!!!!!!!
-       int inc,dayMonth[13]={0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365}, maxDay;
-
-       ihour+=13;
-       maxDay=dayMonth[imonth];
-       if ((iyear%4==0) & (imonth>=2))
-        maxDay++;
-
-       if (ihour>=24)
-        {
-         ihour%=24;
-         iday++;
-
-         if (iday>maxDay)
-          {
-           iday=1;
-           imonth++;
-
-           if (imonth>12)
-            {
-             imonth=1;
-             iyear++;
-            }
-          }
-        }
-      } // !!!!!!!!!!!!  */
-
       day.da_day=(char)iday;
       day.da_mon=(char)imonth;
       day.da_year= iyear;
@@ -358,7 +332,6 @@ RC ReliPDA_EGG_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,i
       pRecord->present_datetime.thetime.ti_hour=(unsigned char)ihour;
       pRecord->present_datetime.thetime.ti_min=(unsigned char)imin;
       pRecord->present_datetime.thetime.ti_sec=(unsigned char)isec;
-//      pRecord->Azimuth=(double)-1.;
 
       memcpy(&pRecord->present_datetime.thedate,&day,sizeof(day));
 
@@ -389,7 +362,7 @@ RC ReliPDA_EGG_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,i
         p += 142;
         Max*=(double)pRecord->NSomme/65000.;
 
-        for (i=0;i<NDET;i++)
+        for (i=0;i<n_wavel;i++)
          {
           sscanf(p,"%lf",&spectrum[i]);
           spectrum[i]*=(double)Max/pRecord->NSomme;  // test pRecord->NSomme==0 is made before
@@ -397,7 +370,7 @@ RC ReliPDA_EGG_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,i
          }
 
         if (ccdFlag)
-         VECTOR_Invert(spectrum,NDET);
+         VECTOR_Invert(spectrum,n_wavel);
        }
      }
    }
@@ -497,6 +470,7 @@ RC SetPDA_EGG(ENGINE_CONTEXT *pEngineContext,FILE *specFp,int newFlag)
   pEngineContext->recordIndexesSize=2001;
   recordIndexes=pBuffers->recordIndexes;
   rc=ERROR_ID_NO;
+  const int n_wavel = NDET[0];
 
   // Buffers allocation
 
@@ -553,10 +527,10 @@ RC SetPDA_EGG(ENGINE_CONTEXT *pEngineContext,FILE *specFp,int newFlag)
 
       fseek(specFp,-((int32_t)recordSize),SEEK_CUR);
 
-      recordSize=pEngineContext->recordSize+(int32_t)sizeof(unsigned short)*NDET+(300L*(sizeof(short)+sizeof(float))+8L)*newFlag;
+      recordSize=pEngineContext->recordSize+(int32_t)sizeof(unsigned short)*n_wavel+(300L*(sizeof(short)+sizeof(float))+8L)*newFlag;
 
 //      recordSize=(int32_t)sizeof(PDA1453A)-((!pEngineContext->project.instrumental.azimuthFlag)?
-//                       sizeof(double):0)+(int32_t)sizeof(unsigned short)*NDET+(300L*(sizeof(short)+sizeof(float))+8L)*newFlag;
+//                       sizeof(double):0)+(int32_t)sizeof(unsigned short)*n_wavel+(300L*(sizeof(short)+sizeof(float))+8L)*newFlag;
 
       recordIndexes[0]=(int32_t)(pEngineContext->recordIndexesSize+1)*sizeof(short);      // file header : size of indexes table + curvenum
 
@@ -634,6 +608,7 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
   // Initializations
 
+  const int n_wavel = NDET[0];
   pRecord=&pEngineContext->recordInfo;
   pBuffers=&pEngineContext->buffers;
 
@@ -663,8 +638,8 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
   // Buffers allocation
 
-  else if (((ISpectre=(unsigned short *)MEMORY_AllocBuffer("ReliPDA_EGG ","ISpectre",NDET,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL) ||
-           ((ObsScan=(double *)MEMORY_AllocBuffer("ReliPDA_EGG ","ObsScan",NDET,sizeof(double),0,MEMORY_TYPE_DOUBLE))==NULL) ||
+  else if (((ISpectre=(unsigned short *)MEMORY_AllocBuffer("ReliPDA_EGG ","ISpectre",n_wavel,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL) ||
+           ((ObsScan=(double *)MEMORY_AllocBuffer("ReliPDA_EGG ","ObsScan",n_wavel,sizeof(double),0,MEMORY_TYPE_DOUBLE))==NULL) ||
            ((ISpecMax=(unsigned short *)MEMORY_AllocBuffer("ReliPDA_EGG ","ISpecMax",2000,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL) ||
            ((TabTint=(float *)MEMORY_AllocBuffer("ReliPDA_EGG ","TabTint",300,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
            ((TabNSomme=(unsigned short *)MEMORY_AllocBuffer("ReliPDA_EGG ","TabNSomme",300,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL))
@@ -684,7 +659,7 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
     if (((namesFp!=NULL) && !fread(names,20,1,namesFp)) ||
          !fread(&header,pEngineContext->recordSize,1,specFp) ||
-         !fread(ISpectre,sizeof(unsigned short)*NDET,1,specFp) ||
+         !fread(ISpectre,sizeof(unsigned short)*n_wavel,1,specFp) ||
          (newFlag &&
         (!fread(TabTint,sizeof(float)*300,1,specFp) ||
          !fread(TabNSomme,sizeof(unsigned short)*300,1,specFp) ||
@@ -706,7 +681,7 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
        {
         // Get the maximum value of the read out spectrum
 
-        for (i=1,SMax=(double)ISpectre[0];i<NDET;i++)
+        for (i=1,SMax=(double)ISpectre[0];i<n_wavel;i++)
          if ((double)ISpectre[i]>SMax)
           SMax=(double)ISpectre[i];
 
@@ -776,7 +751,7 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
         }
 
 // ! ***/           fwrite(&header,sizeof(PDA1453A),1,gp);
-// ! ***/           fwrite(ISpectre,sizeof(unsigned short)*NDET,1,gp);
+// ! ***/           fwrite(ISpectre,sizeof(unsigned short)*n_wavel,1,gp);
 // ! ***/           fwrite(TabTint,sizeof(float)*300,1,gp);
 // ! ***/           fwrite(TabNSomme,sizeof(unsigned short)*300,1,gp);
 // ! ***/           fwrite(&Max,sizeof(double),1,gp);
@@ -814,7 +789,7 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
             for (i=0;i<(header.Rejected+header.ScansNumber);i++)
              pBuffers->specMax[i]=(double)ISpecMax[i]; // *0.5;
 
-            for (i=0;i<NDET;i++)
+            for (i=0;i<n_wavel;i++)
              pBuffers->spectrum[i]=(double)ISpectre[i]*Max/65000.; //SMax;
            }
           else
@@ -826,7 +801,7 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
                pBuffers->specMax[i]=(double)ISpecMax[i];
               }
 
-            for (i=0,Max/=(double)header.ScansNumber;i<NDET;i++ )
+            for (i=0,Max/=(double)header.ScansNumber;i<n_wavel;i++ )
              pBuffers->spectrum[i]=(double)ISpectre[i]*Max/(SMax*2);
            }
 
@@ -848,7 +823,7 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
           // Dark current correction
 
           if (pBuffers->darkCurrent!=NULL)
-           for (i=0;i<NDET;i++)
+           for (i=0;i<n_wavel;i++)
             pBuffers->darkCurrent[i]=(double)0.;
 
           if (newFlag)
@@ -864,12 +839,12 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
                 break;
 
               if ((j!=MAXTPS) && (pBuffers->darkCurrent!=NULL) && (darkFp!=NULL) &&
-                  ((int)STD_FileLength(darkFp)>=(int)((j+1)*sizeof(double)*NDET)))
+                  ((int)STD_FileLength(darkFp)>=(int)((j+1)*sizeof(double)*n_wavel)))
                {
-                fseek(darkFp,(int32_t)j*NDET*sizeof(double),SEEK_SET);
-                fread(ObsScan,sizeof(double)*NDET,1,darkFp);
+                fseek(darkFp,(int32_t)j*n_wavel*sizeof(double),SEEK_SET);
+                fread(ObsScan,sizeof(double)*n_wavel,1,darkFp);
 
-                for (i=0;i<NDET;i++)
+                for (i=0;i<n_wavel;i++)
                  pBuffers->darkCurrent[i]+=(double)ObsScan[i]*TabNSomme[k];
                }
 
@@ -878,19 +853,19 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
            }
           else if (pBuffers->darkCurrent!=NULL)
            {
-            fseek(darkFp,(int32_t)(pEngineContext->recordIndexesSize+1)*sizeof(short)+(pEngineContext->recordSize+(int32_t)sizeof(unsigned short)*NDET)*(recordNo-1),SEEK_SET);
+            fseek(darkFp,(int32_t)(pEngineContext->recordIndexesSize+1)*sizeof(short)+(pEngineContext->recordSize+(int32_t)sizeof(unsigned short)*n_wavel)*(recordNo-1),SEEK_SET);
 
             fread(&header,pEngineContext->recordSize,1,darkFp);
-            fread(ISpectre,sizeof(unsigned short)*NDET,1,darkFp);
+            fread(ISpectre,sizeof(unsigned short)*n_wavel,1,darkFp);
 
-            for (i=0;i<NDET;i++)
+            for (i=0;i<n_wavel;i++)
              pBuffers->darkCurrent[i]=(double)ISpectre[i];
            }
 
           // Dark current subtraction
 
           if (pRecord->NSomme!=0)
-           for (i=0;i<NDET;i++)
+           for (i=0;i<n_wavel;i++)
             {
              pBuffers->spectrum[i]/=(double)pRecord->NSomme;
              if (pBuffers->darkCurrent!=NULL)
@@ -918,7 +893,7 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
      {
       Max=(double)pBuffers->spectrum[0];
 
-      for (i=0;i<NDET;i++)
+      for (i=0;i<n_wavel;i++)
        if ((double)pBuffers->spectrum[i]>Max)
         Max=(double)pBuffers->spectrum[i];
                                  // H for Hamamatsu
@@ -950,7 +925,7 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
       fprintf(logFp,"99999 99999 99999 99999 99999 99999 99999 99999 99999 99999 99999 99999 " );
 
-      for (i=0;i<NDET;i++)
+      for (i=0;i<n_wavel;i++)
        fprintf(logFp,"%05d ",(pBuffers->spectrum[i]<=(double)0.)?0:
                         (int)(pBuffers->spectrum[i]*65000./Max));
 

@@ -504,15 +504,15 @@ RC Gome2ReadSunRef(GOME2_ORBIT_FILE *pOrbitFile) {
   RC     rc;                                                                    // return code
 
   // Initializations
-
+  const int n_wavel = NDET[0];
   channel= (INDEX) pOrbitFile->gome2Info.channelIndex;
 
   rc=ERROR_ID_NO;
 
   // Allocate buffers
 
-  if (((pOrbitFile->gome2SunWve= (double *) MEMORY_AllocDVector("Gome2ReadSunRef","gome2SunWve",0,NDET)) ==NULL) ||
-      ((pOrbitFile->gome2SunRef= (double *) MEMORY_AllocDVector("Gome2ReadSunRef","gome2SunRef",0,NDET)) ==NULL))
+  if (((pOrbitFile->gome2SunWve= (double *) MEMORY_AllocDVector("Gome2ReadSunRef","gome2SunWve",0,n_wavel))==NULL) ||
+      ((pOrbitFile->gome2SunRef= (double *) MEMORY_AllocDVector("Gome2ReadSunRef","gome2SunRef",0,n_wavel))==NULL))
 
     rc=ERROR_ID_ALLOC;
 
@@ -529,7 +529,7 @@ RC Gome2ReadSunRef(GOME2_ORBIT_FILE *pOrbitFile) {
 
     coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,&gome2SunRef[0][0],coda_array_ordering_c);
 
-    for (i=0; i<NDET; i++) {
+    for (i=0; i<n_wavel; i++) {
       pOrbitFile->gome2SunWve[i]=gome2SunWve[channel][i];
       pOrbitFile->gome2SunRef[i]=gome2SunRef[channel][i];
     }
@@ -1218,7 +1218,7 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext) {
 
   // Initializations
 
-  // gome2LoadReferenceFlag=0;
+  const int n_wavel = NDET[0];
   ANALYSE_oldLatitude= (double) 99999.;
   pEngineContext->recordNumber=0;
   oldCurrentIndex=gome2CurrentFileIndex;
@@ -1329,7 +1329,7 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext) {
         coda_cursor_set_product(&pOrbitFile->gome2Cursor,pOrbitFile->gome2Pf);
 
         Gome2ReadOrbitInfo(pOrbitFile, (int) pEngineContext->project.instrumental.user);
-        NDET = pOrbitFile->gome2Info.no_of_pixels;
+        NDET[0] = pOrbitFile->gome2Info.no_of_pixels;
         Gome2BrowseMDR(pOrbitFile, (int) pEngineContext->project.instrumental.user);
 
         if ((pOrbitFile->specNumber= (THRD_browseType==THREAD_BROWSE_DARK) ?1:pOrbitFile->gome2Info.total_nadir_obs) >0) {
@@ -1368,9 +1368,9 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext) {
     if (!(rc=pOrbitFile->rc) && (pOrbitFile->gome2Pf==NULL) &&
         !(rc=Gome2Open(&pOrbitFile->gome2Pf,pEngineContext->fileInfo.fileName,&pOrbitFile->version))) {
       coda_cursor_set_product(&pOrbitFile->gome2Cursor,pOrbitFile->gome2Pf);
-      memcpy(pEngineContext->buffers.lambda,pOrbitFile->gome2SunWve,sizeof(double) *NDET);
-      memcpy(pEngineContext->buffers.lambda_irrad,pOrbitFile->gome2SunWve,sizeof(double) *NDET);
-      memcpy(pEngineContext->buffers.irrad,pOrbitFile->gome2SunRef,sizeof(double) *NDET);
+      memcpy(pEngineContext->buffers.lambda,pOrbitFile->gome2SunWve,sizeof(double) *n_wavel);
+      memcpy(pEngineContext->buffers.lambda_irrad,pOrbitFile->gome2SunWve,sizeof(double) *n_wavel);
+      memcpy(pEngineContext->buffers.irrad,pOrbitFile->gome2SunRef,sizeof(double) *n_wavel);
     }
   }
 
@@ -1422,6 +1422,7 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex) {
 
   // Initializations
 
+  const int n_wavel = NDET[0];
   pOrbitFile=&gome2OrbitFiles[(fileIndex==ITEM_NONE) ?gome2CurrentFileIndex:fileIndex];
   pGome2Info=&pOrbitFile->gome2Info;
   spectrum=pEngineContext->buffers.spectrum;
@@ -1438,7 +1439,7 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex) {
   else if ((recordNo<=0) || (recordNo>pOrbitFile->specNumber))
     rc=ERROR_ID_FILE_END;
   else {   // if ((THRD_id!=THREAD_TYPE_SPECTRA) || (THRD_browseType!=THREAD_BROWSE_DARK)) always true :-)
-    for (int i=0; i<NDET; i++)
+    for (int i=0; i<n_wavel; i++)
       spectrum[i]=sigma[i]= (double) 0.;
 
     if ((indexMDR=Gome2GetMDRIndex(pOrbitFile,indexBand,recordNo-1,&mdrObs)) ==ITEM_NONE)
@@ -1451,7 +1452,7 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex) {
       tint= (pOrbitFile->version<=11) ?unique_int[int_index[indexBand]]:pGome2Info->mdr[indexMDR].integration_times[indexBand];
 
       // Assign earthshine wavelength grid
-      for (int i=0; i<NDET; ++i) {
+      for (int i=0; i<n_wavel; ++i) {
         pEngineContext->buffers.lambda[i] = pGome2Info->mdr[indexMDR].earthshine_wavelength[i];
       }
 
@@ -1964,20 +1965,19 @@ RC Gome2BuildRef(GOME2_REF *refList,int nRef,int nSpectra,double *lambda,double 
   int       nRec;                                                               // number of records use for the average
   int       alreadyOpen;
   INDEX     indexColumn;
-  RC        rc;                                                                 // return code
+
+  const int n_wavel = NDET[0];
 
   // buffers to store interpolated spectra & derivatives.
   double *tempspectrum = malloc(1024*sizeof(*tempspectrum));
-  double *derivs = malloc(NDET*sizeof(*derivs));
-
-  // Initializations
+  double *derivs = malloc(n_wavel*sizeof(*derivs));
 
   pRecord=&pEngineContext->recordInfo;
-  for (i=0; i<NDET; i++)
+  for (i=0; i<n_wavel; i++)
     ref[i]= (double) 0.;
 
   indexColumn=2;
-  rc=ERROR_ID_NO;
+  RC rc=ERROR_ID_NO;
 
   // Search for spectra matching latitudes and SZA conditions
 
@@ -2021,13 +2021,13 @@ RC Gome2BuildRef(GOME2_REF *refList,int nRef,int nSpectra,double *lambda,double 
           (*pIndexLine) ++;
 
           // interpolate reference on wavelength_grid
-          int rc = SPLINE_Deriv2(pEngineContext->buffers.lambda,pEngineContext->buffers.spectrum,derivs,NDET,__func__);
-          rc |= SPLINE_Vector(pEngineContext->buffers.lambda,pEngineContext->buffers.spectrum,derivs,NDET,lambda,tempspectrum,1024,SPLINE_CUBIC,__func__);
+          int rc = SPLINE_Deriv2(pEngineContext->buffers.lambda,pEngineContext->buffers.spectrum,derivs,n_wavel,__func__);
+          rc |= SPLINE_Vector(pEngineContext->buffers.lambda,pEngineContext->buffers.spectrum,derivs,n_wavel,lambda,tempspectrum,1024,SPLINE_CUBIC,__func__);
           if (rc) {
             break;
           }
 
-          for (i=0; i<NDET; i++)
+          for (i=0; i<n_wavel; i++)
             ref[i]+=tempspectrum[i];
 
           nRec++;
@@ -2051,7 +2051,7 @@ RC Gome2BuildRef(GOME2_REF *refList,int nRef,int nSpectra,double *lambda,double 
     strcpy(OUTPUT_refFile,gome2OrbitFiles[indexFile].gome2FileName);
     OUTPUT_nRec=nRec;
 
-    for (i=0; i<NDET; i++)
+    for (i=0; i<n_wavel; i++)
       ref[i]/=nRec;
 
     rc=ERROR_ID_NO;
@@ -2105,6 +2105,7 @@ RC Gome2RefSelection(ENGINE_CONTEXT *pEngineContext,
 
   // Initializations
 
+  const int n_wavel = NDET[0];
   mediateResponseRetainPage(plotPageRef,responseHandle);
   *pRefNormN=*pRefNormS= (double) 1.;
   indexLine=1;
@@ -2134,11 +2135,11 @@ RC Gome2RefSelection(ENGINE_CONTEXT *pEngineContext,
 
   rc=ERROR_ID_NO;
 
-  memcpy(lambdaN,lambdaK,sizeof(double) *NDET);
-  memcpy(lambdaS,lambdaK,sizeof(double) *NDET);
+  memcpy(lambdaN,lambdaK,sizeof(double) *n_wavel);
+  memcpy(lambdaS,lambdaK,sizeof(double) *n_wavel);
 
-  memcpy(refN,ref,sizeof(double) *NDET);
-  memcpy(refS,ref,sizeof(double) *NDET);
+  memcpy(refN,ref,sizeof(double) *n_wavel);
+  memcpy(refS,ref,sizeof(double) *n_wavel);
 
   nRefN=nRefS=0;
 
@@ -2156,7 +2157,7 @@ RC Gome2RefSelection(ENGINE_CONTEXT *pEngineContext,
         rc=Gome2BuildRef(refList,nRefN,nSpectra,lambdaRef1,refN,pEngineContext,&indexLine,responseHandle);
 
       if (!rc)
-        memcpy(refS,refN,sizeof(double) *NDET);
+        memcpy(refS,refN,sizeof(double) *n_wavel);
     }
 
     // Search for records matching SZA conditions only
@@ -2166,7 +2167,7 @@ RC Gome2RefSelection(ENGINE_CONTEXT *pEngineContext,
         rc=Gome2BuildRef(refList,nRefN,nSpectra,lambdaRef1,refN,pEngineContext,&indexLine,responseHandle);
 
       if (!rc)
-        memcpy(refS,refN,sizeof(double) *NDET);
+        memcpy(refS,refN,sizeof(double) *n_wavel);
     }
 
     if (!rc) {
@@ -2179,19 +2180,19 @@ RC Gome2RefSelection(ENGINE_CONTEXT *pEngineContext,
 
       else if (!nRefN) {
         mediateResponseCellDataString(plotPageRef,indexLine++,indexColumn,"No record selected for the northern hemisphere, use reference of the southern hemisphere",responseHandle);
-        memcpy(refN,refS,sizeof(double) *NDET);
+        memcpy(refN,refS,sizeof(double) *n_wavel);
       }
 
       // No reference spectrum found for Southern hemisphere -> use the reference found for Northern hemisphere
 
       else if (!nRefS) {
         mediateResponseCellDataString(plotPageRef,indexLine++,indexColumn,"No record selected for the southern hemisphere, use reference of the northern hemisphere",responseHandle);
-        memcpy(refS,refN,sizeof(double) *NDET);
+        memcpy(refS,refN,sizeof(double) *n_wavel);
       }
 
       if (nRefN || nRefS) {   // if no record selected, use ref (normalized as loaded)
-        VECTOR_NormalizeVector(refN-1,NDET,pRefNormN,"Gome2RefSelection (refN) ");
-        VECTOR_NormalizeVector(refS-1,NDET,pRefNormS,"Gome2RefSelection (refS) ");
+        VECTOR_NormalizeVector(refN-1,n_wavel,pRefNormN,"Gome2RefSelection (refN) ");
+        VECTOR_NormalizeVector(refS-1,n_wavel,pRefNormS,"Gome2RefSelection (refS) ");
       }
     }
   }
@@ -2303,6 +2304,8 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle) {
   RC rc;                                                                        // return code
 
   // Initializations
+  const int n_wavel = NDET[0];
+//  DEBUG_Print(DOAS_logFile,"Enter GOME2_LoadAnalysis\n");
 
   pOrbitFile=&gome2OrbitFiles[gome2CurrentFileIndex];
   saveFlag= (int) pEngineContext->project.spectra.displayDataFlag;
@@ -2318,13 +2321,13 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle) {
 
     for (indexFeno=0; (indexFeno<NFeno) && !rc; indexFeno++) {
       pTabFeno=&TabFeno[0][indexFeno];
-      pTabFeno->NDET=NDET;
+      pTabFeno->NDET=n_wavel;
 
       // Load calibration and reference spectra
 
       if (!pTabFeno->gomeRefFlag) {
-        memcpy(pTabFeno->LambdaRef,pOrbitFile->gome2SunWve,sizeof(double) *NDET);
-        memcpy(pTabFeno->Sref,pOrbitFile->gome2SunRef,sizeof(double) *NDET);
+        memcpy(pTabFeno->LambdaRef,pOrbitFile->gome2SunWve,sizeof(double) *n_wavel);
+        memcpy(pTabFeno->Sref,pOrbitFile->gome2SunRef,sizeof(double) *n_wavel);
 
         if (!TabFeno[0][indexFeno].hidden) {
           if (!(rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,pTabFeno->NDET,&pTabFeno->refNormFact,"GOME2_LoadAnalysis (Reference) "))) {
@@ -2343,7 +2346,7 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle) {
                    ((pWrkSymbol->type==WRK_SYMBOL_PREDEFINED) &&
                     ((indexTabCross==pTabFeno->indexCommonResidual) ||
                      (((indexTabCross==pTabFeno->indexUsamp1) || (indexTabCross==pTabFeno->indexUsamp2)) && (pUsamp->method==PRJCT_USAMP_FILE))))) &&
-                  ((rc=ANALYSE_CheckLambda(pWrkSymbol,pTabFeno->LambdaRef,"GOME2_LoadAnalysis ")) !=ERROR_ID_NO))
+                  ((rc=ANALYSE_CheckLambda(pWrkSymbol,pTabFeno->LambdaRef,pTabFeno->NDET,"GOME2_LoadAnalysis ")) !=ERROR_ID_NO))
 
                 goto EndGOME2_LoadAnalysis;
             }

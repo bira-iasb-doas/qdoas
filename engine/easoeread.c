@@ -277,11 +277,11 @@ RC ReliEASOE(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
 
     // Invert spectra
 
-    for (i=0;i<NDET;i++)
-     {
-      pEngineContext->buffers.spectrum[i]=(double)speRecord.spectre[NDET-i-1];
-      pEngineContext->buffers.darkCurrent[i]=(double)drkRecord.spectre[NDET-i-1];
-     }
+    const int n_wavel = NDET[0];
+    for (i=0;i<n_wavel;i++) {
+      pEngineContext->buffers.spectrum[i]=(double)speRecord.spectre[n_wavel-i-1];
+      pEngineContext->buffers.darkCurrent[i]=(double)drkRecord.spectre[n_wavel-i-1];
+    }
 
     for (i=0;i<speRecord.n_somm;i++)
      pEngineContext->buffers.specMax[i]=(double)ISpecMax[i];

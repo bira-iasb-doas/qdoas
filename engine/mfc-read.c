@@ -127,11 +127,12 @@ RC MFC_LoadOffset(ENGINE_CONTEXT *pEngineContext)
 
   strcpy(MFC_fileOffset,pInstrumental->offsetFile);
 
+  const int n_wavel = NDET[0];
+
   // Read offset
 
-  if (strlen(pInstrumental->offsetFile) && (pBuffers->offset!=NULL))                  // offset
-   {
-   	VECTOR_Init(pBuffers->offset,0.,NDET);
+  if (strlen(pInstrumental->offsetFile) && (pBuffers->offset!=NULL)) {                  // offset
+    VECTOR_Init(pBuffers->offset,0.,n_wavel);
 
     rc=(pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC)?
         MFC_ReadRecord(pInstrumental->offsetFile,&MFC_headerOff,pBuffers->offset,
@@ -167,11 +168,12 @@ RC MFC_LoadDark(ENGINE_CONTEXT *pEngineContext)
 
   strcpy(MFC_fileDark,pInstrumental->vipFile);
 
+  const int n_wavel = NDET[0];
+
   // Read dark current
 
-  if (strlen(pInstrumental->vipFile) && (pBuffers->varPix!=NULL))                  // dark current
-   {
-   	VECTOR_Init(pBuffers->varPix,0.,NDET);
+  if (strlen(pInstrumental->vipFile) && (pBuffers->varPix!=NULL)) {                  // dark current
+    VECTOR_Init(pBuffers->varPix,0.,n_wavel);
 
     rc=(pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC)?
         MFC_ReadRecord(pInstrumental->vipFile,&MFC_headerDrk,pBuffers->varPix,
@@ -421,6 +423,7 @@ RC MFC_ReadRecord(char *fileName,
 
   rc=ERROR_ID_NO;
   specTmp=NULL;
+  const int n_wavel = NDET[0];
 
   // Open file
 
@@ -431,18 +434,18 @@ RC MFC_ReadRecord(char *fileName,
 
   // Allocate a buffer for the spectrum
 
-  else if ((specTmp=(float *)MEMORY_AllocBuffer("MFC_ReadRecord ","specTmp",NDET,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL)
+  else if ((specTmp=(float *)MEMORY_AllocBuffer("MFC_ReadRecord ","specTmp",n_wavel,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL)
    rc=ERROR_ID_ALLOC;
   else
    {
-    for (i=0;i<NDET;i++)
+    for (i=0;i<n_wavel;i++)
      specTmp[i]=(float)0.;
 
     // Complete record read out
 
     if (!fread(pHeaderSpe,sizeof(TBinaryMFC),1,fp) ||                  // header
        ((mask!=maskSpec) && ((pHeaderSpe->ty&mask)==0) && ((unsigned int)pHeaderSpe->wavelength1!=mask)) ||                    // spectrum selection
-        (pHeaderSpe->no_chan==0) || (pHeaderSpe->no_chan>NDET) ||      // verify the size of the spectrum
+        (pHeaderSpe->no_chan==0) || (pHeaderSpe->no_chan>n_wavel) ||      // verify the size of the spectrum
         !fread(specTmp,sizeof(float)*pHeaderSpe->no_chan,1,fp))        // spectrum read out
      {
       memset(pHeaderSpe,0,sizeof(TBinaryMFC));
@@ -453,14 +456,14 @@ RC MFC_ReadRecord(char *fileName,
      {
       // Copy original spectrum to the output buffer
 
-      for (i=0;i<NDET;i++)
+      for (i=0;i<n_wavel;i++)
        spe[i]=(double)specTmp[i];
 
       // Offset correction if any
 
       if ((off!=NULL) && (pHeaderOff->noscans>0) && (THRD_browseType!=THREAD_BROWSE_MFC_OFFSET))
        {
-        for (i=0;i<NDET;i++)
+        for (i=0;i<n_wavel;i++)
          spe[i]-=(double)off[i]*pHeaderSpe->noscans/pHeaderOff->noscans;
        }
 
@@ -468,12 +471,12 @@ RC MFC_ReadRecord(char *fileName,
 
       if ((drk!=NULL) && (pHeaderDrk->int_time!=(float)0.) && (THRD_browseType!=THREAD_BROWSE_MFC_OFFSET) && (THRD_browseType!=THREAD_BROWSE_MFC_DARK))
        {
-        for (i=0;i<NDET;i++)
+        for (i=0;i<n_wavel;i++)
          spe[i]-=(double)drk[i]*pHeaderSpe->int_time/pHeaderDrk->int_time;  // The int_time field should contain the number of scans * the exposure time
        }
 
       if (revertFlag && (THRD_browseType!=THREAD_BROWSE_MFC_OFFSET) && (THRD_browseType!=THREAD_BROWSE_MFC_DARK))
-       VECTOR_Invert(spe,NDET);
+       VECTOR_Invert(spe,n_wavel);
      }
    }
 
@@ -532,7 +535,6 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
   double tmLocal,Tm1,Tm2;
 
   // Initializations
-
 
   pRecord=&pEngineContext->recordInfo;
   pBuffers=&pEngineContext->buffers;
@@ -703,11 +705,6 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
 
         if (rc || (dateFlag && ((pRecord->localCalDay!=localDay) || (pRecord->elevationViewAngle<80.))))                  // reference spectra are zenith only
            rc=ERROR_ID_FILE_RECORD;
-
-//        else if (pInstrumental->mfcRevert)
-//         VECTOR_Invert(pBuffers->spectrum,NDET);
-//        else if (dateFlag)
-//         pEngineContext->lastRefRecord=recordNo;
        }
      }
 
@@ -776,6 +773,8 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,char *fileName,
   memset(line,0,MAX_STR_SHORT_LEN+1);
   rc=ERROR_ID_NO;
 
+  const int n_wavel = NDET[0];
+
   // Open file
 
   if ((fp=fopen(fileName,"rt"))==NULL)
@@ -785,7 +784,7 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,char *fileName,
    rc=ERROR_SetLast("ReadMFCRecordStd",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,fileName);
   else
    {
-    for (i=0;i<NDET;i++)
+    for (i=0;i<n_wavel;i++)
      spe[i]=(double)0.;
 
     if (fgets(line,MAX_STR_SHORT_LEN,fp) &&                                       // first line
@@ -924,7 +923,7 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,char *fileName,
 
     if ((off!=NULL) && (pHeaderOff->noscans>0) && (THRD_browseType!=THREAD_BROWSE_MFC_OFFSET))
      {
-      for (i=0;i<NDET;i++)
+      for (i=0;i<n_wavel;i++)
        spe[i]-=(double)off[i]*pHeaderSpe->noscans/pHeaderOff->noscans;
      }
 
@@ -932,10 +931,11 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,char *fileName,
 
     if ((drk!=NULL) && (pHeaderDrk->int_time!=(float)0.) && (THRD_browseType!=THREAD_BROWSE_MFC_OFFSET) && (THRD_browseType!=THREAD_BROWSE_MFC_DARK))
      {
-      for (i=0;i<NDET;i++)
+      for (i=0;i<n_wavel;i++)
        spe[i]-=(double)pHeaderSpe->noscans*drk[i]*pHeaderSpe->int_time/(pHeaderDrk->int_time*pHeaderDrk->noscans);
      }
    }
+
 
   // Close file
 
@@ -992,6 +992,8 @@ RC ReliMFCStd(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
   strncpy(fileName,pEngineContext->fileInfo.fileName,MAX_STR_SHORT_LEN);
   fp=NULL;
 
+  const int n_wavel = NDET[0];
+
   rc=ERROR_ID_NO;
 
   if ((ptr=strrchr(fileName,PATH_SEP))==NULL)
@@ -1027,7 +1029,7 @@ RC ReliMFCStd(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
       if (rc || (dateFlag && ((pRecord->localCalDay!=localDay) || (pRecord->elevationViewAngle<80.))) )                     // reference spectra are zenith only
        rc=ERROR_ID_FILE_RECORD;
       else if (pEngineContext->project.instrumental.mfcRevert)
-       VECTOR_Invert(pBuffers->spectrum,NDET);
+       VECTOR_Invert(pBuffers->spectrum,n_wavel);
      }
    }
   else
@@ -1129,38 +1131,39 @@ RC MFCBIRA_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
   rc=ERROR_ID_NO;
 
+  const int n_wavel = NDET[0];
+
   // Get the number of spectra in the file
 
   if (specFp==NULL)
    rc=ERROR_SetLast("MFCBIRA_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
   else if (!STD_FileLength(specFp))
    rc=ERROR_SetLast("MFCBIRA_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
-  else
-   {
-   	fread(&pEngineContext->recordNumber,sizeof(int),1,specFp);
-   	fread(&detectorSize,sizeof(int),1,specFp);
+  else {
+    fread(&pEngineContext->recordNumber,sizeof(int),1,specFp);
+    fread(&detectorSize,sizeof(int),1,specFp);
     fread(&header,sizeof(MFCBIRA_HEADER),1,specFp);                             // Get date and time of the first record
 
-   	memcpy(&pEngineContext->fileInfo.startDate,&header.measurementDate,sizeof(SHORT_DATE));
-   	memcpy(&pEngineContext->fileInfo.startTime,&header.startTime,sizeof(struct time));
+    memcpy(&pEngineContext->fileInfo.startDate,&header.measurementDate,sizeof(SHORT_DATE));
+    memcpy(&pEngineContext->fileInfo.startTime,&header.startTime,sizeof(struct time));
 
-   	if (pEngineContext->recordNumber<=0)
-   	 rc=ERROR_SetLast("MFCBIRA_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
-   	else if (detectorSize!=NDET)
-   	 rc=ERROR_SetLast("MFCBIRA_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_BAD_LENGTH,pEngineContext->fileInfo.fileName);
-   	else if ((spectrum=MEMORY_AllocBuffer("MFCBIRA_Reli","spectrum",sizeof(float)*NDET,1,0,MEMORY_TYPE_FLOAT))==NULL)
-   	 rc=ERROR_ID_ALLOC;
+    if (pEngineContext->recordNumber<=0)
+      rc=ERROR_SetLast("MFCBIRA_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
+    else if (detectorSize!=n_wavel)
+      rc=ERROR_SetLast("MFCBIRA_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_BAD_LENGTH,pEngineContext->fileInfo.fileName);
+    else if ((spectrum=MEMORY_AllocBuffer("MFCBIRA_Reli","spectrum",sizeof(float)*n_wavel,1,0,MEMORY_TYPE_FLOAT))==NULL)
+      rc=ERROR_ID_ALLOC;
 
-   	else
-   	 {
+    else
+      {
        // Load offset and dark current
 
       if (!rc && (offset!=NULL) && (darkCurrent!=NULL))
        {
    	 	  // Initialize vectors
 
-        VECTOR_Init(offset,(double)0.,NDET);
-        VECTOR_Init(darkCurrent,(double)0.,NDET);
+        VECTOR_Init(offset,(double)0.,n_wavel);
+        VECTOR_Init(darkCurrent,(double)0.,n_wavel);
 
         drkTint=0.;
 
@@ -1168,15 +1171,15 @@ RC MFCBIRA_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
         for (i=nOff=nDrk=0,drkTint=0.;i<pEngineContext->recordNumber;i++)
          {
-         	fseek(specFp,2L*sizeof(int)+i*(sizeof(MFCBIRA_HEADER)+NDET*sizeof(float)),SEEK_SET);
+         	fseek(specFp,2L*sizeof(int)+i*(sizeof(MFCBIRA_HEADER)+n_wavel*sizeof(float)),SEEK_SET);
    	      fread(&header,sizeof(MFCBIRA_HEADER),1,specFp);
 
    	      // Load offset
 
    	      if (header.measurementType==PRJCT_INSTR_MAXDOAS_TYPE_OFFSET)
    	       {
-   	        fread(spectrum,sizeof(float)*NDET,1,specFp);
-   	        for (j=0;j<NDET;j++)
+   	        fread(spectrum,sizeof(float)*n_wavel,1,specFp);
+   	        for (j=0;j<n_wavel;j++)
    	         offset[j]+=(double)spectrum[j];
 
    	        nOff+=header.scansNumber;                                             // all offset should have the same exposure time
@@ -1186,8 +1189,8 @@ RC MFCBIRA_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
    	      else if (header.measurementType==PRJCT_INSTR_MAXDOAS_TYPE_DARK)
    	       {
-   	        fread(spectrum,sizeof(float)*NDET,1,specFp);
-   	        for (j=0;j<NDET;j++)
+   	        fread(spectrum,sizeof(float)*n_wavel,1,specFp);
+   	        for (j=0;j<n_wavel;j++)
    	         darkCurrent[j]+=(double)spectrum[j];
 
    	        nDrk+=header.scansNumber;
@@ -1200,14 +1203,14 @@ RC MFCBIRA_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
         // Average offset (account for the number of spectra and the number of scans)
 
         if (nOff)
-        	for (j=0;j<NDET;j++)
+        	for (j=0;j<n_wavel;j++)
         	 offset[j]/=nOff;
 
         // Average dark current and correct by the offset
 
         if (nDrk)
-        	for (j=0;j<NDET;j++)                                                   // drk=drk-offset*drkScans/offScans
-        	 darkCurrent[j]=(darkCurrent[j]-offset[j]*nDrk)/(nDrk*drkTint);               // number of scans for the dark current should be 1
+        	for (j=0;j<n_wavel;j++)                                                     // drk=drk-offset*drkScans/offScans
+        	 darkCurrent[j]=(darkCurrent[j]-offset[j]*nDrk)/(nDrk*drkTint);       // number of scans for the dark current should be 1
        }
    	 }
   }
@@ -1259,15 +1262,17 @@ RC MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
   pBuffers=&pEngineContext->buffers;
   rc=ERROR_ID_NO;
 
-  if ((spectrum=MEMORY_AllocBuffer("MFCBIRA_Reli","spectrum",sizeof(float)*NDET,1,0,MEMORY_TYPE_FLOAT))==NULL)
+  const int n_wavel = NDET[0];
+
+  if ((spectrum=MEMORY_AllocBuffer("MFCBIRA_Reli","spectrum",sizeof(float)*n_wavel,1,0,MEMORY_TYPE_FLOAT))==NULL)
    rc=ERROR_ID_ALLOC;
   else
    {
    	// Go to the requested record
 
-   	fseek(specFp,2L*sizeof(int)+(recordNo-1)*(sizeof(MFCBIRA_HEADER)+NDET*sizeof(float)),SEEK_SET);
+   	fseek(specFp,2L*sizeof(int)+(recordNo-1)*(sizeof(MFCBIRA_HEADER)+n_wavel*sizeof(float)),SEEK_SET);
    	fread(&header,sizeof(MFCBIRA_HEADER),1,specFp);
-   	fread(spectrum,sizeof(float)*NDET,1,specFp);
+   	fread(spectrum,sizeof(float)*n_wavel,1,specFp);
 
    	// Retrieve the main information from the header
 
@@ -1325,7 +1330,7 @@ RC MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
     pRecordInfo->localCalDay=ZEN_FNCaljda(&tmLocal);
     pRecordInfo->localTimeDec=fmod(pRecordInfo->TimeDec+24.+THRD_localShift,(double)24.);
 
-   	for (i=0;i<NDET;i++)
+   	for (i=0;i<n_wavel;i++)
    	 pBuffers->spectrum[i]=(double)spectrum[i];
 
    	if ((header.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_DARK) && (header.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_OFFSET))
@@ -1333,13 +1338,13 @@ RC MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
      	// Offset correction
 
    	  if (pBuffers->offset!=NULL)
-   	   for (i=0;i<NDET;i++)
+   	   for (i=0;i<n_wavel;i++)
    	    pBuffers->spectrum[i]-=pBuffers->offset[i]*header.scansNumber;          // offset is already divided by its number of scans
 
    	  // Dark current correction                                                // dark current is already divided by it integration time
 
    	  if (pBuffers->varPix!=NULL)
-   	   for (i=0;i<NDET;i++)
+   	   for (i=0;i<n_wavel;i++)
    	    pBuffers->spectrum[i]-=pBuffers->varPix[i]*header.scansNumber*header.exposureTime;
 
    	  // Average
@@ -1394,6 +1399,8 @@ RC MFC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
   // Initializations
 
+  const int n_wavel = NDET[0];
+
   pBuffers=&pEngineContext->buffers;
 
   saveFlag=(int)pEngineContext->project.spectra.displayDataFlag;
@@ -1412,7 +1419,7 @@ RC MFC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
      if (!TabFeno[0][indexFeno].hidden && !TabFeno[0][indexFeno].gomeRefFlag)
       {
        pTabFeno=&TabFeno[0][indexFeno];
-       pTabFeno->NDET=NDET;
+       pTabFeno->NDET=n_wavel;
        FILES_RebuildFileName(ptr+1,pTabFeno->refFile,0);
 
        if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC)
@@ -1444,7 +1451,7 @@ RC MFC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
            if ((((pWrkSymbol->type==WRK_SYMBOL_CROSS) && (pTabCross->crossAction==ANLYS_CROSS_ACTION_NOTHING)) ||
                 ((pWrkSymbol->type==WRK_SYMBOL_PREDEFINED) &&
                  (indexTabCross==pTabFeno->indexCommonResidual))) &&
-                ((rc=ANALYSE_CheckLambda(pWrkSymbol,pTabFeno->LambdaRef,"MFC_LoadAnalysis "))!=ERROR_ID_NO))
+               ((rc=ANALYSE_CheckLambda(pWrkSymbol,pTabFeno->LambdaRef,pTabFeno->NDET,"MFC_LoadAnalysis "))!=ERROR_ID_NO))
 
             goto EndMFC_LoadAnalysis;
           }

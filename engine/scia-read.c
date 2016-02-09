@@ -779,8 +779,7 @@ RC SciaReadSunRefPDS(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
 
   // Initializations
 
-//  DEBUG_Print(DOAS_logFile,"Begin SciaReadSunRefPDS\n");
-
+  const int n_wavel = NDET[0];
   pBuffers=&pEngineContext->buffers;
 
   pOrbitFile=&sciaOrbitFiles[fileIndex];
@@ -789,8 +788,8 @@ RC SciaReadSunRefPDS(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
 
   // Buffers allocation
 
-  if (((pOrbitFile->sciaSunRef=(float *)MEMORY_AllocBuffer("SciaReadSunRefPDS ","sciaSunRef",NDET,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
-      ((pOrbitFile->sciaSunWve=(float *)MEMORY_AllocBuffer("SciaReadSunRefPDS ","sciaSunWve",NDET,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL))
+  if (((pOrbitFile->sciaSunRef=(float *)MEMORY_AllocBuffer("SciaReadSunRefPDS ","sciaSunRef",n_wavel,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL) ||
+      ((pOrbitFile->sciaSunWve=(float *)MEMORY_AllocBuffer("SciaReadSunRefPDS ","sciaSunWve",n_wavel,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL))
 
    rc=ERROR_ID_ALLOC;
 
@@ -819,16 +818,16 @@ RC SciaReadSunRefPDS(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
        {
         // Read the wavelength calibration
 
-        fseek(fp,offset+2+(pEngineContext->project.instrumental.scia.sciaChannel)*NDET*sizeof(float),SEEK_SET);
-        fread(pOrbitFile->sciaSunWve,sizeof(float)*NDET,1,fp);
+        fseek(fp,offset+2+(pEngineContext->project.instrumental.scia.sciaChannel)*n_wavel*sizeof(float),SEEK_SET);
+        fread(pOrbitFile->sciaSunWve,sizeof(float)*n_wavel,1,fp);
 
         // Read the reference spectrum
 
-        fseek(fp,offset+2+(pEngineContext->project.instrumental.scia.sciaChannel+8)*NDET*sizeof(float),SEEK_SET); /* 8*NDET + (channel-1)*NDET = (channel+7)*NDET */
-        fread(pOrbitFile->sciaSunRef,sizeof(float)*NDET,1,fp);
+        fseek(fp,offset+2+(pEngineContext->project.instrumental.scia.sciaChannel+8)*n_wavel*sizeof(float),SEEK_SET); /* 8*n_wavel + (channel-1)*n_wavel = (channel+7)*n_wavel */
+        fread(pOrbitFile->sciaSunRef,sizeof(float)*n_wavel,1,fp);
 
         #if defined(__LITTLE_ENDIAN__)
-        for (i=0;i<NDET;i++)
+        for (i=0;i<n_wavel;i++)
          {
           swap_bytes_float((unsigned char *)((float *)&pOrbitFile->sciaSunWve[i]));
           swap_bytes_float((unsigned char *)((float *)&pOrbitFile->sciaSunRef[i]));
@@ -844,17 +843,17 @@ RC SciaReadSunRefPDS(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
      rc=ERROR_SetLast("SciaReadSunRefPDS",ERROR_TYPE_WARNING,ERROR_ID_PDS,"NO_SUN_REF (2)",pEngineContext->fileInfo.fileName);
     else
      {
-      for (i=0;i<NDET;i++)
+      for (i=0;i<n_wavel;i++)
        pBuffers->lambda[i]=(double)(((float *)pOrbitFile->sciaSunWve)[i]);
 
-      for (i=0;i<NDET;i++) {
+      for (i=0;i<n_wavel;i++) {
         pBuffers->lambda_irrad[i]=(double)(pOrbitFile->sciaSunWve[i]);
         pBuffers->irrad[i]=(double)(pOrbitFile->sciaSunRef[i]);
       }
 
       if ((pBuffers->dnl.matrix!=NULL) && (pBuffers->dnl.deriv2!=NULL))
        {
-       	for (i=0;i<NDET;i++)
+       	for (i=0;i<n_wavel;i++)
        	 {
        	 	if (!(rc=SPLINE_Vector(pBuffers->dnl.matrix[0],pBuffers->dnl.matrix[1],pBuffers->dnl.deriv2[1],pBuffers->dnl.nl,&pBuffers->irrad[i],&dnl,1,SPLINE_CUBIC,"SciaReadNadirMDS")))
            {
@@ -994,13 +993,14 @@ RC SciaReadNadirMDS(ENGINE_CONTEXT *pEngineContext,INDEX indexState,INDEX indexR
 
   // Initializations
 
+  const int n_wavel = NDET[0];
   pBuffers=&pEngineContext->buffers;
   pOrbitFile=&sciaOrbitFiles[fileIndex];
   fp=pOrbitFile->sciaPDSInfo.FILE_l1c;
 
   rc=ERROR_ID_NO;
 
-  for (i=0;i<NDET;i++)
+  for (i=0;i<n_wavel;i++)
    pBuffers->spectrum[i]=pBuffers->sigmaSpec[i]=(double)0.;
 
   for (indexCluster=0;indexCluster<pOrbitFile->sciaNadirClustersN;indexCluster++)
@@ -1063,7 +1063,7 @@ RC SciaReadNadirMDS(ENGINE_CONTEXT *pEngineContext,INDEX indexState,INDEX indexR
 
   if ((pBuffers->dnl.matrix!=NULL) && (pBuffers->dnl.deriv2!=NULL))
    {
-   	for (i=0;i<NDET;i++)
+   	for (i=0;i<n_wavel;i++)
    	 {
    	 	if (!(rc=SPLINE_Vector(pBuffers->dnl.matrix[0],pBuffers->dnl.matrix[1],pBuffers->dnl.deriv2[1],pBuffers->dnl.nl,&pBuffers->spectrum[i],&dnl,1,SPLINE_CUBIC,"SciaReadNadirMDS")))
        {
@@ -1804,10 +1804,11 @@ RC SciaBuildRef(SATELLITE_REF *refList,int nRef,int nSpectra,double *lambda,doub
 
   // Initializations
 
+  const int n_wavel = NDET[0];
   pRecord=&pEngineContext->recordInfo;
   indexColumn=2;
 
-  for (i=0;i<NDET;i++)
+  for (i=0;i<n_wavel;i++)
    ref[i]=(double)0.;
 
   rc=ERROR_ID_NO;
@@ -1859,7 +1860,7 @@ RC SciaBuildRef(SATELLITE_REF *refList,int nRef,int nSpectra,double *lambda,doub
 
          	(*pIndexLine)++;
 
-          for (i=0;i<NDET;i++)
+          for (i=0;i<n_wavel;i++)
            ref[i]+=(double)pEngineContext->buffers.spectrum[i];
 
           nRec++;
@@ -1882,7 +1883,7 @@ RC SciaBuildRef(SATELLITE_REF *refList,int nRef,int nSpectra,double *lambda,doub
    	strcpy(OUTPUT_refFile,sciaOrbitFiles[indexFile].sciaFileName);
    	OUTPUT_nRec=nRec;
 
-    for (i=0;i<NDET;i++)
+    for (i=0;i<n_wavel;i++)
      ref[i]/=nRec;
 
     rc=ERROR_ID_NO;
@@ -1925,6 +1926,7 @@ RC SciaRefSelection(ENGINE_CONTEXT *pEngineContext,
  {
   // Declarations
 
+  const int n_wavel = NDET[0];
   SATELLITE_REF *refList;                                                            // list of potential reference spectra
   double latDelta,tmp;
   int nRefN,nRefS;                                                              // number of reference spectra in the previous list resp. for Northern and Southern hemisphere
@@ -1958,11 +1960,11 @@ RC SciaRefSelection(ENGINE_CONTEXT *pEngineContext,
 
   rc=ERROR_ID_NO;
 
-  memcpy(lambdaN,lambdaK,sizeof(double)*NDET);
-  memcpy(lambdaS,lambdaK,sizeof(double)*NDET);
+  memcpy(lambdaN,lambdaK,sizeof(double)*n_wavel);
+  memcpy(lambdaS,lambdaK,sizeof(double)*n_wavel);
 
-  memcpy(refN,ref,sizeof(double)*NDET);
-  memcpy(refS,ref,sizeof(double)*NDET);
+  memcpy(refN,ref,sizeof(double)*n_wavel);
+  memcpy(refS,ref,sizeof(double)*n_wavel);
 
   nRefN=nRefS=0;
 
@@ -1982,7 +1984,7 @@ RC SciaRefSelection(ENGINE_CONTEXT *pEngineContext,
        rc=SciaBuildRef(refList,nRefN,nSpectra,lambdaN,refN,pEngineContext,&indexLine,responseHandle);
 
       if (!rc)
-       memcpy(refS,refN,sizeof(double)*NDET);
+       memcpy(refS,refN,sizeof(double)*n_wavel);
      }
 
     // Search for records matching SZA conditions only
@@ -1993,7 +1995,7 @@ RC SciaRefSelection(ENGINE_CONTEXT *pEngineContext,
        rc=SciaBuildRef(refList,nRefN,nSpectra,lambdaN,refN,pEngineContext,&indexLine,responseHandle);
 
       if (!rc)
-       memcpy(refS,refN,sizeof(double)*NDET);
+       memcpy(refS,refN,sizeof(double)*n_wavel);
      }
 
     if (!rc)
@@ -2008,7 +2010,7 @@ RC SciaRefSelection(ENGINE_CONTEXT *pEngineContext,
       else if (!nRefN)
        {
         mediateResponseCellDataString(plotPageRef,indexLine++,indexColumn,"No record selected for the northern hemisphere, use reference of the southern hemisphere",responseHandle);
-        memcpy(refN,refS,sizeof(double)*NDET);
+        memcpy(refN,refS,sizeof(double)*n_wavel);
        }
 
       // No reference spectrum found for Southern hemisphere -> use the reference found for Northern hemisphere
@@ -2016,13 +2018,13 @@ RC SciaRefSelection(ENGINE_CONTEXT *pEngineContext,
       else if (!nRefS)
        {
        	mediateResponseCellDataString(plotPageRef,indexLine++,indexColumn,"No record selected for the southern hemisphere, use reference of the northern hemisphere",responseHandle);
-        memcpy(refS,refN,sizeof(double)*NDET);
+        memcpy(refS,refN,sizeof(double)*n_wavel);
        }
 
       if (nRefN || nRefS)   // if no record selected, use ref (normalized as loaded)
        {
-        VECTOR_NormalizeVector(refN-1,NDET,pRefNormN,"SciaRefSelection (refN) ");
-        VECTOR_NormalizeVector(refS-1,NDET,pRefNormS,"SciaRefSelection (refS) ");
+        VECTOR_NormalizeVector(refN-1,n_wavel,pRefNormN,"SciaRefSelection (refN) ");
+        VECTOR_NormalizeVector(refS-1,n_wavel,pRefNormS,"SciaRefSelection (refS) ");
        }
      }
    }
@@ -2138,8 +2140,7 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   RC rc;                                                                        // return code
 
   // Initializations
-
-//  DEBUG_Print(DOAS_logFile,"Enter SCIA_LoadAnalysis\n");
+  const int n_wavel = NDET[0];
 
   pOrbitFile=&sciaOrbitFiles[sciaCurrentFileIndex];
   saveFlag=(int)pEngineContext->project.spectra.displayDataFlag;
@@ -2157,7 +2158,7 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
     for (indexFeno=0;(indexFeno<NFeno) && !rc;indexFeno++)
       {
        pTabFeno=&TabFeno[0][indexFeno];
-       pTabFeno->NDET=NDET;
+       pTabFeno->NDET=n_wavel;
 
        // Load calibration and reference spectra
 
@@ -2192,7 +2193,7 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                     ((pWrkSymbol->type==WRK_SYMBOL_PREDEFINED) &&
                     ((indexTabCross==pTabFeno->indexCommonResidual) ||
                    (((indexTabCross==pTabFeno->indexUsamp1) || (indexTabCross==pTabFeno->indexUsamp2)) && (pUsamp->method==PRJCT_USAMP_FILE))))) &&
-                    ((rc=ANALYSE_CheckLambda(pWrkSymbol,pTabFeno->LambdaRef,"SCIA_LoadAnalysis "))!=ERROR_ID_NO))
+                    ((rc=ANALYSE_CheckLambda(pWrkSymbol,pTabFeno->LambdaRef,pTabFeno->NDET,"SCIA_LoadAnalysis "))!=ERROR_ID_NO))
 
                 goto EndSCIA_LoadAnalysis;
               }

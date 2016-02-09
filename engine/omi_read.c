@@ -390,7 +390,7 @@ static void omi_destroy_orbit_file(struct omi_orbit_file *pOrbitFile) {
   free(pOrbitFile);
 }
 
-void OMI_TrackSelection(const char *omiTrackSelection,int *omiTracks)
+void OMI_TrackSelection(const char *omiTrackSelection,bool *use_row)
 {
   // Declarations
 
@@ -407,7 +407,7 @@ void OMI_TrackSelection(const char *omiTrackSelection,int *omiTracks)
 
   if (!strlen(omiTrackSelection))
     for (i=0;i<MAX_SWATHSIZE;i++)
-      omiTracks[i]=1;
+      use_row[i]=true;
   else
     {
       for (const char *ptr=omiTrackSelection;(int)(ptr-omiTrackSelection)<=256;ptr++)
@@ -436,7 +436,7 @@ void OMI_TrackSelection(const char *omiTrackSelection,int *omiTracks)
 
 	      if ((number1>0) && (number1<MAX_SWATHSIZE) && (number2>0) && (number2<MAX_SWATHSIZE))
 		for (i=number1-1;i<number2;i++)
-		  omiTracks[i]=1;
+		  use_row[i]=true;
 
 	      number1=number2=-1;
 	      rangeFlag=0;
@@ -457,12 +457,13 @@ void OMI_TrackSelection(const char *omiTrackSelection,int *omiTracks)
 // INPUT         pSwath     the structures with the buffers to allocate
 //               n_alongtrack 
 //               n_crosstrack
+//               n_wavel    the number of wavelength bands in a spectrum
 //
 // RETURN        ERROR_ID_ALLOC if the allocation of a buffer fails
 //               ERROR_ID_NO otherwise
 // -----------------------------------------------------------------------------
 
-static RC OMI_AllocateSwath(struct omi_swath_earth **swath,int n_alongtrack,int n_crosstrack)
+static RC OMI_AllocateSwath(struct omi_swath_earth **swath, const int n_alongtrack, const int n_crosstrack, const int n_wavel)
 {
   // Declarations
 
@@ -660,7 +661,7 @@ static RC find_matching_spectra(ENGINE_CONTEXT *pEngineContext, struct omi_orbit
 
   for (int measurement=0; measurement < orbit_file->nMeasurements; measurement++) {
     for(int row = 0; row < orbit_file->nXtrack; row++) {
-      if (pEngineContext->project.instrumental.omi.omiTracks[row]) {
+      if (pEngineContext->project.instrumental.use_row[row]) {
 
         int recordnumber = measurement*orbit_file->nXtrack + row;
         struct omi_ref_spectrum *newref = NULL; // will be allocated and used only if the spectrum is used in the automatic reference calculation for one of the analysis windows.
@@ -798,8 +799,9 @@ static RC setup_automatic_reference(ENGINE_CONTEXT *pEngineContext, void *respon
 
   // take the average of the matching spectra for each detector row & analysis window:
   for(int row = 0; row < OMI_TOTAL_ROWS; row++) {
-    if (pEngineContext->project.instrumental.omi.omiTracks[row]) {
+    if (pEngineContext->project.instrumental.use_row[row]) {
       automatic_reference_ok[row] = true; // initialize to true, set it to false if automatic reference fails for one or more analysis windows
+      const int n_wavel = NDET[row];
       for(int analysis_window = 0; analysis_window < NFeno; analysis_window++) {
         FENO *pTabFeno = &TabFeno[row][analysis_window];
         if(pTabFeno->hidden || !pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC ) {
@@ -810,12 +812,12 @@ static RC setup_automatic_reference(ENGINE_CONTEXT *pEngineContext, void *respon
         
         if(reflist != NULL) {
           average_spectrum(pTabFeno->SrefN, pTabFeno->SrefSigma, reflist, pTabFeno->LambdaRef);
-          VECTOR_NormalizeVector(pTabFeno->SrefN-1,NDET,&pTabFeno->refNormFactN, __func__);
+          VECTOR_NormalizeVector(pTabFeno->SrefN-1,n_wavel,&pTabFeno->refNormFactN, __func__);
           // copy SrefN to SrefS...
-          memcpy(pTabFeno->SrefS,pTabFeno->SrefN,sizeof(double)* NDET);
+          memcpy(pTabFeno->SrefS,pTabFeno->SrefN,sizeof(double)* n_wavel);
           pTabFeno->refNormFactS = pTabFeno->refNormFactN;
-          memcpy(pTabFeno->LambdaN,pTabFeno->LambdaK, sizeof(double) * NDET);
-          memcpy(pTabFeno->LambdaS,pTabFeno->LambdaK, sizeof(double) * NDET);
+          memcpy(pTabFeno->LambdaN,pTabFeno->LambdaK, sizeof(double) * n_wavel);
+          memcpy(pTabFeno->LambdaS,pTabFeno->LambdaK, sizeof(double) * n_wavel);
 	  pTabFeno->ref_description = automatic_reference_info(reflist);
         } else{
           char errormessage[250];
@@ -1042,7 +1044,7 @@ static RC OmiGetSwathData(struct omi_orbit_file *pOrbitFile, const ENGINE_CONTEX
     }
 
     // Allocate data
-    rc=OMI_AllocateSwath(&pOrbitFile->omiSwath,pOrbitFile->nMeasurements,pOrbitFile->nXtrack);
+    rc=OMI_AllocateSwath(&pOrbitFile->omiSwath,pOrbitFile->nMeasurements,pOrbitFile->nXtrack,pOrbitFile->nWavel);
     
     if (!rc) {
       // Retrieve information on records from Data fields and Geolocation fields
@@ -1078,12 +1080,12 @@ static RC OMI_LoadReference(int spectralType, const char *refFile, struct omi_re
     goto end_loadreference;
   }
 
-  int32 n_xtrack = SWdiminfo(sw_id, (char *) NXTRACK);
+  const int32 n_xtrack = SWdiminfo(sw_id, (char *) NXTRACK);
   if (n_xtrack == FAIL) {
     rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS, NXTRACK, "can't access dimension in file ", refFile);
     goto end_loadreference;
   }
-  int32 n_wavel = SWdiminfo(sw_id, (char *) NWAVEL);
+  const int32 n_wavel = SWdiminfo(sw_id, (char *) NWAVEL);
   if (n_wavel == FAIL) {
     rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS, NWAVEL, "can't access dimension in file ", refFile);
     goto end_loadreference;
@@ -1107,7 +1109,9 @@ static RC OMI_LoadReference(int spectralType, const char *refFile, struct omi_re
 
   if (!rc) {
     ++omiRefFilesN;
-    NDET=pRef->nWavel;
+    for(int i=0; i<n_xtrack; ++i) {
+      NDET[i]=pRef->nWavel;
+    }
     ANALYSE_swathSize=pRef->nXtrack;
     *return_ref = pRef;
   }
@@ -1239,7 +1243,7 @@ static void omi_interpolate_errors(int16 mantissa[], int32 n_wavel, double wavel
   }
 }
 
-RC OMI_GetReference(int spectralType, const char *refFile, INDEX indexColumn, double *lambda, double *ref, double *refSigma)
+RC OMI_GetReference(int spectralType, const char *refFile, INDEX indexColumn, double *lambda, double *ref, double *refSigma, int *n_wavel_ref)
 {
   RC rc=ERROR_ID_NO; 
 
@@ -1261,6 +1265,7 @@ RC OMI_GetReference(int spectralType, const char *refFile, INDEX indexColumn, do
     memcpy(lambda,pRef->omiRefLambda[indexColumn],sizeof(double)*pRef->nWavel);
     memcpy(ref,pRef->omiRefSpectrum[indexColumn],sizeof(double)*pRef->nWavel);
     memcpy(refSigma,pRef->omiRefSigma[indexColumn],sizeof(double)*pRef->nWavel);
+    *n_wavel_ref = pRef->nWavel;
   } else {
     rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_OMI_REF,__func__);
   }
@@ -1279,7 +1284,7 @@ RC OMI_load_analysis(ENGINE_CONTEXT *pEngineContext, void *responseHandle) {
     }
 
     for(int i=0; i<ANALYSE_swathSize; i++) {
-      if (pEngineContext->project.instrumental.omi.omiTracks[i]) {
+      if (pEngineContext->project.instrumental.use_row[i]) {
         // fit wavelength shift between calibrated solar irradiance
         // and automatic reference spectrum and apply this shift to
         // absorption crosssections
@@ -1326,22 +1331,22 @@ RC OMI_Set(ENGINE_CONTEXT *pEngineContext)
   strcpy(current_orbit_file.omiFileName,pEngineContext->fileInfo.fileName);
   current_orbit_file.specNumber=0;
 
+  rc=OmiOpen(&current_orbit_file,OMI_EarthSwaths[pEngineContext->project.instrumental.omi.spectralType]);
   // Open the file
-  if (!(rc=OmiOpen(&current_orbit_file,OMI_EarthSwaths[pEngineContext->project.instrumental.omi.spectralType], pEngineContext)))
-    {
-      pEngineContext->recordNumber=current_orbit_file.specNumber;
-      pEngineContext->recordInfo.n_alongtrack=current_orbit_file.nMeasurements;
-      pEngineContext->recordInfo.n_crosstrack=current_orbit_file.nXtrack;
+  if (!rc) {
+    pEngineContext->recordNumber=current_orbit_file.specNumber;
+    pEngineContext->recordInfo.n_alongtrack=current_orbit_file.nMeasurements;
+    pEngineContext->recordInfo.n_crosstrack=current_orbit_file.nXtrack;
 
-      omiTotalRecordNumber+=current_orbit_file.nMeasurements;
+    omiTotalRecordNumber+=current_orbit_file.nMeasurements;
 
-      NDET = current_orbit_file.nWavel;
+    for (int i=0; i<current_orbit_file.nXtrack; ++i) {
+      NDET[i] = current_orbit_file.nWavel;
     }
-  else
-    {
-      omi_free_swath_data(current_orbit_file.omiSwath);
-      omi_close_orbit_file(&current_orbit_file);
-    }
+  } else {
+    omi_free_swath_data(current_orbit_file.omiSwath);
+    omi_close_orbit_file(&current_orbit_file);
+  }
 
 #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop(__func__,rc);
@@ -1464,8 +1469,8 @@ RC OMI_read_earth(ENGINE_CONTEXT *pEngineContext,int recordNo)
         KURUCZ_indexLine=1;
         omiSwathOld=i_alongtrack;
       }      
-      memcpy(pEngineContext->buffers.lambda_irrad,OMI_ref[0].omiRefLambda[i_crosstrack],sizeof(double)*NDET);
-      memcpy(pEngineContext->buffers.irrad,OMI_ref[0].omiRefSpectrum[i_crosstrack],sizeof(double)*NDET);
+      memcpy(pEngineContext->buffers.lambda_irrad,OMI_ref[0].omiRefLambda[i_crosstrack],sizeof(double)*pOrbitFile->nWavel);
+      memcpy(pEngineContext->buffers.irrad,OMI_ref[0].omiRefSpectrum[i_crosstrack],sizeof(double)*pOrbitFile->nWavel);
     }
   }
   return rc;

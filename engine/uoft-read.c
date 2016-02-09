@@ -227,13 +227,14 @@ RC UofTReadRecord(UOFT_DATA *pUofTData,double *spectrum,FILE *specFp,char *fileN
 
   // Initializations
 
+  const int n_wavel = NDET[0];
   rc=ERROR_ID_NO;
 
   // Get the range of pixels of the detector
 
   if (!fgets(fileLine,MAX_STR_LEN,specFp) ||                                        // the size of the detector
       (sscanf(fileLine,"%d %d",&pixMin,&pixMax)!=2) ||
-      (pixMax-pixMin+1!=NDET))
+      (pixMax-pixMin+1!=n_wavel))
 
    rc=ERROR_SetLast("UofTReadRecord",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,fileName);
 
@@ -268,9 +269,9 @@ RC UofTReadRecord(UOFT_DATA *pUofTData,double *spectrum,FILE *specFp,char *fileN
    {
     // Spectrum read out
 
-    for (i=0;(i<NDET) && fgets(fileLine,MAX_STR_LEN,specFp) && sscanf(fileLine,"%lf",&spectrum[i]);i++);
+    for (i=0;(i<n_wavel) && fgets(fileLine,MAX_STR_LEN,specFp) && sscanf(fileLine,"%lf",&spectrum[i]);i++);
 
-    if (i<NDET)
+    if (i<n_wavel)
      rc=ERROR_SetLast("UofTReadRecord",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,fileName);
     else
      {

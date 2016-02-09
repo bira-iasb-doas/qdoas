@@ -152,7 +152,7 @@ int    thrdRefFlag;
 // THRD_SpectrumCorrection : Apply instrumental correction to spectra
 // ------------------------------------------------------------------
 
-RC THRD_SpectrumCorrection(ENGINE_CONTEXT *pEngineContext,double *spectrum)
+RC THRD_SpectrumCorrection(ENGINE_CONTEXT *pEngineContext,double *spectrum, const int n_wavel)
  {
   // Declaration
 
@@ -165,7 +165,7 @@ RC THRD_SpectrumCorrection(ENGINE_CONTEXT *pEngineContext,double *spectrum)
   // Odd even pixel correction
 
   if (pEngineContext->project.lfilter.type==PRJCT_FILTER_TYPE_ODDEVEN)
-   rc=FILTER_OddEvenCorrection(pEngineContext->buffers.lambda,spectrum,spectrum,NDET);
+   rc=FILTER_OddEvenCorrection(pEngineContext->buffers.lambda,spectrum,spectrum,n_wavel);
 
   // Straylight bias correction
 
@@ -180,17 +180,17 @@ RC THRD_SpectrumCorrection(ENGINE_CONTEXT *pEngineContext,double *spectrum)
 
    	offset=(double)0.;
 
-   	imin=FNPixel(pEngineContext->buffers.lambda,pEngineContext->project.instrumental.lambdaMin,NDET,PIXEL_CLOSEST);
-   	imax=FNPixel(pEngineContext->buffers.lambda,pEngineContext->project.instrumental.lambdaMax,NDET,PIXEL_CLOSEST);
+   	imin=FNPixel(pEngineContext->buffers.lambda,pEngineContext->project.instrumental.lambdaMin,n_wavel,PIXEL_CLOSEST);
+   	imax=FNPixel(pEngineContext->buffers.lambda,pEngineContext->project.instrumental.lambdaMax,n_wavel,PIXEL_CLOSEST);
 
-    if ((imin<=imax) && (imin>=0) && (imax<NDET))
+    if ((imin<=imax) && (imin>=0) && (imax<n_wavel))
      {
      	for (i=imin;i<imax;i++)
        offset+=spe[i];
 
       offset/=(double)(imax-imin);
 
-      for (i=0;i<NDET;i++)
+      for (i=0;i<n_wavel;i++)
        spe[i]-=offset;
      }
    }

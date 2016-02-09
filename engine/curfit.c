@@ -387,7 +387,7 @@ char *CurfitError(char *string,INDEX indexError,double *p,double *deltap)
 // INPUT         X       - wavelengths or pixels according to the selected shift unit
 //               specX   - the spectrum to evaluate
 //               srefX   - the control spectrum (also called reference spectrum)
-//               nX      - the size of previous vectors (depending on the size of the detector)
+//               n_wavel - the size of previous vectors (depending on the size of the detector)
 //
 //                   !!! use whole vectors (0..NDET-1) in order to avoid side
 //                   !!! effects if the shift is fitted in Function
@@ -409,7 +409,7 @@ char *CurfitError(char *string,INDEX indexError,double *p,double *deltap)
 //               ERROR_ID_NO if successful
 // -----------------------------------------------------------------------------
 
-RC CurfitNumDeriv(double *X, double *specX, double *srefX, int nX, double *Y, double *sigmaY, int nY,
+RC CurfitNumDeriv(double *X, double *specX, double *srefX, int n_wavel, double *Y, double *sigmaY, int nY,
                   double *P, double *A, double *deltaA,int indexA,double **deriv,INDEX indexFenoColumn)
  {
   // Declarations
@@ -498,7 +498,7 @@ RC CurfitNumDeriv(double *X, double *specX, double *srefX, int nX, double *Y, do
 // INPUT         X       - wavelengths or pixels according to the selected shift unit
 //               specX   - the spectrum to evaluate
 //               srefX   - the control spectrum (also called reference spectrum)
-//               nX      - the size of previous vectors (depending on the size of the detector)
+//               n_wavel - the size of previous vectors (depending on the size of the detector)
 //
 //                   !!! use whole vectors (0..NDET-1) in order to avoid side
 //                   !!! effects if the shift is fitted in ANALYSE_Function
@@ -519,7 +519,7 @@ RC CurfitNumDeriv(double *X, double *specX, double *srefX, int nX, double *Y, do
 //               ERROR_ID_NO if successful
 // -----------------------------------------------------------------------------
 
-RC CurfitDerivFunc(double *X, double *specX, double *srefX, int nX, double *Y, double *sigmaY, double *Yfit,int nY,
+RC CurfitDerivFunc(double *X, double *specX, double *srefX, int n_wavel, double *Y, double *sigmaY, double *Yfit,int nY,
                    double *P, double *A, double *deltaA,double **deriv,INDEX indexFenoColumn)
  {
   // Declarations
@@ -547,7 +547,7 @@ RC CurfitDerivFunc(double *X, double *specX, double *srefX, int nX, double *Y, d
     //    predefined parameters as offset, undersampling, raman, common residual are fitted linearly
 
     if (((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT) &&
-         (TabCross[i].FitConc!=ITEM_NONE) && ((rc=CurfitNumDeriv(X,specX,srefX,nX,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitConc,deriv,indexFenoColumn))>=THREAD_EVENT_STOP)) ||
+         (TabCross[i].FitConc!=ITEM_NONE) && ((rc=CurfitNumDeriv(X,specX,srefX,n_wavel,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitConc,deriv,indexFenoColumn))>=THREAD_EVENT_STOP)) ||
 
     // SVD : concentrations of molecules fitted linearly
     //       second derivatives of non linear parameters (predefined parameters, shift, stretch)
@@ -562,15 +562,15 @@ RC CurfitDerivFunc(double *X, double *specX, double *srefX, int nX, double *Y, d
          (i!=Feno->indexUsamp2) &&
          (i!=Feno->indexResol)) ||
          (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD)) &&
-        ((rc=CurfitNumDeriv(X,specX,srefX,nX,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitParam,deriv,indexFenoColumn))>=THREAD_EVENT_STOP)) ||
+        ((rc=CurfitNumDeriv(X,specX,srefX,n_wavel,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitParam,deriv,indexFenoColumn))>=THREAD_EVENT_STOP)) ||
 
     //    derivatives of the fitting function in shift, stretch and scaling are always numeric undependantly on the method of analysis
 
-        ((TabCross[i].FitShift!=ITEM_NONE) && ((rc=CurfitNumDeriv(X,specX,srefX,nX,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitShift,deriv,indexFenoColumn))>=THREAD_EVENT_STOP)) ||
-        ((TabCross[i].FitStretch!=ITEM_NONE) && ((rc=CurfitNumDeriv(X,specX,srefX,nX,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitStretch,deriv,indexFenoColumn))>=THREAD_EVENT_STOP)) ||
-        ((TabCross[i].FitStretch2!=ITEM_NONE) && ((rc=CurfitNumDeriv(X,specX,srefX,nX,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitStretch2,deriv,indexFenoColumn))>=THREAD_EVENT_STOP)) ||
-        ((TabCross[i].FitScale!=ITEM_NONE) && ((rc=CurfitNumDeriv(X,specX,srefX,nX,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitScale,deriv,indexFenoColumn))>=THREAD_EVENT_STOP)) ||
-        ((TabCross[i].FitScale2!=ITEM_NONE) && ((rc=CurfitNumDeriv(X,specX,srefX,nX,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitScale2,deriv,indexFenoColumn))>=THREAD_EVENT_STOP)))
+        ((TabCross[i].FitShift!=ITEM_NONE) && ((rc=CurfitNumDeriv(X,specX,srefX,n_wavel,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitShift,deriv,indexFenoColumn))>=THREAD_EVENT_STOP)) ||
+        ((TabCross[i].FitStretch!=ITEM_NONE) && ((rc=CurfitNumDeriv(X,specX,srefX,n_wavel,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitStretch,deriv,indexFenoColumn))>=THREAD_EVENT_STOP)) ||
+        ((TabCross[i].FitStretch2!=ITEM_NONE) && ((rc=CurfitNumDeriv(X,specX,srefX,n_wavel,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitStretch2,deriv,indexFenoColumn))>=THREAD_EVENT_STOP)) ||
+        ((TabCross[i].FitScale!=ITEM_NONE) && ((rc=CurfitNumDeriv(X,specX,srefX,n_wavel,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitScale,deriv,indexFenoColumn))>=THREAD_EVENT_STOP)) ||
+        ((TabCross[i].FitScale2!=ITEM_NONE) && ((rc=CurfitNumDeriv(X,specX,srefX,n_wavel,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitScale2,deriv,indexFenoColumn))>=THREAD_EVENT_STOP)))
 
      goto EndCurfitDerivFunc;
 
@@ -603,7 +603,7 @@ RC CurfitDerivFunc(double *X, double *specX, double *srefX, int nX, double *Y, d
 //               X       - wavelengths or pixels according to the selected shift unit
 //               specX   - the spectrum to evaluate
 //               srefX   - the control spectrum (also called reference spectrum)
-//               nX      - the size of previous vectors (depending on the size of the detector)
+//               n_wavel - the size of previous vectors (depending on the size of the detector)
 //
 //                   !!! use whole vectors (0..NDET-1) in order to avoid side
 //                   !!! effects if the shift is fitted in ANALYSE_Function
@@ -641,7 +641,7 @@ RC Curfit(int     mode,                                                         
           double *X,                                                            // I   data points for independent variable
           double *specX,                                                        // I   the spectrum to evaluate
           double *srefX,                                                        // I   the control spectrum (also called reference spectrum)
-          int     nX,                                                           // I   the size of previous vectors (depending on the size of the detector)
+          int     n_wavel,                                                           // I   the size of previous vectors (depending on the size of the detector)
           double *Y,                                                            // I   the data to fit (vector of zeros to fit the residual)
           double *sigmaY,                                                       // I   standard deviations for Y data points
           int     nY,                                                           // I   number of data points in Y
@@ -737,7 +737,7 @@ RC Curfit(int     mode,                                                         
        alpha[j][k]=0.;
      }
 
-    if (((rc=CurfitDerivFunc(X,specX,srefX,nX,Y,sigmaY,Yfit,nY,P,A,deltaA,deriv,indexFenoColumn))>=THREAD_EVENT_STOP) ||
+    if (((rc=CurfitDerivFunc(X,specX,srefX,n_wavel,Y,sigmaY,Yfit,nY,P,A,deltaA,deriv,indexFenoColumn))>=THREAD_EVENT_STOP) ||
         ((rc=ANALYSE_Function(specX,srefX,sigmaY,Yfit,nY,P,A,indexFenoColumn))>=THREAD_EVENT_STOP))
 
      goto EndCurfit;

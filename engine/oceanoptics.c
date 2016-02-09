@@ -144,7 +144,7 @@ RC ReliOceanOptics(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int 
   int npixels;
 
   // Initializations
-
+  const int n_wavel = NDET[0];
   pRecordInfo=&pEngineContext->recordInfo;
   spectrum=pEngineContext->buffers.spectrum;
   lambda=pEngineContext->buffers.lambda;
@@ -156,8 +156,8 @@ RC ReliOceanOptics(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int 
 
   memset(month,0,100);
 
-  VECTOR_Init(spectrum,(double)0.,NDET);
-  VECTOR_Init(lambda,(double)0.,NDET);
+  VECTOR_Init(spectrum,(double)0.,n_wavel);
+  VECTOR_Init(lambda,(double)0.,n_wavel);
 
   // Set file pointers
 
@@ -185,8 +185,8 @@ RC ReliOceanOptics(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int 
    	 	 	else if ((str=strstr(fileLine,"Number of Pixels in Processed Spectrum: "))!=NULL)
    	 	 	 {
   	 	 	   sscanf(fileLine,"Number of Pixels in Processed Spectrum: %d",&npixels);
-  	 	 	   if (npixels>NDET)
-  	 	 	    npixels=NDET;
+  	 	 	   if (npixels>n_wavel)
+  	 	 	    npixels=n_wavel;
   	 	 	  }
    	 	 	else if ((str=strstr(fileLine,">>>>>Begin Processed Spectral Data<<<<<"))!=NULL)
   	 	 	  spectrumFound=1;

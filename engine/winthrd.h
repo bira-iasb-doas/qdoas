@@ -62,7 +62,7 @@ enum _thrdGoto
 // ----------
 
 double           THRD_GetDist(double longit, double latit, double longitRef, double latitRef);
-RC               THRD_SpectrumCorrection(ENGINE_CONTEXT *pEngineContext,double *spectrum);
+RC               THRD_SpectrumCorrection(ENGINE_CONTEXT *pEngineContext,double *spectrum, const int n_wavel);
 RC               THRD_CopySpecInfo(ENGINE_CONTEXT *pSpecInfoTarget,ENGINE_CONTEXT *pSpecInfoSource);
 RC               THRD_NewRef(ENGINE_CONTEXT *pEngineContext);
 

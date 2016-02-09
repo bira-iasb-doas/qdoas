@@ -142,7 +142,7 @@ RC AIRBORNE_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   else if (!(fileLength=STD_FileLength(specFp)))
    rc=ERROR_SetLast("AIRBORNE_Set",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pEngineContext->fileInfo.fileName);
   else
-   pEngineContext->recordNumber=fileLength/(sizeof(AIRBORNE_DATA)+sizeof(double)*NDET);
+   pEngineContext->recordNumber=fileLength/(sizeof(AIRBORNE_DATA)+sizeof(double)*NDET[0]);
 
   // Return
 
@@ -187,13 +187,13 @@ RC AIRBORNE_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int lo
    rc=ERROR_SetLast("AIRBORNE_Read",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pEngineContext->fileInfo.fileName);
   else if ((recordNo<=0) || (recordNo>pEngineContext->recordNumber))
    rc=ERROR_ID_FILE_END;
-  else
-   {
+  else {
     // Complete the reading of the record
+    const int n_wavel = NDET[0];
 
-    fseek(specFp,(recordNo-1)*(sizeof(AIRBORNE_DATA)+sizeof(double)*NDET),SEEK_SET);
+    fseek(specFp,(recordNo-1)*(sizeof(AIRBORNE_DATA)+sizeof(double)*n_wavel),SEEK_SET);
     fread(&header,sizeof(AIRBORNE_DATA),1,specFp);
-    fread(spectrum,sizeof(double)*NDET,1,specFp);
+    fread(spectrum,sizeof(double)*n_wavel,1,specFp);
 
     pRecord->present_datetime.thedate.da_day = header.today.da_day;
     pRecord->present_datetime.thedate.da_mon = header.today.da_mon;

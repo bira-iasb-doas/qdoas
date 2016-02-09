@@ -7,7 +7,7 @@
 #include "analyse.h"
 
 RC write_spikes(char *spikestring, unsigned int length, bool *spikes,int ndet);
-double output_flux(const ENGINE_CONTEXT *pEngineContext, double wavelength);
+double output_flux(const ENGINE_CONTEXT *pEngineContext, double wavelength, int indexFenoColumn);
 
 static inline FENO *get_tabfeno_calib(struct output_field *this_field __attribute__ ((unused)), int indexFenoColumn) {
   FENO *tabfeno_kurucz = &TabFeno[indexFenoColumn][KURUCZ_buffers[indexFenoColumn].indexKurucz];
@@ -749,14 +749,14 @@ static inline void get_chisquare_calib(struct output_field *this_field, double *
   *chisquare = KURUCZ_buffers[indexFenoColumn].KuruczFeno[this_field->index_feno].chiSquare[index_calib];
 }
 
-static inline void get_flux(struct output_field *this_field, double *flux, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  *flux = output_flux(pEngineContext, OUTPUT_fluxes[this_field->index_flux]);
+static inline void get_flux(struct output_field *this_field, double *flux, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn, int index_calib __attribute__ ((unused))) {
+  *flux = output_flux(pEngineContext, OUTPUT_fluxes[this_field->index_flux], indexFenoColumn);
 }
 
-static inline void get_cic(struct output_field *this_field, double *cic, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  double flux1 = output_flux(pEngineContext, OUTPUT_cic[this_field->index_cic][1]);
+static inline void get_cic(struct output_field *this_field, double *cic, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn, int index_calib __attribute__ ((unused))) {
+  double flux1 = output_flux(pEngineContext, OUTPUT_cic[this_field->index_cic][1], indexFenoColumn);
   *cic = (flux1 != (double) 0.)
-    ? output_flux(pEngineContext, OUTPUT_cic[this_field->index_cic][0])/flux1
+    ? output_flux(pEngineContext, OUTPUT_cic[this_field->index_cic][0], indexFenoColumn)/flux1
     : QDOAS_FILL_DOUBLE;
 }
 
@@ -781,11 +781,13 @@ static inline void get_altitude_end (struct output_field *this_field __attribute
 }
 
 static inline void get_lambda(struct output_field *this_field __attribute__ ((unused)), double *lambda, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-	 memcpy(lambda,pEngineContext->buffers.lambda,sizeof(double)*NDET);
+  const int n_wavel = NDET[indexFenoColumn];
+  memcpy(lambda,pEngineContext->buffers.lambda,sizeof(double)*n_wavel);
 }
 
 static inline void get_spectrum(struct output_field *this_field __attribute__ ((unused)), double *spectrum, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-	 memcpy(spectrum,pEngineContext->buffers.spectrum,sizeof(double)*NDET);
+  const int n_wavel = NDET[indexFenoColumn];
+  memcpy(spectrum,pEngineContext->buffers.spectrum,sizeof(double)*n_wavel);
 }
 
 // write_spikes:

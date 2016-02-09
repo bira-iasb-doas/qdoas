@@ -132,7 +132,7 @@ RC AsciiSkip(ENGINE_CONTEXT *pEngineContext,FILE *specFp,int nSkip)
   // Initializations
 
   pInstr=&pEngineContext->project.instrumental;
-  maxCount=NDET+pInstr->ascii.szaSaveFlag+pInstr->ascii.azimSaveFlag+pInstr->ascii.elevSaveFlag+pInstr->ascii.timeSaveFlag+pInstr->ascii.dateSaveFlag;
+  maxCount=NDET[0]+pInstr->ascii.szaSaveFlag+pInstr->ascii.azimSaveFlag+pInstr->ascii.elevSaveFlag+pInstr->ascii.timeSaveFlag+pInstr->ascii.dateSaveFlag;
   rc=ERROR_ID_NO;
 
   // Buffer allocation
@@ -212,7 +212,7 @@ RC ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   pInstr=&pEngineContext->project.instrumental;
   pRef=&pEngineContext->analysisRef;
   startCount=pInstr->ascii.szaSaveFlag+pInstr->ascii.azimSaveFlag+pInstr->ascii.elevSaveFlag+pInstr->ascii.timeSaveFlag+pInstr->ascii.dateSaveFlag;
-  maxCount=NDET;
+  maxCount=NDET[0];
   rc=ERROR_ID_NO;
   nc=0;
 
@@ -257,7 +257,7 @@ RC ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
             }
           }
           if (nc>pInstr->ascii.lambdaSaveFlag+1)
-            rc=MATRIX_Allocate(&asciiMatrix,NDET+startCount,nc,0,0,0,__func__);
+            rc=MATRIX_Allocate(&asciiMatrix,NDET[0]+startCount,nc,0,0,0,__func__);
         } else {
           // scan ahead until end of line
           fscanf(specFp, "%*[^\n]");
@@ -341,7 +341,8 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
 
   memset(&pRecordInfo->present_datetime,0,sizeof(pRecordInfo->present_datetime));
 
-  VECTOR_Init(spectrum,(double)0.,NDET);
+  const int n_wavel = NDET[0];
+  VECTOR_Init(spectrum,(double)0.,n_wavel);
 
   // Set file pointers
 
@@ -413,7 +414,7 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
       }
 
       // Read the spectrum
-      for (i=0; i<NDET; ++i) {
+      for (i=0; i<n_wavel; ++i) {
         if (line_ends(specFp) )
           return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
 
@@ -428,7 +429,7 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
     // SPECTRA RECORDS ARE SAVED IN SUCCESSIVE COLUMNS
     // -----------------------------------------------
 
-    else if ((asciiMatrix.nl>=NDET) && (asciiMatrix.nc>lambdaFlag)) {
+    else if ((asciiMatrix.nl>=n_wavel) && (asciiMatrix.nc>lambdaFlag)) {
       if (ndataSet!=asciiLastDataSet) {
         asciiLastDataSet=ndataSet;
 
@@ -476,9 +477,9 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
         pRecordInfo->TimeDec=asciiMatrix.matrix[ndataRecord][count++];
 
       if (lambdaFlag)
-        memcpy(lambda,asciiMatrix.matrix[0]+count,sizeof(double)*NDET);
+        memcpy(lambda,asciiMatrix.matrix[0]+count,sizeof(double)*n_wavel);
 
-      memcpy(spectrum,asciiMatrix.matrix[ndataRecord]+count,sizeof(double)*NDET);
+      memcpy(spectrum,asciiMatrix.matrix[ndataRecord]+count,sizeof(double)*n_wavel);
     } else {
       // Read the solar zenith angle
 
@@ -522,7 +523,7 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
       // Read the spectrum and if selected, the wavelength calibration
       if (lambdaFlag) {
         // wavelength and spectrum
-        for (i=0; i<NDET;) {
+        for (i=0; i<n_wavel;) {
           if (fscanf(specFp, COMMENT_LINE, &c) == 1)
             continue;
           // read two doubles before end of line:
@@ -534,7 +535,7 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
         }
       } else {
         // just spectrum
-        for (i=0; i<NDET; ) {
+        for (i=0; i<n_wavel; ) {
           if (fscanf(specFp, COMMENT_LINE, &c) == 1)
             continue;
           if ((fscanf(specFp,NEXT_DOUBLE,&spectrum[i]) != 1)

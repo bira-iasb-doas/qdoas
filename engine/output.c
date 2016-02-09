@@ -132,7 +132,6 @@ static double OUTPUT_fluxes[MAX_FLUXES], /*!< \brief fluxes */
 static int OUTPUT_NFluxes, /*!< \brief number of fluxes in OUTPUT_fluxes array */
   OUTPUT_NCic; /*!< \brief number of color indexes in OUTPUT_cic array */
 
-#define output_c
 #include "output_private.h"
 
 static enum output_format selected_format = ASCII; // ASCII files as default
@@ -165,20 +164,22 @@ static void output_field_free(struct output_field *this_field);
 struct field_attribute *copy_attributes(const struct field_attribute *attributes, int num_attributes);
 
 /*! \brief Calculate flux for a given wavelength.*/
-double output_flux(const ENGINE_CONTEXT *pEngineContext, double wavelength) {
+double output_flux(const ENGINE_CONTEXT *pEngineContext, double wavelength, int i_crosstrack) {
+  const int n_wavel = NDET[i_crosstrack];
+
   double flux =0.;
   double bandWidth=pEngineContext->project.asciiResults.bandWidth;
 
   if ( wavelength >= pEngineContext->buffers.lambda[0] &&
-       wavelength <= pEngineContext->buffers.lambda[NDET-1] ) {
+       wavelength <= pEngineContext->buffers.lambda[n_wavel-1] ) {
 
     int imin;
     int imax;
 
     // The interval is defined in nm
 
-    imin=max(FNPixel(pEngineContext->buffers.lambda,wavelength-0.5*bandWidth,NDET,PIXEL_CLOSEST),0);
-    imax=min(FNPixel(pEngineContext->buffers.lambda,wavelength+0.5*bandWidth,NDET,PIXEL_CLOSEST),NDET-1);
+    imin=max(FNPixel(pEngineContext->buffers.lambda,wavelength-0.5*bandWidth,n_wavel,PIXEL_CLOSEST),0);
+    imax=min(FNPixel(pEngineContext->buffers.lambda,wavelength+0.5*bandWidth,n_wavel,PIXEL_CLOSEST),n_wavel-1);
 
     // Flux calculation
 
@@ -298,14 +299,15 @@ static void register_cross_results(const PRJCT_RESULTS *pResults, const FENO *pT
   \param [in] pResults     output options for the selected cross section
   \param [in] Zm           the current solar zenith angle
   \param [in] lambda       the current wavelength calibration
+  \param [in] n_wavel      the number of wavelengths
 
   \param [in,out] xs       the cross section to correct by wavelength dependent AMF
 
   \param [out] deriv2      second derivatives of the new cross section
 
   */
-RC OUTPUT_GetWveAmf(CROSS_RESULTS *pResults,double Zm,double *lambda,double *xs)
- {
+RC OUTPUT_GetWveAmf(CROSS_RESULTS *pResults,double Zm,double *lambda,double *xs,int n_wavel)
+{
   // Declarations
 
   AMF_SYMBOL *pAmfSymbol;
@@ -322,7 +324,7 @@ RC OUTPUT_GetWveAmf(CROSS_RESULTS *pResults,double Zm,double *lambda,double *xs)
    {
    	pAmfSymbol=&OUTPUT_AmfSpace[pResults->indexAmf];
 
-    for (i=0;i<NDET;i++)
+    for (i=0;i<n_wavel;i++)
      xs[i]*=(double)VECTOR_Table2_Index1(pAmfSymbol->Phi,pAmfSymbol->PhiLines,pAmfSymbol->PhiColumns,(double)lambda[i],(double)Zm);
    }
 
@@ -753,6 +755,13 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
   const char *title_los_zenith = "LoS ZA";
   const char *title_los_azimuth = "LoS Azimuth";
 
+  // for variables that depend on spectrum length: find maximum length over all detector rows:
+  int max_ndet = 0;
+  for (int i=0; i<ANALYSE_swathSize; ++i) {
+    if (NDET[i] > max_ndet)
+      max_ndet = NDET[i];
+  }
+
   switch(pProject->instrumental.readOutFormat) {
   case PRJCT_INSTR_FORMAT_SCIA_PDS:
   case PRJCT_INSTR_FORMAT_GOME2:
@@ -1103,10 +1112,10 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
        register_field( (struct output_field) { .basic_fieldname = "AltitudeEnd", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_altitude_end });
        break;
      case PRJCT_RESULTS_LAMBDA:
-       register_field( (struct output_field) { .basic_fieldname = "Lambda", .memory_type = OUTPUT_DOUBLE, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_lambda, .data_cols = NDET, .column_number_format="(%d)" });
+       register_field( (struct output_field) { .basic_fieldname = "Lambda", .memory_type = OUTPUT_DOUBLE, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_lambda, .data_cols = max_ndet, .column_number_format="(%d)" });
        break;
      case PRJCT_RESULTS_SPECTRA:
-       register_field( (struct output_field) { .basic_fieldname = "Spec", .memory_type = OUTPUT_DOUBLE, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_spectrum, .data_cols = NDET, .column_number_format="(%d)" });
+       register_field( (struct output_field) { .basic_fieldname = "Spec", .memory_type = OUTPUT_DOUBLE, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_spectrum, .data_cols = max_ndet, .column_number_format="(%d)" });
        break;
      default:
        break;
@@ -1208,7 +1217,7 @@ static void OutputRegisterParam(const ENGINE_CONTEXT *pEngineContext)
   // if using OMI: increase indexFenoColumn until we find a used track, otherwise: use track 0
   for(indexFenoColumn=0; indexFenoColumn<ANALYSE_swathSize; indexFenoColumn++) {
     if ( pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI ||
-         pEngineContext->project.instrumental.omi.omiTracks[indexFenoColumn] )
+         pEngineContext->project.instrumental.use_row[indexFenoColumn] )
       break;
   }
 
@@ -1454,7 +1463,7 @@ RC OUTPUT_RegisterData(const ENGINE_CONTEXT *pEngineContext)
           if (pResults->calibFlag) {
             for (indexFenoColumn=0;indexFenoColumn<ANALYSE_swathSize;indexFenoColumn++) {
               if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) ||
-                  pEngineContext->project.instrumental.omi.omiTracks[indexFenoColumn]) {
+                  pEngineContext->project.instrumental.use_row[indexFenoColumn]) {
 
                 int indexFenoK=ITEM_NONE;
                 for (int indexFeno=0;indexFeno<NFeno && indexFenoK==ITEM_NONE; ++indexFeno) {
@@ -1495,10 +1504,10 @@ RC OUTPUT_RegisterData(const ENGINE_CONTEXT *pEngineContext)
 
 RC OUTPUT_RegisterSpectra(const ENGINE_CONTEXT *pEngineContext)
  {
- 	if (THRD_id==THREAD_TYPE_EXPORT)
- 	 OutputRegisterFields(pEngineContext,pEngineContext->project.exportSpectra.fieldsFlag,pEngineContext->project.exportSpectra.fieldsNumber);  // do not depend on swath size
+   if (THRD_id==THREAD_TYPE_EXPORT)
+     OutputRegisterFields(pEngineContext,pEngineContext->project.exportSpectra.fieldsFlag,pEngineContext->project.exportSpectra.fieldsNumber);  // do not depend on swath size
 
- 	return ERROR_ID_NO;
+   return ERROR_ID_NO;
  }
 
 /*! \brief Save results of the last processed record. */
@@ -1981,15 +1990,9 @@ void save_calibration(void) {
 
 
 RC OUTPUT_SaveResults(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
- {
-  // Declarations
+{
 
-  CROSS_RESULTS *pTabCrossResults;
-  INDEX indexFeno,indexTabCross,i;
-  double *Spectrum;
-
-  // Initializations
-
+  const int n_wavel = NDET[indexFenoColumn];
   const RECORD_INFO *pRecordInfo=&pEngineContext->recordInfo;
   RC rc=ERROR_ID_NO;
 
@@ -1997,12 +2000,12 @@ RC OUTPUT_SaveResults(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
 
   if (OUTPUT_AmfSpace!=NULL) {
 
-    for (indexFeno=0;indexFeno<NFeno;indexFeno++) {
+    for (int indexFeno=0;indexFeno<NFeno;indexFeno++) {
       FENO *pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
 
       if ((THRD_id!=THREAD_TYPE_KURUCZ) && !pTabFeno->hidden && !pTabFeno->rcKurucz) {
-        for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++) {
-          pTabCrossResults=&pTabFeno->TabCrossResults[indexTabCross];
+        for (int indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++) {
+          CROSS_RESULTS *pTabCrossResults=&pTabFeno->TabCrossResults[indexTabCross];
 
           if (pTabCrossResults->indexAmf!=ITEM_NONE) {
             if (OutputGetAmf(pTabCrossResults,pRecordInfo->Zm,pRecordInfo->Tm,&pTabCrossResults->Amf)) {
@@ -2020,9 +2023,9 @@ RC OUTPUT_SaveResults(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
   // Rebuild spectrum for fluxes and color indexes computation
 
   if ((pRecordInfo->NSomme!=0) && (pRecordInfo->TotalExpTime!=(double)0.)) {
-    Spectrum=(double *)pEngineContext->buffers.spectrum;
-
-    for (i=0;i<NDET;i++)
+    double *Spectrum= pEngineContext->buffers.spectrum;
+    
+    for (int i=0;i<n_wavel;i++)
       Spectrum[i]*=(double)pRecordInfo->NSomme/pRecordInfo->TotalExpTime;
   }
 

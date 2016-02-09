@@ -87,7 +87,7 @@ typedef unsigned int MASK,SZ_LEN;
 
 // Standard arrays dimensions
 
-#define BUFFER_SIZE                            4096                             // any buffer allocation
+//#define BUFFER_SIZE                            4096                             // any buffer allocation
 
 // Strings lengths
 
@@ -175,6 +175,7 @@ SHORT_DATE;
 #define ERROR_ID_BUFFER_FULL                    103                             // a buffer is full and can not receive objects anymore
 #define ERROR_ID_COMMANDLINE                    105                             // syntax error in command line
 #define ERROR_ID_MEDIATE                        106
+#define ERROR_ID_SWATHSIZE                      107                             // swath size > MAX_SWATHSIZE
 
 // Files
 
@@ -187,13 +188,14 @@ SHORT_DATE;
 #define ERROR_ID_FILE_BAD_LENGTH                127
 #define ERROR_ID_WAVELENGTH                     128                             // bad wavelength calibration in the input file
 #define ERROR_ID_FILE_OVERWRITE                 129                             // data not saved; change the output file name
-#define ERROR_ID_FILE_NOT_SPECIFIED             130                             // a required file name is not missing from the configuration
+#define ERROR_ID_FILE_NOT_SPECIFIED             130                             // a required file name is missing from the configuration
 #define ERROR_ID_FILE_STAT                      131                             // cannot call fstat on file
 #define ERROR_ID_DIR_NOT_FOUND                  132                             // directory does not exist
 #define ERROR_ID_XS_BAD_WAVELENGTH              133                             // the cross section should be defined on the same grid as the reference one when 'None' is selected as Interp/conv action
 #define ERROR_ID_XS_COLUMNS                     134                             // the cross section does not have the expected number of columns
 #define ERROR_ID_XS_RING                        135                             // ring cross section does not contain 4 columns
 #define ERROR_ID_XS_FILENAME                    136                             // no file name for cross section
+#define ERROR_ID_REF_DATA                       137                             // For imager: reference for a column does not contain data (fill values)
 
 // Debug
 
@@ -280,6 +282,7 @@ SHORT_DATE;
 #define ERROR_ID_HDFEOS5_SETFILL               1413                             // error setting fill value for field
 #define ERROR_ID_HDFEOS5_GETFILL               1414                             // error getting fill value for field
 #define ERROR_ID_NETCDF                        1500
+#define ERROR_ID_TROPOMI_REF                   1600                             // requested reference spectrum not found
 #define ERROR_ID_FILE_FORMAT                   2000                             // bad file format
 
 // =========
