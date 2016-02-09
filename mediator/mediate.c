@@ -1819,11 +1819,6 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
    if (rc)
      goto handle_errors;
 
-   // for imagers, it is possible that errors occur for only some of
-   // the rows.  In that case, analysis can continue for the other
-   // rows, but we still want to display a warning message.
-   bool imager_err = false;
-
    for (indexFenoColumn=0;(indexFenoColumn<ANALYSE_swathSize) && !rc;indexFenoColumn++) {
 
      if (!pEngineContext->project.instrumental.use_row[indexFenoColumn])

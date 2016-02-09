@@ -1682,7 +1682,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
            alignRef++;
 
            if (indexRefRecord!=ITEM_NONE)
-            memcpy(pTabFeno->Sref,ENGINE_contextRef.buffers.spectrum,sizeof(double)*NDET);
+            memcpy(pTabFeno->Sref,ENGINE_contextRef.buffers.spectrum,sizeof(double)*pTabFeno->NDET);
            else
             {
             	double *sref1,*sref2;
@@ -1693,11 +1693,11 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
             	// normalize by the integration time first in order to have the same absorption structures
 
             	if (pTabFeno->refSpectrumSelectionScanMode==ANLYS_MAXDOAS_REF_SCAN_AVERAGE)
-           	 	for (int i=0;i<NDET;i++)
+           	 	for (int i=0;i<pTabFeno->NDET;i++)
            	 	 pTabFeno->Sref[i]=(sref1[i]/ENGINE_contextRef.recordInfo.Tint+sref2[i]/ENGINE_contextRef2.recordInfo.Tint)*0.5;
            	 else if (pTabFeno->refSpectrumSelectionScanMode==ANLYS_MAXDOAS_REF_SCAN_INTERPOLATE)
            	  {
-           	 	 for (int i=0;i<NDET;i++)
+           	 	 for (int i=0;i<pTabFeno->NDET;i++)
            	 	  pTabFeno->Sref[i]=sref1[i]/ENGINE_contextRef.recordInfo.Tint+(pEngineContext->recordInfo.Tm-ENGINE_contextRef.recordInfo.Tm)*(sref2[i]/ENGINE_contextRef2.recordInfo.Tint-sref1[i]/ENGINE_contextRef.recordInfo.Tint)/(ENGINE_contextRef2.recordInfo.Tm-ENGINE_contextRef.recordInfo.Tm);
            	  }
             }
@@ -1760,7 +1760,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
            	 sprintf(fileName,"ref%sN_interpolate.asc",pTabFeno->windowName);
 
            	fp=fopen(fileName,"w+t");
-           	for (int i=0;i<NDET;i++)
+           	for (int i=0;i<pTabFeno->NDET;i++)
            	 fprintf(fp,"%.14le %.14le\n",ENGINE_contextRef.buffers.lambda[i],pTabFeno->Sref[i]);
            	fclose(fp);
            }

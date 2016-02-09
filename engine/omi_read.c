@@ -476,7 +476,7 @@ static RC OMI_AllocateSwath(struct omi_swath_earth **swath, const int n_alongtra
   RC rc = ERROR_ID_NO;                          // Return code
 
   if (
-      ((pSpectrum->pixelQualityFlags=(unsigned short *)MEMORY_AllocBuffer(__func__,"pixelQualityFlags",NDET,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL) ||
+      ((pSpectrum->pixelQualityFlags=(unsigned short *)MEMORY_AllocBuffer(__func__,"pixelQualityFlags",n_wavel,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL) ||
       ((pData->measurementQualityFlags=(unsigned short *)MEMORY_AllocBuffer(__func__,"measurementQualityFlags",n_alongtrack,sizeof(unsigned short),0,MEMORY_TYPE_USHORT))==NULL) ||
       ((pData->instrumentConfigurationId=(unsigned char*)MEMORY_AllocBuffer(__func__,"instrumentConfigurationId",n_alongtrack,sizeof(unsigned short),0,MEMORY_TYPE_UNKNOWN))==NULL) ||
       ((pData->wavelengthReferenceColumn=(short *)MEMORY_AllocBuffer(__func__,"wavelengthReferenceColumn",n_alongtrack,sizeof(short),0,MEMORY_TYPE_SHORT))==NULL) ||
@@ -1331,7 +1331,7 @@ RC OMI_Set(ENGINE_CONTEXT *pEngineContext)
   strcpy(current_orbit_file.omiFileName,pEngineContext->fileInfo.fileName);
   current_orbit_file.specNumber=0;
 
-  rc=OmiOpen(&current_orbit_file,OMI_EarthSwaths[pEngineContext->project.instrumental.omi.spectralType]);
+  rc=OmiOpen(&current_orbit_file,OMI_EarthSwaths[pEngineContext->project.instrumental.omi.spectralType],pEngineContext);
   // Open the file
   if (!rc) {
     pEngineContext->recordNumber=current_orbit_file.specNumber;
@@ -1430,49 +1430,46 @@ RC OMI_read_earth(ENGINE_CONTEXT *pEngineContext,int recordNo)
   // Goto the requested record
 
   if (!pOrbitFile->specNumber)
-    rc=ERROR_ID_FILE_EMPTY;
+    return ERROR_ID_FILE_EMPTY;
   else if ((recordNo<=0) || (recordNo>pOrbitFile->specNumber))
-    rc=ERROR_ID_FILE_END;
-  else {
-    for (int i=0;i<NDET;i++)
-      spectrum[i]=sigma[i]=(double)0.;
+    return ERROR_ID_FILE_END;
 
-    int i_alongtrack=(recordNo-1)/pOrbitFile->nXtrack;
-    int i_crosstrack=(recordNo-1)%pOrbitFile->nXtrack;
+  int i_alongtrack=(recordNo-1)/pOrbitFile->nXtrack;
+  int i_crosstrack=(recordNo-1)%pOrbitFile->nXtrack;
 
-    get_omi_record_data(&pEngineContext->recordInfo, pOrbitFile, i_alongtrack, i_crosstrack);
+  get_omi_record_data(&pEngineContext->recordInfo, pOrbitFile, i_alongtrack, i_crosstrack);
     
-    if (!pEngineContext->project.instrumental.omi.omiTracks[i_crosstrack]) {
-      return ERROR_ID_FILE_RECORD;
-    }
-    rc= omi_load_spectrum(OMI_SPEC_RAD,
-                          pOrbitFile->sw_id,
-                          i_alongtrack,
-                          i_crosstrack,
-                          pOrbitFile->nWavel,
-                          lambda,spectrum,sigma,
-                          pEngineContext->recordInfo.omi.omiPixelQF);
-    if (rc)
-      return rc;
+  if (!pEngineContext->project.instrumental.use_row[i_crosstrack]) {
+    return ERROR_ID_FILE_RECORD;
+  }
+  rc= omi_load_spectrum(OMI_SPEC_RAD,
+                        pOrbitFile->sw_id,
+                        i_alongtrack,
+                        i_crosstrack,
+                        pOrbitFile->nWavel,
+                        lambda,spectrum,sigma,
+                        pEngineContext->recordInfo.omi.omiPixelQF);
+  if (rc)
+    return rc;
 
-    // check L1 wavelength calibration
-    // might be good to check that lambda covers the current analysis window, as well
-    for (int i=1; i<pOrbitFile->nWavel; ++i) {
-      // check lambda increases:
-      if (lambda[i] <= lambda[i-1]) {
-        return ERROR_SetLast(__func__, ERROR_TYPE_WARNING, ERROR_ID_L1WAVELENGTH, recordNo);
-      }
-    }
-
-    if ((THRD_id==THREAD_TYPE_ANALYSIS) && omiRefFilesN) {
-      if (omiSwathOld!=i_alongtrack) {
-        KURUCZ_indexLine=1;
-        omiSwathOld=i_alongtrack;
-      }      
-      memcpy(pEngineContext->buffers.lambda_irrad,OMI_ref[0].omiRefLambda[i_crosstrack],sizeof(double)*pOrbitFile->nWavel);
-      memcpy(pEngineContext->buffers.irrad,OMI_ref[0].omiRefSpectrum[i_crosstrack],sizeof(double)*pOrbitFile->nWavel);
+  // check L1 wavelength calibration
+  // might be good to check that lambda covers the current analysis window, as well
+  for (int i=1; i<pOrbitFile->nWavel; ++i) {
+    // check lambda increases:
+    if (lambda[i] <= lambda[i-1]) {
+      return ERROR_SetLast(__func__, ERROR_TYPE_WARNING, ERROR_ID_L1WAVELENGTH, recordNo);
     }
   }
+
+  if ((THRD_id==THREAD_TYPE_ANALYSIS) && omiRefFilesN) {
+    if (omiSwathOld!=i_alongtrack) {
+      KURUCZ_indexLine=1;
+      omiSwathOld=i_alongtrack;
+    }      
+    memcpy(pEngineContext->buffers.lambda_irrad,OMI_ref[0].omiRefLambda[i_crosstrack],sizeof(double)*pOrbitFile->nWavel);
+    memcpy(pEngineContext->buffers.irrad,OMI_ref[0].omiRefSpectrum[i_crosstrack],sizeof(double)*pOrbitFile->nWavel);
+    }
+
   return rc;
 }
 
