@@ -445,6 +445,17 @@ long STD_FileLength(FILE *fp)
   return(fileSize);
  }
 
+static void mysetenv(const char *name, const char *value)
+ {
+  #ifdef HAVE_SETENV
+    setenv(name, value, 1);
+  #else
+    char str[80];
+    sprintf(str, "%s=%s", name, value);
+    putenv(str);
+  #endif
+ }
+
   // Convert a struct tm into a unix epoch timestamp.
 time_t STD_timegm(struct tm *t) {
   // get current timezone setting
@@ -452,19 +463,19 @@ time_t STD_timegm(struct tm *t) {
   if (timezone_old)
     timezone_old = strdup(timezone_old);
   // set timezone to UTC for mktime
-  setenv("TZ", "", 1);
+  mysetenv("TZ", "");
   tzset();
   time_t result = mktime(t);
   if (timezone_old) {
     // restore environment
-    setenv("TZ", timezone_old, 1);
+    mysetenv("TZ", timezone_old);
     free(timezone_old);
   } else {
     // no timezone was set, just remove our setting
 #ifndef _WIN32
     unsetenv("TZ");
 #else
-    putenv("TZ="); // for MinGW32, we use this instead of unsetenv("TZ") 
+    putenv("TZ="); // for MinGW32, we use this instead of unsetenv("TZ")
 #endif
   }
   tzset();
