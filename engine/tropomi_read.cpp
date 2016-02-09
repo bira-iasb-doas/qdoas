@@ -100,8 +100,6 @@ static void set_reference_time(const string& utc_date) {
     0,  // days since sunday
     0,  // days since January 1st
     0, // hours of daylight savings time
-    0, // timezone offset
-    "GMT" // timezone name
   };
 
   reference_time = STD_timegm(&t);
