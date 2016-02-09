@@ -91,6 +91,7 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "stdfunc.h"
 #include "doas.h"
 
 #define MAX_FORMAT_LEN    15                                                    // maximum number of characters for a string describing the format of a token
@@ -443,3 +444,29 @@ long STD_FileLength(FILE *fp)
 
   return(fileSize);
  }
+
+  // Convert a struct tm into a unix epoch timestamp.
+time_t STD_timegm(struct tm *t) {
+  // get current timezone setting
+  char *timezone_old = getenv("TZ");
+  if (timezone_old)
+    timezone_old = strdup(timezone_old);
+  // set timezone to UTC for mktime
+  setenv("TZ", "", 1);
+  tzset();
+  time_t result = mktime(t);
+  if (timezone_old) {
+    // restore environment
+    setenv("TZ", timezone_old, 1);
+    free(timezone_old);
+  } else {
+    // no timezone was set, just remove our setting
+#ifndef _WIN32
+    unsetenv("TZ");
+#else
+    putenv("TZ="); // for MinGW32, we use this instead of unsetenv("TZ") 
+#endif
+  }
+  tzset();
+  return result;
+}

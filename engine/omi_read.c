@@ -43,7 +43,6 @@
 //
 //  ----------------------------------------------------------------------------
 
-#include <time.h>
 #include <dirent.h>
 #include <stdio.h>
 
@@ -850,24 +849,7 @@ static void tai_to_utc(double tai, float utc_seconds_in_day, struct tm *result, 
                                  .tm_isdst = 0 };
 
   // get seconds since epoch of 1/1/1993 00:00:00 (GMT)
-#ifndef _WIN32
-  time_t time_epoch = timegm(&start_tai);
-#else
-  // get UTC time on MinGW32:
-
-  // get current timezone setting
-  char *timezone_old = getenv("TZ");
-  // set timezone to UTC for mktime
-  putenv("TZ=UTC");
-  time_t time_epoch = mktime(&start_tai);
-  if (timezone_old != NULL) {
-    // restore environment
-    putenv(timezone_old);
-  } else {
-    // no timezone was set, just remove our setting
-    putenv("TZ="); // for MinGW32, we use this instead of unsetenv("TZ") 
-  }
-#endif
+  time_t time_epoch = STD_timegm(&start_tai);
 
   // for observations after the leap second (for example the last observation
   // from 2012/06/30, 23:59:60), the number of seconds in the UTC day can be

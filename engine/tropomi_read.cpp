@@ -7,8 +7,6 @@
 #include <algorithm>
 #include <sstream>
 
-#include <ctime>
-
 #include "tropomi.h"
 #include "tropomi_read.h"
 #include "netcdfwrapper.h"
@@ -17,6 +15,7 @@
 #include "comdefs.h"
 #include "engine_context.h"
 #include "analyse.h"
+#include "stdfunc.h"
 
 using std::string;
 using std::vector;
@@ -105,7 +104,7 @@ static void set_reference_time(const string& utc_date) {
     "GMT" // timezone name
   };
 
-  reference_time = timegm(&t);  
+  reference_time = STD_timegm(&t);
 }
 
 static geodata read_geodata(const NetCDFGroup& geo_group, size_t n_scanline, size_t n_groundpixel) {
