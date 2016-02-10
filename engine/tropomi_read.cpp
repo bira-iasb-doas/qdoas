@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <sstream>
+#include <ctime>
 
 #include "tropomi.h"
 #include "tropomi_read.h"
@@ -15,7 +16,6 @@
 #include "comdefs.h"
 #include "engine_context.h"
 #include "analyse.h"
-#include "stdfunc.h"
 
 using std::string;
 using std::vector;
@@ -67,15 +67,21 @@ static void getDate(int delta_t, struct datetime *date_time, int *pMs) {
   struct date *pDate = &date_time->thedate;
   struct time *pTime = &date_time->thetime;
 
-  struct tm *thedate = gmtime(&thetime);
+  struct tm thedate;
+#ifndef _WIN32
+  localtime_r(&thetime, &thedate);
+#else
+  struct tm *time = localtime(&thetime);
+  thedate = *time;
+#endif
+  
+  pDate->da_year = thedate.tm_year + 1900;
+  pDate->da_mon = thedate.tm_mon + 1; // month, from 1 to 12
+  pDate->da_day = thedate.tm_mday;
 
-  pDate->da_year = thedate->tm_year + 1900;
-  pDate->da_mon = thedate->tm_mon + 1; // month, from 1 to 12
-  pDate->da_day = thedate->tm_mday;
-
-  pTime->ti_hour = thedate->tm_hour;
-  pTime->ti_min = thedate->tm_min;
-  pTime->ti_sec = thedate->tm_sec;
+  pTime->ti_hour = thedate.tm_hour;
+  pTime->ti_min = thedate.tm_min;
+  pTime->ti_sec = thedate.tm_sec;
 
   *pMs = static_cast<int>(delta_t) % 1000;
 }
@@ -99,10 +105,16 @@ static void set_reference_time(const string& utc_date) {
     year - 1900, // year since 1900
     0,  // days since sunday
     0,  // days since January 1st
-    0, // hours of daylight savings time
+    0, // have daylight savings time?
+#if defined(__GNUC__) && !defined(__MINGW32__) // initialize extra fields available in GCC but not in MinGW32
+    0, // Seconds east of UTC
+    0  // Timezone abbreviation
+#endif
   };
 
-  reference_time = STD_timegm(&t);
+   // get number of seconds since 1/1/1970. mktime() uses the current
+   // timezone, so we must convert back using localtime() in getDate()
+  reference_time = mktime(&t);
 }
 
 static geodata read_geodata(const NetCDFGroup& geo_group, size_t n_scanline, size_t n_groundpixel) {

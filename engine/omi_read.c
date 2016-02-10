@@ -45,6 +45,7 @@
 
 #include <dirent.h>
 #include <stdio.h>
+#include <time.h>
 
 #include <hdf.h>
 #include <HdfEosDef.h>
@@ -848,8 +849,12 @@ static void tai_to_utc(double tai, float utc_seconds_in_day, struct tm *result, 
                                  .tm_year = 93, // year since 1900
                                  .tm_isdst = 0 };
 
-  // get seconds since epoch of 1/1/1993 00:00:00 (GMT)
-  time_t time_epoch = STD_timegm(&start_tai);
+  // get seconds since epoch of 1/1/1993 00:00:00
+  // 
+  // the value returned from mktime contains an offset for the current
+  // timezone. This is not a problem because we convert back to a
+  // struct tm using localtime() later on.
+  time_t time_epoch = mktime(&start_tai); 
 
   // for observations after the leap second (for example the last observation
   // from 2012/06/30, 23:59:60), the number of seconds in the UTC day can be
@@ -877,9 +882,9 @@ static void tai_to_utc(double tai, float utc_seconds_in_day, struct tm *result, 
 
   // convert back to a datetime
 #ifndef _WIN32
-  gmtime_r(&time_epoch, result);
+  localtime_r(&time_epoch, result);
 #else
-  struct tm *time = gmtime(&time_epoch);
+  struct tm *time = localtime(&time_epoch);
   *result = *time;
 #endif
 
