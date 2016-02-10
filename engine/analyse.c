@@ -4440,7 +4440,7 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
       
       // Load cross section from file
       
-      if (!strcasecmp(pWrkSymbol->symbolName,"1/Ref")) {
+      if (strcasecmp(pWrkSymbol->symbolName,"1/Ref")) {
         if (!strlen(pWrkSymbol->crossFileName)) {
           return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_XS_FILENAME,pWrkSymbol->symbolName);
         }
