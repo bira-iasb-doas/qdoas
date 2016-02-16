@@ -1345,7 +1345,10 @@ RC MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
 
    	  if (pBuffers->varPix!=NULL)
    	   for (i=0;i<n_wavel;i++)
-   	    pBuffers->spectrum[i]-=pBuffers->varPix[i]*header.scansNumber*header.exposureTime;
+   	    {
+   	     pBuffers->spectrum[i]-=pBuffers->varPix[i]*header.scansNumber*header.exposureTime;
+   	     pBuffers->spectrum[i]/=header.scansNumber;
+   	    }
 
    	  // Average
 
