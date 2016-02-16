@@ -927,7 +927,7 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
 
    if (rc)
      return rc;
-   
+
    int i_crosstrack = (indexRecord - 1) % ANALYSE_swathSize;
    const int n_wavel = NDET[i_crosstrack];
 
@@ -941,21 +941,21 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
      pRecord->oldZm=pRecord->Zm;
 
    // Correction of the solar zenith angle with the geolocation of the specified observation site
-   
+
    if ((indexSite=SITES_GetIndex(pEngineContext->project.instrumental.observationSite))!=ITEM_NONE) {
      pSite=&SITES_itemList[indexSite];
-     
+
      longit=-pSite->longitude;   // !!! sign is inverted
-       
+
      pRecord->longitude=-longit;
      pRecord->latitude=latit=(double)pSite->latitude;
-       
+
      if (pSite->altitude>(double)0.)
        pRecord->altitude=pSite->altitude*0.001;
-       
+
      pRecord->Zm=(pRecord->Tm!=(double)0.)?ZEN_FNTdiz(ZEN_FNCrtjul(&pRecord->Tm),&longit,&latit,&pRecord->Azimuth):(double)-1.;
    }
-   
+
    return rc;
  }
 
@@ -1745,25 +1745,6 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
            if ((rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,pTabFeno->NDET,&pTabFeno->refNormFact,"EngineNewRef"))!=ERROR_ID_NO)
             break;
-
-           {
-           	FILE *fp;
-           	char fileName[80];
-
-           	if (pTabFeno->refSpectrumSelectionScanMode==ANLYS_MAXDOAS_REF_SCAN_BEFORE)
-           	 sprintf(fileName,"ref%sN_before.asc",pTabFeno->windowName);
-           	else if (pTabFeno->refSpectrumSelectionScanMode==ANLYS_MAXDOAS_REF_SCAN_AFTER)
-           	 sprintf(fileName,"ref%sN_after.asc",pTabFeno->windowName);
-           	else if (pTabFeno->refSpectrumSelectionScanMode==ANLYS_MAXDOAS_REF_SCAN_AVERAGE)
-           	 sprintf(fileName,"ref%sN_average.asc",pTabFeno->windowName);
-           	else if (pTabFeno->refSpectrumSelectionScanMode==ANLYS_MAXDOAS_REF_SCAN_INTERPOLATE)
-           	 sprintf(fileName,"ref%sN_interpolate.asc",pTabFeno->windowName);
-
-           	fp=fopen(fileName,"w+t");
-           	for (int i=0;i<pTabFeno->NDET;i++)
-           	 fprintf(fp,"%.14le %.14le\n",ENGINE_contextRef.buffers.lambda[i],pTabFeno->Sref[i]);
-           	fclose(fp);
-           }
 
            pTabFeno->indexRef=indexRefRecord;
            pTabFeno->Zm=ENGINE_contextRef.recordInfo.Zm;
