@@ -268,10 +268,11 @@ RC ERROR_SetLast(const char *callingFunction,int errorType,RC errorId,...)
    	// Browse already registered errors
 
     for (i=0;i<errorStackN;i++)
-     if (errorStack[i].errorId==errorId)
+     if (errorStack[i].errorId==errorId
+         && errorStack[i].errorType == errorType)
       break;
 
-    if ((i==errorStackN) &&                                                     // if the error code is already in the stack, do not repeat it
+    if ((i==errorStackN) &&                                                     // if this error code and type is already in the stack, do not repeat it
         (errorStackN<=ERROR_MAX_ERRORS))                                        // the stack is not full
      {
       pError=&errorStack[errorStackN];
