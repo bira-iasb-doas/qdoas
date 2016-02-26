@@ -98,6 +98,9 @@ class CWorkSpace
   bool renameProject(const QString &oldProjectName, const QString &newProjectName);
   bool renameAnalysisWindow(const QString &projectName, const QString &oldWindowName, const QString &newWindowName);
 
+  void setConfigFile(const QString &fileName);
+  const QString& getConfigFile();
+
   bool modifySite(const QString &siteName, const QString &abbr, double longitude, double latitude, double altitude);
   bool modifySymbol(const QString &symbolName, const QString &description);
   void modifiedProjectProperties(const QString &projectName);
@@ -146,6 +149,7 @@ class CWorkSpace
 
   static CWorkSpace *m_instance;
 
+  QString m_configFile;
   std::map<QString,SProjBucket> m_projMap;
   std::map<QString,mediate_site_t*> m_siteMap;
   symbolmap_t m_symbolMap;

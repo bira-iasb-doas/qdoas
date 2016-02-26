@@ -463,7 +463,7 @@ extern "C" {
     char path[FILENAME_BUFFER_LENGTH];
     data_select_list_t selection;
    } mediate_project_export_t;
-
+ 
   /* mediate_project_t
    *
    * Contains all user-specified information about a project. It allows the GUI to
@@ -473,6 +473,7 @@ extern "C" {
   typedef struct mediate_project
   {
     /* Coupled to the control offered by the GUI Project Tabs. */
+    char project_name[PROJECT_NAME_BUFFER_LENGTH];
     mediate_project_spectra_t spectra;
     mediate_project_display_t display;
     mediate_project_selection_t selection;
@@ -491,7 +492,7 @@ extern "C" {
   /****************************************************/
   /* Helper functions */
 
-  void initializeMediateProject(mediate_project_t *d);
+  void initializeMediateProject(mediate_project_t *d, const char *config_file, const char *project_name);
   void initializeMediateProjectDisplay(mediate_project_display_t *d);
   void initializeMediateProjectSelection(mediate_project_selection_t *d);
   void initializeMediateProjectAnalysis(mediate_project_analysis_t *d);

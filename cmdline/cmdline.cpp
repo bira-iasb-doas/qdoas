@@ -404,6 +404,7 @@ int readConfigQdoas(commands_t *cmd, QList<const CProjectConfigItem*> &projectIt
   if (ok) {
 
     CWorkSpace *ws = CWorkSpace::instance();
+    ws->setConfigFile(cmd->configFile);
 
     // sites
     const QList<const CSiteConfigItem*> &siteItems = handler->siteItems();
@@ -476,7 +477,7 @@ int readConfigQdoas(commands_t *cmd, QList<const CProjectConfigItem*> &projectIt
 
 int analyseProjectQdoas(const CProjectConfigItem *projItem, const QString &outputDir, const QList<QString> &filenames)
 {
-	 QString fileFilter="*.*";
+  QString fileFilter="*.*";
   void *engineContext;
   int retCode;
 
@@ -547,9 +548,9 @@ int analyseProjectQdoas(const CProjectConfigItem *projItem, const QString &outpu
 int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *projItem, const QString &outputDir,
 			       CBatchEngineController *controller)
 {
-	 CWorkSpace *ws = CWorkSpace::instance();
-	 int n;
-	 const mediate_site_t *siteList = ws->siteList(n);
+  CWorkSpace *ws = CWorkSpace::instance();
+  int n;
+  const mediate_site_t *siteList = ws->siteList(n);
   int retCode = 0;
   CEngineResponseVisual *msgResp = new CEngineResponseVisual;
 
@@ -637,8 +638,11 @@ int analyseProjectQdoasFile(void *engineContext, CBatchEngineController *control
 
   CEngineResponseBeginAccessFile *beginFileResp = new CEngineResponseBeginAccessFile(filename);
 
-  result = (!calibSwitch) ? mediateRequestBeginAnalyseSpectra(engineContext, filename.toAscii().constData(), beginFileResp) :
-                            mediateRequestBeginCalibrateSpectra(engineContext, filename.toAscii().constData(), beginFileResp);
+  result = (!calibSwitch)
+    ? mediateRequestBeginAnalyseSpectra(engineContext,
+                                        CWorkSpace::instance()->getConfigFile().toAscii().constData(),
+                                        filename.toAscii().constData(), beginFileResp)
+    : mediateRequestBeginCalibrateSpectra(engineContext, filename.toAscii().constData(), beginFileResp);
 
   beginFileResp->setNumberOfRecords(result);
 

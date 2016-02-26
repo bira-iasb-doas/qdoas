@@ -62,8 +62,7 @@ CProjectConfigItem::CProjectConfigItem() :
   m_enabled(true)
 {
   m_root = new CProjectConfigFolder("root", true);
-
-  initializeMediateProject(&m_projProp);
+  initializeMediateProject(&m_projProp, "", "");
 }
 
 CProjectConfigItem::~CProjectConfigItem()
@@ -77,6 +76,7 @@ CProjectConfigItem::~CProjectConfigItem()
 void CProjectConfigItem::setName(const QString &name)
 {
   m_name = name;
+  strncpy(m_projProp.project_name, name.toAscii().data(), PROJECT_NAME_BUFFER_LENGTH-1);
 }
 
 const QString& CProjectConfigItem::name(void) const

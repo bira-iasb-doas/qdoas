@@ -1271,7 +1271,7 @@ int mediateRequestSetProject(void *engineContext,
 
    // Transfer projects options from the mediator to the engine
 
-   // TO DO : Initialize the pEngineProject->name
+   strncpy(pEngineProject->project_name, project->project_name, PROJECT_NAME_BUFFER_LENGTH-1);
 
    setMediateProjectDisplay(&pEngineProject->spectra,&project->display);
    setMediateProjectSelection(&pEngineProject->spectra,&project->selection);
@@ -2229,7 +2229,6 @@ int mediateRequestNextMatchingExportSpectrum(void *engineContext,
    if (rec > 0 && (pEngineContext->indexRecord<=pEngineContext->recordNumber)) {
     {
      mediateRequestPlotSpectra(pEngineContext,responseHandle);
-     // mediateRequestSaveSpectra(pEngineContext,responseHandle);
     }
    }
 
@@ -2250,11 +2249,14 @@ int mediateRequestEndExportSpectra(void *engineContext,
  }
 
 int mediateRequestBeginAnalyseSpectra(void *engineContext,
+                                      const char *configFileName,
 				      const char *spectraFileName,
 				      void *responseHandle)
  {
    ENGINE_CONTEXT *pEngineContext = (ENGINE_CONTEXT *)engineContext;
    RC rc = ERROR_ID_NO;
+
+   strncpy(pEngineContext->project.config_file, configFileName, FILENAME_BUFFER_LENGTH -1);
 
    rc=EngineRequestBeginBrowseSpectra(pEngineContext,spectraFileName,responseHandle);
 
@@ -2414,8 +2416,8 @@ int mediateRequestViewCrossSections(void *engineContext, char *awName,double min
 
    // Initializations
 
-   sprintf(windowTitle,"Cross sections used in %s analysis window of project %s",awName,pEngineContext->project.name);   // !!! it would be nice to add also the project name
-   sprintf(tabTitle,"%s.%s (XS)",pEngineContext->project.name,awName);
+   sprintf(windowTitle,"Cross sections used in %s analysis window of project %s",awName,pEngineContext->project.window_name);   // !!! it would be nice to add also the project name
+   sprintf(tabTitle,"%s.%s (XS)",pEngineContext->project.window_name,awName);
    indexLine=indexColumn=2;
 
    // Get index of selected analysis window in list

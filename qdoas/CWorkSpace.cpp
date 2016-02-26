@@ -191,7 +191,7 @@ mediate_project_t* CWorkSpace::createProject(const QString &newProjectName)
     // does not exist
     tmp = new mediate_project_t;
 
-    initializeMediateProject(tmp);
+    initializeMediateProject(tmp, m_configFile.toAscii().data(), newProjectName.toAscii().data() );
 
     // insert the project (with no windows)
     m_projMap.insert(std::map<QString,SProjBucket>::value_type(newProjectName,SProjBucket(tmp)));
@@ -338,8 +338,11 @@ bool CWorkSpace::renameProject(const QString &oldProjectName, const QString &new
       }
 
       // change of key so insert for the new key then remove the old entry
-      m_projMap.insert(std::map<QString,SProjBucket>::value_type(newProjectName, oldIt->second));
+      auto new_project = m_projMap.insert(std::map<QString,SProjBucket>::value_type(newProjectName, oldIt->second));
       m_projMap.erase(oldIt);
+
+      // update project name metadata in mediate_project_t structure:
+      strncpy(new_project.first->second.project->project_name, newProjectName.toAscii().data(), PROJECT_NAME_BUFFER_LENGTH-1);
 
       // notify the observers again
       obs = m_projectObserverList.begin();
@@ -382,6 +385,14 @@ bool CWorkSpace::renameAnalysisWindow(const QString &projectName, const QString 
     }
   }
   return false;
+}
+
+void CWorkSpace::setConfigFile(const QString &fileName) {
+  m_configFile = fileName;
+}
+
+const QString& CWorkSpace::getConfigFile() {
+  return m_configFile;
 }
 
 bool CWorkSpace::modifySite(const QString &siteName, const QString &abbr,

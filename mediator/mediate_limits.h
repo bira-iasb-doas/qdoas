@@ -30,6 +30,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #define FLUX_BUFFER_LENGTH          256
 #define COLOUR_INDEX_BUFFER_LENGTH  256
 #define ANLYSWIN_NAME_BUFFER_LENGTH  64
+#define PROJECT_NAME_BUFFER_LENGTH 64
 #define TRACK_SELECTION_LENGTH      256
 
 #define MAX_AW_CROSS_SECTION         16

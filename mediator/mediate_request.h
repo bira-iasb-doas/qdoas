@@ -260,7 +260,7 @@ int mediateRequestEndExportSpectra(void *engineContext, void *responseHandle);
 //
 // On success, spectraFileName becomes the 'current spectra file' for the engineContext.
 
-int mediateRequestBeginAnalyseSpectra(void *engineContext, const char *spectraFileName, void *responseHandle);
+  int mediateRequestBeginAnalyseSpectra(void *engineContext, const char *configFileName, const char *spectraFileName, void *responseHandle);
 
 
 // mediateRequestNextMatchingAnalyseSpectrum

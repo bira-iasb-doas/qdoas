@@ -22,7 +22,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QFileDialog>
 
 #include "CPreferences.h"
-
+#include "CWorkSpace.h"
 #include "CEngineRequest.h"
 #include "CEngineResponse.h"
 #include "CEngineThread.h"
@@ -316,6 +316,7 @@ bool CEngineRequestBeginAnalyseFile::process(CEngineThread *engineThread)
   CEngineResponseBeginAccessFile *resp = new CEngineResponseBeginAccessFile(m_fileName);
 
   int rc = mediateRequestBeginAnalyseSpectra(engineThread->engineContext(),
+                                             CWorkSpace::instance()->getConfigFile().toAscii().constData(),
 					     m_fileName.toAscii().constData(), resp);
 
   resp->setNumberOfRecords(rc); // -1 if an error occurred

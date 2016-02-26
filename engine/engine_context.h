@@ -582,7 +582,9 @@ ANALYSIS_REF;
 
   typedef struct _project
  {
-  char name[MAX_ITEM_NAME_LEN+1];                      // name of window
+   char window_name[MAX_ITEM_NAME_LEN];                      // name of window
+   char config_file[FILENAME_BUFFER_LENGTH];
+   char project_name[PROJECT_NAME_BUFFER_LENGTH];
   PRJCT_SPECTRA spectra;                               // spectra selection tab page
   PRJCT_ANLYS analysis;                                // analysis tab page
   PRJCT_FILTER lfilter;                                // filter (low pass options) tab page

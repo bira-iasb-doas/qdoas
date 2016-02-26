@@ -153,8 +153,10 @@ void initializeMediateProjectExport(mediate_project_export_t *d)
   d->directoryFlag = 1;
 }
 
-void initializeMediateProject(mediate_project_t *d)
+void initializeMediateProject(mediate_project_t *d, const char *config_file, const char *project_name)
 {
+  strncpy(d->project_name, project_name, PROJECT_NAME_BUFFER_LENGTH -1);
+
   /* delegate to sub component initialization functions */
   initializeMediateProjectDisplay(&(d->display));
   initializeMediateProjectSelection(&(d->selection));

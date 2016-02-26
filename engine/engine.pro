@@ -10,8 +10,6 @@ HEADERS += *.h
 DEPENDPATH += ../mediator
 INCLUDEPATH += ../mediator ../common
 
-QMAKE_CXXFLAGS += -std=c++0x
-
 windows {
   TARGET   = ../engine
 }

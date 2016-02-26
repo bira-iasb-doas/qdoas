@@ -10,6 +10,8 @@ QMAKE_CFLAGS += -g -std=gnu99 -Wall -Wextra -pedantic \
           -Wwrite-strings -Wstrict-prototypes -Wold-style-definition \
           -Wredundant-decls -Wnested-externs -Wlogical-op
 
+QMAKE_CXXFLAGS += -std=c++0x
+
 QDOAS_VERSION=2.110.1
 
 win64 {

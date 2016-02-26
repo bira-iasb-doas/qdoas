@@ -17,7 +17,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
-
 #include <QMenu>
 #include <QDateTime>
 #include <QKeyEvent>
@@ -759,6 +758,7 @@ QString CWProjectTree::loadConfiguration(const QList<const CProjectConfigItem*> 
     projProp = CWorkSpace::instance()->findProject(projName);
     assert(projProp != NULL);
     *projProp = *((*it)->properties()); // blot copy
+
     // update useCount for count the symbols used in the calibration
     for (int i=0; i < projProp->calibration.crossSectionList.nCrossSection; ++i)
       ws->incrementUseCount(projProp->calibration.crossSectionList.crossSection[i].symbol);
@@ -778,14 +778,14 @@ QString CWProjectTree::loadConfiguration(const QList<const CProjectConfigItem*> 
     // add any analysis windows
     item = projItem->child(1); // the analysis window branch node
 
-    QString preceedingWindowName;
+    QString precedingWindowName;
     const QList<const CAnalysisWindowConfigItem*> &awList = (*it)->analysisWindowItems();
     QList<const CAnalysisWindowConfigItem*>::const_iterator awIt = awList.begin();
     while (awIt != awList.end()) {
       QString awName = (*awIt)->name();
 
       // create the item with the edit iterface
-      errStrPartial = editInsertNewAnalysisWindow(item, awName, preceedingWindowName, &awItem);
+      errStrPartial = editInsertNewAnalysisWindow(item, awName, precedingWindowName, &awItem);
       if (!errStrPartial.isNull())
        collateErrorMessage(errStrTotal,errStrPartial);
 
@@ -800,7 +800,7 @@ QString CWProjectTree::loadConfiguration(const QList<const CProjectConfigItem*> 
       // enable or disable the analyis window
       awItem->setEnabled((*awIt)->isEnabled());
 
-      preceedingWindowName = awName;
+      precedingWindowName = awName;
       ++awIt;
     }
 

@@ -383,6 +383,7 @@ void CWMain::setProjectFileName(const QString &fileName)
   QString str("Qdoas - ");
 
   m_projectFile = fileName;
+  CWorkSpace::instance()->setConfigFile(fileName);
 
   if (m_projectFile.isEmpty()) {
     str += "Unnamed[*]";
@@ -432,6 +433,7 @@ void CWMain::openFile(const QString &fileName) {
   bool ok = xmlReader.parse(source);
 
   if (ok) {
+    setProjectFileName(fileName);
 
     CPathMgr *pathMgr = CPathMgr::instance();
     CWorkSpace *ws = CWorkSpace::instance();
@@ -474,7 +476,6 @@ void CWMain::openFile(const QString &fileName) {
     // projects
     errMsg += m_projTree->loadConfiguration(handler->projectItems());
 
-    setProjectFileName(fileName);
     m_stateMonitor->slotValidate();
     m_saveAction->setEnabled(false);
     m_saveAsAction->setEnabled(true);

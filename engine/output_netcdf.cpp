@@ -192,6 +192,8 @@ static void write_global_attrs(const ENGINE_CONTEXT*pEngineContext, NetCDFGroup 
     input_filename = pEngineContext->fileInfo.fileName;
   }
   group.putAttr("InputFile", input_filename);
+  group.putAttr("QDOASConfig", pEngineContext->project.config_file);
+  group.putAttr("QDOASConfigProject", pEngineContext->project.project_name);
 }
 
 static void write_calibration_field(const struct output_field& calibfield, NetCDFGroup &group, const string& varname,
