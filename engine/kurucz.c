@@ -146,7 +146,7 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
  {
   // Declarations
 
-  char            string[MAX_ITEM_TEXT_LEN],pageTitle[MAX_ITEM_TEXT_LEN];
+  char            string[MAX_ITEM_TEXT_LEN];
   CROSS_REFERENCE *TabCross,*pTabCross;
   CROSS_RESULTS   *pResults,*Results;                                           // pointer to results associated to a symbol
   SVD             *svdFeno;                                                     // svd environments associated to list of little windows

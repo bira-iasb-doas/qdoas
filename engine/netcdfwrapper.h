@@ -62,7 +62,7 @@ public:
     } else {
       return result;
     }
-  };
+  }
 
   template<typename T>
   inline T getFillValue(int varid) const {
@@ -71,21 +71,21 @@ public:
     } else {
       return default_fillvalue<T>();
     }
-  };
+  }
 
   template<typename T>
   inline T getFillValue(const std::string& var_name) const {
     return getFillValue<T>(varID(var_name));
-  };
+  }
 
   template<typename T>
   inline void getVar(int varid, const size_t start[], const size_t count[], T *out) const {
     if (ncGetVar(varid, start, count, out) != NC_NOERR) {
       throw std::runtime_error("Cannot read NetCDF variable '"+name+"/"+varName(varid)+"'");
-    } };
+    } }
   template<typename T>
   inline void getVar(const std::string& name, const size_t start[], const size_t count[], T *out) const {
-    getVar(varID(name), start, count, out);  };
+    getVar(varID(name), start, count, out);  }
 
   template<typename T>
   inline void putVar(int varid, const size_t start[], const size_t count[], T *in) {

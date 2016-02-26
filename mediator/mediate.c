@@ -1,3 +1,4 @@
+
 /*
   Qdoas is a cross-platform application for spectral analysis with the DOAS
   algorithm.  Copyright (C) 2007  S[&]T and BIRA
@@ -333,41 +334,6 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
   // Return
 
   return indexLine;
- }
-
-// -----------------------------------------------------------------------------
-// FUNCTION      mediateRequestSaveSpectra
-// -----------------------------------------------------------------------------
-// PURPOSE       Export spectra in an ASCII file
-//
-// INPUT         pEngineContext     pointer to the engine context
-//
-// RETURN        0 in case of success; the code of the error otherwise
-// -----------------------------------------------------------------------------
-
-int mediateRequestSaveSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
- {
- 	// Declarations
-
-  PROJECT *pProject;                                                            // pointer to the project part of the engine context
-  PRJCT_SPECTRA *pSpectra;                                                      // pointer to the spectra part of the project
-  PRJCT_INSTRUMENTAL *pInstrumental;                                            // pointer to the instrumental part of the project
-  PRJCT_EXPORT *pExport;                                                        // pointer to the export part of the project
-  RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
-  struct date *pDay;                                                            // pointer to measurement date
-  struct time *pTime;                                                           // pointer to measurement date
-  char fileName[DOAS_MAX_PATH_LEN+1];
-
-  // Initializations
-
-  pRecord=&pEngineContext->recordInfo;
-  pProject=&pEngineContext->project;
-  pSpectra=&pProject->spectra;
-  pInstrumental=&pProject->instrumental;
-  pDay=&pRecord->present_datetime.thedate;
-  pTime=&pRecord->present_datetime.thetime;
-
-  return 0;
  }
 
 // -----------------------------------------------------------------------------
