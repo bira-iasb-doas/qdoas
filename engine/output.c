@@ -1587,6 +1587,9 @@ static RC get_orbit_date(const ENGINE_CONTEXT *pEngineContext, int *orbit_year, 
   case PRJCT_INSTR_FORMAT_OMI:
     rc = OMI_get_orbit_date(orbit_year, orbit_month, orbit_day);
     break;
+  case PRJCT_INSTR_FORMAT_TROPOMI:
+    rc = tropomi_get_orbit_date(orbit_year, orbit_month, orbit_day);
+    break;
   case PRJCT_INSTR_FORMAT_GDP_BIN:
     rc = GDP_BIN_get_orbit_date(orbit_year, orbit_month, orbit_day);
     break;

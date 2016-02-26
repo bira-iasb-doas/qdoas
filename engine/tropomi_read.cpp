@@ -377,6 +377,14 @@ int tropomi_get_reference(const char *filename, int pixel,
   return rc;
 }
 
+int tropomi_get_orbit_date(int *orbit_year, int *orbit_month, int *orbit_day) {
+  auto orbit_start = std::istringstream(current_file.getAttText("time_coverage_start"));
+  // time_coverage_start is formatted as "YYYY-MM-DD"
+  char tmp; // to skip "-" chars
+  orbit_start >> *orbit_year >> tmp >> *orbit_month >> tmp >> *orbit_day;
+  return  orbit_start.good() ? 0 : 1;
+}
+
 void tropomi_cleanup(void) {
   current_file.close();
   
