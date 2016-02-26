@@ -6,7 +6,6 @@
 #include <stdexcept>
 #include <algorithm>
 #include <sstream>
-#include <ctime>
 
 #include "tropomi.h"
 #include "tropomi_read.h"
@@ -14,6 +13,7 @@
 
 #include "winthrd.h"
 #include "comdefs.h"
+#include "stdfunc.h"
 #include "engine_context.h"
 #include "analyse.h"
 
@@ -69,9 +69,9 @@ static void getDate(int delta_t, struct datetime *date_time, int *pMs) {
 
   struct tm thedate;
 #ifndef _WIN32
-  localtime_r(&thetime, &thedate);
+  gmtime_r(&thetime, &thedate);
 #else
-  struct tm *time = localtime(&thetime);
+  struct tm *time = gmtime(&thetime);
   thedate = *time;
 #endif
   
@@ -112,9 +112,8 @@ static void set_reference_time(const string& utc_date) {
 #endif
   };
 
-   // get number of seconds since 1/1/1970. mktime() uses the current
-   // timezone, so we must convert back using localtime() in getDate()
-  reference_time = mktime(&t);
+   // get number of seconds since 1/1/1970, UTC
+  reference_time = STD_timegm(&t);
 }
 
 static geodata read_geodata(const NetCDFGroup& geo_group, size_t n_scanline, size_t n_groundpixel) {

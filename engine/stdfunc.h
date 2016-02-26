@@ -2,6 +2,7 @@
 #define STDFUNC_H
 
 #include <stdio.h>
+#include <time.h>
 
 // ======================================
 // stdfunc.h : STANDARD UTILITY FUNCTIONS
@@ -20,6 +21,8 @@ char       *STD_Strupr(char *n);
 char       *STD_Strlwr(char *n);
 
 int         STD_IsDir(char *filename);
+
+time_t STD_timegm(register struct tm * t);
   
 #if defined(_cplusplus) || defined(__cplusplus)
 }
