@@ -378,7 +378,7 @@ int tropomi_get_reference(const char *filename, int pixel,
 }
 
 int tropomi_get_orbit_date(int *orbit_year, int *orbit_month, int *orbit_day) {
-  auto orbit_start = std::istringstream(current_file.getAttText("time_coverage_start"));
+  std::istringstream orbit_start(current_file.getAttText("time_coverage_start"));
   // time_coverage_start is formatted as "YYYY-MM-DD"
   char tmp; // to skip "-" chars
   orbit_start >> *orbit_year >> tmp >> *orbit_month >> tmp >> *orbit_day;
