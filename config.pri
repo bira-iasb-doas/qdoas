@@ -124,6 +124,9 @@ thomas {
 
   CONFIG += qwt
 
+  QMAKE_CXX = ccache g++
+  QMAKE_CC = ccache gcc
+
   INCLUDEPATH += /home/thomasd/include
   INCLUDEPATH += /usr/include/hdf
   INCLUDEPATH += /usr/include/hdf5/serial
