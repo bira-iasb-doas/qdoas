@@ -1347,7 +1347,7 @@ RC AnalyseLoadVector(const char *function, const char *fileName, double *lambda,
 // ANALYSE_LinFit : Use svd facilities for linear regressions
 // ----------------------------------------------------------
 
-RC ANALYSE_LinFit(SVD *pSvd,int Npts,int Degree,double *a,double *sigma,double *b,double *x)
+RC ANALYSE_LinFit(SVD *pSvd, int Npts, int Degree, const double *a, const double *sigma, const double *b, double *x)
 {
   // Declarations
 
@@ -1356,7 +1356,7 @@ RC ANALYSE_LinFit(SVD *pSvd,int Npts,int Degree,double *a,double *sigma,double *
   RC rc;
 
 #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionBegin("ANALYSE_LinFit",DEBUG_FCTTYPE_UTIL);
+  DEBUG_FunctionBegin(__func__,DEBUG_FCTTYPE_UTIL);
 #endif
 
   // Initializations
@@ -1374,8 +1374,8 @@ RC ANALYSE_LinFit(SVD *pSvd,int Npts,int Degree,double *a,double *sigma,double *
 
     x[1]=mean/Npts;
    }
-  else if (((Norm=(double *)MEMORY_AllocDVector("ANALYSE_LinFit ","Norm",1,Degree+1))==NULL) ||
-           ((bSig=(double *)MEMORY_AllocDVector("ANALYSE_LinFit ","bSig",1,Npts))==NULL))
+  else if (((Norm=(double *)MEMORY_AllocDVector(__func__,"Norm",1,Degree+1))==NULL) ||
+           ((bSig=(double *)MEMORY_AllocDVector(__func__,"bSig",1,Npts))==NULL))
    rc=ERROR_ID_ALLOC;
   else
    {
@@ -1401,7 +1401,7 @@ RC ANALYSE_LinFit(SVD *pSvd,int Npts,int Degree,double *a,double *sigma,double *
     // Normalize columns in svd matrix
 
     for (i=1;i<=Degree+1;i++)
-     if ((rc=VECTOR_NormalizeVector(pSvd->A[i],Npts,&Norm[i],"ANALYSE_LinFit "))!=ERROR_ID_NO)
+     if ((rc=VECTOR_NormalizeVector(pSvd->A[i],Npts,&Norm[i],__func__))!=ERROR_ID_NO)
       goto EndANALYSE_LinFit;
 
     // SVD decomposition and backsubstitution
@@ -1418,12 +1418,12 @@ RC ANALYSE_LinFit(SVD *pSvd,int Npts,int Degree,double *a,double *sigma,double *
  EndANALYSE_LinFit :
 
   if (Norm!=NULL)
-   MEMORY_ReleaseDVector("ANALYSE_LinFit ","Norm",Norm,1);
+   MEMORY_ReleaseDVector(__func__,"Norm",Norm,1);
   if (bSig!=NULL)
-   MEMORY_ReleaseDVector("ANALYSE_LinFit ","bSig",bSig,1);
+   MEMORY_ReleaseDVector(__func__,"bSig",bSig,1);
 
 #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionStop("ANALYSE_LinFit",rc);
+  DEBUG_FunctionStop(__func__,rc);
 #endif
 
   return rc;

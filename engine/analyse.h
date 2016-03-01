@@ -316,7 +316,7 @@ RC   ANALYSE_ConvoluteXs(const FENO *pTabFeno,int action,double conc,
                          const double *newlambda, double *output, INDEX indexlambdaMin, INDEX indexlambdaMax, const int n_wavel,
                          INDEX indexFenoColumn, int wveDptFlag);
 RC   ANALYSE_XsConvolution(FENO *pTabFeno,double *newLambda,MATRIX_OBJECT *pSlit,MATRIX_OBJECT *pSlit2,int slitType,double *slitParam1,double *slitParam2,INDEX indexFenoColumn,int wveDptFlag);
-RC   ANALYSE_LinFit(SVD *pSvd,int Npts,int Degree,double *a,double *sigma,double *b,double *x);
+RC   ANALYSE_LinFit(SVD *pSvd,int Npts,int Degree, const double *a, const double *sigma, const double *b, double *x);
 void ANALYSE_SvdFree(char *callingFunctionShort,SVD *pSvd);
 RC   ANALYSE_SvdLocalAlloc(char *callingFunctionShort,SVD *pSvd);
 RC   ANALYSE_SvdInit(SVD *pSvd, const int n_wavel);
