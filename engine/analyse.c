@@ -4240,38 +4240,31 @@ RC ANALYSE_LoadSlit(const PRJCT_SLIT *pSlit,int kuruczFlag)
   rc=ERROR_ID_NO;
 
 
-  if (pSlitFunction->slitType!=SLIT_TYPE_NONE)
-   {
+  if (pSlitFunction->slitType!=SLIT_TYPE_NONE) {
     // Slit type selection
 
-    if ((pSlitFunction->slitType==SLIT_TYPE_FILE) || pSlitFunction->slitWveDptFlag)
-     {
+    if ((pSlitFunction->slitType==SLIT_TYPE_FILE) || pSlitFunction->slitWveDptFlag) {
       // Load file
 
       if (!strlen(pSlitFunction->slitFile))
-       rc=ERROR_SetLast("ANALYSE_LoadSlit",ERROR_TYPE_FATAL,ERROR_ID_MSGBOX_FIELDEMPTY,"Slit File");
+        rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_MSGBOX_FIELDEMPTY,"Slit File");
       else
-       rc=MATRIX_Load(pSlitFunction->slitFile,&ANALYSIS_slit,0,0,
-                      -9999.,9999.,
-                      /* ((pSlitFunction->slitType==SLIT_TYPE_GAUSS_T_FILE) ||
-                         (pSlitFunction->slitType==SLIT_TYPE_ERF_T_FILE))?0: */ 1,0,"ANALYSE_LoadSlit ");
-     }
+        rc=MATRIX_Load(pSlitFunction->slitFile,&ANALYSIS_slit, 0, 0, 0., 0., 1, 0, __func__);
+    }
 
-    if (pSlitFunction->slitWveDptFlag && ((pSlitFunction->slitType==SLIT_TYPE_FILE) ||(pSlitFunction->slitType==SLIT_TYPE_ERF) ||(pSlitFunction->slitType==SLIT_TYPE_AGAUSS) || (pSlitFunction->slitType==SLIT_TYPE_VOIGT)))
-     {
+    if (pSlitFunction->slitWveDptFlag && ((pSlitFunction->slitType==SLIT_TYPE_FILE) ||(pSlitFunction->slitType==SLIT_TYPE_ERF) ||(pSlitFunction->slitType==SLIT_TYPE_AGAUSS) || (pSlitFunction->slitType==SLIT_TYPE_VOIGT))) {
       if (!strlen(pSlitFunction->slitFile2))
-       rc=ERROR_SetLast("ANALYSE_LoadSlit",ERROR_TYPE_FATAL,ERROR_ID_MSGBOX_FIELDEMPTY,"Slit File 2");
+        rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_MSGBOX_FIELDEMPTY,"Slit File 2");
       else
-       rc=MATRIX_Load(pSlitFunction->slitFile2,&ANALYSIS_slit2,0,0,
-                      -9999.,9999.,1,0,"ANALYSE_LoadSlit 2");
-     }
-   }
+        rc=MATRIX_Load(pSlitFunction->slitFile2, &ANALYSIS_slit2, 0, 0, 0., 0., 1, 0, "ANALYSE_LoadSlit 2");
+    }
+  }
 
   if (!rc && kuruczFlag) {
     if (!strlen(pSlit->kuruczFile))
-      rc=ERROR_SetLast("ANALYSE_LoadSlit",ERROR_TYPE_FATAL,ERROR_ID_MSGBOX_FIELDEMPTY,"Slit solar ref. file");
+      rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_MSGBOX_FIELDEMPTY,"Slit solar ref. file");
     else {
-      rc=MATRIX_Load(pSlit->kuruczFile,&ANALYSIS_slitK,0,0,-9999.,9999.,1,0,"ANALYSE_LoadSlit ");
+      rc=MATRIX_Load(pSlit->kuruczFile,&ANALYSIS_slitK,0,0,0.,0.,1,0,__func__);
       int n_columns = (pSlitFunction->slitType==SLIT_TYPE_NONE) ? 1+ANALYSE_swathSize : 2;
       if (ANALYSIS_slitK.nc != n_columns) {
         rc=ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_XS_COLUMNS, "Slit solar ref. file", ANALYSIS_slitK.nc, n_columns);
@@ -4284,7 +4277,7 @@ RC ANALYSE_LoadSlit(const PRJCT_SLIT *pSlit,int kuruczFlag)
   return rc;
 }
 
-RC ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol,double *lambda, const int n_wavel, const char *callingFunction)
+RC ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol, const double *lambda, const int n_wavel, const char *callingFunction)
 {
   // Declarations
 
@@ -4372,7 +4365,7 @@ RC is_same_file(const char *file1, const char *file2, bool *result) {
 // PURPOSE       Load data from the molecules pages
 // -----------------------------------------------------------------------------
 
-RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *crossSectionList,int nCross,int hidden,double *lambda,INDEX indexFenoColumn)
+RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *crossSectionList,int nCross,int hidden, const double *lambda,INDEX indexFenoColumn)
 {
   // Declarations
 
@@ -4443,6 +4436,9 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
       if (strcasecmp(pWrkSymbol->symbolName,"1/Ref")) {
         if (!strlen(pWrkSymbol->crossFileName)) {
           return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_XS_FILENAME,pWrkSymbol->symbolName);
+        }
+        if (lambda[0] == 0.0) { // lambda should now contain a wavelength grid from a calibration file or reference spectrum
+          return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_MISSING_INITIAL_CALIB);
         }
         if ( (rc=MATRIX_Load(pCross->crossSectionFile,&pWrkSymbol->xs,0,0,
                              (pCross->crossType==ANLYS_CROSS_ACTION_NOTHING) ? 0. : lambda[0]-7.,

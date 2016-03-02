@@ -308,7 +308,7 @@ extern double      **U,*x,*Lambda,*LambdaSpec,
 
 RC ANALYSE_Function ( double * const X, double * const Y, double *SigmaY, double *Yfit, int Npts,
               double *fitParamsC, double *fitParamsF,INDEX indexFenoColumn);
-RC   ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol,double *lambda, const int n_wavel, const char *callingFunction);
+RC   ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol, const double *lambda, const int n_wavel, const char *callingFunction);
 RC   ANALYSE_XsInterpolation(FENO *pTabFeno, const double *newLambda,INDEX indexFenoColumn);
 RC   ANALYSE_ConvoluteXs(const FENO *pTabFeno,int action,double conc,
                          const MATRIX_OBJECT *pXs,
@@ -328,7 +328,7 @@ RC   ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle);
 
 void ANALYSE_SetAnalysisType(INDEX indexFenoColumn);
 RC   ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn);
-RC   ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *crossSectionList,int nCross,int hidden,double *lambda,INDEX indexFenoColumn);
+RC   ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *crossSectionList,int nCross,int hidden, const double *lambda,INDEX indexFenoColumn);
 RC   ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,int nLinear,INDEX indexFenoColumn);
 RC   ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAMETERS *nonLinearList,int nNonLinear,double *lambda,INDEX indexFenoColumn);
 RC   ANALYSE_LoadShiftStretch(const ANALYSIS_SHIFT_STRETCH *shiftStretchList,int nShiftStretch,INDEX indexFenoColumn);

@@ -441,19 +441,18 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
 
     rc=ERROR_ID_ALLOC;
 
-   else
-    {
-    	// Buffers initialization
+   else {
+     // Buffers initialization
 
-    	if (pBuffers->specMaxx!=NULL)
-    	 for (i=0;i<MAX_SPECMAX;i++)
-    	  pBuffers->specMaxx[i]=(double)i+1;
+     if (pBuffers->specMaxx!=NULL)
+       for (i=0;i<MAX_SPECMAX;i++)
+         pBuffers->specMaxx[i]=(double)i+1;
 
      // Load the wavelength calibration
 
      if (!strlen(pInstrumental->calibrationFile) || (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI))
        for (i=0;i<max_ndet;i++)
-         pBuffers->lambda[i]=i+1;
+         pBuffers->lambda[i] = 0.0;
      else if ((fp=fopen(pInstrumental->calibrationFile,"rt"))==NULL)
        rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pInstrumental->calibrationFile);
      else {

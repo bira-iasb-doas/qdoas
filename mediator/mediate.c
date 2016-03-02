@@ -126,8 +126,6 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
   else
     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Date and Time","%02d/%02d/%d %02d:%02d:%02d.%06d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec,&pRecord->present_datetime.microseconds);
 
-  //      sprintf(tmpString,"%.3f -> %.3f \n",pRecord->TimeDec,pRecord->localTimeDec);
-
   pDay=&pRecord->startDate;
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_STARTDATE])
     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Start date","%02d/%02d/%d",pDay->da_day,pDay->da_mon,pDay->da_year);
@@ -1677,9 +1675,6 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
            rc=ERROR_ID_ALLOC;
            break;
          }
-
-         for (i=0;i<n_wavel;i++)
-           pTabFeno->LambdaRef[i]=i;  // NB : for satellites measurements, irradiance is retrieved later from spectra files
 
          if ( pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI
               && strlen(pInstrumental->calibrationFile) ) {
