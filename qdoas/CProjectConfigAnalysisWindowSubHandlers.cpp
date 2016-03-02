@@ -354,7 +354,7 @@ bool CAnalysisWindowNonLinearSubHandler::start(const QXmlAttributes &atts)
   m_d->usamp1FlagFit = (atts.value("u1fit") == "true") ? 1 : 0;
   m_d->usamp1Initial = atts.value("u1init").toDouble();
   m_d->usamp1Delta = atts.value("u1delt").toDouble();
-  m_d->usamp1FlagFitStore = (atts.value("u1fstr") == "true") ? 1 : 0;
+  m_d->usamp1FlagFitStore = (atts.value("u1str") == "true") ? 1 : 0;
   m_d->usamp1FlagErrStore = (atts.value("u1estr") == "true") ? 1 : 0;
 
   if (fabs(m_d->usamp1Delta)<(double)EPSILON)
@@ -363,7 +363,7 @@ bool CAnalysisWindowNonLinearSubHandler::start(const QXmlAttributes &atts)
   m_d->usamp2FlagFit = (atts.value("u2fit") == "true") ? 1 : 0;
   m_d->usamp2Initial = atts.value("u2init").toDouble();
   m_d->usamp2Delta = atts.value("u2delt").toDouble();
-  m_d->usamp2FlagFitStore = (atts.value("u2fstr") == "true") ? 1 : 0;
+  m_d->usamp2FlagFitStore = (atts.value("u2str") == "true") ? 1 : 0;
   m_d->usamp2FlagErrStore = (atts.value("u2estr") == "true") ? 1 : 0;
 
   if (fabs(m_d->usamp2Delta)<(double)EPSILON)
