@@ -2,15 +2,13 @@
 # General Configuration for ALL applications
 #----------------------------------------------
 
-CODE_GENERATION = debug       # debug or release
-CONFIG += debug
+CODE_GENERATION = release      # debug or release
+CONFIG += release
 
 QMAKE_CFLAGS += -g -std=gnu99 -Wall -Wextra -pedantic \
           -Wformat=2 -Wunused -Wno-unused-parameter -Wuninitialized \
           -Wwrite-strings -Wstrict-prototypes -Wold-style-definition \
           -Wredundant-decls -Wnested-externs -Wlogical-op
-
-QMAKE_CXXFLAGS += -std=c++0x
 
 QDOAS_VERSION=2.110.1
 
@@ -79,6 +77,9 @@ linux_package {
 # linux -> windows cross-compilation using mxe (M cross environment, http://mxe.cc)
 # run <path-to-mxe-root>/usr/i686-pc-mingw32/qt/bin/qmake all.pro CONFIG+=mxe
 mxe {
+  CONFIG -= debug
+  CONFIG += release
+  CODE_GENERATION = release
   # cross-compiled qwt, coda, hdf-eos2 and hdf-eos5 libraries should
   # be installed here:
   INSTALL_PREFIX = /bira-iasb/projects/DOAS/Programmes/QDOAS-cross

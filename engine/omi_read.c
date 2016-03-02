@@ -879,7 +879,7 @@ static void tai_to_utc(double tai, float utc_seconds_in_day, struct tm *result, 
 #ifndef _WIN32
   gmtime_r(&time_epoch, result);   // use the thread-safe approach where it's available
 #else
-  struct *time = gmtime(&time_epoch);
+  struct tm *time = gmtime(&time_epoch);
   *result = *time;
 #endif
 

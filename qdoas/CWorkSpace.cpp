@@ -338,11 +338,11 @@ bool CWorkSpace::renameProject(const QString &oldProjectName, const QString &new
       }
 
       // change of key so insert for the new key then remove the old entry
-      auto new_project = m_projMap.insert(std::map<QString,SProjBucket>::value_type(newProjectName, oldIt->second));
+      SProjBucket inserted = m_projMap.insert(std::map<QString,SProjBucket>::value_type(newProjectName, oldIt->second)).first->second;
       m_projMap.erase(oldIt);
 
       // update project name metadata in mediate_project_t structure:
-      strncpy(new_project.first->second.project->project_name, newProjectName.toAscii().data(), PROJECT_NAME_BUFFER_LENGTH-1);
+      strncpy(inserted.project->project_name, newProjectName.toAscii().data(), PROJECT_NAME_BUFFER_LENGTH-1);
 
       // notify the observers again
       obs = m_projectObserverList.begin();
