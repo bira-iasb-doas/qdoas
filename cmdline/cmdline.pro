@@ -58,7 +58,6 @@ SOURCES += ../qdoas/CProjectConfigSubHandlers.cpp
 SOURCES += ../qdoas/CProjectConfigAnalysisWindowSubHandlers.cpp
 SOURCES += ../qdoas/CProjectConfigTreeNode.cpp
 SOURCES += ../qdoas/CProjectConfigItem.cpp
-SOURCES += ../qdoas/CWorkSpace.cpp
 
 SOURCES += ../convolution/CConvConfigHandler.cpp
 SOURCES += ../ring/CRingConfigHandler.cpp
@@ -77,7 +76,6 @@ HEADERS += ../qdoas/CProjectConfigSubHandlers.h
 HEADERS += ../qdoas/CProjectConfigAnalysisWindowSubHandlers.h
 HEADERS += ../qdoas/CProjectConfigTreeNode.h
 HEADERS += ../qdoas/CProjectConfigItem.h
-HEADERS += ../qdoas/CWorkSpace.h
 
 HEADERS += ../convolution/CConvConfigHandler.h
 HEADERS += ../ring/CRingConfigHandler.h

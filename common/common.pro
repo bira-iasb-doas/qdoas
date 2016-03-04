@@ -24,7 +24,8 @@ SOURCES       = CConfigHandler.cpp \
 		CWPlotPage.cpp \
 		CWPlotPropertiesConfig.cpp \
 		CWPlotPropertiesDialog.cpp \
-		CWSlitEditors.cpp
+                CWSlitEditors.cpp \
+                CWorkSpace.cpp
 
 HEADERS += *.h
 
