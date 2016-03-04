@@ -35,7 +35,7 @@ linux_package {
 }
 
 mxe {
-  LIBS += -Wl,-Bstatic -lqwt
+  LIBS += -Wl,-Bstatic -lqwt -lQtSvg
   CONFIG += windows
 }
 

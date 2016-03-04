@@ -29,8 +29,10 @@ linux_package {
 }
 
 mxe {
-  LIBS += -Wl,-Bstatic -lcoda -lhdfeos -lnetcdf -lmfhdf -ldf -lz -ljpeg -lhe5_hdfeos -lhdf5_hl -lhdf5 -lqwt
+  LIBS += -Wl,-Bstatic -lcoda -lhdfeos -lnetcdf -lmfhdf -ldf -lz -ljpeg -lhe5_hdfeos -lhdf5_hl -lhdf5
   LIBS += -lportablexdr
+  LIBS += -lqwt -lQtSvg
+
   CONFIG += windows
 }
 
