@@ -649,7 +649,7 @@ RC TemperatureCorrection(double *xs,double *A,double *B,double *C,double *newXs,
 RC ShiftVector(const double *lambda, double *source, const double *deriv, double *target, const int n_wavel,
                double DSH,double DST,double DST2,                           // first shift and stretch
                double DSH_,double DST_,double DST2_,                        // second shift and stretch
-               const double *Param,int fwhmDir,int kuruczFlag, const double *preshift,INDEX indexFenoColumn)
+               const double *Param,int fwhmDir,int kuruczFlag,INDEX indexFenoColumn)
 {
   // Declarations
 
@@ -2209,7 +2209,7 @@ RC ANALYSE_Function( double * const spectrum_orig, double * const reference, dou
 
     if ( (rc=ShiftVector(LambdaSpec, spectrum_orig, SplineSpec, spectrum_interpolated, n_wavel,
                          shift_rad, stretch_rad, stretch2_rad,
-                         (double)0.,(double)0.,(double)0., fitParamsF,-1,0,NULL,indexFenoColumn))!=ERROR_ID_NO ||
+                         0., 0., 0., fitParamsF, -1, 0, indexFenoColumn))!=ERROR_ID_NO ||
          (Feno->useUsamp && pUsamp->method==PRJCT_USAMP_AUTOMATIC && (rc=ANALYSE_UsampBuild(2,ITEM_NONE))!=ERROR_ID_NO) )
 
       goto EndFunction;
@@ -2448,7 +2448,7 @@ RC ANALYSE_Function( double * const spectrum_orig, double * const reference, dou
                                  (pTabCross->FitStretch!=ITEM_NONE)?(double)fitParamsF[pTabCross->FitStretch]:(double)pTabCross->InitStretch,
                                  (pTabCross->FitStretch2!=ITEM_NONE)?(double)fitParamsF[pTabCross->FitStretch2]:(double)pTabCross->InitStretch2,
                                  Feno->Shift,Feno->Stretch,Feno->Stretch2,
-                                 NULL,0,0,NULL,indexFenoColumn))!=ERROR_ID_NO)))
+                                 NULL,0,0,indexFenoColumn))!=ERROR_ID_NO)))
 
             goto EndFunction;
 
@@ -2595,7 +2595,7 @@ RC ANALYSE_Function( double * const spectrum_orig, double * const reference, dou
     if ((rc=ShiftVector(ANALYSE_splineX,reference,SplineRef,reference_shifted,n_wavel,
                         shift_ref,stretch_ref,stretch2_ref,
                         (double)0.,(double)0.,(double)0., fitParamsF,1,
-                        (Feno->analysisType==ANALYSIS_TYPE_FWHM_KURUCZ)?1:0,NULL,indexFenoColumn))!=ERROR_ID_NO)
+                        (Feno->analysisType==ANALYSIS_TYPE_FWHM_KURUCZ)?1:0,indexFenoColumn))!=ERROR_ID_NO)
 
      goto EndFunction;
 
