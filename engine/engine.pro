@@ -2,8 +2,6 @@ TEMPLATE = lib
 
 include( ../config.pri )
 
-QMAKE_CXXFLAGS += -std=c++0x
-
 CONFIG += staticlib $$CODE_GENERATION
 
 SOURCES += *.c *.cpp
