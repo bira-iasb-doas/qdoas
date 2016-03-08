@@ -80,6 +80,9 @@ struct _prjctKurucz {
   double           lambdaRight;
   int              invPolyDegree;
   int              analysisMethod;
+  int              preshiftFlag;
+  double           preshiftMin;
+  double           preshiftMax;
 };
 
 // ----------------------

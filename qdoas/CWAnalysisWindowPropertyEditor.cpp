@@ -314,7 +314,7 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   m_refTwoStack = new QStackedLayout;
   m_refTwoStack->setMargin(0);
 
-  if ((p->instrumental.format==PRJCT_INSTR_FORMAT_CCD_EEV) || (p->instrumental.format==PRJCT_INSTR_FORMAT_MFC_STD) || (p->instrumental.format==PRJCT_INSTR_FORMAT_MFC_BIRA) ||
+  if ((p->instrumental.format==PRJCT_INSTR_FORMAT_CCD_EEV) || (p->instrumental.format==PRJCT_INSTR_FORMAT_MFC) || (p->instrumental.format==PRJCT_INSTR_FORMAT_MFC_STD) || (p->instrumental.format==PRJCT_INSTR_FORMAT_MFC_BIRA) ||
      ((p->instrumental.format==PRJCT_INSTR_FORMAT_ASCII) && p->instrumental.ascii.flagElevationAngle))
    m_refTwoStack->addWidget(m_maxdoasFrame);  // automatic - takes index 0
   else
@@ -547,7 +547,7 @@ bool CWAnalysisWindowPropertyEditor::actionOk(void)
     strcpy(d->refTwoFile, m_refTwoEdit->text().toAscii().data());
     strcpy(d->residualFile, m_residualEdit->text().toAscii().data());
 
-    if ((p->instrumental.format==PRJCT_INSTR_FORMAT_CCD_EEV) || (p->instrumental.format==PRJCT_INSTR_FORMAT_MFC_STD) || (p->instrumental.format==PRJCT_INSTR_FORMAT_MFC_BIRA) ||
+    if ((p->instrumental.format==PRJCT_INSTR_FORMAT_CCD_EEV) || (p->instrumental.format==PRJCT_INSTR_FORMAT_MFC) || (p->instrumental.format==PRJCT_INSTR_FORMAT_MFC_STD) || (p->instrumental.format==PRJCT_INSTR_FORMAT_MFC_BIRA) ||
        ((p->instrumental.format==PRJCT_INSTR_FORMAT_ASCII) && p->instrumental.ascii.flagElevationAngle))
      {
       d->refSzaCenter = m_maxdoasSzaCenterEdit->text().toDouble();
@@ -649,7 +649,7 @@ void CWAnalysisWindowPropertyEditor::projectPropertiesChanged()
      {
       // MAXDOAS measurements
 
-      if ((d->instrumental.format==PRJCT_INSTR_FORMAT_CCD_EEV) || (d->instrumental.format==PRJCT_INSTR_FORMAT_MFC_STD) ||  (d->instrumental.format==PRJCT_INSTR_FORMAT_MFC_BIRA) ||
+      if ((d->instrumental.format==PRJCT_INSTR_FORMAT_CCD_EEV) || (d->instrumental.format==PRJCT_INSTR_FORMAT_MFC) || (d->instrumental.format==PRJCT_INSTR_FORMAT_MFC_STD) ||  (d->instrumental.format==PRJCT_INSTR_FORMAT_MFC_BIRA) ||
          ((d->instrumental.format==PRJCT_INSTR_FORMAT_ASCII) && d->instrumental.ascii.flagElevationAngle))
        {
         m_maxdoasFrame->show();

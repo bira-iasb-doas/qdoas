@@ -41,21 +41,21 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
   int index;
   QString tmpStr;
 
-  QVBoxLayout *mainLayout = new QVBoxLayout(this);   
+  QVBoxLayout *mainLayout = new QVBoxLayout(this);
   QLabel *methodLabel,*refLabel;
 
   QGridLayout *topLayout = new QGridLayout;
 
-  mainLayout->addSpacing(5);     
-  
-  // ref file    
-  topLayout->addWidget((refLabel=new QLabel("Solar Ref. File", this)), 0, 0);  
+  mainLayout->addSpacing(5);
+
+  // ref file
+  topLayout->addWidget((refLabel=new QLabel("Solar Ref. File", this)), 0, 0);
   m_refFileEdit  = new QLineEdit(this);
   m_refFileEdit->setMaxLength(sizeof(properties->solarRefFile) - 1); // limit test length to buffer size
   m_refBrowseBtn = new QPushButton("Browse", this);
   topLayout->addWidget(m_refFileEdit, 0, 1, 1, 2);
   topLayout->addWidget(m_refBrowseBtn, 0, 3);
-  
+
   // methodType
   topLayout->addWidget((methodLabel=new QLabel("Analysis Method", this)), 1, 0);
   m_methodCombo = new QComboBox(this);
@@ -96,7 +96,7 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
   orderLayout->setAlignment(Qt::AlignLeft);
   orderLayout->addWidget(new QLabel("Order", this));
   m_orderSpinBox = new QSpinBox(this);
-  m_orderSpinBox->setRange(1, 10); 
+  m_orderSpinBox->setRange(1, 10);
   orderLayout->addWidget(m_orderSpinBox);
   topLayout->addWidget(m_orderWidget, 2, 2, 1, 2);
   m_orderWidget->hide(); // show when lineshape combo is cSpectralLineShapeLorentz
@@ -164,23 +164,46 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
   m_lambdaMinEdit = new QLineEdit(windowGroup);
   //  m_lambdaMinEdit->setFixedWidth(50);
   m_lambdaMinEdit->setValidator(new CDoubleFixedFmtValidator(100.0, 900.0, 2, m_lambdaMinEdit));
+  m_lambdaMinEdit->setFixedWidth(60);
   windowLayout->addWidget(m_lambdaMinEdit, 0, 1, Qt::AlignLeft);
 
-  windowLayout->addWidget(new QLabel("Max", windowGroup), 0, 2, Qt::AlignRight);
+  windowLayout->addWidget(new QLabel("Max", windowGroup), 1, 0, Qt::AlignRight);
   m_lambdaMaxEdit = new QLineEdit(windowGroup);
   //  m_lambdaMaxEdit->setFixedWidth(50);
   m_lambdaMaxEdit->setValidator(new CDoubleFixedFmtValidator(100.0, 900.0, 2, m_lambdaMaxEdit));
-  windowLayout->addWidget(m_lambdaMaxEdit, 0, 3, Qt::AlignLeft);
+  m_lambdaMaxEdit->setFixedWidth(60);
+  windowLayout->addWidget(m_lambdaMaxEdit, 1, 1, Qt::AlignLeft);
 
-  windowLayout->addWidget(new QLabel("Sub-windows", windowGroup), 1, 0, 1, 3, Qt::AlignRight);
+  windowLayout->addWidget(new QLabel("Sub-windows", windowGroup), 2, 0, Qt::AlignRight);
   m_subWindowsSpinBox = new QSpinBox(this);
   m_subWindowsSpinBox->setFixedWidth(50);
   m_subWindowsSpinBox->setRange(1, 50);
-  windowLayout->addWidget(m_subWindowsSpinBox, 1, 3, Qt::AlignLeft);
+  windowLayout->addWidget(m_subWindowsSpinBox, 2, 1, Qt::AlignLeft);
 
   groupLayout->addWidget(windowGroup);
 
+  // Preshift
+
+  QGroupBox   *preshiftGroup = new QGroupBox("Preshift (nm)", this);
+  QGridLayout *preshiftLayout = new QGridLayout(preshiftGroup);
+
+  m_preshiftCheck = new QCheckBox("Calculate preshift", preshiftGroup);
+  preshiftLayout->addWidget(m_preshiftCheck, 0, 0,1,0);
+  m_preshiftMinLabel = new QLabel("Min preshift", preshiftGroup);
+  preshiftLayout->addWidget(m_preshiftMinLabel, 1, 0, Qt::AlignRight);
+  m_preshiftMinEdit = new QLineEdit(preshiftGroup);
+  m_preshiftMinEdit->setFixedWidth(60);
+  preshiftLayout->addWidget(m_preshiftMinEdit, 1, 1, Qt::AlignRight);
+  m_preshiftMaxLabel = new QLabel("Max preshift", preshiftGroup);
+  preshiftLayout->addWidget(m_preshiftMaxLabel, 2, 0, Qt::AlignRight);
+  m_preshiftMaxEdit = new QLineEdit(preshiftGroup);
+  m_preshiftMaxEdit->setFixedWidth(60);
+  preshiftLayout->addWidget(m_preshiftMaxEdit, 2, 1, Qt::AlignRight);
+
+  groupLayout->addWidget(preshiftGroup);
   mainLayout->addLayout(groupLayout);
+
+
 
   // fit paramters tables
   m_tabs = new QTabWidget(this);
@@ -242,6 +265,15 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
 
   m_subWindowsSpinBox->setValue(properties->subWindows);
 
+  m_preshiftCheck->setChecked(properties->preshiftFlag!= 0);
+
+  m_preshiftMinEdit->setValidator(new CDoubleFixedFmtValidator(-20., 20., 2, m_preshiftMinEdit));
+  m_preshiftMinEdit->validator()->fixup(tmpStr.setNum(properties->preshiftMin));
+  m_preshiftMinEdit->setText(tmpStr);
+  m_preshiftMaxEdit->setValidator(new CDoubleFixedFmtValidator(-20., 20., 2, m_preshiftMaxEdit));
+  m_preshiftMaxEdit->validator()->fixup(tmpStr.setNum(properties->preshiftMax));
+  m_preshiftMaxEdit->setText(tmpStr);
+
   m_moleculesTab->populate(&(properties->crossSectionList));
   m_linearTab->populate(&(properties->linear));
   m_sfpTab->populate(&(properties->sfp[0]));
@@ -264,7 +296,6 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
   connect(m_lineShapeCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(slotLineShapeSelectionChanged(int)));
   connect(m_refBrowseBtn, SIGNAL(clicked()), this, SLOT(slotBrowseSolarRefFile()));
   connect(fileBrowseBtn, SIGNAL(clicked()), this, SLOT(slotBrowseSlfFile()));
-
 }
 
 void CWProjectTabCalibration::apply(mediate_project_calibration_t *properties) const
@@ -291,6 +322,10 @@ void CWProjectTabCalibration::apply(mediate_project_calibration_t *properties) c
 
   properties->subWindows = m_subWindowsSpinBox->value();
 
+  properties->preshiftFlag = (m_preshiftCheck->checkState() == Qt::Checked) ? 1 : 0;
+  properties->preshiftMin = m_preshiftMinEdit->text().toDouble();
+  properties->preshiftMax = m_preshiftMaxEdit->text().toDouble();
+
   m_moleculesTab->apply(&(properties->crossSectionList));
   m_linearTab->apply(&(properties->linear));
   m_sfpTab->apply(&(properties->sfp[0]));
@@ -312,7 +347,7 @@ void CWProjectTabCalibration::slotLineShapeSelectionChanged(int index)
     m_orderWidget->show();
   else
     m_orderWidget->hide();
-    
+
   if (tmp==PRJCT_CALIB_FWHM_TYPE_NONE) {
     m_refFileEdit->setEnabled(false);
     m_refBrowseBtn->setEnabled(false);
@@ -320,7 +355,7 @@ void CWProjectTabCalibration::slotLineShapeSelectionChanged(int index)
     m_refFileEdit->setEnabled(true);
     m_refBrowseBtn->setEnabled(true);
   }
-   
+
   m_sfpDegreeSpinBox->setEnabled(tmp != PRJCT_CALIB_FWHM_TYPE_NONE);
 
 }

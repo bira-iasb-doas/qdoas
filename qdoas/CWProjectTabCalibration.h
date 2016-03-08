@@ -70,6 +70,10 @@ Q_OBJECT
   CWShiftAndStretchDoasTable *m_shiftAndStretchTab;
   CWGapDoasTable *m_gapTab;
   CWOutputDoasTable *m_outputTab;
+
+  QCheckBox *m_preshiftCheck;
+  QLabel *m_preshiftMinLabel,*m_preshiftMaxLabel;
+  QLineEdit *m_preshiftMinEdit,*m_preshiftMaxEdit;
 };
 
 #endif

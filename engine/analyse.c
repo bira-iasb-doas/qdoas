@@ -686,9 +686,6 @@ RC ShiftVector(const double *lambda, double *source, const double *deriv, double
     x0=(y-lambda0+DSH_);
     ANALYSE_shift[j]=y-(DSH+DST*x0*StretchFact1+DST2*x0*x0*StretchFact2);
 
-    // if ((preshift!=NULL) && (fabs(preshift[j])<EPSILON))
-    //  ANALYSE_shift[j]-=preshift[j];
-
     // Fit difference of resolution between spectrum and reference
 
     if (fwhmFlag)
@@ -2117,7 +2114,7 @@ RC ANALYSE_Function( double * const spectrum_orig, double * const reference, dou
 {
   // Declarations
 
-  double *XTrav,*YTrav,*newXsTrav,*spec_nolog,*spectrum_interpolated,*reference_shifted,*preshift,offset,deltaX,tau;
+  double *XTrav,*YTrav,*newXsTrav,*spec_nolog,*spectrum_interpolated,*reference_shifted,offset,deltaX,tau;
   CROSS_REFERENCE *TabCross,*pTabCross;
   MATRIX_OBJECT slit0,slit1;
   int NewDimC,offsetOrder;
@@ -2132,7 +2129,7 @@ RC ANALYSE_Function( double * const spectrum_orig, double * const reference, dou
   // Initializations
   const int n_wavel = NDET[indexFenoColumn];
   TabCross=Feno->TabCross;
-  XTrav=YTrav=newXsTrav=preshift=spectrum_interpolated=reference_shifted=spec_nolog=NULL;
+  XTrav=YTrav=newXsTrav=spectrum_interpolated=reference_shifted=spec_nolog=NULL;
   memset(&slit0,0,sizeof(MATRIX_OBJECT));
   memset(&slit1,0,sizeof(MATRIX_OBJECT));
 
@@ -2170,18 +2167,12 @@ RC ANALYSE_Function( double * const spectrum_orig, double * const reference, dou
       ((spec_nolog=MEMORY_AllocDVector(__func__,"spec_nolog",0,Npts-1))==NULL) ||
       ((newXsTrav=MEMORY_AllocDVector(__func__,"newXsTrav",0,n_wavel-1))==NULL) ||
       ((spectrum_interpolated=MEMORY_AllocDVector(__func__,"spectrum_interpolated",0,n_wavel-1))==NULL) || // spectrum interpolated on reference wavelength grid
-      ((reference_shifted=MEMORY_AllocDVector(__func__,"reference_shifted",0,n_wavel-1))==NULL) ||
-      ((preshift=MEMORY_AllocDVector(__func__,"preshift",0,n_wavel-1))==NULL))            // shifted and stretched cross section
+      ((reference_shifted=MEMORY_AllocDVector(__func__,"reference_shifted",0,n_wavel-1))==NULL))
 
    rc=ERROR_ID_ALLOC;
 
   else
    {
-    // if (!Feno->hidden)
-    //  for (i=0;i<n_wavel;i++)
-    //   preshift[i]=Feno->LambdaK[i]-Feno->Lambda[i];
-    // else
-    memcpy(preshift,ANALYSE_zeros,sizeof(double)*n_wavel);
     memcpy(newXsTrav,ANALYSE_zeros,sizeof(double)*n_wavel);
 
    // ========
@@ -2825,8 +2816,6 @@ RC ANALYSE_Function( double * const spectrum_orig, double * const reference, dou
    MEMORY_ReleaseDVector(__func__,"spectrum_interpolated",spectrum_interpolated,0);
   if (reference_shifted != NULL)
    MEMORY_ReleaseDVector(__func__,"reference_shifted",reference_shifted,0);
-  if (preshift!=NULL)
-   MEMORY_ReleaseDVector(__func__,"preshift",preshift,0);
   if (spec_nolog != NULL)
    MEMORY_ReleaseDVector(__func__,"spec_nolog",spec_nolog,0);
 
@@ -3443,7 +3432,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
         if (!Feno->hidden && (Feno->rcKurucz==ERROR_ID_NO) &&
             ((Feno->useKurucz==ANLYS_KURUCZ_SPEC) || !Feno->rc)) {
           memcpy(ANALYSE_absolu,ANALYSE_zeros,sizeof(double)*n_wavel);
-          
+
           if (Feno->amfFlag ||
               ((Feno->useKurucz==ANLYS_KURUCZ_REF_AND_SPEC) && Feno->xsToConvolute) ||
               ( (Feno->linear_offset_mode == LINEAR_OFFSET_RAD) && (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD)))   // fit a linear offset using the inverse of the spectrum
@@ -3545,7 +3534,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                 Feno->Stretch=Feno->StretchN;
                 Feno->Stretch2=Feno->Stretch2N;
                 Feno->refNormFact=Feno->refNormFactN;
-                
+
                 memcpy(Feno->Sref,Feno->SrefN,sizeof(double)*n_wavel);
 
                 if (!Feno->useKurucz)
@@ -3558,13 +3547,13 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                 Feno->refNormFact=Feno->refNormFactS;
 
                 memcpy(Feno->Sref,Feno->SrefS,sizeof(double)*n_wavel);
-                
+
                 if (!Feno->useKurucz)
                   memcpy(Feno->LambdaK,Feno->LambdaS,sizeof(double)*n_wavel);
               }
 
               // Undersampling
-              
+
               if (!Feno->useKurucz &&
                   (((rc=KURUCZ_ApplyCalibration(Feno,Feno->LambdaK,indexFenoColumn))!=ERROR_ID_NO) ||
                    ((rc=ANALYSE_SvdInit(&Feno->svd, n_wavel))!=ERROR_ID_NO)))
@@ -4430,9 +4419,9 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
       strcpy(pWrkSymbol->symbolName,symbolName);
       strcpy(pWrkSymbol->crossFileName,pCross->crossSectionFile);
       strcpy(pWrkSymbol->amfFileName,pCross->amfFile);
-      
+
       // Load cross section from file
-      
+
       if (strcasecmp(pWrkSymbol->symbolName,"1/Ref")) {
         if (!strlen(pWrkSymbol->crossFileName)) {
           return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_XS_FILENAME,pWrkSymbol->symbolName);
@@ -4446,7 +4435,7 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
                              (pCross->crossType!=ANLYS_CROSS_ACTION_NOTHING) ? 1 : 0, 1, __func__) ) ) {
           return rc;
         }
-        
+
         if (!strcasecmp(pWrkSymbol->symbolName,"O3TD") )
           rc=MATRIX_Allocate(&O3TD,n_wavel,pWrkSymbol->xs.nc,0,0,0,__func__);
         NWorkSpace++;

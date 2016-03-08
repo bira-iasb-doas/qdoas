@@ -15,6 +15,7 @@ struct _KuruczFeno {
   double         *wve;
   int            *nIter;
   bool           have_calibration; // "true" if this struct contains results.
+  double         preshift;
 };
 
 struct _Kurucz {
@@ -65,7 +66,7 @@ extern int KURUCZ_indexLine;
 // PROTOTYPES
 // ----------
 
-RC KURUCZ_Spectrum(const double *oldLambda, double *newLambda, double *spectrum, const double *reference, double *instrFunction,
+RC   KURUCZ_Spectrum(const double *oldLambda, double *newLambda, double *spectrum, const double *reference, double *instrFunction,
                    char displayFlag,const char *windowTitle,double **coeff,double **fwhmVector,double **fwhmDeriv2,int saveFlag,
                    INDEX indexFeno,void *responseHandle,INDEX indexFenoColumn);
 RC   KURUCZ_ApplyCalibration(FENO *pTabFeno,double *newLambda,INDEX indexFenoColumn);

@@ -290,6 +290,7 @@ void CQdoasConfigWriter::writePropertiesCalibration(FILE *fp, const mediate_proj
   fprintf(fp, "      <polynomial shift=\"%d\" sfp=\"%d\" />\n", d->shiftDegree, d->sfpDegree);
   fprintf(fp, "      <window min=\"%.1f\" max=\"%.1f\" intervals=\"%d\" />\n",
 	  d->wavelengthMin, d->wavelengthMax, d->subWindows);
+	 fprintf(fp, "      <preshift calculate=\"%s\" min=\"%.1f\" max=\"%.1f\" />\n",(d->preshiftFlag ? sTrue : sFalse),d->preshiftMin, d->preshiftMax);
 
   writeCrossSectionList(fp, &(d->crossSectionList));
   writeSfps(fp, &(d->sfp[0]));

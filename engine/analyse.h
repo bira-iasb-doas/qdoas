@@ -275,6 +275,7 @@ struct _feno {
   int             longPathFlag;                                                 // for Anoop
   INDEX           indexRefOmi;
   int             newrefFlag;
+  double          preshift;
 };
 
 extern FENO         **TabFeno,*Feno;

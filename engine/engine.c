@@ -1530,7 +1530,6 @@ RC EngineLoadRefMFC(ENGINE_CONTEXT *pEngineContextRef,ENGINE_CONTEXT *pEngineCon
   return rc;
  }
 
-
 // -----------------------------------------------------------------------------
 // FUNCTION      EngineNewRef
 // -----------------------------------------------------------------------------
@@ -1685,19 +1684,23 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
            else
             {
             	double *sref1,*sref2;
+            	double tint1,tint2;
 
             	sref1=ENGINE_contextRef.buffers.spectrum;
             	sref2=ENGINE_contextRef2.buffers.spectrum;
+
+            	tint1=(fabs(ENGINE_contextRef.recordInfo.Tint)<(double)EPSILON)?(double)1.:ENGINE_contextRef.recordInfo.Tint;     // to avoid division by zero if the integration time is not defined
+            	tint2=(fabs(ENGINE_contextRef2.recordInfo.Tint)<(double)EPSILON)?(double)1.:ENGINE_contextRef2.recordInfo.Tint;   // to avoid division by zero if the integration time is not defined
 
             	// normalize by the integration time first in order to have the same absorption structures
 
             	if (pTabFeno->refSpectrumSelectionScanMode==ANLYS_MAXDOAS_REF_SCAN_AVERAGE)
            	 	for (int i=0;i<pTabFeno->NDET;i++)
-           	 	 pTabFeno->Sref[i]=(sref1[i]/ENGINE_contextRef.recordInfo.Tint+sref2[i]/ENGINE_contextRef2.recordInfo.Tint)*0.5;
+           	 	 pTabFeno->Sref[i]=(sref1[i]/tint1+sref2[i]/tint2)*0.5;
            	 else if (pTabFeno->refSpectrumSelectionScanMode==ANLYS_MAXDOAS_REF_SCAN_INTERPOLATE)
            	  {
            	 	 for (int i=0;i<pTabFeno->NDET;i++)
-           	 	  pTabFeno->Sref[i]=sref1[i]/ENGINE_contextRef.recordInfo.Tint+(pEngineContext->recordInfo.Tm-ENGINE_contextRef.recordInfo.Tm)*(sref2[i]/ENGINE_contextRef2.recordInfo.Tint-sref1[i]/ENGINE_contextRef.recordInfo.Tint)/(ENGINE_contextRef2.recordInfo.Tm-ENGINE_contextRef.recordInfo.Tm);
+           	 	  pTabFeno->Sref[i]=sref1[i]/tint1+(pEngineContext->recordInfo.Tm-ENGINE_contextRef.recordInfo.Tm)*(sref2[i]/tint2-sref1[i]/tint1)/(ENGINE_contextRef2.recordInfo.Tm-ENGINE_contextRef.recordInfo.Tm);
            	  }
             }
 
@@ -1854,27 +1857,3 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
    return rc;
  }
 
-/*
-RC Engine_CalculatePreshift(ENGINE_Context pEngineContext)
- {
- 	// Declarations
-
- 	RC rc;
-
- 	// Initialization
-
- 	rc=ERROR_ID_NO;
-
-    	if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) ||
-         (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC))
-
-      rc=EngineSetRefIndexesMFC(pEngineContext,&newref,&indexRecord);
-
-     else
-
-      rc=EngineSetRefIndexes(pEngineContext);
-
-  // Return
-
-  return rc;
- }      */

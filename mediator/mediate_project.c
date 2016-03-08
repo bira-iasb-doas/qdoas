@@ -85,6 +85,8 @@ void initializeMediateProjectCalibration(mediate_project_calibration_t *d)
   d->requireFits=1;
   d->requireResidual=1;
   d->requireShiftSfp=1;
+  d->preshiftMin=(double)-3.;
+  d->preshiftMax=(double)3.;
 
   for (i=0;i<NSFP;i++)
    {

@@ -78,6 +78,838 @@ KURUCZ KURUCZ_buffers[MAX_SWATHSIZE];
 FFT *pKURUCZ_fft;
 int KURUCZ_indexLine=1;
 
+// ===========================
+// CALCULATION OF THE PRESHIFT
+// ===========================
+
+// Given two arrays x[1..n] and y[1..n], this routine computes their correlation coefficient
+// r (returned as r), the significance level at which the null hypothesis of zero correlation is
+// disproved (prob whose small value indicates a significant correlation), and Fisher’s z (returned
+// as z), whose value can be used in further statistical tests as described above.
+
+// Reference : Numerical Recipes in C
+
+#define TINY 1.0e-20 // Will regularize the unusual case of complete correlation#
+
+double corrcoef(double *x,double *y,int n)
+ {
+ 	// Declarations
+
+  int j;
+  double yt,xt,r;   // df,t
+  double syy=0.0,sxy=0.0,sxx=0.0,ay=0.0,ax=0.0;
+
+  // Find the means.
+
+  for (j=0;j<n;j++)
+   {
+    ax += x[j];
+    ay += y[j];
+   }
+
+  ax /= n;
+  ay /= n;
+
+  // Compute the correlation coefficient.
+
+  for (j=0;j<n;j++)
+   {
+    xt=x[j]-ax;
+    yt=y[j]-ay;
+    sxx += xt*xt;
+    syy += yt*yt;
+    sxy += xt*yt;
+   }
+
+  r=sxy/(sqrt(sxx*syy)+TINY);
+
+  // *z=0.5*log((1.0+(*r)+TINY)/(1.0-(*r)+TINY)); Fisher’s z transformation.
+  // df=n-2;
+  // t=(*r)*sqrt(df/((1.0-(*r)+TINY)*(1.0+(*r)+TINY))); Equation (14.5.5).
+  // *prob=betai(0.5*df,0.5,df/(df+t*t)); Student’s t probability.
+/* *prob=erfcc(fabs((*z)*sqrt(n-1.0))/1.4142136) */
+ // For large n, this easier computation of prob, using the short routine erfcc, would give approximately
+ // the same value.
+
+  // Return
+
+  return r;
+ }
+
+double ShiftCorrel(double *lambda,double *ref,double *spec,double *spec2,double *lambdas,double *specInt,int n,int imin,int imax,double *x,int *pRc)
+ {
+ 	// Declarations
+
+ 	int i,npix;
+ 	double correl;
+ 	RC rc;
+
+ 	// Initializations
+
+ 	npix=(imax-imin+1);
+ 	correl=(double)0.;
+
+ 	rc=ERROR_ID_NO;
+
+ 	// Shift the wavelength calibration
+
+  for (i=0;i<n;i++)
+   lambdas[i]=lambda[i]+x[0];
+
+  // Interpolate the spectrum on the original wavelength calibration
+
+  if (!(rc=SPLINE_Deriv2(&lambdas[imin],&spec[imin],&spec2[imin],npix,__func__)) &&
+      !(rc=SPLINE_Vector(&lambdas[imin],&spec[imin],&spec2[imin],npix,&lambda[imin],&specInt[imin],npix,PRJCT_ANLYS_INTERPOL_SPLINE,__func__)))
+
+   correl=(double)1.-corrcoef(&ref[imin],&specInt[imin],npix);
+
+  *pRc=rc;
+
+  return correl;
+ }
+
+void KuruczSmooth(double *lambda,double *spectrum,int n,int width,int imin,int imax,int normFlag,double *smoothed)
+ {
+ 	// Declarations
+
+ 	int i,j,jmin,jmax;
+  double sum,norm;
+
+  // Initializations
+
+  for (i=0;i<n;i++)
+   smoothed[i]=(double)0.;
+
+ 	for (i=imin,norm=(double)0.;i<=imax;i++)
+ 	 {
+ 	 	jmin=max(0,i-width);
+ 	 	jmax=min(n-1,i+width);
+
+ 	 	for (j=jmin,sum=(double)0.;j<=jmax;j++)
+ 	 	 sum+=spectrum[j];
+
+ 	 	if (fabs(sum)>EPSILON)
+ 	   smoothed[i]=spectrum[i]/sum;
+ 	 	norm+=smoothed[i]*smoothed[i];
+ 	 }
+
+ 	// Normalization
+
+ 	if (normFlag && (norm>EPSILON))
+ 	 for (i=imin;i<=imax;i++)
+ 	  smoothed[i]/=norm;
+ }
+
+/******************************************************************************/
+
+void nelmin ( double fn (double *,double *,double *,double *,double *,double *,int ,int ,int ,double *,int * ),
+              double *lambda,double *ref,double *spec,double *spec2,double *lambdas,double *specInt,int ndet,int imin,int imax,double *shift,int *pRc,
+              int n, double start[], double xmin[],double *ynewlo, double reqmin, double step[], int konvge, int kcount,int *icount, int *numres, int *ifault )
+
+/******************************************************************************/
+/*
+  Purpose:
+
+    NELMIN minimizes a function using the Nelder-Mead algorithm.
+
+  Discussion:
+
+    This routine seeks the minimum value of a user-specified function.
+
+    Simplex function minimisation procedure due to Nelder+Mead(1965),
+    as implemented by O'Neill(1971, Appl.Statist. 20, 338-45), with
+    subsequent comments by Chambers+Ertel(1974, 23, 250-1), Benyon(1976,
+    25, 97) and Hill(1978, 27, 380-2)
+
+    The function to be minimized must be defined by a function of
+    the form
+
+      function fn ( x, f )
+      double fn
+      double x(*)
+
+    and the name of this subroutine must be declared EXTERNAL in the
+    calling routine and passed as the argument FN.
+
+    This routine does not include a termination test using the
+    fitting of a quadratic surface.
+
+  Licensing:
+
+    This code is distributed under the GNU LGPL license.
+
+  Modified:
+
+    28 October 2010
+
+  Author:
+
+    Original FORTRAN77 version by R ONeill.
+    C version by John Burkardt.
+
+  Reference:
+
+    John Nelder, Roger Mead,
+    A simplex method for function minimization,
+    Computer Journal,
+    Volume 7, 1965, pages 308-313.
+
+    R ONeill,
+    Algorithm AS 47:
+    Function Minimization Using a Simplex Procedure,
+    Applied Statistics,
+    Volume 20, Number 3, 1971, pages 338-345.
+
+  Parameters:
+
+    Input, double FN ( double x[] ), the name of the routine which evaluates
+    the function to be minimized.
+
+    Input, int N, the number of variables.
+
+    Input/output, double START[N].  On input, a starting point
+    for the iteration.  On output, this data may have been overwritten.
+
+    Output, double XMIN[N], the coordinates of the point which
+    is estimated to minimize the function.
+
+    Output, double YNEWLO, the minimum value of the function.
+
+    Input, double REQMIN, the terminating limit for the variance
+    of function values.
+
+    Input, double STEP[N], determines the size and shape of the
+    initial simplex.  The relative magnitudes of its elements should reflect
+    the units of the variables.
+
+    Input, int KONVGE, the convergence check is carried out
+    every KONVGE iterations.
+
+    Input, int KCOUNT, the maximum number of function
+    evaluations.
+
+    Output, int *ICOUNT, the number of function evaluations
+    used.
+
+    Output, int *NUMRES, the number of restarts.
+
+    Output, int *IFAULT, error indicator.
+    0, no errors detected.
+    1, REQMIN, N, or KONVGE has an illegal value.
+    2, iteration terminated because KCOUNT was exceeded without convergence.
+*/
+{
+  double ccoeff = 0.5;
+  double del;
+  double dn;
+  double dnn;
+  double ecoeff = 2.0;
+  double eps = 0.001;
+  int i;
+  int ihi;
+  int ilo;
+  int j;
+  int jcount;
+  int l;
+  int nn;
+  double *p;
+  double *p2star;
+  double *pbar;
+  double *pstar;
+  double rcoeff = 1.0;
+  double rq;
+  double x;
+  double *y;
+  double y2star;
+  double ylo;
+  double ystar;
+  double z;
+/*
+  Check the input parameters.
+*/
+  if ( reqmin <= 0.0 )
+  {
+    *ifault = 1;
+    return;
+  }
+
+  if ( n < 1 )
+  {
+    *ifault = 1;
+    return;
+  }
+
+  if ( konvge < 1 )
+  {
+    *ifault = 1;
+    return;
+  }
+
+  p = ( double * ) malloc ( n * ( n + 1 ) * sizeof ( double ) );
+  pstar = ( double * ) malloc ( n * sizeof ( double ) );
+  p2star = ( double * ) malloc ( n * sizeof ( double ) );
+  pbar = ( double * ) malloc ( n * sizeof ( double ) );
+  y = ( double * ) malloc ( ( n + 1 ) * sizeof ( double ) );
+
+  *icount = 0;
+  *numres = 0;
+
+  jcount = konvge;
+  dn = ( double ) ( n );
+  nn = n + 1;
+  dnn = ( double ) ( nn );
+  del = 1.0;
+  rq = reqmin * dn;
+/*
+  Initial or restarted loop.
+*/
+  for ( ; ; )
+  {
+    for ( i = 0; i < n; i++ )
+    {
+      p[i+n*n] = start[i];
+    }
+    y[n] = fn (lambda,ref,spec,spec2,lambdas,specInt,ndet,imin,imax,shift,pRc);
+    *icount = *icount + 1;
+
+    for ( j = 0; j < n; j++ )
+    {
+      x = start[j];
+      start[j] = start[j] + step[j] * del;
+      for ( i = 0; i < n; i++ )
+      {
+        p[i+j*n] = start[i];
+      }
+      y[j] = fn (lambda,ref,spec,spec2,lambdas,specInt,ndet,imin,imax,shift,pRc);
+      *icount = *icount + 1;
+      start[j] = x;
+    }
+/*
+  The simplex construction is complete.
+
+  Find highest and lowest Y values.  YNEWLO = Y(IHI) indicates
+  the vertex of the simplex to be replaced.
+*/
+    ylo = y[0];
+    ilo = 0;
+
+    for ( i = 1; i < nn; i++ )
+    {
+      if ( y[i] < ylo )
+      {
+        ylo = y[i];
+        ilo = i;
+      }
+    }
+/*
+  Inner loop.
+*/
+    for ( ; ; )
+    {
+      if ( kcount <= *icount )
+      {
+        break;
+      }
+      *ynewlo = y[0];
+      ihi = 0;
+
+      for ( i = 1; i < nn; i++ )
+      {
+        if ( *ynewlo < y[i] )
+        {
+          *ynewlo = y[i];
+          ihi = i;
+        }
+      }
+/*
+  Calculate PBAR, the centroid of the simplex vertices
+  excepting the vertex with Y value YNEWLO.
+*/
+      for ( i = 0; i < n; i++ )
+      {
+        z = 0.0;
+        for ( j = 0; j < nn; j++ )
+        {
+          z = z + p[i+j*n];
+        }
+        z = z - p[i+ihi*n];
+        pbar[i] = z / dn;
+      }
+/*
+  Reflection through the centroid.
+*/
+      for ( i = 0; i < n; i++ )
+      {
+        pstar[i] = pbar[i] + rcoeff * ( pbar[i] - p[i+ihi*n] );
+      }
+      ystar = fn (lambda,ref,spec,spec2,lambdas,specInt,ndet,imin,imax,pstar,pRc);
+      *icount = *icount + 1;
+/*
+  Successful reflection, so extension.
+*/
+      if ( ystar < ylo )
+      {
+        for ( i = 0; i < n; i++ )
+        {
+          p2star[i] = pbar[i] + ecoeff * ( pstar[i] - pbar[i] );
+        }
+        y2star = fn (lambda,ref,spec,spec2,lambdas,specInt,ndet,imin,imax,p2star,pRc);
+        *icount = *icount + 1;
+/*
+  Check extension.
+*/
+        if ( ystar < y2star )
+        {
+          for ( i = 0; i < n; i++ )
+          {
+            p[i+ihi*n] = pstar[i];
+          }
+          y[ihi] = ystar;
+        }
+/*
+  Retain extension or contraction.
+*/
+        else
+        {
+          for ( i = 0; i < n; i++ )
+          {
+            p[i+ihi*n] = p2star[i];
+          }
+          y[ihi] = y2star;
+        }
+      }
+/*
+  No extension.
+*/
+      else
+      {
+        l = 0;
+        for ( i = 0; i < nn; i++ )
+        {
+          if ( ystar < y[i] )
+          {
+            l = l + 1;
+          }
+        }
+
+        if ( 1 < l )
+        {
+          for ( i = 0; i < n; i++ )
+          {
+            p[i+ihi*n] = pstar[i];
+          }
+          y[ihi] = ystar;
+        }
+/*
+  Contraction on the Y(IHI) side of the centroid.
+*/
+        else if ( l == 0 )
+        {
+          for ( i = 0; i < n; i++ )
+          {
+            p2star[i] = pbar[i] + ccoeff * ( p[i+ihi*n] - pbar[i] );
+          }
+          y2star = fn (lambda,ref,spec,spec2,lambdas,specInt,ndet,imin,imax,p2star,pRc);
+          *icount = *icount + 1;
+/*
+  Contract the whole simplex.
+*/
+          if ( y[ihi] < y2star )
+          {
+            for ( j = 0; j < nn; j++ )
+            {
+              for ( i = 0; i < n; i++ )
+              {
+                p[i+j*n] = ( p[i+j*n] + p[i+ilo*n] ) * 0.5;
+                xmin[i] = p[i+j*n];
+              }
+              y[j] = fn (lambda,ref,spec,spec2,lambdas,specInt,ndet,imin,imax,xmin,pRc);
+              *icount = *icount + 1;
+            }
+            ylo = y[0];
+            ilo = 0;
+
+            for ( i = 1; i < nn; i++ )
+            {
+              if ( y[i] < ylo )
+              {
+                ylo = y[i];
+                ilo = i;
+              }
+            }
+            continue;
+          }
+/*
+  Retain contraction.
+*/
+          else
+          {
+            for ( i = 0; i < n; i++ )
+            {
+              p[i+ihi*n] = p2star[i];
+            }
+            y[ihi] = y2star;
+          }
+        }
+/*
+  Contraction on the reflection side of the centroid.
+*/
+        else if ( l == 1 )
+        {
+          for ( i = 0; i < n; i++ )
+          {
+            p2star[i] = pbar[i] + ccoeff * ( pstar[i] - pbar[i] );
+          }
+          y2star = fn (lambda,ref,spec,spec2,lambdas,specInt,ndet,imin,imax,p2star,pRc);
+          *icount = *icount + 1;
+/*
+  Retain reflection?
+*/
+          if ( y2star <= ystar )
+          {
+            for ( i = 0; i < n; i++ )
+            {
+              p[i+ihi*n] = p2star[i];
+            }
+            y[ihi] = y2star;
+          }
+          else
+          {
+            for ( i = 0; i < n; i++ )
+            {
+              p[i+ihi*n] = pstar[i];
+            }
+            y[ihi] = ystar;
+          }
+        }
+      }
+/*
+  Check if YLO improved.
+*/
+      if ( y[ihi] < ylo )
+      {
+        ylo = y[ihi];
+        ilo = ihi;
+      }
+      jcount = jcount - 1;
+
+      if ( 0 < jcount )
+      {
+        continue;
+      }
+/*
+  Check to see if minimum reached.
+*/
+      if ( *icount <= kcount )
+      {
+        jcount = konvge;
+
+        z = 0.0;
+        for ( i = 0; i < nn; i++ )
+        {
+          z = z + y[i];
+        }
+        x = z / dnn;
+
+        z = 0.0;
+        for ( i = 0; i < nn; i++ )
+        {
+          z = z + pow ( y[i] - x, 2 );
+        }
+
+        if ( z <= rq )
+        {
+          break;
+        }
+      }
+    }
+/*
+  Factorial tests to check that YNEWLO is a local minimum.
+*/
+    for ( i = 0; i < n; i++ )
+    {
+      xmin[i] = p[i+ilo*n];
+    }
+    *ynewlo = y[ilo];
+
+    if ( kcount < *icount )
+    {
+      *ifault = 2;
+      break;
+    }
+
+    *ifault = 0;
+
+    for ( i = 0; i < n; i++ )
+    {
+      del = step[i] * eps;
+      xmin[i] = xmin[i] + del;
+      z = fn (lambda,ref,spec,spec2,lambdas,specInt,ndet,imin,imax,xmin,pRc);
+      *icount = *icount + 1;
+      if ( z < *ynewlo )
+      {
+        *ifault = 2;
+        break;
+      }
+      xmin[i] = xmin[i] - del - del;
+      z = fn (lambda,ref,spec,spec2,lambdas,specInt,ndet,imin,imax,xmin,pRc);
+      *icount = *icount + 1;
+      if ( z < *ynewlo )
+      {
+        *ifault = 2;
+        break;
+      }
+      xmin[i] = xmin[i] + del;
+    }
+
+    if ( *ifault == 0 )
+    {
+      break;
+    }
+/*
+  Restart the procedure.
+*/
+    for ( i = 0; i < n; i++ )
+    {
+      start[i] = xmin[i];
+    }
+    del = eps;
+    *numres = *numres + 1;
+  }
+  free ( p );
+  free ( pstar );
+  free ( p2star );
+  free ( pbar );
+  free ( y );
+
+  return;
+}
+
+// TO DO LATER
+// !!! The following function could be called by ShiftVector -> some adaptations necessary
+//
+
+// ----------------------------------------------------------------------------
+// FUNCTION        KuruczConvolveSolarSpectrum
+// ----------------------------------------------------------------------------
+// PURPOSE         Convolve solar spectrum with initial fwhm parameters before
+//                 calculating the preshift.  The resulting spectrum will be used
+//                 as calibrated ref.
+//
+// INPUT           newlambda             the calibrated grid
+//                 n_wavel               the size of the calibrated grid
+//
+// OUTPUT          pSolar                pointer to the convolved solar spectrum
+//
+// RETURN          ERROR_ID_NO in case of success
+// ----------------------------------------------------------------------------
+
+RC KuruczConvolveSolarSpectrum(MATRIX_OBJECT *pSolar,double *newlambda,int n_wavel,int indexFenoColumn)
+ {
+ 	// Declarations
+
+ 	CROSS_REFERENCE *TabCross;
+ 	MATRIX_OBJECT slitXs;
+  MATRIX_OBJECT slitXs2;
+  SLIT slitOptions;
+  int slitType;
+  int shiftIndex,i;
+  RC rc;
+  KURUCZ *pKurucz;
+
+  // Initializations
+
+  pKurucz=&KURUCZ_buffers[indexFenoColumn];
+  Feno=&TabFeno[indexFenoColumn][pKurucz->indexKurucz];
+  TabCross=Feno->TabCross;
+  rc=ERROR_ID_NO;
+
+  memset(&slitXs,0,sizeof(MATRIX_OBJECT));
+  memset(&slitXs2,0,sizeof(MATRIX_OBJECT));
+
+  memcpy(pSolar->matrix[0],newlambda,sizeof(double)*n_wavel);
+  memcpy(pSolar->matrix[1],ANALYSE_zeros,sizeof(double)*n_wavel);
+
+  slitType=pKuruczOptions->fwhmType;
+
+  if (slitType==SLIT_TYPE_FILE)
+   {
+    int nc=KURUCZ_buffers[indexFenoColumn].slitFunction.nc;
+    int nl=KURUCZ_buffers[indexFenoColumn].slitFunction.nl;
+    double fwhmStretch1,fwhmStretch2;
+
+    shiftIndex=(nc==2)?0:1;
+
+    fwhmStretch1=(Feno->indexFwhmParam[0]!=ITEM_NONE)?(double)TabCross[Feno->indexFwhmParam[0]].InitParam:(double)1.;
+    fwhmStretch2=(Feno->indexFwhmParam[1]!=ITEM_NONE)?(double)TabCross[Feno->indexFwhmParam[1]].InitParam:(double)1.;
+
+ 	  if (MATRIX_Allocate(&slitXs,nl,nc,0,0,1,__func__))
+ 	   rc=ERROR_ID_ALLOC;
+    else
+     {
+      // make a backup of the matrix
+
+      for (i=0;i<nc;i++)
+        memcpy(slitXs.matrix[i],KURUCZ_buffers[indexFenoColumn].slitFunction.matrix[i],sizeof(double)*nl);
+
+ 	    // Apply the stretch on the slit wavelength calibration
+
+ 	    for (i=shiftIndex;i<slitXs.nl;i++)
+        slitXs.matrix[0][i]=(slitXs.matrix[0][i]<(double)0.)?fwhmStretch1*KURUCZ_buffers[indexFenoColumn].slitFunction.matrix[0][i]:fwhmStretch2*KURUCZ_buffers[indexFenoColumn].slitFunction.matrix[0][i];
+
+ 	    // Recalculate second derivatives and the FWHM
+
+ 	    for (i=1;i<slitXs.nc;i++)
+        rc=SPLINE_Deriv2(slitXs.matrix[0]+shiftIndex,slitXs.matrix[1]+shiftIndex,slitXs.deriv2[i]+shiftIndex,slitXs.nl-shiftIndex,__func__);
+     }
+   }
+  else
+   {
+    memset(&slitOptions,0,sizeof(SLIT));
+
+    slitOptions.slitType=slitType;
+    slitOptions.slitFile[0]=0;
+    slitOptions.slitParam=TabCross[Feno->indexFwhmParam[0]].InitParam;
+    slitOptions.slitParam2=(slitType==SLIT_TYPE_GAUSS)?(double)0.:TabCross[Feno->indexFwhmParam[1]].InitParam;
+
+    rc=XSCONV_LoadSlitFunction(&slitXs,&slitXs2,&slitOptions,NULL,&slitType);
+   }
+
+  // convolution of the solar spectrum
+
+  if (!rc)
+   rc=XSCONV_TypeStandard(pSolar,0,n_wavel,&KURUCZ_buffers[indexFenoColumn].hrSolar,&slitXs,&slitXs2,&KURUCZ_buffers[indexFenoColumn].hrSolar,NULL,slitType,slitOptions.slitParam,slitOptions.slitParam2,0);
+
+  // Release allocated buffers
+
+  MATRIX_Free(&slitXs,__func__);
+  MATRIX_Free(&slitXs2,__func__);
+
+  // Return
+
+  return rc;
+ }
+
+// ----------------------------------------------------------------------------
+// FUNCTION        KuruczCalculatePreshift
+// ----------------------------------------------------------------------------
+// PURPOSE         Calculate the preshift between the reference spectrum to calculate and a already well calibrated spectrum
+//
+// INPUT           calibratedLambda      wavelength calibration of the well calibrated spectrum
+//                 calibratedRef         well calibrated spectrum
+//                 newRef                reference spectrum to calibrate
+//                 ndet                  size of the detector
+//                 preshiftMin           minimum value for the preshift
+//                 preshiftMax           maximum value for the preshift
+//                 step                  shift step in the wavelength shift window for correlation caluclation
+//                 lambdaMin, lambdaMax  wavelengths range to calculate the correlation between the two spectra
+//
+// OUTPUT          newLambda             new grid
+//                 pShift                initial shift for wavelength calibration
+//
+// RETURN          indexFeno      index of the analysis window in which reference has been found;
+// ----------------------------------------------------------------------------
+
+RC KuruczCalculatePreshift(double *calibratedLambda,double *calibratedRef,double *newRef,int ndet,double preshiftMin,double preshiftMax,double step,double lambdaMin,double lambdaMax,double *pShift)
+ {
+ 	// Declarations
+
+  double *lambdas,*Sref1,*Sref2,*Sref2Deriv,*Sref2Interp,*shift,*coeff;
+  int ishift,ishiftMin,nshift,nfuncEval,nrestart,imin,imax;
+  double shiftIni,shiftMin,coefMin,varstep;
+ 	RC rc,rc2;
+
+ 	// Initialization
+
+  Sref1=Sref2=Sref2Deriv=Sref2Interp=shift=NULL;
+  nshift=(double)((preshiftMax-preshiftMin)/step)+1.;
+
+  varstep=1;
+  *pShift=(double)0.;
+ 	rc=ERROR_ID_NO;
+
+ 	// Allocate temporary buffers
+
+ 	if (((lambdas=(double *)MEMORY_AllocDVector("KuruczCalculatePreshift","lambdas",0,ndet-1))==NULL) ||
+ 	    ((Sref1=(double *)MEMORY_AllocDVector("KuruczCalculatePreshift","Sref1",0,ndet-1))==NULL) ||
+ 	    ((Sref2=(double *)MEMORY_AllocDVector("KuruczCalculatePreshift","Sref2",0,ndet-1))==NULL) ||
+ 	    ((Sref2Deriv=(double *)MEMORY_AllocDVector("KuruczCalculatePreshift","Sref2Deriv",0,ndet-1))==NULL) ||
+ 	    ((Sref2Interp=(double *)MEMORY_AllocDVector("KuruczCalculatePreshift","Sref2Interp",0,ndet-1))==NULL) ||
+ 	    ((shift=(double *)MEMORY_AllocDVector("KuruczCalculatePreshift","shift",0,nshift-1))==NULL) ||
+ 	    ((coeff=(double *)MEMORY_AllocDVector("KuruczCalculatePreshift","coeff",0,nshift-1))==NULL))
+
+ 	 rc=ERROR_ID_ALLOC;
+
+ 	// Load the reference spectrum at minimum SZA
+
+ 	else // if (!(rc=EngineBuildRefList(pEngineContext)) && ((indexRef=pEngineContext->analysisRef.zmMinIndex)!=ITEM_NONE) &&
+ 	     //   ((!pEngineContext->mfcDoasisFlag && !(rc=EngineReadFile(&ENGINE_contextRef,indexRef,0,0))) ||
+ 	     //     (pEngineContext->mfcDoasisFlag && !(rc=EngineLoadRefMFC(&ENGINE_contextRef,pEngineContext,indexRef)))))
+ 	 {
+    imin=max(0,FNPixel(calibratedLambda,lambdaMin,ndet,PIXEL_CLOSEST));
+ 	  imax=min(ndet-1,FNPixel(calibratedLambda,lambdaMax,ndet,PIXEL_CLOSEST));
+
+ 	  for (int i=0;i<ndet;i++)
+ 	   Sref1[i]=Sref2[i]=Sref2Deriv[i]=Sref2Interp[i]=(double)0.;
+
+ 	 	// Smooth structures in both reference spectra; spectra are also normalized
+
+ 	 	KuruczSmooth(calibratedLambda,calibratedRef,ndet,35,imin,imax,1,Sref1);
+    KuruczSmooth(calibratedLambda,newRef,ndet,35,imin,imax,1,Sref2);
+
+ 	 	for (ishift=ishiftMin=0;(ishift<nshift) && !rc;ishift++)
+     {
+     	shift[ishift]=preshiftMin+(double)ishift*step;
+     	coeff[ishift]=ShiftCorrel(calibratedLambda,Sref1,Sref2,Sref2Deriv,lambdas,Sref2Interp,ndet,imin,imax,&shift[ishift],&rc);
+
+     	if (!rc && (coeff[ishift]<coeff[ishiftMin]))
+     	 ishiftMin=ishift;
+     }
+
+    shiftIni=shift[ishiftMin];
+
+    nelmin  (ShiftCorrel,                                                                                                // I   double fn ( double x[] )    the name of the routine which evaluates the function to be minimized.
+             calibratedLambda,Sref1,Sref2,Sref2Deriv,lambdas,Sref2Interp,ndet,imin,imax,&shift[ishiftMin],&rc,           // I                               arguments of ShiftCorrel
+             1,                                                                                                          // I   int n                       the number of variables -> in this case, the shift
+             &shiftIni,                                                                                                  // I/O double start[]              starting points for the iteration.  This data may be overwritten
+             &shiftMin,                                                                                                  // O   double xmin[]               the coordinates of the point which is estimated to minimize the function.
+             &coefMin,                                                                                                   // O   double *ynewlo              the minimum value of the function
+     (double)1.e-3,                                                                                                      // I   double reqmin               the terminating limit for the variance of function values.
+             &varstep,                                                                                                   // I   double STEP[N]              determines the size and shape of the initial simplex.  The relative magnitudes of its elements should reflect the units of the variables.
+             10,                                                                                                         // I   int konvge,                 the convergence check is carried out every KONVGE iterations.
+              200,                                                                                                       // I   int kcount,                 the maximum number of function evaluations.
+             &nfuncEval,                                                                                                 // O   int *icount,                the number of function evaluations  used.
+             &nrestart,                                                                                                  // O   int *numres,                the number of restarts.
+             &rc2);                                                                                                      // O   int *ifault                 error indicator :
+                                                                                                                         //                                       0, no errors detected.
+                                                                                                                         //                                       1, REQMIN, N, or KONVGE has an illegal value.
+                                                                                                                         //                                       2, iteration terminated because KCOUNT was exceeded without convergence.
+
+    *pShift=shiftMin;
+   }
+
+  // Release allocated buffers
+
+  if (lambdas!=NULL)
+   MEMORY_ReleaseDVector("KuruczCalculatePreshift","lambdas",lambdas,0);
+  if (Sref1!=NULL)
+   MEMORY_ReleaseDVector("KuruczCalculatePreshift","Sref1",Sref1,0);
+  if (Sref2!=NULL)
+   MEMORY_ReleaseDVector("KuruczCalculatePreshift","Sref2",Sref2,0);
+  if (Sref2Deriv!=NULL)
+   MEMORY_ReleaseDVector("KuruczCalculatePreshift","Sref2Deriv",Sref2Deriv,0);
+  if (Sref2Interp!=NULL)
+   MEMORY_ReleaseDVector("KuruczCalculatePreshift","Sref2Interp",Sref2Interp,0);
+  if (shift!=NULL)
+   MEMORY_ReleaseDVector("KuruczCalculatePreshift","shift",shift,0);
+  if (coeff!=NULL)
+   MEMORY_ReleaseDVector("KuruczCalculatePreshift","coeff",coeff,0);
+
+  // Return
+
+  return rc;
+ }
+
 // =================
 // KURUCZ PROCEDURES
 // =================
@@ -146,7 +978,7 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
  {
   // Declarations
 
-  char            string[MAX_ITEM_TEXT_LEN];
+  char            string[MAX_ITEM_TEXT_LEN],pageTitle[MAX_ITEM_TEXT_LEN];
   CROSS_REFERENCE *TabCross,*pTabCross;
   CROSS_RESULTS   *pResults,*Results;                                           // pointer to results associated to a symbol
   SVD             *svdFeno;                                                     // svd environments associated to list of little windows
@@ -165,7 +997,7 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
                    indexCrossFit,
                    indexLine,indexColumn,                                       // position in the spreadsheet for information to write
                    i,j,k;                                                    // temporary indexes
-  double j0,lambda0;
+  double j0,lambda0,shiftSign;
   RC               rc;                                                          // return code
   plot_data_t      spectrumData[2];
   KURUCZ *pKurucz;
@@ -189,8 +1021,9 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
   // Use substitution variables
 
   Feno=&TabFeno[indexFenoColumn][pKurucz->indexKurucz];
+  shiftSign=(Feno->indexSpectrum!=ITEM_NONE)?(double)-1.:(double)1.;            // very important !!!
   TabCross=Feno->TabCross;
-  
+
   memcpy(Feno->LambdaK,oldLambda,sizeof(double)*oldNDET);
   rc=ANALYSE_XsInterpolation(Feno,oldLambda,indexFenoColumn);
 
@@ -229,16 +1062,16 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
   if (instrFunction!=NULL)
     for (i=0;i<n_wavel;i++)
       spectrum[i]/=(double)instrFunction[i];
-  
+
   // Always restart from the original calibration
-  
+
   Lambda=newLambda;
   LambdaSpec=newLambda;
   memcpy(Lambda,oldLambda,sizeof(double)*n_wavel);
   memcpy(ANALYSE_secX,spectrum,sizeof(double)*n_wavel);
 
   // Set solar spectrum
-  
+
   if ((solar=MEMORY_AllocDVector(__func__,"solar",0,n_wavel))==NULL)
     rc=ERROR_ID_ALLOC;
   else if (!pKuruczOptions->fwhmFit) {
@@ -266,12 +1099,12 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
   if (pKurucz->crossFits.matrix!=NULL)
     for (indexTabCross=0;indexTabCross<pKurucz->crossFits.nc;indexTabCross++)
       memcpy(pKurucz->crossFits.matrix[indexTabCross],ANALYSE_zeros,sizeof(double)*n_wavel);
-  
+
   memcpy(ANALYSE_t,ANALYSE_zeros,sizeof(double)*n_wavel);
   memcpy(ANALYSE_tc,ANALYSE_zeros,sizeof(double)*n_wavel);
-  
+
   ANALYSE_plotKurucz=(pKurucz->displaySpectra || pKurucz->displayResidual || pKurucz->displayFit || pKurucz->displayShift)?1:0;
-  
+
   if (ANALYSE_plotKurucz) {
     if (ANALYSE_swathSize>1) {
       sprintf(string,"Row %d/%d",indexFenoColumn+1,ANALYSE_swathSize);
@@ -282,6 +1115,9 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
       mediateResponseCellInfo(plotPageCalib,indexLine++,indexColumn,responseHandle,"KURUCZ alignment for window ","%s",TabFeno[indexFenoColumn][indexFeno].windowName);
     else
       mediateResponseCellDataString(plotPageCalib,indexLine++,indexColumn,"Kurucz",responseHandle);
+
+    if (pKuruczOptions->preshiftFlag)
+     mediateResponseCellInfo(plotPageCalib,indexLine++,indexColumn,responseHandle,"Preshift (nm)","%g",TabFeno[indexFenoColumn][indexFeno].preshift);
 
     mediateResponseCellDataString(plotPageCalib,indexLine,indexColumn++,"Window",responseHandle);
     mediateResponseCellDataString(plotPageCalib,indexLine,indexColumn++,"Pixel",responseHandle);
@@ -294,13 +1130,13 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
         sprintf(string,"SFP %d",indexParam+1);
         mediateResponseCellDataString(plotPageCalib,indexLine,indexColumn++,string,responseHandle);
       }
-    
+
     if ((Feno->indexOffsetConst!=ITEM_NONE) && (Feno->TabCross[Feno->indexOffsetConst].FitParam!=ITEM_NONE))
       mediateResponseCellDataString(plotPageCalib,indexLine,indexColumn++,"Offset",responseHandle);
 
     for (indexTabCross=0;indexTabCross<Feno->NTabCross;indexTabCross++) {
       pTabCross=&TabCross[indexTabCross];
-      
+
       if (pTabCross->IndSvdA && (WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CROSS))
         mediateResponseCellDataString(plotPageCalib,indexLine,indexColumn++,WorkSpace[pTabCross->Comp].symbolName,responseHandle);
     }
@@ -314,7 +1150,7 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
 
     if (pKuruczOptions->fwhmFit)
       pKURUCZ_fft=&pKurucz->KuruczFeno[indexFeno].fft[indexWindow];
-    
+
     // Global initializations
 
 #if defined(__DEBUG_) && __DEBUG_
@@ -347,24 +1183,24 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
 
     VSig[indexWindow+1]=pResults->SigmaShift;
 
-    VShift[indexWindow+1]=(Feno->indexSpectrum!=ITEM_NONE)?(double)-pResults->Shift:(double)pResults->Shift;
+    VShift[indexWindow+1]=pResults->Shift;                          // In order to be in accordance with the preshift, we keep the sign now.  Before (Feno->indexSpectrum!=ITEM_NONE)?(double)-pResults->Shift:(double)pResults->Shift;
     VPix[indexWindow+1]=pixMid[indexWindow+1];
     VLambda[indexWindow+1]=(fabs(pixMid[indexWindow+1]-floor(pixMid[indexWindow+1]))<(double)0.1)?
-      (double)oldLambda[(INDEX)pixMid[indexWindow+1]]-VShift[indexWindow+1]:
-      (double)0.5*(oldLambda[(INDEX)floor(pixMid[indexWindow+1])]+oldLambda[(INDEX)floor(pixMid[indexWindow+1]+1.)])-VShift[indexWindow+1];
+      (double)oldLambda[(INDEX)pixMid[indexWindow+1]]-shiftSign*VShift[indexWindow+1]:
+      (double)0.5*(oldLambda[(INDEX)floor(pixMid[indexWindow+1])]+oldLambda[(INDEX)floor(pixMid[indexWindow+1]+1.)])-shiftSign*VShift[indexWindow+1];
 
     // Store fwhm for future use
-    
+
     if (pKuruczOptions->fwhmFit)
       for (indexParam=0;indexParam<maxParam;indexParam++) {
         if ((indexParam==1) && (pKuruczOptions->fwhmType==SLIT_TYPE_AGAUSS))
           fwhm[indexParam][indexWindow]=Feno->TabCrossResults[Feno->indexFwhmParam[indexParam]].Param;  // asymmetric factor can be negatif for asymmetric gaussian
         else
           fwhm[indexParam][indexWindow]=fabs(Feno->TabCrossResults[Feno->indexFwhmParam[indexParam]].Param);
-          
+
         fwhmSigma[indexParam][indexWindow]=Feno->TabCrossResults[Feno->indexFwhmParam[indexParam]].SigmaParam;
       }
-    
+
     // Store fit for display
 
     if (displayFlag) {
@@ -402,7 +1238,7 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
 
         for (indexTabCross=indexCrossFit=0;(indexTabCross<Feno->NTabCross) && (indexCrossFit<pKurucz->crossFits.nc);indexTabCross++) {
           pTabCross=&TabCross[indexTabCross];
-          
+
           if (pTabCross->IndSvdA && (WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CROSS) && pTabCross->display) {
             for (i=SvdPDeb,k=1;i<=SvdPFin;i++,k++)
               pKurucz->crossFits.matrix[indexCrossFit][i]=x[pTabCross->IndSvdA]*U[pTabCross->IndSvdA][k];
@@ -415,7 +1251,7 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
     // Results safe keeping
 
     memcpy(pKurucz->KuruczFeno[indexFeno].results[indexWindow],Feno->TabCrossResults,sizeof(CROSS_RESULTS)*Feno->NTabCross);
-    
+
     pKurucz->KuruczFeno[indexFeno].wve[indexWindow]=VLambda[indexWindow+1];
     pKurucz->KuruczFeno[indexFeno].chiSquare[indexWindow]=Square;
     pKurucz->KuruczFeno[indexFeno].rms[indexWindow]=(Square>(double)0.)?sqrt(Square):(double)0.;
@@ -455,12 +1291,12 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
     for (j=pKurucz->shiftDegree;j>=1;j--)
       shiftPoly[i]=shiftPoly[i]*(double)i+Pcalib[j];
 
-    Lambda[i]=oldLambda[i]-shiftPoly[i];
+    Lambda[i]=oldLambda[i]-shiftSign*shiftPoly[i];
   }
-    
+
   if (displayFlag) {
     // Display complete fit
-      
+
     if (pKurucz->displaySpectra) {
       if (ANALYSE_swathSize==1)
         strcpy(string,"Complete fit");
@@ -481,7 +1317,7 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
         strcpy(string,"Residual");
       else
         sprintf(string,"Residual (%d/%d)",indexFenoColumn+1,ANALYSE_swathSize);
-        
+
       if (pKurucz->method!=PRJCT_ANLYS_METHOD_SVD)
         for (j=SvdPDeb;j<=SvdPFin;j++)
           ANALYSE_absolu[j]=(ANALYSE_tc[j]!=(double)0.)?ANALYSE_absolu[j]/ANALYSE_tc[j]:(double)0.;
@@ -499,7 +1335,7 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
          (Feno->indexOffsetConst!=ITEM_NONE) &&
          (Feno->indexOffsetOrder1!=ITEM_NONE) &&
          (Feno->indexOffsetOrder2!=ITEM_NONE) &&
-           
+
          ((TabCross[Feno->indexOffsetConst].FitParam!=ITEM_NONE) ||
           (TabCross[Feno->indexOffsetOrder1].FitParam!=ITEM_NONE) ||
           (TabCross[Feno->indexOffsetOrder2].FitParam!=ITEM_NONE) ||
@@ -510,7 +1346,7 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
         ANALYSE_absolu[j]+=offset[j]-ANALYSE_secX[j];
         ANALYSE_secX[j]=offset[j];
       }
-          
+
       if (pKurucz->displayFit) {
         if (ANALYSE_swathSize==1)
           strcpy(string,"Offset");
@@ -569,7 +1405,7 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
     }
 
     // Display wavelength dependence of fwhm
-      
+
     if (pKuruczOptions->fwhmFit) {
       for (indexParam=0;(indexParam<maxParam) && (rc<THREAD_EVENT_STOP);indexParam++) {
         if (ANALYSE_swathSize==1)
@@ -711,8 +1547,8 @@ RC KURUCZ_ApplyCalibration(FENO *pTabFeno,double *newLambda,INDEX indexFenoColum
       memcpy(wveDptStretch.matrix[1],pTabFeno->fwhmVector[0],sizeof(double)*n_wavel);
       memcpy(wveDptStretch.matrix[2],pTabFeno->fwhmVector[1],sizeof(double)*n_wavel);
 
-      if (!(rc=SPLINE_Deriv2(wveDptStretch.matrix[0],wveDptStretch.matrix[1],wveDptStretch.deriv2[1],wveDptStretch.nl,"XSCONV_TypeStandard ")))
-        rc=SPLINE_Deriv2(wveDptStretch.matrix[0],wveDptStretch.matrix[2],wveDptStretch.deriv2[2],wveDptStretch.nl,"XSCONV_TypeStandard ");
+      if (!(rc=SPLINE_Deriv2(wveDptStretch.matrix[0],wveDptStretch.matrix[1],wveDptStretch.deriv2[1],wveDptStretch.nl,__func__)))
+        rc=SPLINE_Deriv2(wveDptStretch.matrix[0],wveDptStretch.matrix[2],wveDptStretch.deriv2[2],wveDptStretch.nl,__func__);
     }
   }
 
@@ -726,7 +1562,7 @@ RC KURUCZ_ApplyCalibration(FENO *pTabFeno,double *newLambda,INDEX indexFenoColum
 
   // Release allocated matrix object
 
-  MATRIX_Free(&wveDptStretch,"XSCONV_TypeStandard ");
+  MATRIX_Free(&wveDptStretch,__func__);
 
   // Return
 
@@ -757,9 +1593,10 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,int saveFlag,int gomeFla
 {
   // Declarations
 
-  FENO            *pTabFeno,*pTabRef;                               // browse analysis windows
-  double          *reference;                                                   // reference spectrum to align on Kurucz
+  FENO            *pTabFeno,*pTabRef,                                           // browse analysis windows
+                  *pKuruczFeno;                                                 // points to the calibration window
 
+  double          *reference;                                                   // reference spectrum to align on Kurucz
   int              maxParam,
                    msgCount,
                    nKuruczFeno,
@@ -767,15 +1604,25 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,int saveFlag,int gomeFla
   INDEX            indexFeno,                                                   // browse analysis windows
                    indexRef;                                                    // index of another analysis window with the same reference spectrum
   KURUCZ *pKurucz;
+
+  MATRIX_OBJECT    calibratedMatrix;                                            // for the calculation of the preshift
+  CROSS_REFERENCE *TabCross;
+
   RC               rc;                                                          // return code
 
   // Initializations
 
+  KURUCZ_indexLine=1;
   pKurucz=&KURUCZ_buffers[indexFenoColumn];
   const int n_wavel = NDET[indexFenoColumn];
+  pKuruczFeno=&TabFeno[indexFenoColumn][pKurucz->indexKurucz];
+  TabCross=pKuruczFeno->TabCross;
 
   rc=ERROR_ID_NO;
   msgCount=0;
+
+  memset(&calibratedMatrix,0,sizeof(MATRIX_OBJECT));
+  VECTOR_Init(ANALYSE_zeros,(double)0.,n_wavel);                                // To check later : sometimes, the last component of the vector is different from 0. and that causes a problem with the plot of "absolu"
 
   // Allocate buffers
 
@@ -821,10 +1668,23 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,int saveFlag,int gomeFla
               ((indexRef<indexFeno) ||
               ((refFlag && !pTabFeno->useEtalon) && ((TabFeno[indexFenoColumn][indexRef].refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_FILE) || TabFeno[indexFenoColumn][indexRef].useEtalon))))
            {
+           	int Nb_Win=KURUCZ_buffers[indexFenoColumn].Nb_Win;
+           	int indexWindow;
+
             pTabRef=&TabFeno[indexFenoColumn][indexRef];
             pTabFeno->rcKurucz=pTabRef->rcKurucz;
 
             memcpy(pTabFeno->LambdaK,pTabRef->LambdaK,sizeof(double)*pTabFeno->NDET);
+            memcpy(pKurucz->KuruczFeno[indexFeno].rms,pKurucz->KuruczFeno[indexRef].rms,sizeof(double)*Nb_Win);
+            memcpy(pKurucz->KuruczFeno[indexFeno].chiSquare,pKurucz->KuruczFeno[indexRef].chiSquare,sizeof(double)*Nb_Win);
+            memcpy(pKurucz->KuruczFeno[indexFeno].wve,pKurucz->KuruczFeno[indexRef].wve,sizeof(double)*Nb_Win);
+            memcpy(pKurucz->KuruczFeno[indexFeno].nIter,pKurucz->KuruczFeno[indexRef].nIter,sizeof(int)*Nb_Win);
+
+            memcpy(pKurucz->KuruczFeno[indexFeno].chiSquare,pKurucz->KuruczFeno[indexRef].chiSquare,sizeof(double)*Nb_Win);
+
+            if (TabFeno[indexFenoColumn][pKurucz->indexKurucz].NTabCross)
+             for (indexWindow=0;indexWindow<Nb_Win;indexWindow++)
+              memcpy(pKurucz->KuruczFeno[indexFeno].results[indexWindow],pKurucz->KuruczFeno[indexRef].results[indexWindow],sizeof(CROSS_RESULTS)*TabFeno[indexFenoColumn][pKurucz->indexKurucz].NTabCross);
 
             if (pKuruczOptions->fwhmFit)
              {
@@ -842,6 +1702,35 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,int saveFlag,int gomeFla
            }
           else
            {
+           	// Calculate preshift
+
+           	if (pKuruczOptions->preshiftFlag && !(rc=MATRIX_Allocate(&calibratedMatrix,n_wavel,2,0,0,0,__func__)))
+           	 {
+           	 	// Get solar spectrum
+
+           	 	memcpy(calibratedMatrix.matrix[0],pTabFeno->LambdaRef,n_wavel*sizeof(double));
+
+           	 	// For tests  --- MATRIX_Load("D:/My_GroundBased_Activities/GB_Stations/Bruxelles/miniDOAS_Uccle/BX_SPE_20131108_285.REF",&calibratedMatrix,pTabFeno->NDET,2,0.,0.,0,0,"KURUCZ_Reference");   // FOR TESTS
+
+           	 	if (pKuruczOptions->fwhmFit)
+           	 	 rc=KuruczConvolveSolarSpectrum(&calibratedMatrix,pTabFeno->LambdaRef,n_wavel,indexFenoColumn);
+           	 	else
+           	 	 rc=SPLINE_Vector(pKurucz->hrSolar.matrix[0],pKurucz->hrSolar.matrix[1],pKurucz->hrSolar.deriv2[1],pKurucz->hrSolar.nl,pTabFeno->LambdaRef,calibratedMatrix.matrix[1],n_wavel,pAnalysisOptions->interpol,__func__);
+
+           	 	// Calculate preshift
+
+              if (!rc &&
+                 !(rc=KuruczCalculatePreshift(calibratedMatrix.matrix[0],calibratedMatrix.matrix[1],reference,pTabFeno->NDET,pKuruczOptions->preshiftMin,pKuruczOptions->preshiftMax,0.2,(double)pKuruczOptions->lambdaLeft,(double)pKuruczOptions->lambdaRight,&pTabFeno->preshift)))
+               {
+               	if ((pKuruczFeno->indexSpectrum!=ITEM_NONE) && (TabCross[Feno->indexSpectrum].FitShift!=ITEM_NONE))
+               	 TabCross[Feno->indexSpectrum].InitShift=pTabFeno->preshift;
+               	if ((pKuruczFeno->indexReference!=ITEM_NONE) && (TabCross[Feno->indexReference].FitShift!=ITEM_NONE))
+               	 TabCross[Feno->indexReference].InitShift=-pTabFeno->preshift;
+               }
+
+              MATRIX_Free(&calibratedMatrix,"KURUCZ_Reference");
+             }
+
             // Apply Kurucz for building new calibration for reference
             if ((rc=pTabFeno->rcKurucz=KURUCZ_Spectrum(pTabFeno->LambdaRef,pTabFeno->LambdaK,reference,pKurucz->solar,instrFunction,
                  1,pTabFeno->windowName,pTabFeno->fwhmPolyRef,pTabFeno->fwhmVector,pTabFeno->fwhmDeriv2,saveFlag,indexFeno,responseHandle,indexFenoColumn))!=ERROR_ID_NO)

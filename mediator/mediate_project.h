@@ -180,6 +180,9 @@ extern "C" {
     int requireFits;
     int requireResidual;
     int requireShiftSfp;
+    int preshiftFlag;
+    double preshiftMin;
+    double preshiftMax;
     /* table data ... */
     cross_section_list_t crossSectionList;
     struct anlyswin_linear linear;

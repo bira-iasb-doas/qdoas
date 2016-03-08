@@ -538,6 +538,11 @@ bool CProjectCalibrationSubHandler::start(const QString &element, const QXmlAttr
     m_calibration->wavelengthMax = atts.value("max").toDouble();
     m_calibration->subWindows = atts.value("intervals").toInt();
   }
+  else if (element == "preshift") {
+    m_calibration->preshiftFlag = (atts.value("calculate") == "true") ? 1 : 0;
+    m_calibration->preshiftMin = atts.value("min").toDouble();
+    m_calibration->preshiftMax = atts.value("max").toDouble();
+  }
   else if (element == "cross_section") {
     return m_master->installSubHandler(new CAnalysisWindowCrossSectionSubHandler(m_master, &(m_calibration->crossSectionList)), atts);
   }
@@ -1115,7 +1120,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
       else
 	return postErrorMessage("Calibration Filename too long");
     }
-    
+
     str = atts.value("instr");
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);

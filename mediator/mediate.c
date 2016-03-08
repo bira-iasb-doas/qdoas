@@ -399,10 +399,10 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
        y_units = "Counts";
        break;
      }
-     
+
      if ((tempSpectrum=(double *)MEMORY_AllocDVector("mediateRequestPlotSpectra","tempSpectrum",0,n_wavel-1))!=NULL) {
        memcpy(tempSpectrum,pBuffers->spectrum,sizeof(double)*n_wavel);
-       
+
        if (pEngineContext->buffers.instrFunction!=NULL) {
          for (i=0;i<n_wavel;i++)
            if (pBuffers->instrFunction[i]==(double)0.)
@@ -438,7 +438,7 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
 
        if ((pBuffers->darkCurrent!=NULL) && pEngineContext->recordInfo.mkzy.darkFlag) {
          sprintf(tmpString,(pEngineContext->recordInfo.mkzy.offsetFlag)?"Dark current":"Offset");
-         
+
          mediateAllocateAndSetPlotData(&spectrumData,tmpString,pBuffers->lambda, pBuffers->darkCurrent, n_wavel, Line);
          mediateResponsePlotData(plotPageDarkCurrent, &spectrumData, 1, Spectrum, forceAutoScale,tmpString, "Wavelength (nm)", "Counts", responseHandle);
          mediateReleasePlotData(&spectrumData);
@@ -462,7 +462,7 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
           (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV)) &&
          (pEngineContext->fileInfo.darkFp!=NULL) && (pBuffers->darkCurrent!=NULL)) {
        sprintf(tmpString,"Dark current (%d/%d)",pEngineContext->indexRecord,pEngineContext->recordNumber);
-       
+
        mediateAllocateAndSetPlotData(&spectrumData, "Dark current",pBuffers->lambda, pBuffers->darkCurrent, n_wavel, Line);
        mediateResponsePlotData(plotPageDarkCurrent, &spectrumData, 1, Spectrum, forceAutoScale, "Dark current", "Wavelength (nm)", "Counts", responseHandle);
        mediateReleasePlotData(&spectrumData);
@@ -689,28 +689,32 @@ void setMediateProjectAnalysis(PRJCT_ANLYS *pEngineAnalysis,const mediate_projec
 
 void setMediateProjectCalibration(PRJCT_KURUCZ *pEngineCalibration,CALIB_FENO *pEngineCalibFeno,const mediate_project_calibration_t *pMediateCalibration,int displayFitFlag)
  {
-   strcpy(pEngineCalibration->file,pMediateCalibration->solarRefFile);           // kurucz file
-   strcpy(pEngineCalibration->slfFile,pMediateCalibration->slfFile);             // slit function file
+   strcpy(pEngineCalibration->file,pMediateCalibration->solarRefFile);          // kurucz file
+   strcpy(pEngineCalibration->slfFile,pMediateCalibration->slfFile);            // slit function file
 
-   pEngineCalibration->analysisMethod=pMediateCalibration->methodType;           // analysis method type
-   pEngineCalibration->windowsNumber=pMediateCalibration->subWindows;            // number of windows
-   pEngineCalibration->fwhmPolynomial=pMediateCalibration->sfpDegree;            // security gap in pixels numbers
-   pEngineCalibration->shiftPolynomial=pMediateCalibration->shiftDegree;         // degree of polynomial to use
+   pEngineCalibration->analysisMethod=pMediateCalibration->methodType;          // analysis method type
+   pEngineCalibration->windowsNumber=pMediateCalibration->subWindows;           // number of windows
+   pEngineCalibration->fwhmPolynomial=pMediateCalibration->sfpDegree;           // security gap in pixels numbers
+   pEngineCalibration->shiftPolynomial=pMediateCalibration->shiftDegree;        // degree of polynomial to use
 
    if (displayFitFlag)
     {
-     pEngineCalibration->displayFit=pMediateCalibration->requireFits;              // display fit flag
-     pEngineCalibration->displayResidual=pMediateCalibration->requireResidual;     // display new calibration flag
-     pEngineCalibration->displayShift=pMediateCalibration->requireShiftSfp;        // display shift/Fwhm in each pixel
-     pEngineCalibration->displaySpectra=pMediateCalibration->requireSpectra;       // display fwhm in each pixel
+     pEngineCalibration->displayFit=pMediateCalibration->requireFits;           // display fit flag
+     pEngineCalibration->displayResidual=pMediateCalibration->requireResidual;  // display new calibration flag
+     pEngineCalibration->displayShift=pMediateCalibration->requireShiftSfp;     // display shift/Fwhm in each pixel
+     pEngineCalibration->displaySpectra=pMediateCalibration->requireSpectra;    // display fwhm in each pixel
     }
    else
     pEngineCalibration->displayFit=pEngineCalibration->displayResidual=pEngineCalibration->displayShift=pEngineCalibration->displaySpectra=0;
 
-   pEngineCalibration->fwhmFit=(pMediateCalibration->lineShape>0)?1:0;           // force fit of fwhm while applying Kurucz
-   pEngineCalibration->lambdaLeft=pMediateCalibration->wavelengthMin;            // minimum wavelength for the spectral interval
-   pEngineCalibration->lambdaRight=pMediateCalibration->wavelengthMax;           // maximum wavelength for the spectral interval
-   pEngineCalibration->invPolyDegree=2*pMediateCalibration->lorentzOrder;        // degree of the lorentzian
+   pEngineCalibration->fwhmFit=(pMediateCalibration->lineShape>0)?1:0;          // force fit of fwhm while applying Kurucz
+   pEngineCalibration->lambdaLeft=pMediateCalibration->wavelengthMin;           // minimum wavelength for the spectral interval
+   pEngineCalibration->lambdaRight=pMediateCalibration->wavelengthMax;          // maximum wavelength for the spectral interval
+   pEngineCalibration->invPolyDegree=2*pMediateCalibration->lorentzOrder;       // degree of the lorentzian
+
+   pEngineCalibration->preshiftFlag=pMediateCalibration->preshiftFlag;          // calculate the preshift
+   pEngineCalibration->preshiftMin=pMediateCalibration->preshiftMin;            // minimum value for the preshift
+   pEngineCalibration->preshiftMax=pMediateCalibration->preshiftMax;            // maximum value for the preshift
 
    switch(pMediateCalibration->lineShape)
     {
@@ -1784,16 +1788,16 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
 
      if (!pEngineContext->project.instrumental.use_row[indexFenoColumn])
        continue;
-     
+
      if ((xsToConvolute && !useKurucz) || !pKuruczOptions->fwhmFit)
        for (indexWindow=0;(indexWindow<NFeno) && !rc;indexWindow++) {
          pTabFeno=&TabFeno[indexFenoColumn][indexWindow];
-         
+
          if ((pSlitOptions->slitFunction.slitType==SLIT_TYPE_NONE) && pTabFeno->xsToConvolute)
            rc = ERROR_SetLast("mediateRequestSetAnalysisWindows", ERROR_TYPE_FATAL, ERROR_ID_CONVOLUTION);
          else if (pTabFeno->xsToConvolute && /* pTabFeno->useEtalon && */ (pTabFeno->gomeRefFlag || pEngineContext->refFlag) &&
                   ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,&ANALYSIS_slit2,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,indexFenoColumn,pSlitOptions->slitFunction.slitWveDptFlag))!=0))
-           
+
            break;
        }
 
