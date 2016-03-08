@@ -1356,6 +1356,7 @@ static void get_omi_record_data(RECORD_INFO *pRecord, const struct omi_orbit_fil
   pRecord->useErrors=1;                                                     // Errors are available for OMI
   
   pRecord->omi.omiXtrackQF = pData->xtrackQualityFlags[i_record];
+  pRecord->omi.omiGroundPQF = pData->groundPixelQualityFlags[i_record];
   pRecord->omi.instrumentConfigurationId = pData->instrumentConfigurationId[i_alongtrack];
 
   pRecord->satellite.altitude = pData->spacecraftAltitude[i_alongtrack];
