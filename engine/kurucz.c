@@ -1725,7 +1725,10 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,int saveFlag,int gomeFla
                	if ((pKuruczFeno->indexSpectrum!=ITEM_NONE) && (TabCross[Feno->indexSpectrum].FitShift!=ITEM_NONE))
                	 TabCross[Feno->indexSpectrum].InitShift=pTabFeno->preshift;
                	if ((pKuruczFeno->indexReference!=ITEM_NONE) && (TabCross[Feno->indexReference].FitShift!=ITEM_NONE))
-               	 TabCross[Feno->indexReference].InitShift=-pTabFeno->preshift;
+               	 {
+               	 	pTabFeno->preshift=-pTabFeno->preshift;
+               	  TabCross[Feno->indexReference].InitShift=pTabFeno->preshift;
+               	 }
                }
 
               MATRIX_Free(&calibratedMatrix,"KURUCZ_Reference");
