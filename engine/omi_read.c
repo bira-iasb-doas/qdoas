@@ -62,6 +62,7 @@
 #include "zenithal.h"
 #include "winthrd.h"
 #include "stdfunc.h"
+#include "output.h"
 
 #define MAX_OMI_FILES 500
 
@@ -114,6 +115,7 @@ struct omi_data {
   short *wavelengthReferenceColumn;
   unsigned short *measurementQualityFlags;
   unsigned char *instrumentConfigurationId;
+  bool have_xtrack_quality_flags;
 };
 
 struct omi_spectrum {
@@ -941,14 +943,24 @@ static RC OmiGetSwathData(struct omi_orbit_file *pOrbitFile, const ENGINE_CONTEX
     }
 
     // Older OMI files do not have "XTrackQualityFlags", so reading them is optional (if the project isn't configured to use XTrackQualityFlags)
-    if (!rc && pEngineContext->project.instrumental.omi.xtrack_mode != XTRACKQF_IGNORE) {
+    pData->have_xtrack_quality_flags = false;
+    int32 rank;
+    int32 dims[2];
+    int32 numbertype;
+    char dimlist[520];
+    swrc = SWfieldinfo(pOrbitFile->sw_id, (char *) "XTrackQualityFlags", &rank, dims, &numbertype, dimlist);
+    if (swrc != FAIL) {
       swrc = SWreadfield(pOrbitFile->sw_id, (char *)"XTrackQualityFlags", start, NULL, edge, pData->xtrackQualityFlags);
-      if (swrc == FAIL) {
+      if (swrc != FAIL) {
+        pData->have_xtrack_quality_flags = true;
+      } else {
         rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS, "XTrackQualityFlags", pOrbitFile->omiFileName,
                            "Cannot read XTrackQualityFlags", "");
       }
+    } else if (pEngineContext->project.instrumental.omi.xtrack_mode != XTRACKQF_IGNORE) {
+    rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS, "XTrackQualityFlags", pOrbitFile->omiFileName,
+                       "File does not contain XTrackQualityFlags", "");
     }
-
   }
 
   // normalize longitudes: should be in the range 0-360
@@ -1355,7 +1367,7 @@ static void get_omi_record_data(RECORD_INFO *pRecord, const struct omi_orbit_fil
   pRecord->azimuthViewAngle=pData->viewingAzimuthAngle[i_record];
   pRecord->useErrors=1;                                                     // Errors are available for OMI
 
-  pRecord->omi.omiXtrackQF = pData->xtrackQualityFlags[i_record];
+  pRecord->omi.omiXtrackQF = pData->have_xtrack_quality_flags ? pData->xtrackQualityFlags[i_record] : QDOAS_FILL_USHORT;
   pRecord->omi.omiGroundPQF = pData->groundPixelQualityFlags[i_record];
   pRecord->omi.instrumentConfigurationId = pData->instrumentConfigurationId[i_alongtrack];
 
