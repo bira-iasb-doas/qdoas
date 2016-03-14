@@ -907,6 +907,10 @@ RC ANALYSE_XsInterpolation(FENO *pTabFeno, const double *newLambda,INDEX indexFe
   rc=ERROR_ID_NO;
   oldNl=0;
 
+  if (newLambda[0] == 0.0) { // newLambda should now contain a wavelength grid from a calibration file or reference spectrum
+    return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_MISSING_INITIAL_CALIB);
+  }
+
   // Browse cross sections
 
   for (indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++)
@@ -4426,12 +4430,7 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
         if (!strlen(pWrkSymbol->crossFileName)) {
           return ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_XS_FILENAME,pWrkSymbol->symbolName);
         }
-        if (lambda[0] == 0.0) { // lambda should now contain a wavelength grid from a calibration file or reference spectrum
-          return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_MISSING_INITIAL_CALIB);
-        }
-        if ( (rc=MATRIX_Load(pCross->crossSectionFile,&pWrkSymbol->xs,0,0,
-                             (pCross->crossType==ANLYS_CROSS_ACTION_NOTHING) ? 0. : lambda[0]-7.,
-                             (pCross->crossType==ANLYS_CROSS_ACTION_NOTHING) ? 0. : lambda[n_wavel-1]+7.,
+        if ( (rc=MATRIX_Load(pCross->crossSectionFile,&pWrkSymbol->xs,0,0,0.,0.,
                              (pCross->crossType!=ANLYS_CROSS_ACTION_NOTHING) ? 1 : 0, 1, __func__) ) ) {
           return rc;
         }
