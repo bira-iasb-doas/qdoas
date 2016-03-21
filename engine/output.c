@@ -1823,9 +1823,19 @@ RC OUTPUT_CheckPath(ENGINE_CONTEXT *pEngineContext,char *path,int format) {
     const char *extension = output_file_extensions[format];
     size_t namelen = strlen(output_path) + strlen(extension);
     char filename[1+namelen];
+    char *ptr;
+
     strcpy(filename, output_path);
 
-    if ((format!=ASCII) || (strrchr(fileName,'.')==NULL))     // ASCII should accept any extensions (.dat, .txt, ...)
+
+    if ((ptr=strrchr(filename,PATH_SEP))==NULL)             // avoid problem when dot is used in the directory path as "./<filename>
+     ptr=filename;
+    else
+     ptr++;
+
+     if (strrchr(ptr,'.')==NULL)                            // ASCII format should accept any extension
+
+    if ((format!=ASCII) || (strrchr(ptr,'.')!=NULL))     // ASCII should accept any extensions (.dat, .txt, ...)
      {
       remove_extension(filename); // if user has added a filename extension .asc/.he5/..., remove it
       strcat(filename, extension); // add proper extension
@@ -1883,7 +1893,6 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
 
   RC rc=ERROR_ID_NO;
   char outputFileName[MAX_ITEM_TEXT_LEN] = {0};
-
 
   pEngineContext->outputPath=(THRD_id==THREAD_TYPE_EXPORT)?(char *)pExport->path:(char *)pResults->path;
 
@@ -2027,7 +2036,7 @@ RC OUTPUT_SaveResults(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
 
   if ((pRecordInfo->NSomme!=0) && (pRecordInfo->TotalExpTime!=(double)0.)) {
     double *Spectrum= pEngineContext->buffers.spectrum;
-    
+
     for (int i=0;i<n_wavel;i++)
       Spectrum[i]*=(double)pRecordInfo->NSomme/pRecordInfo->TotalExpTime;
   }

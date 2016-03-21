@@ -17,8 +17,15 @@ static void OutputAscPrintTitles(FILE *fp);
 
 RC ascii_open(const ENGINE_CONTEXT *pEngineContext,char *filename) {
 
-  if (!strchr(filename,'.'))                            // ASCII format should accept any extension
-    strcat(filename, output_file_extensions[ASCII]);
+ char *ptr;
+
+ if ((ptr=strrchr(filename,PATH_SEP))==NULL)             // avoid problem when dot is used in the directory path as "./<filename>
+  ptr=filename;
+ else
+  ptr++;
+
+  if (strrchr(ptr,'.')==NULL)                            // ASCII format should accept any extension
+    strcat(ptr, output_file_extensions[ASCII]);
 
   const PROJECT *pProject= &pEngineContext->project;
 
