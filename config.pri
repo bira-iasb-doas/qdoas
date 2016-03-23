@@ -12,13 +12,13 @@ QMAKE_CFLAGS += -g -std=gnu99 -Wall -Wextra -pedantic \
 
 QMAKE_CXXFLAGS += -std=c++0x
 
-QDOAS_VERSION=2.110.1
+QDOAS_VERSION=2.111
 
 win64 {
   QDOAS_VERSION = "$${QDOAS_VERSION}_x86_64"
 }
 
-DEFINES += QDOAS_VERSION="\"\\\"$${QDOAS_VERSION}\\\"\"" QDOAS_DATE="\"\\\"4 November 2015\\\"\""
+DEFINES += QDOAS_VERSION="\"\\\"$${QDOAS_VERSION}\\\"\"" QDOAS_DATE="\"\\\"April 2016\\\"\""
 
 LIBS += -L../mediator -lmediator -L../engine -lengine -L../common -lcommon
 DEPENDPATH += ../common ../engine ../mediator
