@@ -1267,7 +1267,7 @@ RC ANALYSE_XsConvolution(FENO *pTabFeno,double *newlambda,
 }
 
 // --------------------------------------------
-// AnalyseLoadVector : Load a vector from file
+// AnalyseLoadVector : Load a (2-column) vector from a file
 // --------------------------------------------
 
 RC AnalyseLoadVector(const char *function, const char *fileName, double *lambda, double *vector, const int n_wavel, int refFlag, int *pNewSize)
@@ -1290,56 +1290,53 @@ RC AnalyseLoadVector(const char *function, const char *fileName, double *lambda,
   memset(string,0,MAX_ITEM_TEXT_LEN);
   rc=ERROR_ID_NO;
 
-  if (strlen(FILES_RebuildFileName(fullFileName,fileName,1)) && (vector!=NULL))
-   {
+  if (strlen(FILES_RebuildFileName(fullFileName,fileName,1)) && (vector!=NULL)) {
     if ((fp=fopen(fullFileName,"rt"))==NULL)
-     rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_NOT_FOUND,fullFileName);
-    else
-     {
-      for (i=0;(i<n_wavel) && fgets(string,MAX_ITEM_TEXT_LEN,fp);)
+      rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_NOT_FOUND,fullFileName);
+    else {
+      for (i=0;  i<n_wavel && fgets(string,MAX_ITEM_TEXT_LEN,fp) && !rc; ) {
+        if ((strchr(string,';')==NULL) && (strchr(string,'*')==NULL)) {
+          int n_scan = sscanf(string,"%lf %lf",&lambda[i],&vector[i]);
+          if (n_scan != 2) {
+            rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_BAD_LENGTH, fullFileName);
+          }
+          i++;
+        } else if (refFlag) {
+          if ((str=strstr(string,"Zm"))!=NULL)
+            sscanf(str,"Zm : %lf",&TabFeno[0][NFeno].Zm);
+          else if ((str=strstr(string,"SZA"))!=NULL)
+            sscanf(str,"SZA : %lf",&TabFeno[0][NFeno].Zm);
+          else if ((str=strstr(string,"TDet"))!=NULL)
+            sscanf(str,"TDet : %lf",&TabFeno[0][NFeno].TDet);
+          else if (((str=strchr(string,'/'))!=NULL) && (*(str+3)=='/') && (*(str+11)==':') && (*(str+14)==':')) {
+            sscanf(str-2,"%02d/%02d/%d %02d:%02d:%02d",&day,&month,&year,&hour,&min,&sec);
 
-       if ((strchr(string,';')==NULL) && (strchr(string,'*')==NULL))
-        {
-         sscanf(string,"%lf %lf",&lambda[i],&vector[i]);
-         i++;
-        }
-       else if (refFlag)
-        {
-         if ((str=strstr(string,"Zm"))!=NULL)
-          sscanf(str,"Zm : %lf",&TabFeno[0][NFeno].Zm);
-         else if ((str=strstr(string,"SZA"))!=NULL)
-          sscanf(str,"SZA : %lf",&TabFeno[0][NFeno].Zm);
-         else if ((str=strstr(string,"TDet"))!=NULL)
-          sscanf(str,"TDet : %lf",&TabFeno[0][NFeno].TDet);
-         else if (((str=strchr(string,'/'))!=NULL) && (*(str+3)=='/') && (*(str+11)==':') && (*(str+14)==':'))
-          {
-           sscanf(str-2,"%02d/%02d/%d %02d:%02d:%02d",&day,&month,&year,&hour,&min,&sec);
+            refTime.ti_hour=(unsigned char)hour;
+            refTime.ti_min=(unsigned char)min;
+            refTime.ti_sec=(unsigned char)sec;
 
-           refTime.ti_hour=(unsigned char)hour;
-           refTime.ti_min=(unsigned char)min;
-           refTime.ti_sec=(unsigned char)sec;
+            TabFeno[0][NFeno].refDate.da_day=(char)day;
+            TabFeno[0][NFeno].refDate.da_mon=(char)month;
+            TabFeno[0][NFeno].refDate.da_year= year;
 
-           TabFeno[0][NFeno].refDate.da_day=(char)day;
-           TabFeno[0][NFeno].refDate.da_mon=(char)month;
-           TabFeno[0][NFeno].refDate.da_year= year;
-
-           TabFeno[0][NFeno].Tm=(double)ZEN_NbSec(&TabFeno[0][NFeno].refDate,&refTime,0);
-           TabFeno[0][NFeno].TimeDec=(double)hour+min/60.;
+            TabFeno[0][NFeno].Tm=(double)ZEN_NbSec(&TabFeno[0][NFeno].refDate,&refTime,0);
+            TabFeno[0][NFeno].TimeDec=(double)hour+min/60.;
           }
         }
+      }
 
       if (pNewSize!=NULL)
-       *pNewSize=i;
+        *pNewSize=i;
 
       fclose(fp);
-     }
-   }
+    }
+  }
 
 #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionStop(__func__,rc);
+    DEBUG_FunctionStop(__func__,rc);
 #endif
 
-  // Return
+    // Return
 
   return rc;
 }
