@@ -815,7 +815,7 @@ RC KuruczCalculatePreshift(double *calibratedLambda,double *calibratedRef,double
  	// Declarations
 
   double *lambdas,*Sref1,*Sref2,*Sref2Deriv,*Sref2Interp,*shift,*coeff;
-  int ishift,ishiftMin,nshift,nfuncEval,nrestart,imin,imax;
+  int ishift,ishiftMin,nshift,nfuncEval,nrestart,imin,imax,nsmooth;
   double shiftIni,shiftMin,coefMin,varstep;
  	RC rc,rc2;
 
@@ -849,13 +849,15 @@ RC KuruczCalculatePreshift(double *calibratedLambda,double *calibratedRef,double
     imin=max(0,FNPixel(calibratedLambda,lambdaMin,ndet,PIXEL_CLOSEST));
  	  imax=min(ndet-1,FNPixel(calibratedLambda,lambdaMax,ndet,PIXEL_CLOSEST));
 
+ 	  nsmooth=(int)floor((double)(imax-imin+1)/(calibratedLambda[imax]-calibratedLambda[imin])*2.5+0.5);
+
  	  for (int i=0;i<ndet;i++)
  	   Sref1[i]=Sref2[i]=Sref2Deriv[i]=Sref2Interp[i]=(double)0.;
 
  	 	// Smooth structures in both reference spectra; spectra are also normalized
 
- 	 	KuruczSmooth(calibratedLambda,calibratedRef,ndet,35,imin,imax,1,Sref1);
-    KuruczSmooth(calibratedLambda,newRef,ndet,35,imin,imax,1,Sref2);
+ 	 	KuruczSmooth(calibratedLambda,calibratedRef,ndet,nsmooth,imin,imax,1,Sref1);
+    KuruczSmooth(calibratedLambda,newRef,ndet,nsmooth,imin,imax,1,Sref2);
 
  	 	for (ishift=ishiftMin=0;(ishift<nshift) && !rc;ishift++)
      {
