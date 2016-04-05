@@ -158,8 +158,8 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_PITCH,              "Pitch"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_ROLL,               "Roll"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_HEADING,            "Heading"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_STARTGPSTIME,           "Start GPS Time (hhmmss)"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ENDGPSTIME,             "End GPS Time (hhmmss)"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_STARTGPSTIME,           "Start Time (hhmmss.ms)"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ENDGPSTIME,             "End Time (hhmmss.ms)"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_LONGITEND,              "Longitude End"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_LATITEND,               "Latitude End"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ALTITEND,               "Altitude End"));

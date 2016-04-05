@@ -813,6 +813,7 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
   case PRJCT_INSTR_FORMAT_BIRA_AIRBORNE :
   case PRJCT_INSTR_FORMAT_BIRA_MOBILE :
     func_frac_time = &get_frac_time_recordinfo;
+    format_datetime = "%4d%02d%02d%02d%02d%02d.%03d"; // year, month, day, hour, min, sec, milliseconds
     break;
   case PRJCT_INSTR_FORMAT_GDP_ASCII:
     func_sza = &gdpasc_get_sza;
@@ -1097,10 +1098,10 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
        register_field( (struct output_field) { .basic_fieldname = "Precalculated flux", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_precalculated_flux, .data_cols = 4, .column_number_format="(%d)" });
        break;
      case PRJCT_RESULTS_STARTGPSTIME:
-       register_field( (struct output_field) { .basic_fieldname = "GPS Start Time (hhmmss)", .memory_type = OUTPUT_TIME, .resulttype = fieldtype, .format = "%02d%02d%02d", .get_data = (func_void)&get_gps_start_time });
+       register_field( (struct output_field) { .basic_fieldname = "Start Time (hhmmss.ms)", .memory_type = OUTPUT_DATETIME, .resulttype = fieldtype, .format = format_datetime, .get_data = (func_void)&get_gps_start_time });
        break;
      case PRJCT_RESULTS_ENDGPSTIME:
-       register_field( (struct output_field) { .basic_fieldname = "GPS Stop Time (hhmmss)", .memory_type = OUTPUT_TIME, .resulttype = fieldtype, .format = "%02d%02d%02d", .get_data = (func_void)&get_gps_end_time });
+       register_field( (struct output_field) { .basic_fieldname = "Stop Time (hhmmss.ms)", .memory_type = OUTPUT_DATETIME, .resulttype = fieldtype, .format = format_datetime, .get_data = (func_void)&get_gps_end_time });
        break;
      case PRJCT_RESULTS_LONGITEND:
        register_field( (struct output_field) { .basic_fieldname = "Longitude End", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_longitude_end });

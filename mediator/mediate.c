@@ -53,6 +53,7 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
    RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
    struct date *pDay;                                                            // pointer to measurement date
    struct time *pTime;                                                           // pointer to measurement date
+   struct datetime *pdateTime;
    int indexLine,indexColumn;
    char blankString[256];
 
@@ -121,10 +122,13 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
   if (strlen(pInstrumental->dnlFile))
     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Non linearity","%s",pInstrumental->dnlFile);
 
-  if (pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_GOME2)
-    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Date and Time","%02d/%02d/%d %02d:%02d:%02d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
+  if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Date and Time","%02d/%02d/%d %02d:%02d:%02d.%06d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec,pRecord->present_datetime.microseconds);
+  else if (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_BIRA_AIRBORNE) || (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_BIRA_MOBILE)) && pRecord->present_datetime.millis)
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Date and Time","%02d/%02d/%d %02d:%02d:%02d.%03d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec,pRecord->present_datetime.millis);
   else
-    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Date and Time","%02d/%02d/%d %02d:%02d:%02d.%06d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec,pRecord->present_datetime.microseconds);
+    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Date and Time","%02d/%02d/%d %02d:%02d:%02d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
+
 
   pDay=&pRecord->startDate;
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_STARTDATE])
@@ -142,12 +146,12 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
 
   if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_BIRA_AIRBORNE) || (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_BIRA_MOBILE))
    {
-    pTime=&pRecord->uavBira.gpsStartTime;
+    pdateTime=&pRecord->uavBira.startTime;
     if (pSpectra->fieldsFlag[PRJCT_RESULTS_STARTGPSTIME])
-      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Start time","%02d:%02d:%02d",pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
-    pTime=&pRecord->uavBira.gpsEndTime;
+      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Start time","%02d:%02d:%02d.%03d",pdateTime->thetime.ti_hour,pdateTime->thetime.ti_min,pdateTime->thetime.ti_sec,pdateTime->millis);
+    pdateTime=&pRecord->uavBira.endTime;
     if (pSpectra->fieldsFlag[PRJCT_RESULTS_ENDGPSTIME])
-      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"End time","%02d:%02d:%02d",pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
+      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"End time","%02d:%02d:%02d.%03d",pdateTime->thetime.ti_hour,pdateTime->thetime.ti_min,pdateTime->thetime.ti_sec,pdateTime->millis);
    }
 
   if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)
@@ -270,20 +274,20 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Cooler status","%.3f",(pRecord->coolingStatus==0)?"!!! UNLOCKED !!!":"Locked");
 
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_LONGIT])
-   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Longitude","%.3f",pRecord->longitude);
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Longitude","%.6f",pRecord->longitude);
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_LATIT])
-   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Latitude","%.3f",pRecord->latitude);
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Latitude","%.6f",pRecord->latitude);
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_ALTIT])
-   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Altitude","%.3f",pRecord->altitude);
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Altitude","%.6f",pRecord->altitude);
 
   if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_BIRA_AIRBORNE) || (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_BIRA_MOBILE))
    {
     if (pSpectra->fieldsFlag[PRJCT_RESULTS_LONGITEND])
-     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Longitude End","%.3f",pRecord->uavBira.longitudeEnd);
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Longitude End","%.6f",pRecord->uavBira.longitudeEnd);
     if (pSpectra->fieldsFlag[PRJCT_RESULTS_LATITEND])
-     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Latitude End","%.3f",pRecord->uavBira.latitudeEnd);
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Latitude End","%.6f",pRecord->uavBira.latitudeEnd);
     if (pSpectra->fieldsFlag[PRJCT_RESULTS_ALTITEND])
-     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Altitude End","%.3f",pRecord->uavBira.altitudeEnd);
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Altitude End","%.6f",pRecord->uavBira.altitudeEnd);
    }
 
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_CLOUD])

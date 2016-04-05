@@ -760,12 +760,12 @@ static inline void get_cic(struct output_field *this_field, double *cic, const E
     : QDOAS_FILL_DOUBLE;
 }
 
-static inline void get_gps_start_time(struct output_field *this_field __attribute__ ((unused)), struct time *time, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  *time = pEngineContext->recordInfo.uavBira.gpsStartTime;
+static inline void get_gps_start_time(struct output_field *this_field __attribute__ ((unused)),struct datetime *datetime, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  *datetime = pEngineContext->recordInfo.uavBira.startTime;
 }
 
-static inline void get_gps_end_time(struct output_field *this_field __attribute__ ((unused)), struct time *time, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  *time = pEngineContext->recordInfo.uavBira.gpsEndTime;
+static inline void get_gps_end_time(struct output_field *this_field __attribute__ ((unused)), struct datetime *datetime, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  *datetime = pEngineContext->recordInfo.uavBira.endTime;
 }
 
 static inline void get_longitude_end (struct output_field *this_field __attribute__ ((unused)), float *longitude, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {

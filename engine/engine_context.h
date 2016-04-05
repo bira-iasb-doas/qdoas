@@ -391,9 +391,12 @@ typedef struct _airborneBira
  	float altitudeP;
  	float pressure;
  	float longitudeEnd,latitudeEnd,altitudeEnd;
- 	struct time gpsStartTime;
- 	struct time gpsEndTime;
- 	float  pitch,roll,heading;                                                   // airborne
+ 	struct datetime startTime;
+ 	struct datetime endTime;
+ 	// struct time gpsStartTime;    // to delete -> to confirm by Alexis
+ 	// struct time gpsEndTime;
+
+ 	float  pitch,roll,heading;                                                    // airborne
  }
 UAVBIRA_DATA;
 

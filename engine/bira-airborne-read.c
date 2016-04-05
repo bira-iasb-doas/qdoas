@@ -68,7 +68,7 @@
 // CONSTANTS DEFINITION
 // ====================
 
-#define IGNORED_BYTES 96
+#define IGNORED_BYTES 92
 
 // ====================
 // STRUCTURE DEFINITION
@@ -102,6 +102,7 @@ typedef struct _airborneData
   float         longitudeEnd,latitudeEnd,altitudeEnd;
   struct time   gpsTimeEnd;
   float         pitch,roll,heading;                          // airborne
+  short         msBegin,msEnd;
   unsigned char ignoredBytes[IGNORED_BYTES];
  }
 AIRBORNE_DATA;
@@ -173,6 +174,7 @@ RC AIRBORNE_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int lo
   AIRBORNE_DATA  header;                                                        // record header
   double        *spectrum;                                                      // the current spectrum
   double         tmLocal;                                                       // measurement local time
+  double         timeDec;
   RC             rc;                                                            // return code
 
   // Initializations
@@ -198,7 +200,9 @@ RC AIRBORNE_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int lo
     pRecord->present_datetime.thedate.da_day = header.today.da_day;
     pRecord->present_datetime.thedate.da_mon = header.today.da_mon;
     pRecord->present_datetime.thedate.da_year = header.today.da_year;
-    pRecord->present_datetime.thetime = header.now;
+
+    memcpy(&pRecord->uavBira.startTime.thedate,&pRecord->present_datetime.thedate,sizeof(struct date));
+    memcpy(&pRecord->uavBira.endTime.thedate,&pRecord->present_datetime.thedate,sizeof(struct date));
 
     pRecord->TDet=(double)-1.;
     pRecord->rejected=header.nrejMeas;
@@ -225,13 +229,40 @@ RC AIRBORNE_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int lo
  	  pRecord->uavBira.roll=(float)header.roll;
  	  pRecord->uavBira.heading=(float)header.heading;
 
- 	  memcpy(&pRecord->uavBira.gpsStartTime,&header.gpsTime,sizeof(struct time));
- 	  memcpy(&pRecord->uavBira.gpsEndTime,&header.gpsTimeEnd,sizeof(struct time));
+ 	  memcpy(&pRecord->uavBira.startTime.thetime,&header.now,sizeof(struct time));
+ 	  memcpy(&pRecord->uavBira.endTime.thetime,&header.endMeas,sizeof(struct time));
 
-    pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
+ 	  pRecord->uavBira.startTime.millis=(int)header.msBegin;
+ 	  pRecord->uavBira.endTime.millis=(int)header.msEnd;
+ 	  pRecord->uavBira.startTime.microseconds=0;
+    pRecord->uavBira.endTime.microseconds=0;
+
+ 	  // memcpy(&pRecord->uavBira.gpsStartTime,&header.gpsTime,sizeof(struct time));           // to delete -> to confirm by Alexis
+ 	  // memcpy(&pRecord->uavBira.gpsEndTime,&header.gpsTimeEnd,sizeof(struct time));
+
+	   pRecord->Tm=(double)(ZEN_NbSec(&pRecord->present_datetime.thedate,&header.now,0)+0.001*header.msBegin+ZEN_NbSec(&pRecord->present_datetime.thedate,&header.endMeas,0)+0.001*header.msEnd)*0.5;
     pRecord->Zm=(double)ZEN_FNTdiz(ZEN_FNCrtjul(&pRecord->Tm),&pRecord->longitude,&pRecord->latitude,&pRecord->Azimuth);
     pRecord->TotalExpTime=(double)header.totalTime;
-    pRecord->TimeDec=(double)header.now.ti_hour+header.now.ti_min/60.+(header.now.ti_sec+0.01*header.now.ti_hund)/3600.;
+    pRecord->TimeDec=(double)(header.now.ti_hour+header.now.ti_min/60.+(header.now.ti_sec+0.001*header.msBegin)/3600.+header.endMeas.ti_hour+header.endMeas.ti_min/60.+(header.endMeas.ti_sec+0.001*header.msEnd)/3600.)*0.5;
+
+    timeDec=pRecord->TimeDec;
+
+    if (!header.endMeas.ti_hour && !header.endMeas.ti_min && !header.endMeas.ti_sec)
+     {
+ 	    memcpy(&header.endMeas,&header.now,sizeof(struct time));
+ 	    memcpy(&pRecord->present_datetime.thetime,&header.now,sizeof(struct time));
+ 	    pRecord->present_datetime.millis=0;
+ 	   }
+ 	  else
+ 	   {
+      pRecord->present_datetime.thetime.ti_hour=(int)floor(timeDec);
+      timeDec=(timeDec-(double)pRecord->present_datetime.thetime.ti_hour)*60.;
+      pRecord->present_datetime.thetime.ti_min=(int)floor(timeDec);
+      timeDec=(timeDec-(double)pRecord->present_datetime.thetime.ti_min)*60.;
+      pRecord->present_datetime.thetime.ti_sec=(int)floor(timeDec);
+      timeDec=(timeDec-(double)pRecord->present_datetime.thetime.ti_sec)*1000.;
+      pRecord->present_datetime.millis=(int)floor(timeDec);
+     }
 
     tmLocal=pRecord->Tm+THRD_localShift*3600.;
 
