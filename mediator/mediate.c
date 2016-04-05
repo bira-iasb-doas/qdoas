@@ -124,7 +124,7 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
   if (pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_GOME2)
     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Date and Time","%02d/%02d/%d %02d:%02d:%02d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
   else
-    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Date and Time","%02d/%02d/%d %02d:%02d:%02d.%06d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec,&pRecord->present_datetime.microseconds);
+    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Date and Time","%02d/%02d/%d %02d:%02d:%02d.%06d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec,pRecord->present_datetime.microseconds);
 
   pDay=&pRecord->startDate;
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_STARTDATE])
