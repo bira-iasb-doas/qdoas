@@ -977,7 +977,7 @@ INDEX KuruczSearchReference(INDEX indexRefFeno,INDEX indexRefColumn)
 
 RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,const double *reference,double *instrFunction,
                    char displayFlag, const char *windowTitle,double **coeff,double **fwhmVector,double **fwhmDeriv2,int saveFlag,INDEX indexFeno,void *responseHandle,INDEX indexFenoColumn)
- {
+{
   // Declarations
 
   char            string[MAX_ITEM_TEXT_LEN],pageTitle[MAX_ITEM_TEXT_LEN];
@@ -985,12 +985,12 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
   CROSS_RESULTS   *pResults,*Results;                                           // pointer to results associated to a symbol
   SVD             *svdFeno;                                                     // svd environments associated to list of little windows
   double          *VPix,*VSig,*Pcalib,                                          // polynomial coefficients computation
-                  *shiftPoly,
-                  *pixMid,*VLambda,*VShift,
-                 **fwhm,**fwhmSigma,                                            // substitution vectors
-                  *solar,                                                       // solar spectrum
-                  *offset,                                                      // offset
-                   Square;                                                      // Chi square returned by 'CurFitMethod'
+    *shiftPoly,
+    *pixMid,*VLambda,*VShift,
+    **fwhm,**fwhmSigma,                                            // substitution vectors
+    *solar,                                                       // solar spectrum
+    *offset,                                                      // offset
+    Square;                                                      // Chi square returned by 'CurFitMethod'
   int              Nb_Win,maxParam,                                             // number of little windows
                   *NIter;                                                       // number of iterations
   INDEX            indexWindow,                                                 // browse little windows
@@ -1015,7 +1015,12 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
 
   pKurucz->KuruczFeno[indexFeno].have_calibration = true;
 
-  if ((shiftPoly=(double *)MEMORY_AllocDVector(__func__,"shiftPoly",0,oldNDET-1))==NULL) {
+  // store calibration shift/stretch factors:
+  double calib_shift[pKurucz->Nb_Win];
+  double calib_stretch[pKurucz->Nb_Win];
+  double calib_stretch2[pKurucz->Nb_Win];
+
+  if ((shiftPoly=(double *)MEMORY_AllocDVector("KURUCZ_Spectrum ","shiftPoly",0,oldNDET-1))==NULL) {
     rc=ERROR_ID_ALLOC;
     goto EndKuruczSpectrum;
   }
@@ -1185,6 +1190,10 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
 
     VSig[indexWindow+1]=pResults->SigmaShift;
 
+    calib_shift[indexWindow] = pResults->Shift;
+    calib_stretch[indexWindow] = pResults->Stretch;
+    calib_stretch2[indexWindow] = pResults->Stretch2;
+
     VShift[indexWindow+1]=pResults->Shift;                          // In order to be in accordance with the preshift, we keep the sign now.  Before (Feno->indexSpectrum!=ITEM_NONE)?(double)-pResults->Shift:(double)pResults->Shift;
     VPix[indexWindow+1]=pixMid[indexWindow+1];
     VLambda[indexWindow+1]=(fabs(pixMid[indexWindow+1]-floor(pixMid[indexWindow+1]))<(double)0.1)?
@@ -1271,7 +1280,6 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
   //      VLambda by VShift in the following instruction
 
   if ((rc=ANALYSE_LinFit(&Feno->svd,Nb_Win,pKurucz->shiftDegree,VPix,NULL,VShift,Pcalib))!=ERROR_ID_NO)
-    // VLambda not used anymore as we work only in nm now    (pKurucz->units==PRJCT_ANLYS_UNITS_PIXELS)?VLambda:VShift,Pcalib))!=ERROR_ID_NO) // !!! Change in the future VLambda -> VShift
     goto EndKuruczSpectrum;
 
   if (pKuruczOptions->fwhmFit) {
@@ -1288,12 +1296,25 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
       goto EndKuruczSpectrum;
   }
 
-  for (i=0;i<n_wavel;i++) {
-    shiftPoly[i]=Pcalib[pKurucz->shiftDegree+1];
-    for (j=pKurucz->shiftDegree;j>=1;j--)
-      shiftPoly[i]=shiftPoly[i]*(double)i+Pcalib[j];
+  if (Nb_Win > 1) { // multiple subwindows -> fit a polynomial through the shift values.
+    for (i=0;i<n_wavel;i++) {
+      shiftPoly[i]=Pcalib[pKurucz->shiftDegree+1];
+      for (j=pKurucz->shiftDegree;j>=1;j--) {
+        shiftPoly[i]=shiftPoly[i]*(double)i+Pcalib[j];
+      }
+      Lambda[i]=oldLambda[i]-shiftSign*shiftPoly[i];
+    }
+  } else {
+    // if Nb_Win == 1, use fitted shift/stretch from calibration procedure to create corrected lambda grid:
 
-    Lambda[i]=oldLambda[i]-shiftSign*shiftPoly[i];
+    int i_center = floor(0.5*(SvdPDeb + SvdPFin));
+    double lambda0 = 0.5*(oldLambda[i_center] + oldLambda[1+i_center]);
+
+    for (int i=0; i<n_wavel; ++i) {
+      const double x0 = oldLambda[i] - lambda0;
+      shiftPoly[i] = calib_shift[0] + calib_stretch[0]*x0 + calib_stretch2[0]*x0*x0;
+      Lambda[i] = oldLambda[i] - shiftSign*shiftPoly[i];
+    }
   }
 
   if (displayFlag) {
@@ -1479,7 +1500,7 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
   NDET[indexFenoColumn]=oldNDET;
 
   return rc;
- }
+}
 
 // ----------------------------------------------------------------------------
 // FUNCTION        KURUCZ_ApplyCalibration
