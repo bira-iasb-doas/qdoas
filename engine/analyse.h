@@ -291,7 +291,6 @@ extern MATRIX_OBJECT ANALYSIS_slit,ANALYSIS_slit2,O3TD;
 extern double      **U,*x,*Lambda,*LambdaSpec,
                     *ANALYSE_pixels,
                     *ANALYSE_splineX,              // abscissa used for spectra, in the units selected by user
-                    *ANALYSE_splineX2,             // in pixels units, second derivatives of corresponding wavelengths
                     *ANALYSE_absolu,               // residual spectrum
                     *ANALYSE_secX,                 // residual spectrum + the contribution of a cross section for fit display
                     *ANALYSE_t,                    // residual transmission in Marquadt-Levenberg not linear method

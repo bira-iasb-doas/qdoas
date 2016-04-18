@@ -187,7 +187,6 @@ int ANALYSE_swathSize=0;
 double **U,*x,*Lambda,*LambdaSpec,
   *ANALYSE_pixels,
   *ANALYSE_splineX,              // abscissa used for spectra, in the units selected by user
-  *ANALYSE_splineX2,             // in pixels units, second derivatives of corresponding wavelengths
   *ANALYSE_absolu,               // residual spectrum
   *ANALYSE_secX,                 // residual spectrum + the contribution of a cross section for fit display
   *ANALYSE_t,                    // residual transmission in Marquardt-Levenberg not linear method
@@ -209,7 +208,6 @@ USAMP  ANALYSE_usampBuffers;
 
 int NOrtho,
   *OrthoSet,
-  ANALYSE_ignoreAll,
   hFilterSpecLog,hFilterRefLog;
 
 int NDET[MAX_SWATHSIZE];
@@ -1567,7 +1565,6 @@ RC AnalyseSvdGlobalAlloc(ENGINE_CONTEXT *pEngineContext)
       ((ANALYSE_shift=(double *)MEMORY_AllocDVector(__func__,"ANALYSE_shift",0,max_ndet-1))==NULL) ||
       ((ANALYSE_pixels=(double *)MEMORY_AllocDVector(__func__,"ANALYSE_pixels",0,max_ndet-1))==NULL) ||
       ((ANALYSE_splineX=(double *)MEMORY_AllocDVector(__func__,"ANALYSE_splineX",0,max_ndet-1))==NULL) ||
-      ((ANALYSE_splineX2=(double *)MEMORY_AllocDVector(__func__,"ANALYSE_splineX2",0,max_ndet-1))==NULL) ||
       ((ANALYSE_absolu=(double *)MEMORY_AllocDVector(__func__,"ANALYSE_absolu",0,max_ndet))==NULL) ||
       ((ANALYSE_t=(double *)MEMORY_AllocDVector(__func__,"ANALYSE_t",0,max_ndet))==NULL) ||
       ((ANALYSE_tc=(double *)MEMORY_AllocDVector(__func__,"ANALYSE_tc",0,max_ndet))==NULL) ||
@@ -1611,7 +1608,7 @@ RC ANALYSE_SvdInit(SVD *pSvd, const int n_wavel)
   double deltaX,norm,norm1,norm2,swap,temp;
   INDEX i,j;
   double lambda0;
-  RC rc;
+  RC rc=ERROR_ID_NO;
 
 #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("ANALYSE_SvdInit",DEBUG_FCTTYPE_APPL);
@@ -1621,213 +1618,190 @@ RC ANALYSE_SvdInit(SVD *pSvd, const int n_wavel)
 
   memcpy(ANALYSE_splineX,Lambda,sizeof(double)*n_wavel);
 
-  if (!(rc=SPLINE_Deriv2(ANALYSE_pixels,Lambda,ANALYSE_splineX2,n_wavel,"ANALYSE_SvdInit ")))
-   {
-    OrthoSet=Feno->OrthoSet;
-    NOrtho=Feno->NOrtho;
+  OrthoSet=Feno->OrthoSet;
+  NOrtho=Feno->NOrtho;
 
-    A=pSvd->A;
-    U=pSvd->U;
-    V=pSvd->V;
-    W=pSvd->W;
-    P=pSvd->P;
+  A=pSvd->A;
+  U=pSvd->U;
+  V=pSvd->V;
+  W=pSvd->W;
+  P=pSvd->P;
 
-    SigmaSqr=pSvd->SigmaSqr;
-    covar=pSvd->covar;
+  SigmaSqr=pSvd->SigmaSqr;
+  covar=pSvd->covar;
 
-    DimL=pSvd->DimL;
-    DimC=pSvd->DimC;
-    DimP=pSvd->DimP;
-    NF=pSvd->NF;
-    NP=pSvd->NP;
+  DimL=pSvd->DimL;
+  DimC=pSvd->DimC;
+  DimP=pSvd->DimP;
+  NF=pSvd->NF;
+  NP=pSvd->NP;
 
-    temp=(double)0.;
+  temp=(double)0.;
 
-    if (!Feno->hidden && (ANALYSE_plFilter->type!=PRJCT_FILTER_TYPE_NONE))
-     temp+=ANALYSE_plFilter->filterEffWidth;
+  if (!Feno->hidden && (ANALYSE_plFilter->type!=PRJCT_FILTER_TYPE_NONE))
+    temp+=ANALYSE_plFilter->filterEffWidth;
 
-    //    for high-pass filters, don't account for the filter width in the calculation of the number of freedom
-    //    if ((ANALYSE_phFilter->type!=PRJCT_FILTER_TYPE_NONE) && (ANALYSE_phFilter->type!=PRJCT_FILTER_TYPE_ODDEVEN))
-    //     temp+=ANALYSE_phFilter->filterEffWidth;
+  //    for high-pass filters, don't account for the filter width in the calculation of the number of freedom
+  //    if ((ANALYSE_phFilter->type!=PRJCT_FILTER_TYPE_NONE) && (ANALYSE_phFilter->type!=PRJCT_FILTER_TYPE_ODDEVEN))
+  //     temp+=ANALYSE_phFilter->filterEffWidth;
 
-    ANALYSE_nFree=floor(DimL/((temp>(double)1.e-6)?temp:(double)1.)+0.5)-pSvd->nFit;
+  ANALYSE_nFree=floor(DimL/((temp>(double)1.e-6)?temp:(double)1.)+0.5)-pSvd->nFit;
 
-    if (ANALYSE_nFree<=(double)0.)
-     rc=ERROR_SetLast("SvdInit",ERROR_TYPE_FATAL,ERROR_ID_NFREE);
-    else
-     {
-      global_doas_spectrum = pSvd->specrange;
+  if (ANALYSE_nFree<=(double)0.)
+    rc=ERROR_SetLast("SvdInit",ERROR_TYPE_FATAL,ERROR_ID_NFREE);
+  else {
+    global_doas_spectrum = pSvd->specrange;
 
-      SvdPDeb=spectrum_start(pSvd->specrange);
-      SvdPFin=spectrum_end(pSvd->specrange);
+    SvdPDeb=spectrum_start(pSvd->specrange);
+    SvdPFin=spectrum_end(pSvd->specrange);
 
-      lambda0 = center_pixel_wavelength(SvdPDeb, SvdPFin);
+    lambda0 = center_pixel_wavelength(SvdPDeb, SvdPFin);
 
-      Dim=0;
+    Dim=0;
 
-      if (!Feno->hidden && (ANALYSE_plFilter->type!=PRJCT_FILTER_TYPE_NONE) && (ANALYSE_plFilter->type!=PRJCT_FILTER_TYPE_ODDEVEN))
-       Dim+=(int)((ANALYSE_plFilter->filterSize)*sqrt(ANALYSE_plFilter->filterNTimes));
-      if (((!Feno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((Feno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
-          (ANALYSE_phFilter->type!=PRJCT_FILTER_TYPE_NONE) && (ANALYSE_phFilter->type!=PRJCT_FILTER_TYPE_ODDEVEN))
-       Dim+=(int)((ANALYSE_phFilter->filterSize)*sqrt(ANALYSE_phFilter->filterNTimes));
+    if (!Feno->hidden && (ANALYSE_plFilter->type!=PRJCT_FILTER_TYPE_NONE) && (ANALYSE_plFilter->type!=PRJCT_FILTER_TYPE_ODDEVEN))
+      Dim+=(int)((ANALYSE_plFilter->filterSize)*sqrt(ANALYSE_plFilter->filterNTimes));
+    if (((!Feno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((Feno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
+        (ANALYSE_phFilter->type!=PRJCT_FILTER_TYPE_NONE) && (ANALYSE_phFilter->type!=PRJCT_FILTER_TYPE_ODDEVEN))
+      Dim+=(int)((ANALYSE_phFilter->filterSize)*sqrt(ANALYSE_phFilter->filterNTimes));
 
-      Dim=max(Dim,pAnalysisOptions->securityGap); // !!!!!!!!!!!!!!!!!
+    Dim=max(Dim,pAnalysisOptions->securityGap); // !!!!!!!!!!!!!!!!!
 
-      LimMin=max(SvdPDeb-Dim,0);
-      LimMax=min(SvdPFin+Dim,n_wavel-1);
+    LimMin=max(SvdPDeb-Dim,0);
+    LimMax=min(SvdPFin+Dim,n_wavel-1);
 
-      LimN=LimMax-LimMin+1;
+    LimN=LimMax-LimMin+1;
 
-      // Set non linear normalization factors
+    // Set non linear normalization factors
 
-      norm1=norm2=(double)0.;
+    norm1=norm2=(double)0.;
 
-      doas_iterator my_iterator;
-      for( int i = iterator_start(&my_iterator, pSvd->specrange); i != ITERATOR_FINISHED; i=iterator_next(&my_iterator))
-       {
-        deltaX=(double)(ANALYSE_splineX[i]-lambda0)*(ANALYSE_splineX[i]-lambda0);
+    doas_iterator my_iterator;
+    for( int i = iterator_start(&my_iterator, pSvd->specrange); i != ITERATOR_FINISHED; i=iterator_next(&my_iterator)) {
+      deltaX=(double)(ANALYSE_splineX[i]-lambda0)*(ANALYSE_splineX[i]-lambda0);
 
-        norm1+=deltaX;
-        norm2+=deltaX*deltaX;
-       }
+      norm1+=deltaX;
+      norm2+=deltaX*deltaX;
+    }
 
-      for (j=LimMin,StretchFact1=StretchFact2=(double)0.;j<=LimMax;j++)
-       {
-        deltaX=(ANALYSE_splineX[j]-lambda0);
+    for (j=LimMin,StretchFact1=StretchFact2=(double)0.;j<=LimMax;j++) {
+      deltaX=(ANALYSE_splineX[j]-lambda0);
 
-        deltaX=ANALYSE_splineX[j]-lambda0-Feno->Stretch*deltaX-Feno->Stretch2*deltaX*deltaX;
-        deltaX*=deltaX;
+      deltaX=ANALYSE_splineX[j]-lambda0-Feno->Stretch*deltaX-Feno->Stretch2*deltaX*deltaX;
+      deltaX*=deltaX;
 
-        StretchFact1+=deltaX;
-        StretchFact2+=deltaX*deltaX;
-       }
+      StretchFact1+=deltaX;
+      StretchFact2+=deltaX*deltaX;
+    }
 
-      if ((norm1<=(double)0.) || (norm2<=(double)0.) ||
-          (StretchFact1<=(double)0.) || (StretchFact2<=(double)0.)) {
+    if ((norm1<=(double)0.) || (norm2<=(double)0.) ||
+        (StretchFact1<=(double)0.) || (StretchFact2<=(double)0.)) {
 
-       rc=ERROR_SetLast("SvdInit",ERROR_TYPE_WARNING,ERROR_ID_SQRT_ARG);
+      rc=ERROR_SetLast("SvdInit",ERROR_TYPE_WARNING,ERROR_ID_SQRT_ARG);
+    } else {
+      StretchFact1=(double)1./sqrt(StretchFact1);
+      StretchFact2=(double)1./sqrt(StretchFact2);
+
+      for (i=0,norm1=(double)sqrt(norm1),norm2=(double)sqrt(norm2);i<Feno->NTabCross;i++) {
+        pTabCross=&Feno->TabCross[i];
+
+        // Normalization of non linear parameters
+
+        if ((i==Feno->indexOffsetOrder1) || (i==Feno->indexFwhmOrder1))
+          pTabCross->Fact=norm1;
+        else if ((i==Feno->indexOffsetOrder2) || (i==Feno->indexFwhmOrder2))
+          pTabCross->Fact=norm2;
+
+        pTabCross->InitStretch/=StretchFact1;
+        pTabCross->InitStretch2/=StretchFact2;
+
+        // Fill, 'Fit' vectors with data on parameters to fit
+
+        // ---------------------------------------------------------------------------
+        if ((Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD) && (pTabCross->FitConc!=ITEM_NONE)) {
+          //
+          // The best would be to use Fact (calculated in ANALYSE_Function when Decomp=1) but this implies that
+          // FitMinp and FitMaxp are in parameters of ANALYSE_Function (called by curfit)
+          //
+
+          FitDeltap[pTabCross->FitConc]=pTabCross->DeltaConc;
+
+          if ((fabs(pTabCross->InitConc)>EPSILON) || (fabs(pTabCross->MinConc)>EPSILON) || (fabs(pTabCross->MaxConc)>EPSILON)) {
+            norm=(double)0.;
+
+            for( int i = iterator_start(&my_iterator, pSvd->specrange); i != ITERATOR_FINISHED; i=iterator_next(&my_iterator))
+              norm+=pTabCross->vector[i]*pTabCross->vector[i];
+
+            if (norm<=(double)0.)
+              rc=ERROR_SetLast("SvdInit",ERROR_TYPE_FATAL,ERROR_ID_SQRT_ARG);
+            else {
+              norm=sqrt(norm);
+
+              Fitp[pTabCross->FitConc]=(fabs(pTabCross->InitConc)>EPSILON)?pTabCross->InitConc*norm:(double)0.;
+              FitMinp[pTabCross->FitConc]=(fabs(pTabCross->MinConc)>EPSILON)?(double)pTabCross->MinConc*norm:(double)0.;
+              FitMaxp[pTabCross->FitConc]=(fabs(pTabCross->MaxConc)>EPSILON)?(double)pTabCross->MaxConc*norm:(double)0.;
+            }
+          } else {
+            Fitp[pTabCross->FitConc]=FitMinp[pTabCross->FitConc]=FitMaxp[pTabCross->FitConc]=(double)0.;
+          }
+        }
+        // ---------------------------------------------------------------------------
+        if ((pTabCross->FitParam!=ITEM_NONE) && !pTabCross->IndSvdP) {
+          Fitp[pTabCross->FitParam]=pTabCross->InitParam;
+          FitDeltap[pTabCross->FitParam]=pTabCross->DeltaParam;
+          FitMinp[pTabCross->FitParam]=pTabCross->MinParam;
+          FitMaxp[pTabCross->FitParam]=pTabCross->MaxParam;
+        }
+        // ---------------------------------------------------------------------------
+        if (pTabCross->FitShift!=ITEM_NONE) {
+          Fitp[pTabCross->FitShift]=pTabCross->InitShift;
+          FitDeltap[pTabCross->FitShift]=pTabCross->DeltaShift;
+          FitMinp[pTabCross->FitShift]=pTabCross->MinShift;
+          FitMaxp[pTabCross->FitShift]=pTabCross->MaxShift;
+        }
+        // ---------------------------------------------------------------------------
+        if (pTabCross->FitStretch!=ITEM_NONE) {
+          Fitp[pTabCross->FitStretch]=pTabCross->InitStretch;
+          FitDeltap[pTabCross->FitStretch]=pTabCross->DeltaStretch;
+          FitMinp[pTabCross->FitStretch]=(double)0.;
+          FitMaxp[pTabCross->FitStretch]=(double)0.;
+        }
+        // ---------------------------------------------------------------------------
+        if (pTabCross->FitStretch2!=ITEM_NONE) {
+          Fitp[pTabCross->FitStretch2]=pTabCross->InitStretch2;
+          FitDeltap[pTabCross->FitStretch2]=pTabCross->DeltaStretch2;
+          FitMinp[pTabCross->FitStretch2]=(double)0.;
+          FitMaxp[pTabCross->FitStretch2]=(double)0.;
+        }
+        // ---------------------------------------------------------------------------
+        if (pTabCross->FitScale!=ITEM_NONE) {
+          Fitp[pTabCross->FitScale]=pTabCross->InitScale;
+          FitDeltap[pTabCross->FitScale]=pTabCross->DeltaScale;
+          FitMinp[pTabCross->FitScale]=(double)0.;
+          FitMaxp[pTabCross->FitScale]=(double)0.;
+        }
+        // ---------------------------------------------------------------------------
+        if (pTabCross->FitScale2!=ITEM_NONE) {
+          Fitp[pTabCross->FitScale2]=pTabCross->InitScale2;
+          FitDeltap[pTabCross->FitScale2]=pTabCross->DeltaScale2;
+          FitMinp[pTabCross->FitScale2]=(double)0.;
+          FitMaxp[pTabCross->FitScale2]=(double)0.;
+        }
+        // ---------------------------------------------------------------------------
       }
 
-      else
-       {
-        StretchFact1=(double)1./sqrt(StretchFact1);
-        StretchFact2=(double)1./sqrt(StretchFact2);
-
-        for (i=0,norm1=(double)sqrt(norm1),norm2=(double)sqrt(norm2);i<Feno->NTabCross;i++)
-         {
-          pTabCross=&Feno->TabCross[i];
-
-          // Normalization of non linear parameters
-
-          if ((i==Feno->indexOffsetOrder1) || (i==Feno->indexFwhmOrder1))
-           pTabCross->Fact=norm1;
-          else if ((i==Feno->indexOffsetOrder2) || (i==Feno->indexFwhmOrder2))
-           pTabCross->Fact=norm2;
-
-          pTabCross->InitStretch/=StretchFact1;
-          pTabCross->InitStretch2/=StretchFact2;
-
-          // Fill, 'Fit' vectors with data on parameters to fit
-
-          // ---------------------------------------------------------------------------
-          if ((Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD) && (pTabCross->FitConc!=ITEM_NONE))
-           {
-           	//
-           	// The best would be to use Fact (calculated in ANALYSE_Function when Decomp=1) but this implies that
-           	// FitMinp and FitMaxp are in parameters of ANALYSE_Function (called by curfit)
-           	//
-
-           	FitDeltap[pTabCross->FitConc]=pTabCross->DeltaConc;
-
-            if ((fabs(pTabCross->InitConc)>EPSILON) || (fabs(pTabCross->MinConc)>EPSILON) || (fabs(pTabCross->MaxConc)>EPSILON))
-             {
-             	norm=(double)0.;
-
-             	for( int i = iterator_start(&my_iterator, pSvd->specrange); i != ITERATOR_FINISHED; i=iterator_next(&my_iterator))
-               norm+=pTabCross->vector[i]*pTabCross->vector[i];
-
-              if (norm<=(double)0.)
-               rc=ERROR_SetLast("SvdInit",ERROR_TYPE_FATAL,ERROR_ID_SQRT_ARG);
-              else
-               {
-                norm=sqrt(norm);
-
-                Fitp[pTabCross->FitConc]=(fabs(pTabCross->InitConc)>EPSILON)?pTabCross->InitConc*norm:(double)0.;
-                FitMinp[pTabCross->FitConc]=(fabs(pTabCross->MinConc)>EPSILON)?(double)pTabCross->MinConc*norm:(double)0.;
-                FitMaxp[pTabCross->FitConc]=(fabs(pTabCross->MaxConc)>EPSILON)?(double)pTabCross->MaxConc*norm:(double)0.;
-               }
-             }
-
-            else
-             Fitp[pTabCross->FitConc]=FitMinp[pTabCross->FitConc]=FitMaxp[pTabCross->FitConc]=(double)0.;
-           }
-          // ---------------------------------------------------------------------------
-          if ((pTabCross->FitParam!=ITEM_NONE) && !pTabCross->IndSvdP)
-           {
-            Fitp[pTabCross->FitParam]=pTabCross->InitParam;
-            FitDeltap[pTabCross->FitParam]=pTabCross->DeltaParam;
-            FitMinp[pTabCross->FitParam]=pTabCross->MinParam;
-            FitMaxp[pTabCross->FitParam]=pTabCross->MaxParam;
-           }
-          // ---------------------------------------------------------------------------
-          if (pTabCross->FitShift!=ITEM_NONE)
-           {
-            Fitp[pTabCross->FitShift]=pTabCross->InitShift;
-            FitDeltap[pTabCross->FitShift]=pTabCross->DeltaShift;
-            FitMinp[pTabCross->FitShift]=pTabCross->MinShift;
-            FitMaxp[pTabCross->FitShift]=pTabCross->MaxShift;
-           }
-          // ---------------------------------------------------------------------------
-          if (pTabCross->FitStretch!=ITEM_NONE)
-           {
-            Fitp[pTabCross->FitStretch]=pTabCross->InitStretch;
-            FitDeltap[pTabCross->FitStretch]=pTabCross->DeltaStretch;
-            FitMinp[pTabCross->FitStretch]=(double)0.;
-            FitMaxp[pTabCross->FitStretch]=(double)0.;
-           }
-          // ---------------------------------------------------------------------------
-          if (pTabCross->FitStretch2!=ITEM_NONE)
-           {
-            Fitp[pTabCross->FitStretch2]=pTabCross->InitStretch2;
-            FitDeltap[pTabCross->FitStretch2]=pTabCross->DeltaStretch2;
-            FitMinp[pTabCross->FitStretch2]=(double)0.;
-            FitMaxp[pTabCross->FitStretch2]=(double)0.;
-           }
-          // ---------------------------------------------------------------------------
-          if (pTabCross->FitScale!=ITEM_NONE)
-           {
-            Fitp[pTabCross->FitScale]=pTabCross->InitScale;
-            FitDeltap[pTabCross->FitScale]=pTabCross->DeltaScale;
-            FitMinp[pTabCross->FitScale]=(double)0.;
-            FitMaxp[pTabCross->FitScale]=(double)0.;
-           }
-          // ---------------------------------------------------------------------------
-          if (pTabCross->FitScale2!=ITEM_NONE)
-           {
-            Fitp[pTabCross->FitScale2]=pTabCross->InitScale2;
-            FitDeltap[pTabCross->FitScale2]=pTabCross->DeltaScale2;
-            FitMinp[pTabCross->FitScale2]=(double)0.;
-            FitMaxp[pTabCross->FitScale2]=(double)0.;
-           }
-          // ---------------------------------------------------------------------------
-         }
-
-        for (i=0;i<NF;i++)
-         {
-          if ((FitMinp[i]!=(double)0.) && (FitMinp[i]==FitMaxp[i]))
-           FitMinp[i]=-FitMaxp[i];
-          if (FitMinp[i]>FitMaxp[i])
-           {
-            swap=FitMinp[i];
-            FitMinp[i]=FitMaxp[i];
-            FitMaxp[i]=swap;
-           }
-         }
-
-        FAST=!NP;
-       }
-     }
-   }
+      for (i=0;i<NF;i++) {
+        if ((FitMinp[i]!=(double)0.) && (FitMinp[i]==FitMaxp[i]))
+          FitMinp[i]=-FitMaxp[i];
+        if (FitMinp[i]>FitMaxp[i]) {
+          swap=FitMinp[i];
+          FitMinp[i]=FitMaxp[i];
+          FitMaxp[i]=swap;
+        }
+      }
+      FAST=!NP;
+    }
+  }
 
   // Return
 
@@ -4159,8 +4133,6 @@ void ANALYSE_ResetData(void)
    MEMORY_ReleaseDVector(__func__,"ANALYSE_pixels",ANALYSE_pixels,0);
   if (ANALYSE_splineX!=NULL)
    MEMORY_ReleaseDVector(__func__,"ANALYSE_splineX",ANALYSE_splineX,0);
-  if (ANALYSE_splineX2!=NULL)
-   MEMORY_ReleaseDVector(__func__,"ANALYSE_splineX2",ANALYSE_splineX2,0);
   if (ANALYSE_absolu!=NULL)
    MEMORY_ReleaseDVector(__func__,"ANALYSE_absolu",ANALYSE_absolu,0);
   if (ANALYSE_t!=NULL)
@@ -4193,7 +4165,6 @@ void ANALYSE_ResetData(void)
     ANALYSE_shift=
     ANALYSE_pixels=
     ANALYSE_splineX=
-    ANALYSE_splineX2=
     ANALYSE_absolu=
     ANALYSE_secX=
     ANALYSE_t=
@@ -5626,7 +5597,6 @@ RC ANALYSE_SetInit(ENGINE_CONTEXT *pEngineContext)
 
   // Initializations
 
-  ANALYSE_ignoreAll=0;
   pEngineContext->analysisRef.refAuto=pEngineContext->analysisRef.refLon=0;
   analyseIndexRecord=pEngineContext->indexRecord;
   memset(&pEngineContext->analysisRef,0,sizeof(ANALYSIS_REF));
