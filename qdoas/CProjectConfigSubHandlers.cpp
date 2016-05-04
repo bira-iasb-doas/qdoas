@@ -481,11 +481,10 @@ bool CProjectCalibrationSubHandler::start(const QXmlAttributes &atts)
 
 bool CProjectCalibrationSubHandler::start(const QString &element, const QXmlAttributes &atts)
 {
+	 QString str;
   // sub element of calibration
 
   if (element == "line") {
-    QString str;
-
     str = atts.value("shape");
     if (str == "none")
       m_calibration->lineShape = PRJCT_CALIB_FWHM_TYPE_NONE;
@@ -536,7 +535,41 @@ bool CProjectCalibrationSubHandler::start(const QString &element, const QXmlAttr
 
     m_calibration->wavelengthMin = atts.value("min").toDouble();
     m_calibration->wavelengthMax = atts.value("max").toDouble();
+    m_calibration->windowSize = atts.value("size").toDouble();
     m_calibration->subWindows = atts.value("intervals").toInt();
+
+    str=atts.value("custom_windows");
+    char *ptr=str.toAscii().data();
+    int i;
+    double lambdaMin,lambdaMax;
+
+    m_calibration->customLambdaMin[0]=m_calibration->wavelengthMin;
+    m_calibration->customLambdaMax[m_calibration->subWindows-1]=m_calibration->wavelengthMax;
+
+    while ((ptr!=NULL) && (i<m_calibration->subWindows))
+     {
+     	sscanf(ptr,"%lf-%lf",&lambdaMin,&lambdaMax);
+     	if (i>0)
+     	 m_calibration->customLambdaMin[i]=lambdaMin;
+     	if (i<m_calibration->subWindows-1)
+     	 m_calibration->customLambdaMax[i]=lambdaMax;
+
+     	if ((ptr=strchr(ptr,','))!=NULL)
+     	 ptr++;
+
+     	i++;
+     }
+
+
+    str = atts.value("division");
+    if (str == "sliding")
+     m_calibration->divisionMode = PRJCT_CALIB_WINDOWS_SLIDING;
+    else if (str == "custom")
+     m_calibration->divisionMode = PRJCT_CALIB_WINDOWS_CUSTOM;
+    else
+     m_calibration->divisionMode = PRJCT_CALIB_WINDOWS_CONTIGUOUS;
+
+
   }
   else if (element == "preshift") {
     m_calibration->preshiftFlag = (atts.value("calculate") == "true") ? 1 : 0;

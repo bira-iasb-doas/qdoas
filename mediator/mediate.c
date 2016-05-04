@@ -698,6 +698,7 @@ void setMediateProjectCalibration(PRJCT_KURUCZ *pEngineCalibration,CALIB_FENO *p
 
    pEngineCalibration->analysisMethod=pMediateCalibration->methodType;          // analysis method type
    pEngineCalibration->windowsNumber=pMediateCalibration->subWindows;           // number of windows
+   pEngineCalibration->divisionMode=pMediateCalibration->divisionMode;          // number of windows
    pEngineCalibration->fwhmPolynomial=pMediateCalibration->sfpDegree;           // security gap in pixels numbers
    pEngineCalibration->shiftPolynomial=pMediateCalibration->shiftDegree;        // degree of polynomial to use
 
@@ -714,6 +715,15 @@ void setMediateProjectCalibration(PRJCT_KURUCZ *pEngineCalibration,CALIB_FENO *p
    pEngineCalibration->fwhmFit=(pMediateCalibration->lineShape>0)?1:0;          // force fit of fwhm while applying Kurucz
    pEngineCalibration->lambdaLeft=pMediateCalibration->wavelengthMin;           // minimum wavelength for the spectral interval
    pEngineCalibration->lambdaRight=pMediateCalibration->wavelengthMax;          // maximum wavelength for the spectral interval
+   pEngineCalibration->windowSize=pMediateCalibration->windowSize;              // size of subwindows (sliding case)
+
+   if (pEngineCalibration->divisionMode==PRJCT_CALIB_WINDOWS_CUSTOM)
+    for (int i=0;i<pEngineCalibration->windowsNumber;i++)
+     {
+     	pEngineCalibration->customLambdaMin[i]=pMediateCalibration->customLambdaMin[i];
+     	pEngineCalibration->customLambdaMax[i]=pMediateCalibration->customLambdaMax[i];
+     }
+
    pEngineCalibration->invPolyDegree=2*pMediateCalibration->lorentzOrder;       // degree of the lorentzian
 
    pEngineCalibration->preshiftFlag=pMediateCalibration->preshiftFlag;          // calculate the preshift

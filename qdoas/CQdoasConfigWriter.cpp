@@ -288,8 +288,30 @@ void CQdoasConfigWriter::writePropertiesCalibration(FILE *fp, const mediate_proj
 	  (d->requireSpectra ? sTrue : sFalse), (d->requireFits ? sTrue : sFalse),
 	  (d->requireResidual ? sTrue : sFalse), (d->requireShiftSfp ? sTrue : sFalse));
   fprintf(fp, "      <polynomial shift=\"%d\" sfp=\"%d\" />\n", d->shiftDegree, d->sfpDegree);
-  fprintf(fp, "      <window min=\"%.1f\" max=\"%.1f\" intervals=\"%d\" />\n",
+  fprintf(fp, "      <window min=\"%.1f\" max=\"%.1f\" intervals=\"%d\" custom_windows=\"",
 	  d->wavelengthMin, d->wavelengthMax, d->subWindows);
+
+	 for (int i=0;i<d->subWindows;i++)
+	  fprintf(fp,"%.2lf-%.2lf,",d->customLambdaMin[i],d->customLambdaMax[i]);
+
+  fprintf(fp,"\" division=");
+
+  switch (d->divisionMode) {
+  case PRJCT_CALIB_WINDOWS_CONTIGUOUS:
+    fprintf(fp, "\"contiguous\"");
+    break;
+  case PRJCT_CALIB_WINDOWS_SLIDING:
+    fprintf(fp, "\"sliding\"");
+    break;
+  case PRJCT_CALIB_WINDOWS_CUSTOM:
+    fprintf(fp, "\"custom\"");
+    break;
+  default:
+    fprintf(fp, "\"invalid\"");
+  }
+	 fprintf(fp," size=\"%.2f\" />\n",d->windowSize);
+
+
 	 fprintf(fp, "      <preshift calculate=\"%s\" min=\"%.1f\" max=\"%.1f\" />\n",(d->preshiftFlag ? sTrue : sFalse),d->preshiftMin, d->preshiftMax);
 
   writeCrossSectionList(fp, &(d->crossSectionList));

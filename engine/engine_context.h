@@ -78,6 +78,10 @@ struct _prjctKurucz {
   int              fwhmType;                           // type of slit function to fit
   double           lambdaLeft;
   double           lambdaRight;
+  double           windowSize;
+  double           customLambdaMin[MAX_CALIB_WINDOWS];
+  double           customLambdaMax[MAX_CALIB_WINDOWS];
+  int              divisionMode;
   int              invPolyDegree;
   int              analysisMethod;
   int              preshiftFlag;

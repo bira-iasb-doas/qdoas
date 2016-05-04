@@ -30,6 +30,7 @@ enum eEngineErrorType {
 
 enum eCurveStyleType {
   Line,
+  DashLine,
   Point
 };
 

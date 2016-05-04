@@ -13,7 +13,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software                                                                                                 
+along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
@@ -27,7 +27,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QFileDialog>
 #include <QMenu>
 #include <QMessageBox>
-#include <QFont>   
+#include <QFont>
 
 #include <QtGui/QGraphicsView>
 
@@ -36,6 +36,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <qwt_plot_canvas.h>
 #include <qwt_plot_grid.h>
 #include <qwt_plot_renderer.h>
+#include <qwt_plot_zoneitem.h>
 
 #include "CWPlotPage.h"
 #include "CPreferences.h"
@@ -44,7 +45,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 // static helper function
 
-bool CWPlot::getImageSaveNameAndFormat(QWidget *parent, QString &fileName, QString &saveFormat)  
+bool CWPlot::getImageSaveNameAndFormat(QWidget *parent, QString &fileName, QString &saveFormat)
 {
   CPreferences *pref = CPreferences::instance();
 
@@ -101,7 +102,7 @@ bool CWPlot::getImageSaveNameAndFormat(QWidget *parent, QString &fileName, QStri
   }
 
   return false;
-}  
+}
 
 CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet,
 	       CPlotProperties &plotProperties, QWidget *parent) :
@@ -109,20 +110,20 @@ CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet,
   m_dataSet(dataSet),
 //  m_dataImage(""),
   m_plotProperties(plotProperties),
-  m_zoomer(NULL),   
+  m_zoomer(NULL),
   m_type(PLOTPAGE_DATASET)
 {
   // Example code for font changes ... TODO
- 
+
   QwtText tmpTitle = title();
   QFont tmpFont = tmpTitle.font();
   tmpFont.setPointSize(tmpFont.pointSize());
   tmpTitle.setFont(tmpFont);
   tmpTitle.setText(m_dataSet->plotTitle());
-  setTitle(tmpTitle);       
-  
-  QString str=tmpTitle.text(); 
-  
+  setTitle(tmpTitle);
+
+  QString str=tmpTitle.text();
+
   setFocusPolicy(Qt::ClickFocus); // TODO - prevents keyPressEvent
 
   //setTitle(m_dataSet->plotTitle());
@@ -141,21 +142,42 @@ CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet,
 
     if (curveData.size() > 0) {
       QwtPlotCurve *curve = new QwtPlotCurve();
+      double *xraw=(double *)curveData.xRawData();
+      int xsize=curveData.size();
       curve->setRenderHint(QwtPlotItem::RenderAntialiased);
 
       // the data is guaranteed to be valid for the life of this object
       curve->setRawSamples(curveData.xRawData(), curveData.yRawData(), curveData.size());
 
       // configure curve's pen color based on index
-      curve->setPen(m_plotProperties.pen(( curveData.curveNumber() %4) + 1));
 
-      if (curveData.curveType() == Point) {
+      if (curveData.curveType() == Line)
+       curve->setPen(m_plotProperties.pen((curveData.curveNumber()%4)+1));
+      else if (curveData.curveType() == DashLine)
+       {
+       	curve->setPen(m_plotProperties.pen((curveData.curveNumber()%4)+1));
+       	QPen newpen=curve->pen();
+       	QBrush newBrush=QBrush(Qt::gray,Qt::Dense4Pattern);
+       	newpen.setStyle(Qt::DashLine);
+       	curve->setPen(newpen);
 
-	curve->setStyle(QwtPlotCurve::NoCurve);
+        QwtPlotZoneItem *zoneItem=new QwtPlotZoneItem;
 
-	QwtSymbol *sym = new QwtSymbol(QwtSymbol::Ellipse);
-        sym->setSize(4);
-	curve->setSymbol(sym);
+        zoneItem->setZ( 11 );
+        zoneItem->setBrush(newBrush);
+        zoneItem->setOrientation( Qt::Vertical );
+        zoneItem->setItemAttribute( QwtPlotItem::Legend, true );
+
+        zoneItem->setInterval(xraw[0],xraw[xsize-1]);
+        zoneItem->setVisible( true );
+        zoneItem->attach( this );
+       }
+      else if (curveData.curveType() == Point) {
+       curve->setStyle(QwtPlotCurve::NoCurve);
+
+       QwtSymbol *sym = new QwtSymbol(QwtSymbol::Ellipse);
+              sym->setSize(4);
+       curve->setSymbol(sym);
       }
 
       curve->attach(this);
@@ -189,52 +211,52 @@ CWPlot::CWPlot(const RefCountConstPtr<CPlotDataSet> &dataSet,
 
 CWPlot::CWPlot(const RefCountConstPtr<CPlotImage> &dataImage,
 	       CPlotProperties &plotProperties, QWidget *parent) :
-  QwtPlot(parent),    
+  QwtPlot(parent),
   m_dataImage(dataImage),
   m_plotProperties(plotProperties),
   m_zoomer(NULL),
   m_type(PLOTPAGE_IMAGE)
  {
-  QString filename=m_dataImage->GetFile(); 
-  QwtText tmpTitle=title();   
+  QString filename=m_dataImage->GetFile();
+  QwtText tmpTitle=title();
   const char *ptr=strrchr(filename.toAscii().constData(),'/')+1;
-   
+
   // Example code for font changes ... TODO
- 
+
   QFont tmpFont = tmpTitle.font();
   tmpFont.setPointSize(tmpFont.pointSize());
   tmpTitle.setFont(tmpFont);
   tmpTitle.setText(ptr);
-  setTitle(tmpTitle);    
-  
+  setTitle(tmpTitle);
+
   enableAxis(QwtPlot::xBottom, false);
-  enableAxis(QwtPlot::yLeft, false);     
-  
+  enableAxis(QwtPlot::yLeft, false);
+
   setFocusPolicy(Qt::ClickFocus); // TODO - prevents keyPressEvent
 
-  m_dataPixmap=QPixmap(filename);               
-  
-  m_dataView = new QGraphicsView(this);    
-  m_dataView->setObjectName(QString::fromUtf8(ptr));
-  m_dataView->setGeometry(QRect(0,0,m_dataPixmap.width(),m_dataPixmap.height()));    
-  m_dataView->setStyleSheet("background: transparent; border: transparent;");
-                                               
-  m_dataPixmapScaled=m_dataPixmap.scaled(m_dataView->width()-5,m_dataView->height()-5,Qt::IgnoreAspectRatio,Qt::SmoothTransformation);           
-                                               
-  m_dataScene = new QGraphicsScene;            
-  m_dataPixmapItem=m_dataScene->addPixmap(m_dataPixmapScaled);  
-  
-  m_dataView->setScene(m_dataScene);  
-}    
+  m_dataPixmap=QPixmap(filename);
 
-void CWPlot::imageresize(QSize visibleSize,int row,int column)     
- {     
+  m_dataView = new QGraphicsView(this);
+  m_dataView->setObjectName(QString::fromUtf8(ptr));
+  m_dataView->setGeometry(QRect(0,0,m_dataPixmap.width(),m_dataPixmap.height()));
+  m_dataView->setStyleSheet("background: transparent; border: transparent;");
+
+  m_dataPixmapScaled=m_dataPixmap.scaled(m_dataView->width()-5,m_dataView->height()-5,Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
+
+  m_dataScene = new QGraphicsScene;
+  m_dataPixmapItem=m_dataScene->addPixmap(m_dataPixmapScaled);
+
+  m_dataView->setScene(m_dataScene);
+}
+
+void CWPlot::imageresize(QSize visibleSize,int row,int column)
+ {
  	int cBorderSize=15;
 
   m_dataView->setGeometry(QRect(row-cBorderSize,column+5,visibleSize.width(), visibleSize.height()));
   m_dataView->setSceneRect (QRect(0,0,m_dataView->width()-5, m_dataView->height()-5));
-  m_dataPixmapScaled=m_dataPixmap.scaled(m_dataView->width()-5,m_dataView->height()-5,Qt::IgnoreAspectRatio,Qt::SmoothTransformation);  
-  m_dataPixmapItem->setPixmap(m_dataPixmapScaled);         
+  m_dataPixmapScaled=m_dataPixmap.scaled(m_dataView->width()-5,m_dataView->height()-5,Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
+  m_dataPixmapItem->setPixmap(m_dataPixmapScaled);
  }
 
 void CWPlot::contextMenuEvent(QContextMenuEvent *e)
@@ -243,7 +265,7 @@ void CWPlot::contextMenuEvent(QContextMenuEvent *e)
   if (childAt(e->pos()) != canvas()) {
 
     QMenu menu;
-    
+
     if (m_type!=PLOTPAGE_IMAGE)
      {
       if (m_zoomer)
@@ -253,7 +275,7 @@ void CWPlot::contextMenuEvent(QContextMenuEvent *e)
       menu.addSeparator();
       menu.addAction("Overlay...", this, SLOT(slotOverlay()));
      }
-     
+
     menu.addAction("Save As...", this, SLOT(slotSaveAs()));
     menu.addAction("Export As Image...", this, SLOT(slotExportAsImage()));
     menu.addAction("Print...", this, SLOT(slotPrint()));
@@ -267,26 +289,26 @@ void CWPlot::contextMenuEvent(QContextMenuEvent *e)
 }
 
 void CWPlot::slotOverlay()
-{             
+{
   if (m_type==PLOTPAGE_DATASET) {
     CPreferences *pref = CPreferences::instance();
-    
+
     QString dirName = pref->directoryName("ASCII_Plot");
-  
+
     QString filename = QFileDialog::getOpenFileName(this, "Overlay Plot(s)", dirName, "*.asc");
-  
+
     if (!filename.isEmpty()) {
       pref->setDirectoryNameGivenFile("ASCII_Plot", filename);
-  
+
       bool failed = false;
-  
+
       FILE *fp = fopen(filename.toAscii().constData(), "r");
       if (fp != NULL) {
         char buffer[32];
         int nCurves, nPoints, i, j;
-        
+
         int curveCount = m_dataSet->count(); // number of 'original' curves ...
-  
+
         double *xData = NULL;
         double *yData = NULL;
 
@@ -313,56 +335,56 @@ void CWPlot::slotOverlay()
               } else {
                 failed = true;
               }
-  
+
               delete [] xData;
               delete [] yData;
               xData = yData = NULL;
             }
             else
               failed  = true;
-  
+
             ++i;
           }
         }
         else
           failed = true;
-  
+
         fclose(fp);
       }
       else
         failed  = true;
-  
+
       if (failed) {
         QString msg = "Failed (correctly) open or parse ASCII data file ";
         msg += filename;
-  
+
         QMessageBox::warning(this, "Failed file read", msg);
       }
       else
         replot();
-  
+
     }
   }
 }
 
-void CWPlot::slotSaveAs() {                       
+void CWPlot::slotSaveAs() {
   if (m_type==PLOTPAGE_DATASET) {
     CPreferences *pref = CPreferences::instance();
     QString dirName = pref->directoryName("ASCII_Plot")+"/undefined.asc";
     QString filename = QFileDialog::getSaveFileName(this, "Save Plot", dirName, "All files (*);;Ascii file (*.asc)");
-    
+
     if (!filename.isEmpty())
      {
       if (!filename.contains('.'))
        filename += ".asc";
-    
+
       pref->setDirectoryNameGivenFile("ASCII_Plot", filename);
-    
+
       FILE *fp = fopen(filename.toAscii().constData(), "w");
       if (fp != NULL)
        {
         int nCurves, nPoints, i, j, n, maxPoints;
-    
+
         nCurves = m_dataSet->count();
         fprintf(fp,";\n");
         fprintf(fp, "; Plot %s (%d %s)\n;\n", m_dataSet->plotTitle().toAscii().constData(),nCurves,(nCurves>1)?"curves":"curve");
@@ -374,7 +396,7 @@ void CWPlot::slotSaveAs() {
            maxPoints=n;
          }
         fprintf(fp,";\n");
-    
+
         for (j=0;j<maxPoints;j++)
          {
           for (i=0;i<nCurves;i++)
@@ -388,18 +410,18 @@ void CWPlot::slotSaveAs() {
 	          }
 	         fprintf(fp,"\n");
 	        }
-    
+
 	       fclose(fp);
 	      }
       else
        {
         QString msg = "Failed to create ASCII plot file ";
         msg += filename;
-    
+
         QMessageBox::warning(this, "Failed file write", msg);
        }
 	    }
-	  }  
+	  }
 	}
 
 void CWPlot::slotPrint()
@@ -485,8 +507,8 @@ CWPlotPage::CWPlotPage(CPlotProperties &plotProperties,
   m_plotProperties(plotProperties),
   m_pageType(page->type())
 {
-  if (page != 0) {  
-    int nplots=page->size(); 
+  if (page != 0) {
+    int nplots=page->size();
 
     if (page->type()==PLOTPAGE_DATASET) {
       int i = 0;
@@ -494,25 +516,25 @@ CWPlotPage::CWPlotPage(CPlotProperties &plotProperties,
         CWPlot *tmp = new CWPlot(page->dataSet(i), m_plotProperties, this);
         tmp->hide();
         m_plots.push_back(tmp);
-        ++i; 
-      }  
-    } else {  
-      int i = 0;       
-      
-      while (i < nplots) {    
-        CWPlot *tmp = new CWPlot(page->dataImage(i), m_plotProperties, this); 
-        tmp->hide();       
-        m_plots.push_back(tmp);  
-        ++i; 
-      }       
+        ++i;
+      }
+    } else {
+      int i = 0;
+
+      while (i < nplots) {
+        CWPlot *tmp = new CWPlot(page->dataImage(i), m_plotProperties, this);
+        tmp->hide();
+        m_plots.push_back(tmp);
+        ++i;
+      }
     }
-  } 
-}  
+  }
+}
 
 void CWPlotPage::layoutPlots(const QSize &visibleSize)
 {
-  const int cBorderSize = 15;   
-  
+  const int cBorderSize = 15;
+
   // MUST have at least one plot for this to be meaningful
   if (m_plots.size() == 0)
     return;
@@ -532,7 +554,7 @@ void CWPlotPage::layoutPlots(const QSize &visibleSize)
     // only one plot ... fit to the visible area
     unitSize = visibleSize;
     unitSize -= QSize(2 * cBorderSize, 2 * cBorderSize);
-    columns = 1; 
+    columns = 1;
   }
   else {
     // calculate the size that fits nicely to the full width
@@ -547,23 +569,23 @@ void CWPlotPage::layoutPlots(const QSize &visibleSize)
 
   // position and resize
   int fitWidth = unitSize.width() + cBorderSize;
-  int fitHeight = unitSize.height() + cBorderSize;         
-  
+  int fitHeight = unitSize.height() + cBorderSize;
+
   int col = 0;
   int row = 0;
   it = m_plots.begin();
   while (it != m_plots.end()) {
-  	
+
     if (m_pageType==PLOTPAGE_IMAGE)
      {
       (*it)->imageresize(unitSize,col * fitWidth + cBorderSize,row * fitHeight + cBorderSize);
-     }     	
+     }
     (*it)->move(col * fitWidth + cBorderSize, row * fitHeight + cBorderSize);
     (*it)->resize(unitSize);
     (*it)->show();
-    
-    // (*it)->m_pixmap->scaled(unitSize.width(),unitSize.height(),Qt::IgnoreAspectRatio,Qt::SmoothTransformation);           
-    
+
+    // (*it)->m_pixmap->scaled(unitSize.width(),unitSize.height(),Qt::IgnoreAspectRatio,Qt::SmoothTransformation);
+
     if (++col == m_plotProperties.columns()) {
       col = 0;
       ++row;
@@ -571,8 +593,8 @@ void CWPlotPage::layoutPlots(const QSize &visibleSize)
     ++it;
   }
   // resize the plot page
-  resize(columns*fitWidth + cBorderSize, (row + (col?1:0)) * fitHeight + cBorderSize);  
-  
+  resize(columns*fitWidth + cBorderSize, (row + (col?1:0)) * fitHeight + cBorderSize);
+
 }
 
 void CWPlotPage::slotPrintAllPlots()
@@ -635,7 +657,7 @@ void CWPlotPage::slotPrintAllPlots()
 	tmp = QRect(cPageBorder + cPlotBorder + col * (cPlotBorder + unitWidth),
 		    cPageBorder + cPlotBorder + row * (cPlotBorder + unitHeight),
 		    unitWidth, unitHeight);
-                   
+
         renderer.render(*it,&p,tmp);
 
         if (++col == columns) {

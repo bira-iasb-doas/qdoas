@@ -176,11 +176,15 @@ extern "C" {
     int sfpDegree;
     double wavelengthMin;
     double wavelengthMax;
+    double customLambdaMin[MAX_CALIB_WINDOWS];
+    double customLambdaMax[MAX_CALIB_WINDOWS];
+    int divisionMode;
     int requireSpectra;
     int requireFits;
     int requireResidual;
     int requireShiftSfp;
     int preshiftFlag;
+    double windowSize;
     double preshiftMin;
     double preshiftMax;
     /* table data ... */
@@ -466,7 +470,7 @@ extern "C" {
     char path[FILENAME_BUFFER_LENGTH];
     data_select_list_t selection;
    } mediate_project_export_t;
- 
+
   /* mediate_project_t
    *
    * Contains all user-specified information about a project. It allows the GUI to

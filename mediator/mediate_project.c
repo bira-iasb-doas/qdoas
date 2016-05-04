@@ -81,6 +81,7 @@ void initializeMediateProjectCalibration(mediate_project_calibration_t *d)
   d->subWindows=0;
   d->wavelengthMin=(double)330.;
   d->wavelengthMax=(double)600.;
+  d->windowSize=(double)10.;
   d->requireSpectra=1;
   d->requireFits=1;
   d->requireResidual=1;
@@ -94,6 +95,9 @@ void initializeMediateProjectCalibration(mediate_project_calibration_t *d)
     d->sfp[i].initialValue=(double)0.5;
     d->sfp[i].deltaValue=(double)1.e-3;
    }
+
+  for (i=0;i<MAX_CALIB_WINDOWS;i++)
+   d->customLambdaMin[i]=d->customLambdaMax[i]=(double)0.;
 }
 
 void initializeMediateProjectUndersampling(mediate_project_undersampling_t *d)

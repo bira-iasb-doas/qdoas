@@ -26,9 +26,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QLineEdit>
 #include <QSpinBox>
 #include <QCheckBox>
-
-#include "mediate_project.h"
-
 #include <QTabWidget>
 
 #include "mediate_project.h"
@@ -36,6 +33,18 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CWAnalysisWindowDoasTables.h"
 
 class PolynomialTab;
+
+class CWProjectTabCalibrationCustomWindowsDialog : public QDialog
+ {
+  public:
+   CWProjectTabCalibrationCustomWindowsDialog(const double *lambdaMin,const double *lambdaMax,int nWindows, QWidget *parent = 0);
+   void GetLambdaMin(double *lambdaMin);
+   void GetLambdaMax(double *lambdaMax);
+
+  private:
+   QLineEdit *m_customLambdaMinEdit[MAX_CALIB_WINDOWS],*m_customLambdaMaxEdit[MAX_CALIB_WINDOWS];
+   int m_nWindows;
+ };
 
 class CWProjectTabCalibration : public QFrame
 {
@@ -47,19 +56,27 @@ Q_OBJECT
 
  public slots:
   void slotLineShapeSelectionChanged(int index);
+  void slotDivisionModeChanged(int index);
+  void slotDefineCustomWindows(void);
   void slotBrowseSolarRefFile();
   void slotBrowseSlfFile();
   void slotOutputCalibration(bool enabled);
 
  private:
+
+  void CheckCustomWindows(double *customLambdaMin,double *customLambdaMax,int nWindows) const;
+
   QLineEdit *m_refFileEdit,*m_slfFileEdit;
   QPushButton *m_refBrowseBtn;
   QComboBox *m_methodCombo;
+  QComboBox *m_subwindowsCombo;
   QComboBox *m_lineShapeCombo;
+  QPushButton *m_subWindowsCustomButton;
   QFrame *m_orderWidget,*m_fileWidget;
   QCheckBox *m_spectraCheck, *m_fitsCheck, *m_residualCheck, *m_shiftSfpCheck;
   QSpinBox *m_orderSpinBox, *m_shiftDegreeSpinBox, *m_sfpDegreeSpinBox;
-  QLineEdit *m_lambdaMinEdit, *m_lambdaMaxEdit;
+  QLineEdit *m_lambdaMinEdit, *m_lambdaMaxEdit,*m_subWindowsSizeEdit;
+  double m_customLambdaMin[MAX_CALIB_WINDOWS],m_customLambdaMax[MAX_CALIB_WINDOWS];
   QSpinBox *m_subWindowsSpinBox;
 
   QTabWidget *m_tabs;
@@ -72,7 +89,7 @@ Q_OBJECT
   CWOutputDoasTable *m_outputTab;
 
   QCheckBox *m_preshiftCheck;
-  QLabel *m_preshiftMinLabel,*m_preshiftMaxLabel;
+  QLabel *m_preshiftMinLabel,*m_preshiftMaxLabel,*m_subWindowsSizeLabel;
   QLineEdit *m_preshiftMinEdit,*m_preshiftMaxEdit;
 };
 

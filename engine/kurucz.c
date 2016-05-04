@@ -987,11 +987,12 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
   double          *VPix,*VSig,*Pcalib,                                          // polynomial coefficients computation
     *shiftPoly,
     *pixMid,*VLambda,*VShift,
+    *dispAbsolu,*dispSecX,
     **fwhm,**fwhmSigma,                                            // substitution vectors
     *solar,                                                       // solar spectrum
     *offset,                                                      // offset
     Square;                                                      // Chi square returned by 'CurFitMethod'
-  int              Nb_Win,maxParam,                                             // number of little windows
+  int              Nb_Win,maxParam,pixMin,pixMax,                                             // number of little windows
                   *NIter;                                                       // number of iterations
   INDEX            indexWindow,                                                 // browse little windows
                    indexParam,
@@ -1001,7 +1002,7 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
                    i,j,k;                                                    // temporary indexes
   double j0,lambda0,shiftSign;
   RC               rc;                                                          // return code
-  plot_data_t      spectrumData[2];
+  plot_data_t      *spectrumData;
   KURUCZ *pKurucz;
 
   // Initializations
@@ -1012,6 +1013,7 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
   indexColumn=2;
   solar=NULL;
   const int oldNDET = NDET[indexFenoColumn];
+  spectrumData=NULL;
 
   pKurucz->KuruczFeno[indexFeno].have_calibration = true;
 
@@ -1020,7 +1022,9 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
   double calib_stretch[pKurucz->Nb_Win];
   double calib_stretch2[pKurucz->Nb_Win];
 
-  if ((shiftPoly=(double *)MEMORY_AllocDVector("KURUCZ_Spectrum ","shiftPoly",0,oldNDET-1))==NULL) {
+  if (((shiftPoly=(double *)MEMORY_AllocDVector("KURUCZ_Spectrum ","shiftPoly",0,oldNDET-1))==NULL) ||
+  	  ((spectrumData=(plot_data_t *)MEMORY_AllocBuffer(__func__,"spectrumData",pKurucz->Nb_Win*2,sizeof(plot_data_t),0,MEMORY_TYPE_STRUCT))==NULL))
+   {
     rc=ERROR_ID_ALLOC;
     goto EndKuruczSpectrum;
   }
@@ -1037,12 +1041,12 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
   Results=Feno->TabCrossResults;
   pResults=&Feno->TabCrossResults[(Feno->indexSpectrum!=ITEM_NONE)?Feno->indexSpectrum:Feno->indexReference];
 
-  VPix       = pKurucz->VPix;
-  VSig       = pKurucz->VSig;
-  Pcalib     = pKurucz->Pcalib;
-  pixMid     = pKurucz->pixMid;
-  VLambda    = pKurucz->VLambda;
-  VShift     = pKurucz->VShift;
+  VPix       = (double *)pKurucz->VPix;
+  VSig       = (double *)pKurucz->VSig;
+  Pcalib     = (double *)pKurucz->Pcalib;
+  pixMid     = (double *)pKurucz->pixMid;
+  VLambda    = (double *)pKurucz->VLambda;
+  VShift     = (double *)pKurucz->VShift;
 
   svdFeno    = pKurucz->KuruczFeno[indexFeno].svdFeno;
 
@@ -1155,6 +1159,12 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
     Feno->Decomp=1;
     NIter[indexWindow]=0;
 
+    dispAbsolu=pKurucz->dispAbsolu[indexWindow];
+    dispSecX=pKurucz->dispSecX[indexWindow];
+
+    memcpy(dispAbsolu,ANALYSE_zeros,sizeof(double)*n_wavel);
+    memcpy(dispSecX,ANALYSE_zeros,sizeof(double)*n_wavel);
+
     if (pKuruczOptions->fwhmFit)
       pKURUCZ_fft=&pKurucz->KuruczFeno[indexFeno].fft[indexWindow];
 
@@ -1215,12 +1225,23 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
     // Store fit for display
 
     if (displayFlag) {
-      if (pKurucz->method!=PRJCT_ANLYS_METHOD_SVD)
+      if (pKurucz->method==PRJCT_ANLYS_METHOD_SVD)
+       {
         for (i=SvdPDeb;i<=SvdPFin;i++)
-          ANALYSE_secX[i]=exp(log(spectrum[i])+ANALYSE_absolu[i]/ANALYSE_tc[i]); // spectrum[i]+solar[i]*ANALYSE_absolu[i]/ANALYSE_tc[i];
+         {
+          dispAbsolu[i]=ANALYSE_absolu[i];
+          dispSecX[i]=ANALYSE_secX[i]=exp(log(spectrum[i])+ANALYSE_absolu[i]);
+         }
+       }
       else
-        for (i=SvdPDeb;i<=SvdPFin;i++)
-          ANALYSE_secX[i]=exp(log(spectrum[i])+ANALYSE_absolu[i]);
+       {
+       	for (i=SvdPDeb;i<=SvdPFin;i++)
+       	 {
+          dispAbsolu[i]=ANALYSE_absolu[i]=(ANALYSE_tc[i]!=(double)0.)?ANALYSE_absolu[i]/ANALYSE_tc[i]:(double)0.;
+          dispSecX[i]=ANALYSE_secX[i]=exp(log(spectrum[i])+ANALYSE_absolu[i]/ANALYSE_tc[i]); // spectrum[i]+solar[i]*ANALYSE_absolu[i]/ANALYSE_tc[i];
+         }
+       }
+
 
       j0=(double)(SvdPDeb+SvdPFin)*0.5;
       lambda0=(fabs(j0-floor(j0))<(double)0.1)?
@@ -1326,11 +1347,33 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
       else
         sprintf(string,"Complete fit (%d/%d)",indexFenoColumn+1,ANALYSE_swathSize);
 
-      mediateAllocateAndSetPlotData(&spectrumData[0],"Spectrum",&Lambda[0],&spectrum[0],n_wavel,Line);
-      mediateAllocateAndSetPlotData(&spectrumData[1],"Adjusted Kurucz",&Lambda[0],&ANALYSE_secX[0],n_wavel,Line);
-      mediateResponsePlotData(plotPageCalib,spectrumData,2,Spectrum,forceAutoScale,string,"Wavelength (nm)","Intensity", responseHandle);
-      mediateReleasePlotData(&spectrumData[1]);
-      mediateReleasePlotData(&spectrumData[0]);
+     if (pKuruczOptions->divisionMode==PRJCT_CALIB_WINDOWS_CONTIGUOUS)
+      {
+       mediateAllocateAndSetPlotData(&spectrumData[0],"Spectrum",&Lambda[0],&spectrum[0],n_wavel,Line);
+       mediateAllocateAndSetPlotData(&spectrumData[1],"Adjusted Kurucz",&Lambda[0],&ANALYSE_secX[0],n_wavel,Line);
+
+       mediateResponsePlotData(plotPageCalib,spectrumData,2,Spectrum,forceAutoScale,string,"Wavelength (nm)","Intensity", responseHandle);
+       mediateReleasePlotData(&spectrumData[0]);
+       mediateReleasePlotData(&spectrumData[1]);
+      }
+     else
+      {
+       for (indexWindow=0;indexWindow<Nb_Win;indexWindow++)
+        {
+         pixMin=spectrum_start(svdFeno[indexWindow].specrange);
+         pixMax=spectrum_end(svdFeno[indexWindow].specrange);
+
+         mediateAllocateAndSetNumberedPlotData(&spectrumData[(indexWindow<<1)],"Spectrum",&Lambda[pixMin],&spectrum[pixMin],pixMax-pixMin+1,(indexWindow%2)?DashLine:Line,0);
+         mediateAllocateAndSetNumberedPlotData(&spectrumData[(indexWindow<<1)+1],"Adjusted Kurucz",&Lambda[pixMin],&pKurucz->dispSecX[indexWindow][pixMin],pixMax-pixMin+1,(indexWindow%2)?DashLine:Line,1);
+        }
+       mediateResponsePlotData(plotPageCalib,spectrumData,Nb_Win*2,Spectrum,forceAutoScale,string,"Wavelength (nm)","Intensity", responseHandle);
+
+       for (indexWindow=0;indexWindow<Nb_Win;indexWindow++)
+        {
+         mediateReleasePlotData(&spectrumData[(indexWindow<<1)]);
+         mediateReleasePlotData(&spectrumData[(indexWindow<<1)+1]);
+        }
+      }
     }
 
     // Display residual
@@ -1341,13 +1384,27 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
       else
         sprintf(string,"Residual (%d/%d)",indexFenoColumn+1,ANALYSE_swathSize);
 
-      if (pKurucz->method!=PRJCT_ANLYS_METHOD_SVD)
-        for (j=SvdPDeb;j<=SvdPFin;j++)
-          ANALYSE_absolu[j]=(ANALYSE_tc[j]!=(double)0.)?ANALYSE_absolu[j]/ANALYSE_tc[j]:(double)0.;
+      if (pKuruczOptions->divisionMode==PRJCT_CALIB_WINDOWS_CONTIGUOUS)
+       {
+        mediateAllocateAndSetPlotData(&spectrumData[0],"Residual",&Lambda[0],&ANALYSE_absolu[0],n_wavel,Line);
+        mediateResponsePlotData(plotPageCalib,spectrumData,1,Spectrum,forceAutoScale,string,"Wavelength (nm)","", responseHandle);
+        mediateReleasePlotData(&spectrumData[0]);
+       }
+      else
+       {
+        for (indexWindow=0;indexWindow<Nb_Win;indexWindow++)
+         {
+         	pixMin=spectrum_start(svdFeno[indexWindow].specrange);
+          pixMax=spectrum_end(svdFeno[indexWindow].specrange);
 
-      mediateAllocateAndSetPlotData(&spectrumData[0],"Residual",&Lambda[0],&ANALYSE_absolu[0],n_wavel,Line);
-      mediateResponsePlotData(plotPageCalib,spectrumData,1,Spectrum,forceAutoScale,string,"Wavelength (nm)","", responseHandle);
-      mediateReleasePlotData(&spectrumData[0]);
+          mediateAllocateAndSetNumberedPlotData(&spectrumData[indexWindow],"Residual",&Lambda[pixMin],&pKurucz->dispAbsolu[indexWindow][pixMin],pixMax-pixMin+1,(indexWindow%2)?DashLine:Line,0);
+         }
+
+        mediateResponsePlotData(plotPageCalib,spectrumData,Nb_Win,Spectrum,forceAutoScale,string,"Wavelength (nm)","", responseHandle);
+
+        for (indexWindow=0;indexWindow<Nb_Win;indexWindow++)
+         mediateReleasePlotData(&spectrumData[indexWindow]);
+       }
     }
 
     memcpy(ANALYSE_secX,ANALYSE_zeros,sizeof(double)*n_wavel);
@@ -1365,10 +1422,6 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
           (TabCross[Feno->indexOffsetConst].InitParam!=(double)0.) ||
           (TabCross[Feno->indexOffsetOrder1].InitParam!=(double)0.) ||
           (TabCross[Feno->indexOffsetOrder2].InitParam!=(double)0.))) {
-      for (j=SvdPDeb;j<=SvdPFin;j++) {
-        ANALYSE_absolu[j]+=offset[j]-ANALYSE_secX[j];
-        ANALYSE_secX[j]=offset[j];
-      }
 
       if (pKurucz->displayFit) {
         if (ANALYSE_swathSize==1)
@@ -1376,11 +1429,45 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
         else
           sprintf(string,"Offset (%d/%d)",indexFenoColumn+1,ANALYSE_swathSize);
 
-        mediateAllocateAndSetPlotData(&spectrumData[0],"Measured",&Lambda[0],&ANALYSE_absolu[0],n_wavel,Line);
-        mediateAllocateAndSetPlotData(&spectrumData[1],"Calculated",&Lambda[0],&ANALYSE_secX[0],n_wavel,Line);
-        mediateResponsePlotData(plotPageCalib,spectrumData,2,Spectrum,forceAutoScale,string,"Wavelength (nm)","", responseHandle);
-        mediateReleasePlotData(&spectrumData[1]);
-        mediateReleasePlotData(&spectrumData[0]);
+        if (pKuruczOptions->divisionMode==PRJCT_CALIB_WINDOWS_CONTIGUOUS)
+         {
+          for (j=pixMin;j<=pixMax;j++)
+           {
+            ANALYSE_absolu[j]+=offset[j]-ANALYSE_secX[j];
+            ANALYSE_secX[j]=offset[j];
+           }
+
+          mediateAllocateAndSetPlotData(&spectrumData[0],"Measured",&Lambda[0],&ANALYSE_absolu[0],n_wavel,Line);
+          mediateAllocateAndSetPlotData(&spectrumData[1],"Calculated",&Lambda[0],&ANALYSE_secX[0],n_wavel,Line);
+          mediateResponsePlotData(plotPageCalib,spectrumData,2,Spectrum,forceAutoScale,string,"Wavelength (nm)","",responseHandle);
+          mediateReleasePlotData(&spectrumData[1]);
+          mediateReleasePlotData(&spectrumData[0]);
+         }
+        else
+         {
+          for (indexWindow=0;indexWindow<Nb_Win;indexWindow++)
+           {
+           	pixMin=spectrum_start(svdFeno[indexWindow].specrange);
+            pixMax=spectrum_end(svdFeno[indexWindow].specrange);
+
+            for (j=pixMin;j<=pixMax;j++)
+             {
+              pKurucz->dispAbsolu[indexWindow][j]+=offset[j]-pKurucz->dispSecX[indexWindow][j];
+              pKurucz->dispSecX[indexWindow][j]=offset[j];
+             }
+
+            mediateAllocateAndSetNumberedPlotData(&spectrumData[(indexWindow<<1)],"Measured",&Lambda[pixMin],&pKurucz->dispAbsolu[indexWindow][pixMin],pixMax-pixMin+1,(indexWindow%2)?DashLine:Line,0);
+            mediateAllocateAndSetNumberedPlotData(&spectrumData[(indexWindow<<1)+1],"Calculated",&Lambda[pixMin],&pKurucz->dispSecX[indexWindow][pixMin],pixMax-pixMin+1,(indexWindow%2)?DashLine:Line,0);
+           }
+
+          mediateResponsePlotData(plotPageCalib,spectrumData,Nb_Win,Spectrum,forceAutoScale,string,"Wavelength (nm)","", responseHandle);
+
+          for (indexWindow=0;indexWindow<Nb_Win;indexWindow++)
+           {
+            mediateReleasePlotData(&spectrumData[(indexWindow<<1)]);
+            mediateReleasePlotData(&spectrumData[(indexWindow<<1)+1]);
+           }
+         }
       }
     }
 
@@ -1391,21 +1478,51 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
         pTabCross=&TabCross[indexTabCross];
 
         if (pTabCross->IndSvdA && (WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CROSS) && pTabCross->display) {
-          for (j=SvdPDeb;j<=SvdPFin;j++) {
-            ANALYSE_absolu[j]+=pKurucz->crossFits.matrix[indexCrossFit][j]-ANALYSE_secX[j];
-            ANALYSE_secX[j]=pKurucz->crossFits.matrix[indexCrossFit][j];
-          }
 
           if (ANALYSE_swathSize==1)
             sprintf(string,"%s fit",WorkSpace[pTabCross->Comp].symbolName);
           else
             sprintf(string,"%s fit (%d/%d)",WorkSpace[pTabCross->Comp].symbolName,indexFenoColumn+1,ANALYSE_swathSize);
 
-          mediateAllocateAndSetPlotData(&spectrumData[0],"Measured",&Lambda[0],&ANALYSE_absolu[0],n_wavel,Line);
-          mediateAllocateAndSetPlotData(&spectrumData[1],"Calculated",&Lambda[0],&ANALYSE_secX[0],n_wavel,Line);
-          mediateResponsePlotData(plotPageCalib,spectrumData,2,Spectrum,forceAutoScale,string,"Wavelength (nm)","", responseHandle);
-          mediateReleasePlotData(&spectrumData[1]);
-          mediateReleasePlotData(&spectrumData[0]);
+          if (pKuruczOptions->divisionMode==PRJCT_CALIB_WINDOWS_CONTIGUOUS)
+           {
+            for (j=SvdPDeb;j<=SvdPFin;j++) {
+              ANALYSE_absolu[j]+=pKurucz->crossFits.matrix[indexCrossFit][j]-ANALYSE_secX[j];
+              ANALYSE_secX[j]=pKurucz->crossFits.matrix[indexCrossFit][j];
+            }
+
+             mediateAllocateAndSetPlotData(&spectrumData[0],"Measured",&Lambda[0],&ANALYSE_absolu[0],n_wavel,Line);
+             mediateAllocateAndSetPlotData(&spectrumData[1],"Calculated",&Lambda[0],&ANALYSE_secX[0],n_wavel,Line);
+             mediateResponsePlotData(plotPageCalib,spectrumData,2,Spectrum,forceAutoScale,string,"Wavelength (nm)","", responseHandle);
+             mediateReleasePlotData(&spectrumData[1]);
+             mediateReleasePlotData(&spectrumData[0]);
+
+           }
+          else
+           {
+            for (indexWindow=0;indexWindow<Nb_Win;indexWindow++)
+             {
+             	pixMin=spectrum_start(svdFeno[indexWindow].specrange);
+              pixMax=spectrum_end(svdFeno[indexWindow].specrange);
+
+              for (j=pixMin;j<=pixMax;j++)
+               {
+                pKurucz->dispAbsolu[indexWindow][j]+=pKurucz->crossFits.matrix[indexCrossFit][j]-pKurucz->dispSecX[indexWindow][j];
+                pKurucz->dispSecX[indexWindow][j]=pKurucz->crossFits.matrix[indexCrossFit][j];
+               }
+
+              mediateAllocateAndSetNumberedPlotData(&spectrumData[(indexWindow<<1)],"Measured",&Lambda[pixMin],&pKurucz->dispAbsolu[indexWindow][pixMin],pixMax-pixMin+1,(indexWindow%2)?DashLine:Line,0);
+              mediateAllocateAndSetNumberedPlotData(&spectrumData[(indexWindow<<1)+1],"Calculated",&Lambda[pixMin],&pKurucz->dispSecX[indexWindow][pixMin],pixMax-pixMin+1,(indexWindow%2)?DashLine:Line,1);
+             }
+
+            mediateResponsePlotData(plotPageCalib,spectrumData,Nb_Win,Spectrum,forceAutoScale,string,"Wavelength (nm)","", responseHandle);
+
+            for (indexWindow=0;indexWindow<Nb_Win;indexWindow++)
+             {
+              mediateReleasePlotData(&spectrumData[(indexWindow<<1)]);
+              mediateReleasePlotData(&spectrumData[(indexWindow<<1)+1]);
+             }
+           }
 
           indexCrossFit++;
         }
@@ -1488,6 +1605,9 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
  EndKuruczSpectrum:
 
   KURUCZ_indexLine=indexLine+1;
+
+  if (spectrumData!=NULL)
+   MEMORY_ReleaseBuffer(__func__,"spectrumData",spectrumData);
 
   if (solar!=NULL)
    MEMORY_ReleaseDVector(__func__,"solar",solar,0);
@@ -1837,13 +1957,15 @@ void KURUCZ_Init(int gomeFlag,INDEX indexFenoColumn) {
 
   INDEX indexWindow;
   int nbWin;
-  double Lambda_min,Lambda_max,Win_size;
+  KURUCZ *pKurucz;
   FENO *pTabFeno;
   SVD *pSvd;
 
   // Initialization
 
-  nbWin=KURUCZ_buffers[indexFenoColumn].Nb_Win;
+  pKurucz=&KURUCZ_buffers[indexFenoColumn];
+
+  nbWin=pKurucz->Nb_Win;
 
   // Browse analysis windows
 
@@ -1851,26 +1973,18 @@ void KURUCZ_Init(int gomeFlag,INDEX indexFenoColumn) {
     pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
 
     if ((pTabFeno->gomeRefFlag==gomeFlag) &&
-        (KURUCZ_buffers[indexFenoColumn].KuruczFeno[indexFeno].svdFeno!=NULL)) {
-      Lambda_min=pKuruczOptions->lambdaLeft;
-      Lambda_max=pKuruczOptions->lambdaRight;
-
-      Win_size=(double)(Lambda_max-Lambda_min)/nbWin;
+        (pKurucz->KuruczFeno[indexFeno].svdFeno!=NULL)) {
 
       for (indexWindow=0;indexWindow<nbWin;indexWindow++) {
-        pSvd=&KURUCZ_buffers[indexFenoColumn].KuruczFeno[indexFeno].svdFeno[indexWindow];
+        pSvd=&pKurucz->KuruczFeno[indexFeno].svdFeno[indexWindow];
 
-        Lambda_max=Lambda_min+Win_size;
-
-        int pixel_start=FNPixel(pTabFeno->LambdaRef,Lambda_min,pTabFeno->NDET,PIXEL_AFTER);
-        int pixel_end=FNPixel(pTabFeno->LambdaRef,Lambda_max,pTabFeno->NDET,PIXEL_BEFORE);
+        int pixel_start=FNPixel(pTabFeno->LambdaRef,pKurucz->lambdaMin[indexWindow],pTabFeno->NDET,PIXEL_AFTER);
+        int pixel_end=FNPixel(pTabFeno->LambdaRef,pKurucz->lambdaMax[indexWindow],pTabFeno->NDET,PIXEL_BEFORE);
 
         pSvd->specrange = spectrum_new();
         spectrum_append(pSvd->specrange, pixel_start, pixel_end);
 
         pSvd->DimL=pixel_end - pixel_start + 1;
-
-        Lambda_min=Lambda_max;
       }
     }
   }
@@ -1903,9 +2017,9 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
   char   slitFile[MAX_ITEM_TEXT_LEN];
   int    Nb_Win,shiftDegree,                                                    // substitution variables
          NTabCross;
-  INDEX  i,indexFeno,indexParam,indexTabCross;                      // indexes for loops and arrays
-  //  double Lambda_min,Lambda_max,                                                 // extrema in nm of a little window
-  //         Win_size,step;                                                         // size of a little window in nm
+  INDEX  i,indexFeno,indexParam,indexTabCross,indexWindow;                      // indexes for loops and arrays
+  double Lambda_min,Lambda_max,                                                 // extrema in nm of a little window
+         Win_size;                                                              // size of a little window in nm
   double step;
   SVD   *pSvd,*pSvdFwhm;                                                        // pointers to svd environments
   KURUCZ *pKurucz;
@@ -1934,7 +2048,7 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
 
   // Load options from Kurucz tab page from project properties
 
-  Nb_Win=pKuruczOptions->windowsNumber;
+  KURUCZ_buffers[indexFenoColumn].Nb_Win=Nb_Win=pKuruczOptions->windowsNumber;
   shiftDegree=pKuruczOptions->shiftPolynomial;
 
   rc=ERROR_ID_NO;
@@ -1961,6 +2075,8 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
    }
 
   if (((pKurucz->KuruczFeno=(KURUCZ_FENO *)MEMORY_AllocBuffer(__func__,"KuruczFeno",NFeno,sizeof(KURUCZ_FENO),0,MEMORY_TYPE_STRUCT))==NULL) ||
+      ((pKurucz->dispAbsolu=(double **)MEMORY_AllocBuffer(__func__,"dispAbsolu",Nb_Win,sizeof(double **),0,MEMORY_TYPE_PTR))==NULL) ||
+      ((pKurucz->dispSecX=(double **)MEMORY_AllocBuffer(__func__,"dispSecX",Nb_Win,sizeof(double **),0,MEMORY_TYPE_PTR))==NULL) ||
       ((pKurucz->solar=(double *)MEMORY_AllocDVector(__func__,"solar",0,n_wavel-1))==NULL) ||           // solar spectrum
       ((pKurucz->offset=(double *)MEMORY_AllocDVector(__func__,"offset",0,n_wavel-1))==NULL) ||         // offset spectrum
       ((pKurucz->Pcalib=(double *)MEMORY_AllocDVector(__func__,"Pcalib",1,shiftDegree+1))==NULL) ||  // coefficients of the polynomial
@@ -1969,6 +2085,8 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
       ((pKurucz->VShift=(double *)MEMORY_AllocDVector(__func__,"VShift",1,Nb_Win))==NULL) ||         // shift applied on pixels
       ((pKurucz->VSig=(double *)MEMORY_AllocDVector(__func__,"VSig",1,Nb_Win))==NULL) ||             // error on shift applied on pixels
       ((pKurucz->VPix=(double *)MEMORY_AllocDVector(__func__,"VPix",1,Nb_Win))==NULL) ||             // pixels with shift correction
+      ((pKurucz->lambdaMin=(double *)MEMORY_AllocDVector(__func__,"lambdaMin",1,Nb_Win))==NULL) ||         // limits of the windows
+      ((pKurucz->lambdaMax=(double *)MEMORY_AllocDVector(__func__,"lambdaMax",1,Nb_Win))==NULL) ||         // limits of the windows
       ((pKurucz->NIter=(int *)MEMORY_AllocBuffer(__func__,"NIter",Nb_Win,sizeof(int),0,MEMORY_TYPE_INT))==NULL) ||
       (hFilterFlag &&
        (((pKurucz->lambdaF=(double *)MEMORY_AllocDVector(__func__,"lambdaF",0,n_wavel+2*pKurucz->solarFGap-1))==NULL) ||
@@ -1983,6 +2101,40 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
      memset(&pKurucz->KuruczFeno[indexFeno],0,sizeof(KURUCZ_FENO));
     }
   }
+
+  // Determine the little windows
+
+  Lambda_min=pKuruczOptions->lambdaLeft;
+  Lambda_max=pKuruczOptions->lambdaRight;
+
+  if (pKuruczOptions->divisionMode==PRJCT_CALIB_WINDOWS_CONTIGUOUS)
+   Win_size=(double)(Lambda_max-Lambda_min)/Nb_Win;
+  else if (pKuruczOptions->divisionMode==PRJCT_CALIB_WINDOWS_SLIDING)
+   Win_size=pKuruczOptions->windowSize;
+
+  for (indexWindow=0;indexWindow<Nb_Win;indexWindow++)
+   {
+   	Lambda_max=(pKuruczOptions->divisionMode!=PRJCT_CALIB_WINDOWS_CUSTOM)?Lambda_min+Win_size:pKuruczOptions->customLambdaMax[indexWindow];
+
+    pKurucz->lambdaMin[indexWindow]=Lambda_min;
+    pKurucz->lambdaMax[indexWindow]=Lambda_max;
+
+    if (pKuruczOptions->divisionMode==PRJCT_CALIB_WINDOWS_CONTIGUOUS)
+     Lambda_min=Lambda_max;
+    else if (pKuruczOptions->divisionMode==PRJCT_CALIB_WINDOWS_SLIDING)
+     Lambda_min=pKuruczOptions->lambdaLeft+(indexWindow+1)*(pKuruczOptions->lambdaRight-pKuruczOptions->lambdaLeft-Win_size)/(Nb_Win-1.);
+    else if (indexWindow<Nb_Win-1)
+     Lambda_min=pKuruczOptions->customLambdaMin[indexWindow+1];
+
+    pKurucz->dispAbsolu[indexWindow]=pKurucz->dispSecX[indexWindow]=NULL;
+
+   	if (((pKurucz->dispAbsolu[indexWindow]=(double *)MEMORY_AllocDVector(__func__,"dispAbsolu",0,n_wavel-1))==NULL) ||
+   	    ((pKurucz->dispSecX[indexWindow]=(double *)MEMORY_AllocDVector(__func__,"dispSecX",0,n_wavel-1))==NULL))
+   	 {
+      rc=ERROR_ID_ALLOC;
+      goto EndKuruczAlloc;
+   	 }
+   }
 
   if (hFilterFlag && pKurucz->solarFGap)
    {
@@ -2055,10 +2207,6 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
      if ((pTabFeno->hidden==1) ||
         ((THRD_id!=THREAD_TYPE_KURUCZ) && !pTabFeno->hidden && pTabFeno->useKurucz))
       {
-       double Lambda_min=pKuruczOptions->lambdaLeft;
-       double Lambda_max=pKuruczOptions->lambdaRight;
-
-       double Win_size=(double)(Lambda_max-Lambda_min)/Nb_Win;
        int DimLMax=2*n_wavel/Nb_Win+1;
 
        if ((pKurucz->KuruczFeno[indexFeno].Grid=(double *)MEMORY_AllocDVector(__func__,"Grid",0,Nb_Win-1))==NULL)
@@ -2090,15 +2238,14 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
           memset(pKurucz->KuruczFeno[indexFeno].results,0,Nb_Win*sizeof(CROSS_RESULTS *));
         }
 
-       for (int indexWindow=0;indexWindow<Nb_Win;indexWindow++)
+       for (indexWindow=0;indexWindow<Nb_Win;indexWindow++)
         {
          pSvd=&pKurucz->KuruczFeno[indexFeno].svdFeno[indexWindow];
          memcpy(pSvd,&pKuruczFeno->svd,sizeof(SVD));
          pSvd->Z=1;
          pSvd->DimL=DimLMax;
 
-         Lambda_max=Lambda_min+Win_size;
-         pKurucz->KuruczFeno[indexFeno].Grid[indexWindow]=Lambda_max;
+         pKurucz->KuruczFeno[indexFeno].Grid[indexWindow]=pKurucz->lambdaMax[indexWindow];
 
          if ((pKurucz->KuruczFeno[indexFeno].results[indexWindow]=(CROSS_RESULTS *)MEMORY_AllocBuffer(__func__,"KuruczFeno(results)",pKuruczFeno->NTabCross,sizeof(CROSS_RESULTS),0,MEMORY_TYPE_STRUCT))==NULL)
           {
@@ -2116,8 +2263,8 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
 
            pfft=&pKurucz->KuruczFeno[indexFeno].fft[indexWindow];
 
-           hrDeb=FNPixel(pKurucz->hrSolar.matrix[0],Lambda_min-3.,pKurucz->hrSolar.nl,PIXEL_AFTER);
-           hrFin=FNPixel(pKurucz->hrSolar.matrix[0],Lambda_max+3.,pKurucz->hrSolar.nl,PIXEL_BEFORE);
+           hrDeb=FNPixel(pKurucz->hrSolar.matrix[0],pKurucz->lambdaMin[indexWindow]-3.,pKurucz->hrSolar.nl,PIXEL_AFTER);
+           hrFin=FNPixel(pKurucz->hrSolar.matrix[0],pKurucz->lambdaMax[indexWindow]+3.,pKurucz->hrSolar.nl,PIXEL_BEFORE);
 
            if (hrDeb==hrFin)
             {
@@ -2146,8 +2293,6 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
 
            memcpy(fftIn+1,pKurucz->hrSolar.matrix[0]+hrDeb,sizeof(double)*hrN);  // Reuse fftIn for high resolution wavelength safe keeping
           }
-
-         Lambda_min=Lambda_max;
         }
       }
     }
@@ -2286,6 +2431,10 @@ void KURUCZ_Free(void)
      MEMORY_ReleaseDVector("KURUCZ_Free ","VPix",pKurucz->VPix,1);
     if (pKurucz->pixMid!=NULL)
      MEMORY_ReleaseDVector("KURUCZ_Free ","pixMid",pKurucz->pixMid,1);
+    if (pKurucz->lambdaMin!=NULL)
+     MEMORY_ReleaseDVector("KURUCZ_Free ","lambdaMin",pKurucz->lambdaMin,1);
+    if (pKurucz->lambdaMax!=NULL)
+     MEMORY_ReleaseDVector("KURUCZ_Free ","lambdaMax",pKurucz->lambdaMax,1);
     if (pKurucz->NIter!=NULL)
      MEMORY_ReleaseBuffer("KURUCZ_Free ","NIter",pKurucz->NIter);
 
@@ -2305,6 +2454,19 @@ void KURUCZ_Free(void)
 
     SVD_Free("KURUCZ_Free (3)",&pKurucz->svdFwhm);
     MATRIX_Free(&pKurucz->crossFits,"KURUCZ_Free");
+
+    for (indexWindow=0;indexWindow<pKurucz->Nb_Win;indexWindow++)
+     {
+     	if (pKurucz->dispAbsolu[indexWindow]!=NULL)
+     	 MEMORY_ReleaseDVector("KURUCZ_Free ","dispAbsolu",pKurucz->dispAbsolu[indexWindow],0);
+     	if (pKurucz->dispSecX[indexWindow]!=NULL)
+     	 MEMORY_ReleaseDVector("KURUCZ_Free ","dispSecX",pKurucz->dispSecX[indexWindow],0);
+     }
+
+    if (pKurucz->dispAbsolu!=NULL)
+     MEMORY_ReleaseBuffer("KURUCZ_Free ","dispAbsolu",pKurucz->dispAbsolu);
+    if (pKurucz->dispSecX!=NULL)
+     MEMORY_ReleaseBuffer("KURUCZ_Free ","dispSecX",pKurucz->dispSecX);
 
     if (pKurucz->KuruczFeno!=NULL)
      {

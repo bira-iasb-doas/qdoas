@@ -31,7 +31,9 @@ struct _Kurucz {
          *fwhmVector[MAX_KURUCZ_FWHM_PARAM],    // wavelength dependence of fwhm
          *fwhmDeriv2[MAX_KURUCZ_FWHM_PARAM],    // wavelength dependence of fwhm
          *VPix,*VSig,*Pcalib,                   // polynomial coefficients computation
+         *lambdaMin,*lambdaMax,
          *pixMid,*VLambda,*VShift,              // display
+         **dispAbsolu,**dispSecX,               // copy of vectors to display for overlapping subwindows
          *fwhm[MAX_KURUCZ_FWHM_PARAM],          // fwhm found for each little window
          *fwhmSigma[MAX_KURUCZ_FWHM_PARAM],     // errors on fwhm
          *fwhmPolySpec[MAX_KURUCZ_FWHM_PARAM];  // polynomial coefficients for building wavelength dependence of fwhm for spectra

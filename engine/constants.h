@@ -299,6 +299,7 @@ enum prjctFilterOutput {
 // --------------------------------
 
 #define NSFP 2
+#define MAX_CALIB_WINDOWS  50
 
 enum _prjctFwhmTypes {
   PRJCT_CALIB_FWHM_TYPE_NONE,
@@ -309,6 +310,12 @@ enum _prjctFwhmTypes {
   PRJCT_CALIB_FWHM_TYPE_VOIGT,
   PRJCT_CALIB_FWHM_TYPE_AGAUSS,
   PRJCT_CALIB_FWHM_TYPE_MAX
+};
+
+enum _prjctCalibWindows {
+	  PRJCT_CALIB_WINDOWS_CONTIGUOUS,
+	  PRJCT_CALIB_WINDOWS_SLIDING,
+	  PRJCT_CALIB_WINDOWS_CUSTOM
 };
 
 // ----------------------

@@ -21,22 +21,22 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #ifndef _MEDIATE_RESPONSE_H_GUARD
 #define _MEDIATE_RESPONSE_H_GUARD
 
-#define MAX_PLOT_SEGMENTS 
+#define MAX_PLOT_SEGMENTS
 
 #include "mediate_types.h"
 
 #if defined(_cplusplus) || defined(__cplusplus)
 extern "C" {
 #endif
-  
+
 //----------------------------------------------------------
 // mediateResponse interface
 //----------------------------------------------------------
-  
+
 //----------------------------------------------------------
 // Plotting oriented interface
 //----------------------------------------------------------
-  
+
 typedef struct plot_data {
   char curveName[80];
   double *x, *y;
@@ -62,9 +62,9 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
 void mediateResponsePlotData(int page, plot_data_t *plotDataArray, int arrayLength,
 			     enum ePlotScaleType type, int forceAutoScaling,
 			     const char *title, const char *xLabel,
-			     const char *yLabel, void *responseHandle);          
-			     
-void mediateResponsePlotImage(int page,const char *imageFile,const char *title,void *responseHandle);			     
+			     const char *yLabel, void *responseHandle);
+
+void mediateResponsePlotImage(int page,const char *imageFile,const char *title,void *responseHandle);
 
 
 //----------------------------------------------------------
