@@ -693,13 +693,7 @@ static inline void get_spikes(struct output_field *this_field, char **spike_list
   write_spikes(*spike_list, 50, pTabFeno->spikes, pTabFeno->NDET);
 }
 
-static inline void omi_get_rejected_pixels(struct output_field *this_field, char **spike_list, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib __attribute__ ((unused))) {
-  FENO *pTabFeno = this_field->get_tabfeno(this_field, indexFenoColumn);
-  *spike_list = malloc(50);
-  write_spikes(*spike_list, 50, pTabFeno->omiRejPixelsQF, pTabFeno->NDET);
-}
-
-static inline void get_omi_rejected_pixels(struct output_field *this_field, char **pixel_list, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib __attribute__ ((unused))) {
+static inline void omi_get_rejected_pixels(struct output_field *this_field, char **pixel_list, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib __attribute__ ((unused))) {
   FENO *pTabFeno = this_field->get_tabfeno(this_field, indexFenoColumn);
   *pixel_list = malloc(50);
   write_spikes(*pixel_list, 50, pTabFeno->omiRejPixelsQF, pTabFeno->NDET);

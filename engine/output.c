@@ -1061,9 +1061,6 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
      case PRJCT_RESULTS_OMI_CONFIGURATION_ID:
        register_field( (struct output_field) { .basic_fieldname = "OMI instrument configuration id", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&get_omi_configuration_id });
        break;
-     case PRJCT_RESULTS_OMI_PIXELS_QF:
-       register_field( (struct output_field) { .basic_fieldname = "OMI rejected pixels based on QF", .memory_type = OUTPUT_STRING, .resulttype = fieldtype, .format = "%-50s", .get_data = (func_void)&omi_get_rejected_pixels });
-       break;
      case PRJCT_RESULTS_UAV_SERVO_BYTE_SENT:
        register_field( (struct output_field) { .basic_fieldname = "UAV servo sent position byte", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#3d", .get_data = (func_void)&get_uav_servo_byte_sent });
        break;
@@ -1287,7 +1284,7 @@ static void register_analysis_output(const PRJCT_RESULTS *pResults, int indexFen
     { (outputRunCalib) ? -1 : PRJCT_RESULTS_SPIKES, // no spike removal in "run calibration" mode
       { .basic_fieldname = "Spike removal", .format = "%-50s", .memory_type = OUTPUT_STRING, .get_data = (func_void) &get_spikes } },
     { (outputRunCalib) ? -1 : PRJCT_RESULTS_OMI_PIXELS_QF,  // no pixel quality flags in "run calibration" mode
-      { .basic_fieldname = "omiRejPixelsQF", .format = "%-50s", .memory_type = OUTPUT_STRING, .get_data = (func_void) &get_omi_rejected_pixels } },
+      { .basic_fieldname = "omiRejPixelsQF", .format = "%-50s", .memory_type = OUTPUT_STRING, .get_data = (func_void) &omi_get_rejected_pixels } },
     { PRJCT_RESULTS_CHI,
       { .basic_fieldname = "Chi", .format = FORMAT_DOUBLE, .memory_type = OUTPUT_DOUBLE,
         .get_data = (outputRunCalib) ? (func_void) &get_chisquare_calib : (func_void) &get_chisquare} },
