@@ -412,9 +412,7 @@ CWProjectTabCalibrationCustomWindowsDialog::CWProjectTabCalibrationCustomWindows
   setWindowTitle("Define calibration subwindows");
 
   QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok|QDialogButtonBox::Cancel);
-  QVBoxLayout *mainLayout = new QVBoxLayout(this);
   QGridLayout *gridLayout=new QGridLayout(this);
-  QLineEdit *lambdaMinEdit,*lambdaMaxEdit;
   char str[80];
   QString tmpStr;
   double calibIntervalMin,calibIntervalMax;
@@ -427,32 +425,30 @@ CWProjectTabCalibrationCustomWindowsDialog::CWProjectTabCalibrationCustomWindows
   gridLayout->addWidget(new QLabel("Lambda Min"),0,1, Qt::AlignRight);
   gridLayout->addWidget(new QLabel("Lambda Max"),0,2, Qt::AlignRight);
 
-  for (int i=0;i<nWindows;i++)
-   {
-   	sprintf(str,"Window %d",i+1);
+  for (int i=0;i<nWindows;i++) {
+    sprintf(str,"Window %d",i+1);
     gridLayout->addWidget(new QLabel(str, this),i+1,0, Qt::AlignRight);
 
     m_customLambdaMinEdit[i]=new QLineEdit(this);
-    m_customLambdaMinEdit[i]->setValidator(new CDoubleFixedFmtValidator(calibIntervalMin, calibIntervalMax, 2, lambdaMinEdit));
+    m_customLambdaMinEdit[i]->setValidator(new CDoubleFixedFmtValidator(calibIntervalMin, calibIntervalMax, 2, m_customLambdaMinEdit[i]));
     m_customLambdaMinEdit[i]->setFixedWidth(60);
     m_customLambdaMinEdit[i]->validator()->fixup(tmpStr.setNum(lambdaMin[i]));
     m_customLambdaMinEdit[i]->setText(tmpStr);
 
     m_customLambdaMaxEdit[i]=new QLineEdit(this);
-    m_customLambdaMaxEdit[i]->setValidator(new CDoubleFixedFmtValidator(calibIntervalMin, calibIntervalMax, 2, lambdaMaxEdit));
+    m_customLambdaMaxEdit[i]->setValidator(new CDoubleFixedFmtValidator(calibIntervalMin, calibIntervalMax, 2, m_customLambdaMaxEdit[i]));
     m_customLambdaMaxEdit[i]->setFixedWidth(60);
     m_customLambdaMaxEdit[i]->validator()->fixup(tmpStr.setNum(lambdaMax[i]));
     m_customLambdaMaxEdit[i]->setText(tmpStr);
 
     gridLayout->addWidget(m_customLambdaMinEdit[i],i+1,1,Qt::AlignRight);
     gridLayout->addWidget(m_customLambdaMaxEdit[i],i+1,2,Qt::AlignRight);
-   }
+  }
 
   m_customLambdaMinEdit[0]->setEnabled(false);
   m_customLambdaMaxEdit[nWindows-1]->setEnabled(false);
 
   gridLayout->addWidget(buttonBox,nWindows+2,0,1,3,Qt::AlignCenter);
-  mainLayout->addLayout(gridLayout);
 
   connect(buttonBox, SIGNAL(accepted()), this, SLOT(accept()));
   connect(buttonBox, SIGNAL(rejected()), this, SLOT(reject()));
