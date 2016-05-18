@@ -12,7 +12,7 @@ QMAKE_CFLAGS += -g -std=gnu99 -Wall -Wextra -pedantic \
 
 QMAKE_CXXFLAGS += -std=c++0x
 
-QDOAS_VERSION=2.111
+QDOAS_VERSION=2.112
 
 win64 {
   QDOAS_VERSION = "$${QDOAS_VERSION}_x86_64"
@@ -42,9 +42,9 @@ bira {
   INSTALL_PREFIX = /bira-iasb/projects/DOAS/Programmes/QDOAS
   QMAKE_CFLAGS_RELEASE -= -g
   QMAKE_CXXFLAGS_RELEASE -= -g
-  QMAKE_LIBDIR += $$INSTALL_PREFIX/lib
   INCLUDEPATH += $$INSTALL_PREFIX/include
-  INCLUDEPATH += /usr/local/include64 # for qwt headers
+  QMAKE_LIBDIR += $$INSTALL_PREFIX/lib_$${QDOAS_VERSION} $$INSTALL_PREFIX/lib_common
+  QMAKE_RPATHDIR += $$INSTALL_PREFIX/lib_$${QDOAS_VERSION} $$INSTALL_PREFIX/lib_common
 }
 
 # portable executable for linux using Linux Standard Base (LSB)
