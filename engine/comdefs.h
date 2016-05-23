@@ -74,7 +74,7 @@ typedef unsigned int MASK,SZ_LEN;
 
 // min and max macros conflict with some c++ headers. In c++ we can
 // use std::min and std::max.
-#ifndef __cplusplus 
+#ifndef __cplusplus
 
 #ifndef max
 #define max(a,b) ( ( (a) >= (b) ) ? (a) : (b) )                                 // returns the maximum between two numbers

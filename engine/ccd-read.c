@@ -122,7 +122,7 @@ typedef struct _ccdData
   int         vipCorrection;                                                    // 1 if a interpixel variability correction has been applied; 0 otherwise
   int         nlCorrection;                                                     // 1 if a nonlinearity correction has been applied; 0 otherwise
   short       nTint;                                                            // number of integration times
-  double      brusagElevation;                                                  // elevation angle for off axis measurements
+  double      trackerElevation;                                                  // elevation angle for off axis measurements
   int         filterUnused;
   int         filterNumber;
   double      headTemperature;
@@ -141,7 +141,7 @@ typedef struct _ccdData
   float       rollAngle;
   struct time startTime;
   struct time endTime;
-  double      mirrorAzimuth;
+  double      trackerAzimuth;
   int         measureType;                                                      // if completed with new data in the future, authorizes compatibility with previous versions
  }
 CCD_DATA;
@@ -608,7 +608,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
            pRecord->ccd.diodes[0]=pRecord->ccd.diodes[1]=pRecord->ccd.diodes[2]=pRecord->ccd.diodes[3]=(float)0.;
            pRecord->ccd.targetElevation=header.targetElevation;
-           pRecord->ccd.targetAzimuth=header.Azimuth;
+           pRecord->ccd.targetAzimuth=header.targetAzimuth;
 
            pRecord->ccd.saturatedFlag=0;
 
@@ -649,7 +649,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
               // This part is not elegant at all but the code should be more consistent in the acquisition program according to the different situations with the pointing mode
 
-              if ((fabs(header.brusagElevation+1.)<EPSILON) && (fabs(header.mirrorAzimuth+1.)<EPSILON))
+              if ((fabs(header.trackerElevation+1.)<EPSILON) && (fabs(header.trackerAzimuth+1.)<EPSILON))
                {
                	pRecord->ccd.targetElevation=header.targetElevation=-1.;
                	pRecord->ccd.targetAzimuth=header.targetAzimuth=-1.;
@@ -660,12 +660,12 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
                {
                	if (fabs(header.targetElevation-header.targetAzimuth)<EPSILON)
                	 {
-               	 	header.targetElevation=floor(header.brusagElevation+0.5);
-               	 	header.targetAzimuth=floor(header.mirrorAzimuth+0.5);
+               	 	header.targetElevation=floor(header.trackerElevation+0.5);
+               	 	header.targetAzimuth=floor(header.trackerAzimuth+0.5);
                	 }
 
                	pRecord->ccd.targetElevation=header.targetElevation;
-               	pRecord->ccd.targetAzimuth=header.targetElevation;
+               	pRecord->ccd.targetAzimuth=header.targetAzimuth;
                }
             }
 
@@ -695,7 +695,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
             pRecord->azimuthViewAngle=
                  ((pRecord->present_datetime.thedate.da_year>2008) ||
                  ((pRecord->present_datetime.thedate.da_year==2008) && (pRecord->present_datetime.thedate.da_mon>4)))?
-                  (float)header.mirrorAzimuth:(float)-1.;
+                  (float)header.targetAzimuth:(float)-1.;                       // trackerAzimuth
 
            pRecord->TimeDec=(double)header.now.ti_hour+header.now.ti_min/60.+header.now.ti_sec/3600.;
            pRecord->localTimeDec=fmod(pRecord->TimeDec+24.+THRD_localShift,(double)24.);

@@ -551,6 +551,8 @@ RC MEMORY_End(void)
    {
    	// Browse remaining objects in the stack
 
+   	DEBUG_Print("Number of remaining objects in the stack : %d\n",memoryStackObjectsNumber);
+
    	if (memoryStackObjectsNumber>0)
    	 {
    	  rc=ERROR_SetLast("MEMORY_End",ERROR_TYPE_DEBUG,ERROR_ID_MEMORY_STACKNOTEMPTY,memoryStackObjectsNumber);

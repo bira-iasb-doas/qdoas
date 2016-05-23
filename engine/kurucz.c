@@ -1162,8 +1162,11 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
     dispAbsolu=pKurucz->dispAbsolu[indexWindow];
     dispSecX=pKurucz->dispSecX[indexWindow];
 
-    memcpy(dispAbsolu,ANALYSE_zeros,sizeof(double)*n_wavel);
-    memcpy(dispSecX,ANALYSE_zeros,sizeof(double)*n_wavel);
+    for (int i=0;i<n_wavel;i++)
+     dispAbsolu[i]=dispSecX[i]=(double)0.;
+
+    // memcpy(dispAbsolu,ANALYSE_zeros,sizeof(double)*n_wavel);
+    // memcpy(dispSecX,ANALYSE_zeros,sizeof(double)*n_wavel);
 
     if (pKuruczOptions->fwhmFit)
       pKURUCZ_fft=&pKurucz->KuruczFeno[indexFeno].fft[indexWindow];
@@ -1241,7 +1244,6 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
           dispSecX[i]=ANALYSE_secX[i]=exp(log(spectrum[i])+ANALYSE_absolu[i]/ANALYSE_tc[i]); // spectrum[i]+solar[i]*ANALYSE_absolu[i]/ANALYSE_tc[i];
          }
        }
-
 
       j0=(double)(SvdPDeb+SvdPFin)*0.5;
       lambda0=(fabs(j0-floor(j0))<(double)0.1)?
@@ -1431,7 +1433,7 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
 
         if (pKuruczOptions->divisionMode==PRJCT_CALIB_WINDOWS_CONTIGUOUS)
          {
-          for (j=pixMin;j<=pixMax;j++)
+          for (j=SvdPDeb;j<=SvdPFin;j++) // !!!!!!!!!!!!!!!!!!! to test
            {
             ANALYSE_absolu[j]+=offset[j]-ANALYSE_secX[j];
             ANALYSE_secX[j]=offset[j];
@@ -2532,4 +2534,5 @@ void KURUCZ_Free(void)
 
     memset(pKurucz,0,sizeof(KURUCZ));
    }
+
  }
