@@ -2113,6 +2113,8 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
    Win_size=(double)(Lambda_max-Lambda_min)/Nb_Win;
   else if (pKuruczOptions->divisionMode==PRJCT_CALIB_WINDOWS_SLIDING)
    Win_size=pKuruczOptions->windowSize;
+  else
+   Win_size=(double)0.;
 
   for (indexWindow=0;indexWindow<Nb_Win;indexWindow++)
    {
