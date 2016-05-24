@@ -300,8 +300,8 @@ RC MATRIX_Load(const char *fileName,MATRIX_OBJECT *pMatrix,
   else {
     // The function has to determine the number of lines and columns
     if (!nl || !nc) {
-      char c;
-      while (fscanf(fp, " %1[*;]%*[^\n]\n", &c) == 1) {
+      char c[2];
+      while (fscanf(fp, " %1[*;]%*[^\n]\n", c) == 1) {
         // skip spaces and comment lines (assumed to start with character ';' or '*')
       }
 
@@ -346,9 +346,8 @@ RC MATRIX_Load(const char *fileName,MATRIX_OBJECT *pMatrix,
       fseek(fp,0L,SEEK_SET);
 
       for (i=0; i<nl && !rc;) {
-
-        char c;
-        while (fscanf(fp, " %1[*;]%*[^\n]\n", &c) == 1) {
+        char c[2];
+        while (fscanf(fp, " %1[*;]%*[^\n]\n", c) == 1) {
           // skip spaces and comment lines (assumed to start with character ';' or '*')
         }
 

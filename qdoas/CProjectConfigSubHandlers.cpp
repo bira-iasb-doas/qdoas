@@ -481,7 +481,7 @@ bool CProjectCalibrationSubHandler::start(const QXmlAttributes &atts)
 
 bool CProjectCalibrationSubHandler::start(const QString &element, const QXmlAttributes &atts)
 {
-	 QString str;
+  QString str;
   // sub element of calibration
 
   if (element == "line") {
@@ -538,28 +538,26 @@ bool CProjectCalibrationSubHandler::start(const QString &element, const QXmlAttr
     m_calibration->windowSize = atts.value("size").toDouble();
     m_calibration->subWindows = atts.value("intervals").toInt();
 
-    str=atts.value("custom_windows");
-    char *ptr=str.toAscii().data();
-    int i;
+    const QByteArray& ascii=atts.value("custom_windows").toAscii();
+    const char *ptr = ascii.data();
+    int i=0;
     double lambdaMin,lambdaMax;
 
     m_calibration->customLambdaMin[0]=m_calibration->wavelengthMin;
     m_calibration->customLambdaMax[m_calibration->subWindows-1]=m_calibration->wavelengthMax;
 
-    while ((ptr!=NULL) && (i<m_calibration->subWindows))
-     {
-     	sscanf(ptr,"%lf-%lf",&lambdaMin,&lambdaMax);
-     	if (i>0)
-     	 m_calibration->customLambdaMin[i]=lambdaMin;
-     	if (i<m_calibration->subWindows-1)
-     	 m_calibration->customLambdaMax[i]=lambdaMax;
+    while ((ptr!=NULL) && (i<m_calibration->subWindows)) {
+      sscanf(ptr,"%lf-%lf",&lambdaMin,&lambdaMax);
+      if (i>0)
+        m_calibration->customLambdaMin[i]=lambdaMin;
+      if (i<m_calibration->subWindows-1)
+        m_calibration->customLambdaMax[i]=lambdaMax;
 
-     	if ((ptr=strchr(ptr,','))!=NULL)
-     	 ptr++;
+      if ((ptr=strchr(ptr,','))!=NULL)
+        ptr++;
 
-     	i++;
-     }
-
+      i++;
+    }
 
     str = atts.value("division");
     if (str == "sliding")
