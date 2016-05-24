@@ -2087,8 +2087,8 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
       ((pKurucz->VShift=(double *)MEMORY_AllocDVector(__func__,"VShift",1,Nb_Win))==NULL) ||         // shift applied on pixels
       ((pKurucz->VSig=(double *)MEMORY_AllocDVector(__func__,"VSig",1,Nb_Win))==NULL) ||             // error on shift applied on pixels
       ((pKurucz->VPix=(double *)MEMORY_AllocDVector(__func__,"VPix",1,Nb_Win))==NULL) ||             // pixels with shift correction
-      ((pKurucz->lambdaMin=(double *)MEMORY_AllocDVector(__func__,"lambdaMin",1,Nb_Win))==NULL) ||         // limits of the windows
-      ((pKurucz->lambdaMax=(double *)MEMORY_AllocDVector(__func__,"lambdaMax",1,Nb_Win))==NULL) ||         // limits of the windows
+      ((pKurucz->lambdaMin=(double *)MEMORY_AllocDVector(__func__,"lambdaMin",0,Nb_Win-1))==NULL) ||         // limits of the windows
+      ((pKurucz->lambdaMax=(double *)MEMORY_AllocDVector(__func__,"lambdaMax",0,Nb_Win-1))==NULL) ||         // limits of the windows
       ((pKurucz->NIter=(int *)MEMORY_AllocBuffer(__func__,"NIter",Nb_Win,sizeof(int),0,MEMORY_TYPE_INT))==NULL) ||
       (hFilterFlag &&
        (((pKurucz->lambdaF=(double *)MEMORY_AllocDVector(__func__,"lambdaF",0,n_wavel+2*pKurucz->solarFGap-1))==NULL) ||
@@ -2436,9 +2436,9 @@ void KURUCZ_Free(void)
     if (pKurucz->pixMid!=NULL)
      MEMORY_ReleaseDVector("KURUCZ_Free ","pixMid",pKurucz->pixMid,1);
     if (pKurucz->lambdaMin!=NULL)
-     MEMORY_ReleaseDVector("KURUCZ_Free ","lambdaMin",pKurucz->lambdaMin,1);
+     MEMORY_ReleaseDVector("KURUCZ_Free ","lambdaMin",pKurucz->lambdaMin,0);
     if (pKurucz->lambdaMax!=NULL)
-     MEMORY_ReleaseDVector("KURUCZ_Free ","lambdaMax",pKurucz->lambdaMax,1);
+     MEMORY_ReleaseDVector("KURUCZ_Free ","lambdaMax",pKurucz->lambdaMax,0);
     if (pKurucz->NIter!=NULL)
      MEMORY_ReleaseBuffer("KURUCZ_Free ","NIter",pKurucz->NIter);
 
