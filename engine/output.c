@@ -86,6 +86,7 @@
 #include "winthrd.h"
 #include "zenithal.h"
 
+#include "tropomi_read.h"
 #include "gdp_bin_read.h"
 #include "spectrum_files.h"
 
