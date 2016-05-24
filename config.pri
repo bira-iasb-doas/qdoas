@@ -140,3 +140,9 @@ thomas {
   QMAKE_LIBDIR += /home/thomasd/lib
   QMAKE_RPATHDIR += /home/thomasd/lib
 }
+
+asan { # use 'CONFIG+=asan' to build with adress sanitizer support
+  QMAKE_CXXFLAGS += -fsanitize=address -fno-omit-frame-pointer
+  QMAKE_CFLAGS += -fsanitize=address -fno-omit-frame-pointer
+  QMAKE_LFLAGS += -fsanitize=address
+}
