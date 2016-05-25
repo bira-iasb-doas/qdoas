@@ -149,10 +149,10 @@ RC AsciiSkip(ENGINE_CONTEXT *pEngineContext,FILE *specFp,int nSkip)
     recordCount=0;
     itemCount=0;
 
-    char c;
+    char c[2];
     int n_scan = 0;
     while (recordCount<nSkip
-           && (n_scan = fscanf(specFp, " %1[^*;\n]%*[^\n]", &c) ) != EOF ) {
+           && (n_scan = fscanf(specFp, " %1[^*;#\n]%*[^\n]", c) ) != EOF ) {
       if (n_scan == 1) {
         // no * or ; at start -> line is (part of) a record
         if (pInstr->ascii.format==PRJCT_INSTR_ASCII_FORMAT_LINE) {
@@ -198,7 +198,6 @@ RC ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   // Declarations
   int itemCount,startCount,maxCount;                                            // counters
   PRJCT_INSTRUMENTAL *pInstr;                                                   // pointer to the instrumental part of the pEngineContext structure
-  ANALYSIS_REF *pRef;
   double tempValue;
   int nc;
   RC rc;                                                                        // return code
@@ -210,7 +209,6 @@ RC ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
   pEngineContext->recordNumber=0;
   pInstr=&pEngineContext->project.instrumental;
-  pRef=&pEngineContext->analysisRef;
   startCount=pInstr->ascii.szaSaveFlag+pInstr->ascii.azimSaveFlag+pInstr->ascii.elevSaveFlag+pInstr->ascii.timeSaveFlag+pInstr->ascii.dateSaveFlag;
   maxCount=NDET[0];
   rc=ERROR_ID_NO;
@@ -227,16 +225,16 @@ RC ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
     fseek(specFp,0L,SEEK_SET);
     itemCount=0;
 
-    char c;
+    char c[2];
     int n_scan = 0;
-    while ( (n_scan = fscanf(specFp, " %1[^*;#\n]", &c) ) != EOF) {
+    while ( (n_scan = fscanf(specFp, " %1[^*;#\n]", c) ) != EOF) {
       if (n_scan == 0) {
         // commment, ignore and scan ahead until end of line
         fscanf(specFp, "%*[^\n]");
         continue;
       }
       // no * or ; at start -> line is (part of) a record
-      ungetc(c, specFp); // put back character we read
+      ungetc(c[0], specFp); // put back character we read
       if (pInstr->ascii.format==PRJCT_INSTR_ASCII_FORMAT_LINE) {
         // Each line of the file is a spectrum record
         pEngineContext->recordNumber++;
@@ -360,11 +358,11 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
     // ------------------------------------------
 
     int n_scan = 0;
-    char c;
+    char c[2];
     if (pInstr->ascii.format==PRJCT_INSTR_ASCII_FORMAT_LINE) {
 
       // skip comment lines:
-      while (fscanf(specFp, COMMENT_LINE, &c) == 1);
+      while (fscanf(specFp, COMMENT_LINE, c) == 1);
 
       // Read the solar zenith angle
       if (zmFlag) {
@@ -435,7 +433,7 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
         asciiLastDataSet=ndataSet;
 
         for (i=0;i<asciiMatrix.nl;i++) {
-          while (fscanf(specFp, COMMENT_LINE, &c) == 1);
+          while (fscanf(specFp, COMMENT_LINE, c) == 1);
 
           // Matrix mode
           for (indexColumn=0; indexColumn <asciiMatrix.nc; indexColumn++) {
@@ -485,21 +483,21 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
       // Read the solar zenith angle
 
       if (zmFlag) {
-        while (fscanf(specFp, COMMENT_LINE, &c) == 1);
+        while (fscanf(specFp, COMMENT_LINE, c) == 1);
         if (fscanf(specFp,NEXT_DOUBLE,&pRecordInfo->Zm) !=1
             || !line_ends(specFp) )
           return ERROR_ID_FILE_END;
       }
 
       if (azimFlag) {
-        while (fscanf(specFp, COMMENT_LINE, &c) == 1);
+        while (fscanf(specFp, COMMENT_LINE, c) == 1);
         if (fscanf(specFp,NEXT_FLOAT,&pRecordInfo->azimuthViewAngle)!=1
             || !line_ends(specFp) )
           return ERROR_ID_FILE_END;
       }
 
       if (elevFlag) {
-        while (fscanf(specFp, COMMENT_LINE, &c) == 1);
+        while (fscanf(specFp, COMMENT_LINE, c) == 1);
         if (fscanf(specFp,NEXT_FLOAT,&pRecordInfo->elevationViewAngle)!=1
             || !line_ends(specFp) )
           return ERROR_ID_FILE_END;
@@ -507,7 +505,7 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
 
       // Read the measurement date
       if (dateSaveFlag) {
-        while (fscanf(specFp, COMMENT_LINE, &c) == 1);
+        while (fscanf(specFp, COMMENT_LINE, c) == 1);
         if (fscanf(specFp,NEXT_DATE,&day,&mon,&year) != 3
             || !line_ends(specFp) )
           return ERROR_ID_FILE_END;
@@ -515,7 +513,7 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
 
       // Read the measurement time
       if (timeFlag) {
-        while (fscanf(specFp, COMMENT_LINE, &c) == 1);
+        while (fscanf(specFp, COMMENT_LINE, c) == 1);
         if (fscanf(specFp,NEXT_DOUBLE,&pRecordInfo->TimeDec) != 1
             || !line_ends(specFp) )
           return ERROR_ID_FILE_END;
@@ -525,7 +523,7 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
       if (lambdaFlag) {
         // wavelength and spectrum
         for (i=0; i<n_wavel;) {
-          if (fscanf(specFp, COMMENT_LINE, &c) == 1)
+          if (fscanf(specFp, COMMENT_LINE, c) == 1)
             continue;
           // read two doubles before end of line:
           if (fscanf(specFp, NEXT_DOUBLE, &lambda[i]) != 1 || line_ends(specFp) )
@@ -537,7 +535,7 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
       } else {
         // just spectrum
         for (i=0; i<n_wavel; ) {
-          if (fscanf(specFp, COMMENT_LINE, &c) == 1)
+          if (fscanf(specFp, COMMENT_LINE, c) == 1)
             continue;
           if ((fscanf(specFp,NEXT_DOUBLE,&spectrum[i]) != 1)
               || (!line_ends(specFp) && !feof(specFp)) )

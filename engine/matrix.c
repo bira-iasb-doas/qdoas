@@ -66,6 +66,7 @@
 // following characters that are not part of a number and not a
 // newline:
 #define NEXT_DOUBLE "%lf%*[^0-9.\n-]"
+#define COMMENT_LINE " %1[*;#]%*[^\n]\n"
 
 // ==================
 // BUFFERS PROCESSING
@@ -301,8 +302,8 @@ RC MATRIX_Load(const char *fileName,MATRIX_OBJECT *pMatrix,
     // The function has to determine the number of lines and columns
     if (!nl || !nc) {
       char c[2];
-      while (fscanf(fp, " %1[*;]%*[^\n]\n", c) == 1) {
-        // skip spaces and comment lines (assumed to start with character ';' or '*')
+      while (fscanf(fp, COMMENT_LINE, c) == 1) {
+        // skip spaces and comment lines (assumed to start with character ';', '#' or '*')
       }
 
       // Determine the number of columns
@@ -347,8 +348,8 @@ RC MATRIX_Load(const char *fileName,MATRIX_OBJECT *pMatrix,
 
       for (i=0; i<nl && !rc;) {
         char c[2];
-        while (fscanf(fp, " %1[*;]%*[^\n]\n", c) == 1) {
-          // skip spaces and comment lines (assumed to start with character ';' or '*')
+        while (fscanf(fp, COMMENT_LINE, c) == 1) {
+          // skip spaces and comment lines (assumed to start with character ';', '#' or '*')
         }
 
         // read first column
