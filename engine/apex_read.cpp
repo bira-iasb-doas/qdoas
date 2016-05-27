@@ -1,6 +1,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <cassert>
 
 #include "apex_read.h"
 
@@ -24,13 +25,13 @@ static size_t col_dim; // cross-track
 
 static vector<vector<double> > load_reference_radiances(const NetCDFFile& reference_file) {
   vector<vector<double> > radiances(reference_file.dimLen("col_dim"));
-  size_t spectral_dim = reference_file.dimLen("spectral_dim");
+  const size_t reference_spectral_dim = reference_file.dimLen("spectral_dim");
 
   for (size_t i=0; i<radiances.size(); ++i) {
     vector<double>& rad = radiances[i];
     rad.resize(spectral_dim);
     const size_t start[] = {i, 0};
-    const size_t count[] = {1, spectral_dim};
+    const size_t count[] = {1, reference_spectral_dim};
     reference_file.getVar("reference_radiance", start, count, rad.data());
   }
   return radiances;
@@ -87,8 +88,9 @@ int apex_set(ENGINE_CONTEXT *pEngineContext) {
 int apex_read(ENGINE_CONTEXT *pEngineContext, int record) {
   int rc = 0;
 
-  int i_alongtrack = (record - 1) / col_dim;
-  int i_crosstrack = (record - 1) % col_dim;
+  assert(record > 1);
+  const size_t i_alongtrack = (record - 1) / col_dim;
+  const size_t i_crosstrack = (record - 1) % col_dim;
 
   const size_t start[] = {i_alongtrack, i_crosstrack, 0};
   const size_t count[] = {1, 1, spectral_dim};
@@ -110,25 +112,23 @@ int apex_get_reference(const char *filename, int i_crosstrack, double *lambda, d
   auto& radiances = reference_radiances[filename];
   auto& lambda_ref = reference_wavelengths[filename];
 
-  size_t reference_spectral_dim = 0;
-  size_t reference_col_dim = 0;
   if (!radiances.size() ){
     try {
       NetCDFFile reference_file(filename);
       radiances = load_reference_radiances(reference_file);
-      reference_spectral_dim = reference_file.dimLen("spectral_dim");
-      reference_col_dim = reference_file.dimLen("col_dim");
-      lambda_ref.resize(spectral_dim);
-      size_t start[] = {0};
-      reference_file.getVar("reference_wavelength", start, &spectral_dim, lambda_ref.data() );
+      lambda_ref.resize(reference_file.dimLen("spectral_dim"));
+      const size_t start[] = {0};
+      const size_t count[] = {lambda_ref.size()};
+      reference_file.getVar("reference_wavelength", start, count, lambda_ref.data() );
     } catch(std::runtime_error& e) {
       return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF,
                            (string {"Error reading reference spectra from file '"} + filename + "'").c_str() );
     }
   }
-  if (reference_spectral_dim != spectral_dim || reference_col_dim != col_dim) {
+
+  if (radiances.size() != col_dim || radiances.at(0).size() != spectral_dim) {
     return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF,
-                         (string { "reference file '" } + filename + "' spectral or column dimension don't match dimensions from " + init_filename).c_str());
+                         (string { "reference file '" } + filename + "' spectral or column dimension don't match dimensions from '" + init_filename + "'").c_str());
   }
   *n_wavel = spectral_dim;
   for (size_t i=0; i<spectral_dim; ++i) {
