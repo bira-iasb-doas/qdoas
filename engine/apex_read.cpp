@@ -88,7 +88,7 @@ int apex_set(ENGINE_CONTEXT *pEngineContext) {
 int apex_read(ENGINE_CONTEXT *pEngineContext, int record) {
   int rc = 0;
 
-  assert(record > 1);
+  assert(record > 0);
   const size_t i_alongtrack = (record - 1) / col_dim;
   const size_t i_crosstrack = (record - 1) % col_dim;
 
