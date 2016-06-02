@@ -130,6 +130,8 @@ bool CSlitFunctionSubHandler::start(const QXmlAttributes &atts)
     m_function->type = SLIT_TYPE_ERF;
   else if (str == "agauss")
     m_function->type = SLIT_TYPE_AGAUSS;
+  else if (str == "supergauss")
+    m_function->type = SLIT_TYPE_SUPERGAUSS;
   else if (str == "boxcarapod")
     m_function->type = SLIT_TYPE_APOD;
   else if (str == "nbsapod")
@@ -180,7 +182,8 @@ bool CSlitFunctionSubHandler::start(const QString &element, const QXmlAttributes
 
     m_function->gaussian.fwhm = atts.value("fwhm").toDouble();
     m_function->gaussian.wveDptFlag=(atts.value("wveDptFlag") == "true") ? 1 : 0;
-    if (!str.isEmpty())
+
+   if (!str.isEmpty())
      {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(m_function->gaussian.filename))
@@ -312,6 +315,39 @@ bool CSlitFunctionSubHandler::start(const QString &element, const QXmlAttributes
 	    }
 	   else
 	    strcpy(m_function->agauss.filename2 ,"\0");
+  }
+
+  else if (element == "supergauss") {
+
+    QString str = atts.value("file");
+    QString str2 = atts.value("file2");
+
+    m_function->supergauss.fwhm = atts.value("fwhm").toDouble();
+    m_function->supergauss.exponential = atts.value("expTerm").toDouble();
+
+    m_function->supergauss.wveDptFlag=(atts.value("wveDptFlag") == "true") ? 1 : 0;
+
+    if (!str.isEmpty())
+     {
+      str = m_master->pathExpand(str);
+      if (str.length() < (int)sizeof(m_function->supergauss.filename))
+	      strcpy(m_function->supergauss.filename, str.toAscii().data());
+      else
+	      return postErrorMessage("Slit Function Filename too long");
+	    }
+	   else
+	    strcpy(m_function->supergauss.filename ,"\0");
+
+    if (!str2.isEmpty())
+     {
+      str2 = m_master->pathExpand(str2);
+      if (str2.length() < (int)sizeof(m_function->supergauss.filename2))
+	      strcpy(m_function->supergauss.filename2, str2.toAscii().data());
+      else
+	      return postErrorMessage("Slit Function Filename too long");
+	    }
+	   else
+	    strcpy(m_function->supergauss.filename2 ,"\0");
   }
   else if (element == "boxcarapod") {
 

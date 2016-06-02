@@ -97,6 +97,14 @@ extern "C" {
   	 char filename2[FILENAME_BUFFER_LENGTH];
   };
 
+  struct slit_supergauss {
+  	 int wveDptFlag;
+  	 double fwhm;
+  	 double exponential;
+  	 char filename[FILENAME_BUFFER_LENGTH];
+  	 char filename2[FILENAME_BUFFER_LENGTH];
+  };
+
   struct slit_apod {
     double resolution;
     double phase;
@@ -122,6 +130,7 @@ extern "C" {
     struct slit_voigt voigt;
     struct slit_error error;
     struct slit_agauss agauss;
+    struct slit_supergauss supergauss;
     struct slit_apod boxcarapod;
     struct slit_apod nbsapod;
     struct slit_file gaussianfile;

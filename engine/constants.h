@@ -298,7 +298,7 @@ enum prjctFilterOutput {
 // Calibration tab page description
 // --------------------------------
 
-#define NSFP 2
+#define NSFP 3
 #define MAX_CALIB_WINDOWS  50
 
 enum _prjctFwhmTypes {
@@ -309,6 +309,7 @@ enum _prjctFwhmTypes {
   PRJCT_CALIB_FWHM_TYPE_INVPOLY,
   PRJCT_CALIB_FWHM_TYPE_VOIGT,
   PRJCT_CALIB_FWHM_TYPE_AGAUSS,
+  PRJCT_CALIB_FWHM_TYPE_SUPERGAUSS,
   PRJCT_CALIB_FWHM_TYPE_MAX
 };
 
@@ -639,6 +640,7 @@ enum _slitTypes {
   SLIT_TYPE_VOIGT,                                                           // Voigt profile function
   SLIT_TYPE_ERF,                                                             // error function (convolution of a Gaussian and a boxcar)
   SLIT_TYPE_AGAUSS,                                                          // asymmetric gaussian line shape
+  SLIT_TYPE_SUPERGAUSS,                                                      // super gaussian line shape
   SLIT_TYPE_APOD,                                                            // apodisation function (used with FTS)
   SLIT_TYPE_APODNBS,                                                         // apodisation function (Norton Beer Strong function)
   SLIT_TYPE_MAX

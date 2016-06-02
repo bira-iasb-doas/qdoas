@@ -170,6 +170,7 @@ const char *XSCONV_slitTypes[SLIT_TYPE_MAX]=
   "Voigt",
   "Error function (FTS)",
   "Asymmetric gaussian",
+  "Super gaussian",
   "Boxcar (FTS)",
   "Norton Beer Strong (FTS)",
 //  "Gaussian, wavelength dependent",
@@ -706,7 +707,7 @@ RC XSCONV_LoadSlitFunction(MATRIX_OBJECT *pSlitXs,MATRIX_OBJECT *pSlitXs2,SLIT *
      	// use sigma2=fwhm/2 because in the S/W user manual sigma=fwhm
 
       sigma2=pSlit->slitParam*0.5;
-      a=sigma2/sqrt(log(2.));
+      a=((slitType!=SLIT_TYPE_SUPERGAUSS) || (fabs(pSlit->slitParam2)<EPSILON))?sigma2/sqrt(log(2.)):sigma2/pow(log(2.),(double)1./pSlit->slitParam2);   // to check with Michelv
       delta=pSlit->slitParam2*0.5;
 
       if (slitType==SLIT_TYPE_GAUSS)
@@ -735,6 +736,10 @@ RC XSCONV_LoadSlitFunction(MATRIX_OBJECT *pSlitXs,MATRIX_OBJECT *pSlitXs2,SLIT *
          {
          	a2=(x<(double)0.)?a*(1.-pSlit->slitParam2):a*(1.+pSlit->slitParam2);
           pSlitXs->matrix[1][i]=(double)exp(-(x*x)/(a2*a2));
+         }
+        else if (slitType==SLIT_TYPE_SUPERGAUSS)
+         {
+          pSlitXs->matrix[1][i]=(double)exp(-pow(fabs(x/a),pSlit->slitParam2));
          }
         else if (slitType==SLIT_TYPE_GAUSS)
          pSlitXs->matrix[1][i]=(double)invapi*exp(-(x*x)/(a*a));
@@ -774,7 +779,8 @@ RC XSCONV_LoadSlitFunction(MATRIX_OBJECT *pSlitXs,MATRIX_OBJECT *pSlitXs2,SLIT *
 // {
 // 	FILE *fp;
 // 	fp=fopen("slit.dat","w+t");
-// 	for (i=0;i<pSlitXs->nl;i++)
+// 	// for (i=0;i<pSlitXs->nl;i++)
+// 	for (i=0;(i<slitSize) && !rc;i++)
 // 	 fprintf(fp,"%g %g %g\n",pSlitXs->matrix[0][i],pSlitXs->matrix[1][i],pSlitXs->deriv2[1][i]);
 // 	fclose(fp);
 // }
@@ -997,7 +1003,8 @@ RC GetNewF(double *pNewF,
 
   newF=(double)0.;
   sigma2=(double)slitParam*0.5;                                                 // use sigma2=fwhm/2 because in the S/W user manual sigma=fwhm
-  a=(double)sigma2/sqrt(log(2.));
+  a=((slitType!=SLIT_TYPE_SUPERGAUSS) || (fabs(slitParam2)<EPSILON))?sigma2/sqrt(log(2.)):sigma2/pow(log(2.),(double)1./slitParam2);   // to check with Michelv
+  //a=(double)sigma2/sqrt(log(2.));
   delta=(double)slitParam2*0.5;
 
   rc=ERROR_ID_NO;
@@ -1023,6 +1030,8 @@ RC GetNewF(double *pNewF,
     a2=(dist<(double)0.)?(double)a*(1.-slitParam2):(double)a*(1.+slitParam2);
     newF=(double)exp(-(dist*dist)/(a2*a2));
    }
+  else if (slitType==SLIT_TYPE_SUPERGAUSS)
+    newF=(double)exp(-pow(fabs(dist/a),slitParam2));         // !!!!
   else if (slitType==SLIT_TYPE_VOIGT)
    newF=(double)Voigtx(dist/a,slitParam2)*norm1;
   else if (slitType==SLIT_TYPE_FILE)
@@ -1109,7 +1118,7 @@ RC XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLam
 
   // Wavelength dependent functions that require two parameters
 
-  if (wveDptFlag && ((slitType==SLIT_TYPE_FILE) || (slitType==SLIT_TYPE_ERF) || (slitType==SLIT_TYPE_VOIGT) || (slitType==SLIT_TYPE_AGAUSS)))
+  if (wveDptFlag && ((slitType==SLIT_TYPE_FILE) || (slitType==SLIT_TYPE_ERF) || (slitType==SLIT_TYPE_VOIGT) || (slitType==SLIT_TYPE_AGAUSS) || (slitType==SLIT_TYPE_SUPERGAUSS)))
    {
     slitLambda2=pSlit2->matrix[0];
     slitVector2=pSlit2->matrix[1];
@@ -1326,7 +1335,7 @@ RC XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLam
         // Convolution
 
         if (!(rc=GetNewF(&newF,slitType,slitLambda,slitVector,slitDeriv2,slitNDET,
-                          dist,slitParam,slitParam2,(xsnewIndex==500)?(double)0.:xshrLambda[indexNew]-xshrLambda[indexOld])))
+                          dist,slitParam,slitParam2,xshrLambda[indexNew]-xshrLambda[indexOld])))
          {
           h=(xshrLambda[indexNew]-xshrLambda[indexOld])*0.5;  // use trapezium formula for surface computation (B+b)*H/2
           crossFIntegral+=(xshrVector[indexOld]*oldF+xshrVector[indexNew]*newF)*h;
@@ -1336,6 +1345,7 @@ RC XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLam
 
         indexOld=indexNew++;
        }
+
      }
 
     // Case 2 : the resolution of slit function is better than the resolution of cross section => cross section interpolation
@@ -1577,6 +1587,9 @@ RC XsconvRebuildSlitFunction(double *lambda,double *slit,int nslit,SLIT *pSlit,M
 
   // Initialization
 
+  sigma2=pSlit->slitParam*0.5;
+  a=((pSlit->slitType!=SLIT_TYPE_SUPERGAUSS) || (fabs(pSlit->slitParam2)<EPSILON))?sigma2/sqrt(log(2.)):sigma2/pow(log(2.),(double)1./pSlit->slitParam2);   // to check with Michelv
+  // a=sigma2/sqrt(log(2.));
   rc=ERROR_ID_NO;
 
   // Build deconvolution slit function
@@ -1593,11 +1606,16 @@ RC XsconvRebuildSlitFunction(double *lambda,double *slit,int nslit,SLIT *pSlit,M
    for (i=0,sigma2=pSlit->slitParam*0.5,a=(double)sigma2/sqrt(log(2.)),delta=(double)pSlit->slitParam2*0.5;i<nslit;i++)
     slit[i]=(double)(ERF_GetValue((lambda[i]+delta)/a)-ERF_GetValue((lambda[i]-delta)/a))/(4.*delta);
 
+  else if (pSlit->slitType==SLIT_TYPE_SUPERGAUSS)
+   for (i=0,slitParam=pSlit->slitParam;i<nslit;i++)
+    slit[i]=(double)exp(-pow(fabs(lambda[i]/a),pSlit->slitParam2));           // normalization ????
+
+
   else if (pSlit->slitType==SLIT_TYPE_AGAUSS)
     for (i=0;i<nslit;i++)
      {
-     	a2=(lambda[i]<(double)0.)?pSlit->slitParam*(1.-pSlit->slitParam2):pSlit->slitParam*(1+pSlit->slitParam2);
-      slit[i]=(double)exp(-4.*log(2.)*(lambda[i]*lambda[i])/(a2*a2));
+     	a2=(lambda[i]<(double)0.)?a*(1.-pSlit->slitParam2):a*(1+pSlit->slitParam2);
+      slit[i]=(double)exp(-4.*log(2.)*(lambda[i]*lambda[i])/(a2*a2));                                                 // normalization -4*log(2.) is correct ????
      }
 
   else // slit type == SLIT_TYPE_FILE

@@ -753,6 +753,10 @@ void setMediateProjectCalibration(PRJCT_KURUCZ *pEngineCalibration,CALIB_FENO *p
       pEngineCalibration->fwhmType=SLIT_TYPE_AGAUSS;
       break;
       // ---------------------------------------------------------------------------
+    case PRJCT_CALIB_FWHM_TYPE_SUPERGAUSS :
+      pEngineCalibration->fwhmType=SLIT_TYPE_SUPERGAUSS;
+      break;
+      // ---------------------------------------------------------------------------
     default :
       pEngineCalibration->fwhmType=SLIT_TYPE_GAUSS;
       break;

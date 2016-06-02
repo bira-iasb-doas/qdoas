@@ -114,7 +114,7 @@ void writeSlitFunction(FILE *fp, size_t nIndent, const mediate_slit_function_t *
   switch (d->type) {
   case SLIT_TYPE_NONE:
     fprintf(fp, "\"none\"");
-    break;  	
+    break;
   case SLIT_TYPE_FILE:
     fprintf(fp, "\"file\"");
     break;
@@ -132,6 +132,9 @@ void writeSlitFunction(FILE *fp, size_t nIndent, const mediate_slit_function_t *
     break;
   case SLIT_TYPE_AGAUSS:
     fprintf(fp, "\"agauss\"");
+    break;
+  case SLIT_TYPE_SUPERGAUSS:
+    fprintf(fp, "\"supergauss\"");
     break;
   case SLIT_TYPE_APOD:
     fprintf(fp, "\"boxcarapod\"");
@@ -161,6 +164,9 @@ void writeSlitFunction(FILE *fp, size_t nIndent, const mediate_slit_function_t *
   tmpStr = pathMgr->simplifyPath(QString(d->agauss.filename));
   tmpStr2 = pathMgr->simplifyPath(QString(d->agauss.filename2));
   fprintf(fp, "%s  <agauss fwhm=\"%.3f\" asym=\"%.3f\" wveDptFlag=\"%s\" file=\"%s\" file2=\"%s\" />\n", buf, d->agauss.fwhm, d->agauss.asym,(d->agauss.wveDptFlag ? sTrue : sFalse),tmpStr.toAscii().data(), tmpStr2.toAscii().data());
+  tmpStr = pathMgr->simplifyPath(QString(d->supergauss.filename));
+  tmpStr2 = pathMgr->simplifyPath(QString(d->supergauss.filename2));
+  fprintf(fp, "%s  <supergauss fwhm=\"%.3f\" expTerm=\"%.3f\" wveDptFlag=\"%s\" file=\"%s\" file2=\"%s\" />\n", buf, d->supergauss.fwhm, d->supergauss.exponential,(d->supergauss.wveDptFlag ? sTrue : sFalse),tmpStr.toAscii().data(), tmpStr2.toAscii().data());
   fprintf(fp, "%s  <boxcarapod resolution=\"%.3f\" phase=\"%.3f\" />\n", buf,
 	  d->boxcarapod.resolution, d->boxcarapod.phase);
   fprintf(fp, "%s  <nbsapod resolution=\"%.3f\" phase=\"%.3f\" />\n", buf,

@@ -724,7 +724,7 @@ RC ShiftVector(const double *lambda, double *source, const double *deriv, double
 
     if (pKuruczOptions->fwhmType==SLIT_TYPE_INVPOLY)
      slitParam2=(double)pKuruczOptions->invPolyDegree;
-    else if (((pKuruczOptions->fwhmType==SLIT_TYPE_ERF) || (pKuruczOptions->fwhmType==SLIT_TYPE_AGAUSS) || (pKuruczOptions->fwhmType==SLIT_TYPE_VOIGT)) && (Feno->indexFwhmParam[1]!=ITEM_NONE))
+    else if (((pKuruczOptions->fwhmType==SLIT_TYPE_ERF) || (pKuruczOptions->fwhmType==SLIT_TYPE_AGAUSS) || (pKuruczOptions->fwhmType==SLIT_TYPE_SUPERGAUSS) || (pKuruczOptions->fwhmType==SLIT_TYPE_VOIGT)) && (Feno->indexFwhmParam[1]!=ITEM_NONE))
      slitParam2=(TabCross[Feno->indexFwhmParam[1]].FitParam!=ITEM_NONE)?(double)Param[TabCross[Feno->indexFwhmParam[1]].FitParam]:(double)TabCross[Feno->indexFwhmParam[1]].InitParam;
     else
      slitParam2=(double)0.;
@@ -833,7 +833,7 @@ RC ShiftVector(const double *lambda, double *source, const double *deriv, double
        	      for (i=1;i<slitXs.nc;i++)
                 rc=SPLINE_Deriv2(slitXs.matrix[0]+shiftIndex,slitXs.matrix[1]+shiftIndex,slitXs.deriv2[i]+shiftIndex,slitXs.nl-shiftIndex,__func__);
             }
-          } else if ((slitType==SLIT_TYPE_VOIGT) || (slitType==SLIT_TYPE_AGAUSS) || (slitType==SLIT_TYPE_INVPOLY)) {
+          } else if ((slitType==SLIT_TYPE_VOIGT) || (slitType==SLIT_TYPE_AGAUSS) || (pKuruczOptions->fwhmType==SLIT_TYPE_SUPERGAUSS) || (slitType==SLIT_TYPE_INVPOLY)) {
             memset(&slitOptions,0,sizeof(SLIT));
 
             slitOptions.slitType=slitType;
@@ -4213,7 +4213,7 @@ RC ANALYSE_LoadSlit(const PRJCT_SLIT *pSlit,int kuruczFlag)
         rc=MATRIX_Load(pSlitFunction->slitFile,&ANALYSIS_slit, 0, 0, 0., 0., 1, 0, __func__);
     }
 
-    if (pSlitFunction->slitWveDptFlag && ((pSlitFunction->slitType==SLIT_TYPE_FILE) ||(pSlitFunction->slitType==SLIT_TYPE_ERF) ||(pSlitFunction->slitType==SLIT_TYPE_AGAUSS) || (pSlitFunction->slitType==SLIT_TYPE_VOIGT))) {
+    if (pSlitFunction->slitWveDptFlag && ((pSlitFunction->slitType==SLIT_TYPE_FILE) ||(pSlitFunction->slitType==SLIT_TYPE_ERF) || (pSlitFunction->slitType==SLIT_TYPE_AGAUSS) || (pSlitFunction->slitType==SLIT_TYPE_SUPERGAUSS) || (pSlitFunction->slitType==SLIT_TYPE_VOIGT))) {
       if (!strlen(pSlitFunction->slitFile2))
         rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_MSGBOX_FIELDEMPTY,"Slit File 2");
       else
@@ -4980,7 +4980,7 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
         if ((indexSymbol<NWorkSpace) && ((indexTabCross=pTabFeno->NTabCross)<MAX_FIT) &&
             ((strcasecmp(symbol,"SFP 1") && strcasecmp(symbol,"SFP 2")) ||
              (pKuruczOptions->fwhmFit &&
-              ((pKuruczOptions->fwhmType==SLIT_TYPE_FILE) || (pKuruczOptions->fwhmType==SLIT_TYPE_ERF) || (pKuruczOptions->fwhmType==SLIT_TYPE_AGAUSS) || (pKuruczOptions->fwhmType==SLIT_TYPE_VOIGT) || strcasecmp(symbol,"SFP 2")))))
+              ((pKuruczOptions->fwhmType==SLIT_TYPE_FILE) || (pKuruczOptions->fwhmType==SLIT_TYPE_ERF) || (pKuruczOptions->fwhmType==SLIT_TYPE_AGAUSS) || (pKuruczOptions->fwhmType==SLIT_TYPE_SUPERGAUSS) || (pKuruczOptions->fwhmType==SLIT_TYPE_VOIGT) || strcasecmp(symbol,"SFP 2")))))
 
          {
           // Add symbol into symbol cross reference

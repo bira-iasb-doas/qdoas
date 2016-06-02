@@ -496,6 +496,8 @@ bool CProjectCalibrationSubHandler::start(const QString &element, const QXmlAttr
       m_calibration->lineShape = PRJCT_CALIB_FWHM_TYPE_ERF;
     else if (str == "agauss")
       m_calibration->lineShape = PRJCT_CALIB_FWHM_TYPE_AGAUSS;
+    else if (str == "supergauss")
+      m_calibration->lineShape = PRJCT_CALIB_FWHM_TYPE_SUPERGAUSS;
     else if (str == "lorentz")
       m_calibration->lineShape = PRJCT_CALIB_FWHM_TYPE_INVPOLY;
     else if (str == "voigt")

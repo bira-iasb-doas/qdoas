@@ -118,6 +118,18 @@ void setMediateSlit(SLIT *pEngineSlit,const mediate_slit_function_t *pMediateSli
 
     break;
  // ----------------------------------------------------------------------------
+    case SLIT_TYPE_SUPERGAUSS :                                                 // Super Gaussian
+
+     pEngineSlit->slitParam=pMediateSlit->supergauss.fwhm;
+     pEngineSlit->slitParam2=pMediateSlit->supergauss.exponential;
+
+     pEngineSlit->slitWveDptFlag=pMediateSlit->supergauss.wveDptFlag;
+
+     strcpy(pEngineSlit->slitFile,pMediateSlit->supergauss.filename);
+     strcpy(pEngineSlit->slitFile2,pMediateSlit->supergauss.filename2);
+
+    break;
+ // ----------------------------------------------------------------------------
     case SLIT_TYPE_APOD :                                                       // apodisation function (used with FTS)
      pEngineSlit->slitParam=pMediateSlit->boxcarapod.resolution;
      pEngineSlit->slitParam2=pMediateSlit->boxcarapod.phase;

@@ -219,6 +219,9 @@ void CWSlitGaussianEdit::reset(const struct slit_gaussian *d)
   m_fwhmEdit->setText(tmpStr);
   m_wavelengthDependent->setCheckState(d->wveDptFlag ? Qt::Checked : Qt::Unchecked);
   m_toggleWavelengthStack->setCurrentIndex(d->wveDptFlag);
+
+  m_slitFileEdit->setText(d->filename);
+
 }
 
 void CWSlitGaussianEdit::apply(struct slit_gaussian *d) const
@@ -597,7 +600,7 @@ CWSlitAGaussEdit::CWSlitAGaussEdit(const struct slit_agauss *d, QWidget *parent)
   fileFrameLayout->setMargin(0);
 
   m_fwhmFileEdit = helperConstructFileEdit(fileFrameLayout, 0, "Gaussian FWHM File",d->filename, sizeof(d->filename)-1);
-  m_boxcarFileEdit = helperConstructFileEdit(fileFrameLayout, 1, "Boxcar width File",d->filename2, sizeof(d->filename2)-1);
+  m_asymFileEdit = helperConstructFileEdit(fileFrameLayout, 1, "Asymmetry factor File",d->filename2, sizeof(d->filename2)-1);
 
   m_toggleWavelengthStack = new QStackedLayout;
   m_toggleWavelengthStack->setMargin(0);
@@ -624,7 +627,7 @@ void CWSlitAGaussEdit::reset(const struct slit_agauss *d)
 
   m_wavelengthDependent->setCheckState(d->wveDptFlag ? Qt::Checked : Qt::Unchecked);
   m_fwhmFileEdit->setText(d->filename);
-  m_boxcarFileEdit->setText(d->filename2);
+  m_asymFileEdit->setText(d->filename2);
 
   m_toggleWavelengthStack->setCurrentIndex(d->wveDptFlag);
 }
@@ -636,7 +639,96 @@ void CWSlitAGaussEdit::apply(struct slit_agauss *d) const
 
   d->wveDptFlag = m_wavelengthDependent->isChecked() ? 1 : 0;
   strcpy(d->filename, m_fwhmFileEdit->text().toAscii().data());
-  strcpy(d->filename2, m_boxcarFileEdit->text().toAscii().data());
+  strcpy(d->filename2, m_asymFileEdit->text().toAscii().data());
+
+  m_toggleWavelengthStack->setCurrentIndex(d->wveDptFlag);
+}
+
+CWSlitSuperGaussEdit::CWSlitSuperGaussEdit(const struct slit_supergauss *d, QWidget *parent) :
+  CWSlitFileBase(parent)
+{
+  QVBoxLayout *mainLayout = new QVBoxLayout(this);
+
+  m_wavelengthDependent = new QCheckBox("Wavelength dependent", this);
+  mainLayout->addWidget(m_wavelengthDependent, Qt::AlignLeft);
+  connect(m_wavelengthDependent, SIGNAL(stateChanged(int)), this, SLOT (slotToggleWavelength(int)));
+
+  QFrame *fwhmFrame = new QFrame(this);
+  fwhmFrame->setFrameStyle(QFrame::NoFrame);
+  QGridLayout *fwhmFrameLayout = new QGridLayout(fwhmFrame);
+  fwhmFrameLayout->setMargin(0);
+
+  // fwhm
+
+  QLabel *labelFwhm = new QLabel("Gaussian FWHM (nm)", fwhmFrame);
+  labelFwhm->setAlignment(Qt::AlignVCenter|Qt::AlignRight);
+  labelFwhm->setMinimumSize(cSuggestedColumnZeroWidth, 0);
+
+  m_fwhmEdit = new QLineEdit(this);
+  m_fwhmEdit->setFixedWidth(cStandardEditWidth);
+  m_fwhmEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 50.0, 3, m_fwhmEdit));
+
+  QLabel *labelExp = new QLabel(	"Exponential term", fwhmFrame);
+  labelExp->setAlignment(Qt::AlignVCenter|Qt::AlignRight);
+  labelExp->setMinimumSize(cSuggestedColumnZeroWidth, 0);
+
+  // exponential term
+
+  m_expEdit = new QLineEdit(this);
+  m_expEdit->setFixedWidth(cStandardEditWidth);
+  m_expEdit->setValidator(new CDoubleFixedFmtValidator(-50., 50.0, 3, m_expEdit));
+
+  fwhmFrameLayout->addWidget(labelFwhm,0,0,Qt::AlignRight);
+  fwhmFrameLayout->addWidget(m_fwhmEdit,0,1,Qt::AlignLeft);
+  fwhmFrameLayout->addWidget(labelExp,1,0,Qt::AlignRight);
+  fwhmFrameLayout->addWidget(m_expEdit,1, 1,Qt::AlignLeft);
+
+  QFrame *fileFrame = new QFrame(this);
+  fileFrame->setFrameStyle(QFrame::NoFrame);
+  QGridLayout *fileFrameLayout = new QGridLayout(fileFrame);
+  fileFrameLayout->setMargin(0);
+
+  m_fwhmFileEdit = helperConstructFileEdit(fileFrameLayout, 0, "Gaussian FWHM File",d->filename, sizeof(d->filename)-1);
+  m_expFileEdit = helperConstructFileEdit(fileFrameLayout, 1, "Exponential term File",d->filename2, sizeof(d->filename2)-1);
+
+  m_toggleWavelengthStack = new QStackedLayout;
+  m_toggleWavelengthStack->setMargin(0);
+  m_toggleWavelengthStack->addWidget(fwhmFrame);
+  m_toggleWavelengthStack->addWidget(fileFrame);
+
+  mainLayout->addLayout(m_toggleWavelengthStack);
+  mainLayout->addStretch(1);
+
+  // initialise
+  reset(d);
+
+  fwhmFrameLayout->setColumnMinimumWidth(0, cSuggestedColumnZeroWidth);
+  fwhmFrameLayout->setColumnStretch(1, 1);
+}
+
+void CWSlitSuperGaussEdit::reset(const struct slit_supergauss *d)
+{
+  QString tmpStr;
+  m_fwhmEdit->validator()->fixup(tmpStr.setNum(d->fwhm));
+  m_fwhmEdit->setText(tmpStr);
+  m_expEdit->validator()->fixup(tmpStr.setNum(d->exponential));
+  m_expEdit->setText(tmpStr);
+
+  m_wavelengthDependent->setCheckState(d->wveDptFlag ? Qt::Checked : Qt::Unchecked);
+  m_fwhmFileEdit->setText(d->filename);
+  m_expFileEdit->setText(d->filename2);
+
+  m_toggleWavelengthStack->setCurrentIndex(d->wveDptFlag);
+}
+
+void CWSlitSuperGaussEdit::apply(struct slit_supergauss *d) const
+{
+  d->fwhm = m_fwhmEdit->text().toDouble();
+  d->exponential = m_expEdit->text().toDouble();
+
+  d->wveDptFlag = m_wavelengthDependent->isChecked() ? 1 : 0;
+  strcpy(d->filename, m_fwhmFileEdit->text().toAscii().data());
+  strcpy(d->filename2, m_expFileEdit->text().toAscii().data());
 
   m_toggleWavelengthStack->setCurrentIndex(d->wveDptFlag);
 }
@@ -688,6 +780,10 @@ CWSlitSelector::CWSlitSelector(const mediate_slit_function_t *slit, const QStrin
   m_slitStack->addWidget(m_agaussEdit);
   m_slitCombo->addItem("Asymmetric Gaussian", QVariant(SLIT_TYPE_AGAUSS));
 
+  m_supergaussEdit = new CWSlitSuperGaussEdit(&(slit->supergauss));
+  m_slitStack->addWidget(m_supergaussEdit);
+  m_slitCombo->addItem("Super Gaussian", QVariant(SLIT_TYPE_SUPERGAUSS));
+
   m_boxcarApodEdit = new CWSlitApodEdit(&(slit->boxcarapod));
   m_slitStack->addWidget(m_boxcarApodEdit);
   m_slitCombo->addItem("Boxcar (FTS)", QVariant(SLIT_TYPE_APOD));
@@ -730,6 +826,7 @@ void CWSlitSelector::reset(const mediate_slit_function_t *slit)
   m_voigtEdit->reset(&(slit->voigt));
   m_errorEdit->reset(&(slit->error));
   m_agaussEdit->reset(&(slit->agauss));
+  m_supergaussEdit->reset(&(slit->supergauss));
   m_boxcarApodEdit->reset(&(slit->boxcarapod));
   m_nbsApodEdit->reset(&(slit->nbsapod));
 }
@@ -749,6 +846,7 @@ void CWSlitSelector::apply(mediate_slit_function_t *slit) const
   m_voigtEdit->apply(&(slit->voigt));
   m_errorEdit->apply(&(slit->error));
   m_agaussEdit->apply(&(slit->agauss));
+  m_supergaussEdit->apply(&(slit->supergauss));
   m_boxcarApodEdit->apply(&(slit->boxcarapod));
   m_nbsApodEdit->apply(&(slit->nbsapod));
 }

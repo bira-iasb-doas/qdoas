@@ -272,6 +272,9 @@ void CQdoasConfigWriter::writePropertiesCalibration(FILE *fp, const mediate_proj
   case PRJCT_CALIB_FWHM_TYPE_AGAUSS:
     fprintf(fp, "\"agauss\"");
     break;
+  case PRJCT_CALIB_FWHM_TYPE_SUPERGAUSS:
+    fprintf(fp, "\"supergauss\"");
+    break;
   case PRJCT_CALIB_FWHM_TYPE_INVPOLY:
     fprintf(fp, "\"lorentz\"");
     break;

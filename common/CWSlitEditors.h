@@ -146,9 +146,23 @@ class CWSlitAGaussEdit : public CWSlitFileBase
   void apply(struct slit_agauss *d) const;
 
  private:
-  QLineEdit *m_fwhmFileEdit, *m_boxcarFileEdit;
+  QLineEdit *m_fwhmFileEdit, *m_asymFileEdit;
   QLineEdit *m_fwhmEdit;
   QLineEdit *m_asymEdit;
+};
+
+class CWSlitSuperGaussEdit : public CWSlitFileBase
+{
+ public:
+  CWSlitSuperGaussEdit(const struct slit_supergauss *d, QWidget *parent = 0);
+
+  void reset(const struct slit_supergauss *d);
+  void apply(struct slit_supergauss *d) const;
+
+ private:
+  QLineEdit *m_fwhmFileEdit, *m_expFileEdit;
+  QLineEdit *m_fwhmEdit;
+  QLineEdit *m_expEdit;
 };
 
 class CWSlitApodEdit : public QFrame
@@ -188,6 +202,7 @@ class CWSlitSelector : public QGroupBox
   CWSlitVoigtEdit *m_voigtEdit;
   CWSlitErrorEdit *m_errorEdit;
   CWSlitAGaussEdit *m_agaussEdit;
+  CWSlitSuperGaussEdit *m_supergaussEdit;
   CWSlitApodEdit *m_boxcarApodEdit, *m_nbsApodEdit;
 };
 

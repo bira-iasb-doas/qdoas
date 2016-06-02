@@ -64,8 +64,8 @@ CWProjectTabSlit::CWProjectTabSlit(const mediate_project_slit_t *slit, QWidget *
   // insert widgets into the stack and items into the combo in lock-step.
 
   m_noneEdit = new CWSlitNoneEdit(&(slit->function.file));
-  m_slitStack->addWidget(m_noneEdit);  
-  m_slitCombo->addItem("None", QVariant(SLIT_TYPE_NONE));    
+  m_slitStack->addWidget(m_noneEdit);
+  m_slitCombo->addItem("None", QVariant(SLIT_TYPE_NONE));
 
   m_fileEdit = new CWSlitFileEdit(&(slit->function.file));
   m_slitStack->addWidget(m_fileEdit);
@@ -90,6 +90,10 @@ CWProjectTabSlit::CWProjectTabSlit(const mediate_project_slit_t *slit, QWidget *
   m_agaussEdit = new CWSlitAGaussEdit(&(slit->function.agauss));
   m_slitStack->addWidget(m_agaussEdit);
   m_slitCombo->addItem("Asymmetric Gaussian", QVariant(SLIT_TYPE_AGAUSS));
+
+  m_supergaussEdit = new CWSlitSuperGaussEdit(&(slit->function.supergauss));
+  m_slitStack->addWidget(m_supergaussEdit);
+  m_slitCombo->addItem("Super Gaussian", QVariant(SLIT_TYPE_SUPERGAUSS));
 
   m_boxcarApodEdit = new CWSlitApodEdit(&(slit->function.boxcarapod));
   m_slitStack->addWidget(m_boxcarApodEdit);
@@ -139,6 +143,7 @@ void CWProjectTabSlit::apply(mediate_project_slit_t *slit) const
   m_voigtEdit->apply(&(slit->function.voigt));
   m_errorEdit->apply(&(slit->function.error));
   m_agaussEdit->apply(&(slit->function.agauss));
+  m_supergaussEdit->apply(&(slit->function.supergauss));
   m_boxcarApodEdit->apply(&(slit->function.boxcarapod));
   m_nbsApodEdit->apply(&(slit->function.nbsapod));
   // not used anymore : commented on 01/02/2012 m_gaussianFileEdit->apply(&(slit->function.gaussianfile));
