@@ -29,7 +29,7 @@ static vector<vector<double> > load_reference_radiances(const NetCDFFile& refere
 
   for (size_t i=0; i<radiances.size(); ++i) {
     vector<double>& rad = radiances[i];
-    rad.resize(spectral_dim);
+    rad.resize(reference_spectral_dim);
     const size_t start[] = {i, 0};
     const size_t count[] = {1, reference_spectral_dim};
     reference_file.getVar("reference_radiance", start, count, rad.data());
@@ -63,11 +63,14 @@ int apex_set(ENGINE_CONTEXT *pEngineContext) {
     row_dim = radiance_file.dimLen("row_dim");
     size_t file_spectral_dim = radiance_file.dimLen("spectral_dim");
     size_t file_col_dim = radiance_file.dimLen("col_dim");
-
-    if (file_spectral_dim != spectral_dim) {
+    if (!spectral_dim) { // e.g. in browsing mode
+      spectral_dim = file_spectral_dim;
+    } else if (file_spectral_dim != spectral_dim) {
       return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, "Reference file spectral dimension different from measurement file dimension");
     }
-    if (file_col_dim != col_dim) {
+    if (!col_dim) {
+      col_dim = file_col_dim;
+    } else if (file_col_dim != col_dim) {
       return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, "Reference file cross-track dimension different from measurement file dimension");
     }
 
