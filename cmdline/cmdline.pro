@@ -21,6 +21,10 @@ unix {
   LIBS         += -lcoda -lhdfeos -lnetcdf -lmfhdf -ldf -lz -ljpeg -lhe5_hdfeos -lhdf5 -lhdf5_hl
 }
 
+hpc {
+  LIBS += -lGctp # must be linked after hdfeos
+}
+
 linux_package {
   TARGET = ../../linux_package/bin/doas_cl.bin
   LIBS         += -lcoda -lhdfeos -lnetcdf -lmfhdf -ldf -ljpeg -lz -lhe5_hdfeos -lhdf5_hl -lhdf5
@@ -88,6 +92,10 @@ HEADERS += ../usamp/CUsampConfigHandler.h
 target.path = $${INSTALL_PREFIX}/bin
 bira {
   target.path = $${INSTALL_PREFIX}/bin_$${QDOAS_VERSION}
+}
+
+hpc {
+  target.path = $${INSTALL_PREFIX}/bin/QDOAS_$${QDOAS_VERSION}
 }
 
 INSTALLS += target

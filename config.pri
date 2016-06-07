@@ -12,13 +12,13 @@ QMAKE_CFLAGS += -g -std=gnu99 -Wall -Wextra -pedantic \
 
 QMAKE_CXXFLAGS += -std=c++0x
 
-QDOAS_VERSION=2.112
+QDOAS_VERSION=2.112.1
 
 win64 {
   QDOAS_VERSION = "$${QDOAS_VERSION}_x86_64"
 }
 
-DEFINES += QDOAS_VERSION="\"\\\"$${QDOAS_VERSION}\\\"\"" QDOAS_DATE="\"\\\"April 2016\\\"\""
+DEFINES += QDOAS_VERSION="\"\\\"$${QDOAS_VERSION}\\\"\"" QDOAS_DATE="\"\\\"7 June 2016\\\"\""
 
 LIBS += -L../mediator -lmediator -L../engine -lengine -L../common -lcommon
 DEPENDPATH += ../common ../engine ../mediator
@@ -145,4 +145,21 @@ asan { # use 'CONFIG+=asan' to build with adress sanitizer support
   QMAKE_CXXFLAGS += -fsanitize=address -fno-omit-frame-pointer
   QMAKE_CFLAGS += -fsanitize=address -fno-omit-frame-pointer
   QMAKE_LFLAGS += -fsanitize=address
+}
+
+# Notes for installation on hpc:
+#
+# hdf-eos5:
+#
+#   CC=/space/hpc-apps/bira/2015a/hdf5-1.8.10-64/bin/h5cc ./configure \
+#     --prefix=/home/thomasd --with-szlib=/home/thomasd \
+#     --enable-install-include
+hpc {
+  LIBS += -lirc -lsvml
+
+  INSTALL_PREFIX = /home/thomasd/
+  INCLUDEPATH += $$INSTALL_PREFIX/include
+
+  QMAKE_LIBDIR += /$$INSTALL_PREFIX/lib /sw/sdev/intel/parallel_studio_xe_2015_update_3-pguyan/composer_xe_2015.3.187/compiler/lib/intel64
+  QMAKE_RPATHDIR += /$$INSTALL_PREFIX/lib /sw/sdev/intel/parallel_studio_xe_2015_update_3-pguyan/composer_xe_2015.3.187/compiler/lib/intel64
 }

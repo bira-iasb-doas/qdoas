@@ -23,6 +23,10 @@ unix {
   LIBS += -lcoda -lhdfeos -lnetcdf -lmfhdf -ldf -lz -ljpeg -lhe5_hdfeos -lhdf5 -lhdf5_hl -lqwt
 }
 
+hpc {
+  LIBS += -lGctp # must be linked after hdfeos
+}
+
 linux_package {
   TARGET = ../../linux_package/bin/qdoas.bin
   LIBS += -lcoda -lhdfeos -lnetcdf -lmfhdf -ldf -lz -lhe5_hdfeos -lhdf5_hl -lhdf5 -lqwt
@@ -186,6 +190,11 @@ linux_package {
 bira {
   target.path = $${INSTALL_PREFIX}/bin_$${QDOAS_VERSION}
   doc.path = $${INSTALL_PREFIX}/doc_$${QDOAS_VERSION}
+}
+
+hpc {
+  target.path = $${INSTALL_PREFIX}/bin/QDOAS_$${QDOAS_VERSION}
+  doc.path = $${INSTALL_PREFIX}/doc/QDOAS_$${QDOAS_VERSION}
 }
 
 doc.files = ../../Doc/QDOAS_ReleaseNotes.doc ../../LICENSE ./Help

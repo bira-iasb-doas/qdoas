@@ -97,4 +97,7 @@ target.path = $${INSTALL_PREFIX}/bin
 bira {
   target.path = $${INSTALL_PREFIX}/bin_$${QDOAS_VERSION}
 }
+hpc {
+  target.path = $${INSTALL_PREFIX}/bin/QDOAS_$${QDOAS_VERSION}
+}
 INSTALLS += target
