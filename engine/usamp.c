@@ -201,8 +201,8 @@ RC USAMP_Build(double *phase1,                                                  
  {
   // Declarations
 
-  MATRIX_OBJECT xsnew,slitFunction,slitFunction2;
-  double *gomeLambda2,*kuruczLambda,slitParam,
+  MATRIX_OBJECT xsnew,slitMatrix[NSFP];
+  double *gomeLambda2,*kuruczLambda,slitParam[NSFP],
          *resample,*d2res;
   int     slitType,nKurucz;
   INDEX   i;
@@ -212,11 +212,15 @@ RC USAMP_Build(double *phase1,                                                  
 
   gomeLambda2=resample=d2res=NULL;
   memset(&xsnew,0,sizeof(MATRIX_OBJECT));
-  memset(&slitFunction,0,sizeof(MATRIX_OBJECT));
-  memset(&slitFunction2,0,sizeof(MATRIX_OBJECT));
+  memset(&slitMatrix,0,sizeof(MATRIX_OBJECT)*NSFP);
   slitType=pSlit->slitType;
   kuruczLambda=pKuruczMatrix->matrix[0];
   nKurucz=pKuruczMatrix->nl;
+
+  slitParam[0]=pSlit->slitParam;
+  slitParam[1]=pSlit->slitParam2;
+  slitParam[2]=pSlit->slitParam3;
+  slitParam[3]=pSlit->slitParam4;
 
   // Buffers allocation
 
@@ -239,9 +243,9 @@ RC USAMP_Build(double *phase1,                                                  
 
     // Kurucz spectrum convolution with a gaussian
 
-    if (!(rc=XSCONV_LoadSlitFunction(&slitFunction,&slitFunction2,pSlit,&slitParam,&slitType)) &&
+    if (!(rc=XSCONV_LoadSlitFunction(slitMatrix,pSlit,&slitParam[0],&slitType)) &&
 //        !(rc=XSCONV_TypeStandardFFT(&usampFFT,slitType,pSlit->slitParam,pSlit->slitParam2,kuruczLambda,kuruczConvolved,nKurucz)) &&
-        !(rc=XSCONV_TypeStandard(&xsnew,0,nKurucz,pKuruczMatrix,&slitFunction,&slitFunction2,pKuruczMatrix,NULL,slitType,slitParam,pSlit->slitParam2,pSlit->slitWveDptFlag)) &&
+        !(rc=XSCONV_TypeStandard(&xsnew,0,nKurucz,pKuruczMatrix,pKuruczMatrix,NULL,slitType,slitMatrix,slitParam,pSlit->slitWveDptFlag)) &&
         !(rc=SPLINE_Deriv2(kuruczLambda,xsnew.matrix[1],xsnew.deriv2[1],nKurucz,"USAMP_Build (kuruczConvolved) ")) &&
         !(rc=SPLINE_Vector(kuruczLambda,xsnew.matrix[1],xsnew.deriv2[1],nKurucz,gomeLambda,resample,nGome,SPLINE_CUBIC,"USAMP_Build (kuruczConvolved) ")) && // calculate solar spectrum at GOME positions
         !(rc=SPLINE_Deriv2(gomeLambda,resample,d2res,nGome,"USAMP_Build (resample 1) ")))
@@ -263,8 +267,8 @@ RC USAMP_Build(double *phase1,                                                  
 
   // Buffers release
 
-  MATRIX_Free(&slitFunction,"USAMP_Build (slitFunction)");
-  MATRIX_Free(&slitFunction2,"USAMP_Build (slitFunction)");
+  for (i=0;i<NSFP;i++)
+   MATRIX_Free(&slitMatrix[i],"USAMP_Build (slitFunction)");
   MATRIX_Free(&xsnew,"USAMP_Build (xsnew)");
 
   if (gomeLambda2!=NULL)

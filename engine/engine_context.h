@@ -556,16 +556,22 @@ typedef struct _analysisRef
  }
 ANALYSIS_REF;
 
-  struct _slit {
+struct _slit {
   int    slitType;                                                              // type of line shape (see above)
   int    slitWveDptFlag;                                                        // 1 if the slit function is wavelength dependent (in this case, use files)
-  char  slitFile[MAX_STR_LEN+1];                                              // for line shapes provided in file, name of the file (first parameter)
-  char  slitFile2[MAX_STR_LEN+1];                                             // for line shapes provided in file, name of the file (second parameter)
-  double slitParam;                                                             // up to 4 parameters can be provided for the line shape
-  double slitParam2;                                                            //       usually, the first one is the FWHM
-  double slitParam3;                                                            //       the Voigt profile function uses the 4 parameters
-  double slitParam4;
+  char   slitFile[MAX_STR_LEN+1];                                               // for line shapes provided in file, name of the file (first parameter)
+  char   slitFile2[MAX_STR_LEN+1];                                              // for line shapes provided in file, name of the file (second parameter)
+  char   slitFile3[MAX_STR_LEN+1];                                              // for line shapes provided in file, name of the file (third parameter)
+  double slitParam,slitParam2,slitParam3,slitParam4;                                                       // up to 4 parameters can be provided for the line shape
  };
+
+typedef struct _slitParam
+ {
+  MATRIX_OBJECT slitMatrix[NSFP];                                               // for wavelength dependent slit functions, we need vectors
+  double slitParam[NSFP];                                                       // for non wavelength dependent slit functions, we need constants
+  int nslit;                                                                    // the number of parameters used (matrix or constants)
+ }
+SLIT_MATRIX;
 
   struct _prjctSlit {
   SLIT  slitFunction;                                  // slit function

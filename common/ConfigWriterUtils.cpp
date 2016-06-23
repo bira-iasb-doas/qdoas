@@ -101,7 +101,7 @@ void writeSlitFunction(FILE *fp, size_t nIndent, const mediate_slit_function_t *
 {
   size_t i;
   char buf[32]; // max index is sizeof(buf)-1
-  QString tmpStr,tmpStr2;
+  QString tmpStr,tmpStr2,tmpStr3;
   CPathMgr *pathMgr = CPathMgr::instance();
 
   // make a space padding string - robust against nIndex < 0.
@@ -166,7 +166,8 @@ void writeSlitFunction(FILE *fp, size_t nIndent, const mediate_slit_function_t *
   fprintf(fp, "%s  <agauss fwhm=\"%.3f\" asym=\"%.3f\" wveDptFlag=\"%s\" file=\"%s\" file2=\"%s\" />\n", buf, d->agauss.fwhm, d->agauss.asym,(d->agauss.wveDptFlag ? sTrue : sFalse),tmpStr.toAscii().data(), tmpStr2.toAscii().data());
   tmpStr = pathMgr->simplifyPath(QString(d->supergauss.filename));
   tmpStr2 = pathMgr->simplifyPath(QString(d->supergauss.filename2));
-  fprintf(fp, "%s  <supergauss fwhm=\"%.3f\" expTerm=\"%.3f\" wveDptFlag=\"%s\" file=\"%s\" file2=\"%s\" />\n", buf, d->supergauss.fwhm, d->supergauss.exponential,(d->supergauss.wveDptFlag ? sTrue : sFalse),tmpStr.toAscii().data(), tmpStr2.toAscii().data());
+  tmpStr3 = pathMgr->simplifyPath(QString(d->supergauss.filename3));
+  fprintf(fp, "%s  <supergauss fwhm=\"%.3f\" expTerm=\"%.3f\" asym=\"%.3f\" wveDptFlag=\"%s\" file=\"%s\" file2=\"%s\" file3=\"%s\" />\n", buf, d->supergauss.fwhm, d->supergauss.exponential,d->supergauss.asym,(d->supergauss.wveDptFlag ? sTrue : sFalse),tmpStr.toAscii().data(), tmpStr2.toAscii().data(), tmpStr3.toAscii().data());
   fprintf(fp, "%s  <boxcarapod resolution=\"%.3f\" phase=\"%.3f\" />\n", buf,
 	  d->boxcarapod.resolution, d->boxcarapod.phase);
   fprintf(fp, "%s  <nbsapod resolution=\"%.3f\" phase=\"%.3f\" />\n", buf,

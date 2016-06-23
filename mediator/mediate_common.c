@@ -54,10 +54,12 @@ void setMediateSlit(SLIT *pEngineSlit,const mediate_slit_function_t *pMediateSli
   pEngineSlit->slitType=pMediateSlit->type;
 
   pEngineSlit->slitParam=
-  pEngineSlit->slitParam2=(double)0.;
+  pEngineSlit->slitParam2=
+  pEngineSlit->slitParam3=
+  pEngineSlit->slitParam4=(double)0.;
   pEngineSlit->slitWveDptFlag=0;
 
-  pEngineSlit->slitFile[0]=pEngineSlit->slitFile2[0]='\0';
+  pEngineSlit->slitFile[0]=pEngineSlit->slitFile2[0]=pEngineSlit->slitFile3[0]='\0';
 
   switch(pEngineSlit->slitType)
    {
@@ -122,11 +124,13 @@ void setMediateSlit(SLIT *pEngineSlit,const mediate_slit_function_t *pMediateSli
 
      pEngineSlit->slitParam=pMediateSlit->supergauss.fwhm;
      pEngineSlit->slitParam2=pMediateSlit->supergauss.exponential;
+     pEngineSlit->slitParam3=pMediateSlit->supergauss.asym;
 
      pEngineSlit->slitWveDptFlag=pMediateSlit->supergauss.wveDptFlag;
 
      strcpy(pEngineSlit->slitFile,pMediateSlit->supergauss.filename);
      strcpy(pEngineSlit->slitFile2,pMediateSlit->supergauss.filename2);
+     strcpy(pEngineSlit->slitFile3,pMediateSlit->supergauss.filename3);
 
     break;
  // ----------------------------------------------------------------------------
@@ -175,7 +179,7 @@ void setMediateSlit(SLIT *pEngineSlit,const mediate_slit_function_t *pMediateSli
 // FUNCTION      setMediateFilter
 // -----------------------------------------------------------------------------
 // PURPOSE       Filtering configuration
-// -----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 
 void setMediateFilter(PRJCT_FILTER *pEngineFilter,const mediate_filter_t *pMediateFilter,int hpFilterFlag,int convoluteFlag)
  {

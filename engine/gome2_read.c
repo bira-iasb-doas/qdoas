@@ -966,7 +966,7 @@ RC Gome2BrowseMDR(GOME2_ORBIT_FILE *pOrbitFile,INDEX indexBand) {
 
       pGome2Info->total_nadir_mdr++;
     }
-    
+
     coda_cursor_goto_parent(&pOrbitFile->gome2Cursor);
   }
 
@@ -2374,7 +2374,7 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle) {
 
             if (((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef,0)) !=ERROR_ID_NO) ||
                 ((!pKuruczOptions->fwhmFit || !pTabFeno->useKurucz) && pTabFeno->xsToConvolute &&
-                 ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,&ANALYSIS_slit2,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,0,pSlitOptions->slitFunction.slitWveDptFlag)) !=ERROR_ID_NO)))
+                 ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,ANALYSIS_slitMatrix,ANALYSIS_slitParam,pSlitOptions->slitFunction.slitType,0,pSlitOptions->slitFunction.slitWveDptFlag)) !=ERROR_ID_NO)))
 
               goto EndGOME2_LoadAnalysis;
           }

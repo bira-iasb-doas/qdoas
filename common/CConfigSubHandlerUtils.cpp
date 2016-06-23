@@ -321,9 +321,11 @@ bool CSlitFunctionSubHandler::start(const QString &element, const QXmlAttributes
 
     QString str = atts.value("file");
     QString str2 = atts.value("file2");
+    QString str3 = atts.value("file3");
 
     m_function->supergauss.fwhm = atts.value("fwhm").toDouble();
     m_function->supergauss.exponential = atts.value("expTerm").toDouble();
+    m_function->supergauss.asym = atts.value("asym").toDouble();
 
     m_function->supergauss.wveDptFlag=(atts.value("wveDptFlag") == "true") ? 1 : 0;
 
@@ -333,7 +335,7 @@ bool CSlitFunctionSubHandler::start(const QString &element, const QXmlAttributes
       if (str.length() < (int)sizeof(m_function->supergauss.filename))
 	      strcpy(m_function->supergauss.filename, str.toAscii().data());
       else
-	      return postErrorMessage("Slit Function Filename too long");
+	      return postErrorMessage("Slit Function Filename (FWHM) too long");
 	    }
 	   else
 	    strcpy(m_function->supergauss.filename ,"\0");
@@ -344,10 +346,21 @@ bool CSlitFunctionSubHandler::start(const QString &element, const QXmlAttributes
       if (str2.length() < (int)sizeof(m_function->supergauss.filename2))
 	      strcpy(m_function->supergauss.filename2, str2.toAscii().data());
       else
-	      return postErrorMessage("Slit Function Filename too long");
+	      return postErrorMessage("Slit Function Filename (Exponential term) too long");
 	    }
 	   else
 	    strcpy(m_function->supergauss.filename2 ,"\0");
+
+    if (!str3.isEmpty())
+     {
+      str3 = m_master->pathExpand(str3);
+      if (str3.length() < (int)sizeof(m_function->supergauss.filename3))
+	      strcpy(m_function->supergauss.filename3, str3.toAscii().data());
+      else
+	      return postErrorMessage("Slit Function Filename (Asymmetry factor) too long");
+	    }
+	   else
+	    strcpy(m_function->supergauss.filename3 ,"\0");
   }
   else if (element == "boxcarapod") {
 

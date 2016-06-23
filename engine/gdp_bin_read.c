@@ -1643,7 +1643,7 @@ RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp,void *respon
 
              if (((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef,0))!=ERROR_ID_NO) ||
                  ((!pKuruczOptions->fwhmFit || !pTabFeno->useKurucz) && pTabFeno->xsToConvolute &&
-                 ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,&ANALYSIS_slit2,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,0,pSlitOptions->slitFunction.slitWveDptFlag))!=ERROR_ID_NO)))
+                 ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,ANALYSIS_slitMatrix,ANALYSIS_slitParam,pSlitOptions->slitFunction.slitType,0,pSlitOptions->slitFunction.slitWveDptFlag))!=ERROR_ID_NO)))
               goto EndGOME_LoadAnalysis;
 
              pTabFeno->Decomp=1;
@@ -1683,7 +1683,7 @@ RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp,void *respon
        // ANALYSE_UsampLocalFree();
 
        if ( (rc=ANALYSE_UsampLocalAlloc(0) )!=ERROR_ID_NO ||
-            (rc=ANALYSE_UsampBuild(0,0))!=ERROR_ID_NO || 
+            (rc=ANALYSE_UsampBuild(0,0))!=ERROR_ID_NO ||
             (rc=ANALYSE_UsampBuild(1,ITEM_NONE))!=ERROR_ID_NO)
 
        goto EndGOME_LoadAnalysis;

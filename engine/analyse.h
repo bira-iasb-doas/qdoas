@@ -287,8 +287,9 @@ extern char *ANLYS_crossAction[ANLYS_CROSS_ACTION_MAX];
 extern char *ANLYS_amf[ANLYS_AMF_TYPE_MAX];
 
 extern PRJCT_FILTER *ANALYSE_plFilter,*ANALYSE_phFilter;
-extern MATRIX_OBJECT ANALYSIS_slit,ANALYSIS_slit2,O3TD;
+extern MATRIX_OBJECT ANALYSIS_slitMatrix[NSFP],O3TD;
 extern double      **U,*x,*Lambda,*LambdaSpec,
+                    ANALYSIS_slitParam[NSFP],
                     *ANALYSE_pixels,
                     *ANALYSE_splineX,              // abscissa used for spectra, in the units selected by user
                     *ANALYSE_absolu,               // residual spectrum
@@ -310,12 +311,11 @@ RC ANALYSE_Function ( double * const X, double * const Y, double *SigmaY, double
               double *fitParamsC, double *fitParamsF,INDEX indexFenoColumn);
 RC   ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol, const double *lambda, const int n_wavel, const char *callingFunction);
 RC   ANALYSE_XsInterpolation(FENO *pTabFeno, const double *newLambda,INDEX indexFenoColumn);
-RC   ANALYSE_ConvoluteXs(const FENO *pTabFeno,int action,double conc,
-                         const MATRIX_OBJECT *pXs,
-                         const MATRIX_OBJECT *pSlit, const MATRIX_OBJECT *pSlit2, int slitType, const double *slitParam1, const double *slitParam2,
+RC   ANALYSE_ConvoluteXs(const FENO *pTabFeno,int action,double conc,const MATRIX_OBJECT *pXs,
+                         const MATRIX_OBJECT *slitMatrix,const double *slitParam, int slitType,
                          const double *newlambda, double *output, INDEX indexlambdaMin, INDEX indexlambdaMax, const int n_wavel,
                          INDEX indexFenoColumn, int wveDptFlag);
-RC   ANALYSE_XsConvolution(FENO *pTabFeno,double *newLambda,MATRIX_OBJECT *pSlit,MATRIX_OBJECT *pSlit2,int slitType,double *slitParam1,double *slitParam2,INDEX indexFenoColumn,int wveDptFlag);
+RC   ANALYSE_XsConvolution(FENO *pTabFeno,double *newLambda,MATRIX_OBJECT *slitMatrix,double *slitParam,int slitType,INDEX indexFenoColumn,int wveDptFlag);
 RC   ANALYSE_LinFit(SVD *pSvd,int Npts,int Degree, const double *a, const double *sigma, const double *b, double *x);
 void ANALYSE_SvdFree(char *callingFunctionShort,SVD *pSvd);
 RC   ANALYSE_SvdLocalAlloc(char *callingFunctionShort,SVD *pSvd);

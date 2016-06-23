@@ -668,20 +668,34 @@ CWSlitSuperGaussEdit::CWSlitSuperGaussEdit(const struct slit_supergauss *d, QWid
   m_fwhmEdit->setFixedWidth(cStandardEditWidth);
   m_fwhmEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 50.0, 3, m_fwhmEdit));
 
+  // exponential term
+
   QLabel *labelExp = new QLabel(	"Exponential term", fwhmFrame);
   labelExp->setAlignment(Qt::AlignVCenter|Qt::AlignRight);
   labelExp->setMinimumSize(cSuggestedColumnZeroWidth, 0);
-
-  // exponential term
 
   m_expEdit = new QLineEdit(this);
   m_expEdit->setFixedWidth(cStandardEditWidth);
   m_expEdit->setValidator(new CDoubleFixedFmtValidator(-50., 50.0, 3, m_expEdit));
 
+  // Asymmetry factor
+
+  QLabel *labelAsym = new QLabel("Asymmetry factor", fwhmFrame);
+  labelAsym->setAlignment(Qt::AlignVCenter|Qt::AlignRight);
+  labelAsym->setMinimumSize(cSuggestedColumnZeroWidth, 0);
+
+  // asymmetry factor
+
+  m_asymEdit = new QLineEdit(this);
+  m_asymEdit->setFixedWidth(cStandardEditWidth);
+  m_asymEdit->setValidator(new CDoubleFixedFmtValidator(-50., 50.0, 3, m_asymEdit));
+
   fwhmFrameLayout->addWidget(labelFwhm,0,0,Qt::AlignRight);
   fwhmFrameLayout->addWidget(m_fwhmEdit,0,1,Qt::AlignLeft);
   fwhmFrameLayout->addWidget(labelExp,1,0,Qt::AlignRight);
   fwhmFrameLayout->addWidget(m_expEdit,1, 1,Qt::AlignLeft);
+  fwhmFrameLayout->addWidget(labelAsym,2,0,Qt::AlignRight);
+  fwhmFrameLayout->addWidget(m_asymEdit,2, 1,Qt::AlignLeft);
 
   QFrame *fileFrame = new QFrame(this);
   fileFrame->setFrameStyle(QFrame::NoFrame);
@@ -690,6 +704,7 @@ CWSlitSuperGaussEdit::CWSlitSuperGaussEdit(const struct slit_supergauss *d, QWid
 
   m_fwhmFileEdit = helperConstructFileEdit(fileFrameLayout, 0, "Gaussian FWHM File",d->filename, sizeof(d->filename)-1);
   m_expFileEdit = helperConstructFileEdit(fileFrameLayout, 1, "Exponential term File",d->filename2, sizeof(d->filename2)-1);
+  m_asymFileEdit = helperConstructFileEdit(fileFrameLayout, 2, "Asymmetry factor File",d->filename3, sizeof(d->filename3)-1);
 
   m_toggleWavelengthStack = new QStackedLayout;
   m_toggleWavelengthStack->setMargin(0);
@@ -713,10 +728,13 @@ void CWSlitSuperGaussEdit::reset(const struct slit_supergauss *d)
   m_fwhmEdit->setText(tmpStr);
   m_expEdit->validator()->fixup(tmpStr.setNum(d->exponential));
   m_expEdit->setText(tmpStr);
+  m_asymEdit->validator()->fixup(tmpStr.setNum(d->asym));
+  m_asymEdit->setText(tmpStr);
 
   m_wavelengthDependent->setCheckState(d->wveDptFlag ? Qt::Checked : Qt::Unchecked);
   m_fwhmFileEdit->setText(d->filename);
   m_expFileEdit->setText(d->filename2);
+  m_asymFileEdit->setText(d->filename3);
 
   m_toggleWavelengthStack->setCurrentIndex(d->wveDptFlag);
 }
@@ -725,10 +743,12 @@ void CWSlitSuperGaussEdit::apply(struct slit_supergauss *d) const
 {
   d->fwhm = m_fwhmEdit->text().toDouble();
   d->exponential = m_expEdit->text().toDouble();
+  d->asym= m_asymEdit->text().toDouble();
 
   d->wveDptFlag = m_wavelengthDependent->isChecked() ? 1 : 0;
   strcpy(d->filename, m_fwhmFileEdit->text().toAscii().data());
   strcpy(d->filename2, m_expFileEdit->text().toAscii().data());
+  strcpy(d->filename3, m_asymFileEdit->text().toAscii().data());
 
   m_toggleWavelengthStack->setCurrentIndex(d->wveDptFlag);
 }

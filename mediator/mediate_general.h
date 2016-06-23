@@ -101,8 +101,10 @@ extern "C" {
   	 int wveDptFlag;
   	 double fwhm;
   	 double exponential;
+  	 double asym;
   	 char filename[FILENAME_BUFFER_LENGTH];
   	 char filename2[FILENAME_BUFFER_LENGTH];
+  	 char filename3[FILENAME_BUFFER_LENGTH];
   };
 
   struct slit_apod {

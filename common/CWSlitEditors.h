@@ -160,9 +160,10 @@ class CWSlitSuperGaussEdit : public CWSlitFileBase
   void apply(struct slit_supergauss *d) const;
 
  private:
-  QLineEdit *m_fwhmFileEdit, *m_expFileEdit;
+  QLineEdit *m_fwhmFileEdit, *m_expFileEdit,*m_asymFileEdit;
   QLineEdit *m_fwhmEdit;
   QLineEdit *m_expEdit;
+  QLineEdit *m_asymEdit;
 };
 
 class CWSlitApodEdit : public QFrame

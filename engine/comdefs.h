@@ -253,7 +253,8 @@ SHORT_DATE;
 #define ERROR_ID_NFREE                         1230                             // problem with the number of degrees of freedom
 #define ERROR_ID_ORTHOGONAL_BASE               1240                             // problem with the orthogonalisation of cross sections
 #define ERROR_ID_ORTHOGONAL_CASCADE            1250                             // problem with the orthogonalisation of cross sections
-#define ERROR_ID_FWHM                          1260                             // Can't apply fitting of slit function parameters with calibration and resolution correction
+#define ERROR_ID_FWHM                          1260                             // wrong value of the FWHM
+#define ERROR_ID_FWHM_INCOMPATIBLE_OPTIONS     1261                             // Can't apply fitting of slit function parameters with calibration and resolution correction
 #define ERROR_ID_OUT_OF_RANGE                  1270                             // field is out of range
 #define ERROR_ID_FILE_AUTOMATIC                1280                             // no automatic reference selection can be performed on this type of file
 #define ERROR_ID_REF_ALIGNMENT                 1285                             // problem with the alignment of the reference spectrum in one analysis window

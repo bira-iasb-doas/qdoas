@@ -1345,21 +1345,19 @@ RC mediateRequestSetAnalysisLinear(const struct anlyswin_linear *pLinear,INDEX i
 // PURPOSE       Load non linear parameters for the calibration
 // -----------------------------------------------------------------------------
 
-#define NNONLINEAR_CALIB 4
-
 RC mediateRequestSetAnalysisNonLinearCalib(ENGINE_CONTEXT *pEngineContext,struct calibration_sfp *nonLinearCalib,double *lambda,INDEX indexFenoColumn)
  {
    // Declarations
 
-   ANALYSE_NON_LINEAR_PARAMETERS nonLinear[NNONLINEAR_CALIB];
+   ANALYSE_NON_LINEAR_PARAMETERS nonLinear[NSFP];
    INDEX indexNonLinear;
    RC rc;
 
    // Initialization
 
-   memset(nonLinear,0,sizeof(ANALYSE_NON_LINEAR_PARAMETERS)*NNONLINEAR_CALIB);
+   memset(nonLinear,0,sizeof(ANALYSE_NON_LINEAR_PARAMETERS)*NSFP);
 
-   for (indexNonLinear=0;indexNonLinear<NNONLINEAR_CALIB;indexNonLinear++)
+   for (indexNonLinear=0;indexNonLinear<NSFP;indexNonLinear++)
     {
      nonLinear[indexNonLinear].minValue=nonLinear[indexNonLinear].maxValue=(double)0.;
      sprintf(nonLinear[indexNonLinear].symbolName,"SFP %d",indexNonLinear+1);
@@ -1371,7 +1369,7 @@ RC mediateRequestSetAnalysisNonLinearCalib(ENGINE_CONTEXT *pEngineContext,struct
      nonLinear[indexNonLinear].storeError=nonLinearCalib[indexNonLinear].errStore;
     }
 
-   rc=ANALYSE_LoadNonLinear(pEngineContext,nonLinear,NNONLINEAR_CALIB,lambda,indexFenoColumn );
+   rc=ANALYSE_LoadNonLinear(pEngineContext,nonLinear,NSFP,lambda,indexFenoColumn );
 
    // Return
 
@@ -1814,7 +1812,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
          if ((pSlitOptions->slitFunction.slitType==SLIT_TYPE_NONE) && pTabFeno->xsToConvolute)
            rc = ERROR_SetLast("mediateRequestSetAnalysisWindows", ERROR_TYPE_FATAL, ERROR_ID_CONVOLUTION);
          else if (pTabFeno->xsToConvolute && /* pTabFeno->useEtalon && */ (pTabFeno->gomeRefFlag || pEngineContext->refFlag) &&
-                  ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,&ANALYSIS_slit2,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,indexFenoColumn,pSlitOptions->slitFunction.slitWveDptFlag))!=0))
+                  ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,ANALYSIS_slitMatrix,ANALYSIS_slitParam,pSlitOptions->slitFunction.slitType,indexFenoColumn,pSlitOptions->slitFunction.slitWveDptFlag))!=0))
 
            break;
        }

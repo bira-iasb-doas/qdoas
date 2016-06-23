@@ -144,21 +144,30 @@ RC mediateConvolutionSave(void *engineContext)
           slitType=pEngineContext->slitConv.slitType;
           fprintf(fp,"; Slit function type : %s %s\n",XSCONV_slitTypes[slitType],(pEngineContext->slitConv.slitWveDptFlag)?"wavelength dependent":"");
 
-          if (pEngineContext->slitConv.slitWveDptFlag)
+          if (slitType==SLIT_TYPE_FILE)
+           fprintf(fp,"; Slit function file : %s\n",pEngineContext->slitConv.slitFile);
+          else if (pEngineContext->slitConv.slitWveDptFlag)
            {
-            if ((slitType==SLIT_TYPE_FILE) || pEngineContext->slitConv.slitWveDptFlag)
+            if (strlen(pEngineContext->slitConv.slitFile))
              fprintf(fp,"; Slit function file : %s\n",pEngineContext->slitConv.slitFile);
-            if (pEngineContext->slitConv.slitWveDptFlag && strlen(pEngineContext->slitConv.slitFile2))
+            if (strlen(pEngineContext->slitConv.slitFile2))
              fprintf(fp,"; Slit function file 2 : %s\n",pEngineContext->slitConv.slitFile2);
+            if (strlen(pEngineContext->slitConv.slitFile3))
+             fprintf(fp,"; Slit function file 3 : %s\n",pEngineContext->slitConv.slitFile3);          // Super gaussian
            }
           else
            {
-            if ((slitType==SLIT_TYPE_GAUSS) || (slitType==SLIT_TYPE_INVPOLY) || (slitType==SLIT_TYPE_ERF) || (slitType==SLIT_TYPE_AGAUSS))
+            if ((slitType==SLIT_TYPE_GAUSS) || (slitType==SLIT_TYPE_INVPOLY) || (slitType==SLIT_TYPE_ERF) || (slitType==SLIT_TYPE_AGAUSS) || (slitType==SLIT_TYPE_SUPERGAUSS))
              fprintf(fp,"; Gaussian FWHM : %.3f\n",pEngineContext->slitConv.slitParam);
             if (slitType==SLIT_TYPE_ERF)
              fprintf(fp,"; Boxcar width : %.3f\n",pEngineContext->slitConv.slitParam2);
             if (slitType==SLIT_TYPE_AGAUSS)
              fprintf(fp,"; Asymmetry factor : %.3f\n",pEngineContext->slitConv.slitParam2);
+            if (slitType==SLIT_TYPE_SUPERGAUSS)
+             {
+             	fprintf(fp,"; Exponential term : %.3f\n",pEngineContext->slitConv.slitParam2);
+              fprintf(fp,"; Asymmetry factor : %.3f\n",pEngineContext->slitConv.slitParam3);
+             }
 
             if ((slitType== SLIT_TYPE_APOD) || (slitType== SLIT_TYPE_APODNBS))
              {
@@ -182,21 +191,30 @@ RC mediateConvolutionSave(void *engineContext)
            {
             fprintf(fp,"; Deconvolution Slit function type : %s %s\n",XSCONV_slitTypes[slitType],(pEngineContext->slitConv.slitWveDptFlag)?"wavelength dependent":"");
 
-            if (pEngineContext->slitDConv.slitWveDptFlag)
+            if (slitType==SLIT_TYPE_FILE)
+             fprintf(fp,"; Slit function file : %s\n",pEngineContext->slitDConv.slitFile);
+            else if (pEngineContext->slitDConv.slitWveDptFlag)
              {
-              if ((slitType==SLIT_TYPE_FILE) || pEngineContext->slitDConv.slitWveDptFlag)
+              if (strlen(pEngineContext->slitDConv.slitFile))
                fprintf(fp,"; Slit function file : %s\n",pEngineContext->slitDConv.slitFile);
-              if (pEngineContext->slitConv.slitWveDptFlag && strlen(pEngineContext->slitDConv.slitFile2))
+              if (strlen(pEngineContext->slitDConv.slitFile2))
                fprintf(fp,"; Slit function file 2 : %s\n",pEngineContext->slitDConv.slitFile2);
+              if (strlen(pEngineContext->slitDConv.slitFile3))
+               fprintf(fp,"; Slit function file 3 : %s\n",pEngineContext->slitDConv.slitFile3);          // Super gaussian
              }
             else
              {
-              if ((slitType==SLIT_TYPE_GAUSS) || (slitType==SLIT_TYPE_INVPOLY) || (slitType==SLIT_TYPE_ERF) || (slitType==SLIT_TYPE_AGAUSS))
+              if ((slitType==SLIT_TYPE_GAUSS) || (slitType==SLIT_TYPE_INVPOLY) || (slitType==SLIT_TYPE_ERF) || (slitType==SLIT_TYPE_AGAUSS) || (slitType==SLIT_TYPE_SUPERGAUSS))
                fprintf(fp,"; Gaussian FWHM : %.3f\n",pEngineContext->slitDConv.slitParam);
               if (slitType==SLIT_TYPE_ERF)
                fprintf(fp,"; Boxcar width : %.3f\n",pEngineContext->slitDConv.slitParam2);
               if (slitType==SLIT_TYPE_AGAUSS)
                fprintf(fp,"; Asymmetry factor : %.3f\n",pEngineContext->slitDConv.slitParam2);
+              if (slitType==SLIT_TYPE_SUPERGAUSS)
+               {
+               	fprintf(fp,"; Exponential term : %.3f\n",pEngineContext->slitDConv.slitParam2);
+                fprintf(fp,"; Asymmetry factor : %.3f\n",pEngineContext->slitDConv.slitParam3);
+               }
 
               if ((slitType== SLIT_TYPE_APOD) || (slitType== SLIT_TYPE_APODNBS))
                {
@@ -305,12 +323,9 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
   // Declarations
 
   ENGINE_XSCONV_CONTEXT *pEngineContext=(ENGINE_XSCONV_CONTEXT*)engineContext;
+  MATRIX_OBJECT XSCONV_slitMatrix[NSFP],XSCONV_slitDMatrix[NSFP];
 
-  MATRIX_OBJECT XSCONV_slitFunction,                                            // slit function (SFP1) used for convolution
-                XSCONV_slitFunction2,                                           // slit function (SFP2) used for convolution
-                XSCONV_slitDFunction,                                           // slit function (SFP1) used for deconvolution
-                XSCONV_slitDFunction2,                                          // slit function (SFP2) used for deconvolution
-                XSCONV_xshr,                                                    // high resolution cross section
+  MATRIX_OBJECT XSCONV_xshr,                                                    // high resolution cross section
                *pXsnew,                                                         // convoluted cross section
                 XSCONV_kurucz;                                                  // kurucz
 
@@ -318,10 +333,10 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
   SLIT *pSlitConv,*pSlitDConv;                                                  // pointers to the convolution and deconvolution slit function parts of the engine context
 
   char windowTitle[MAX_ITEM_TEXT_LEN],pageTitle[MAX_ITEM_TEXT_LEN];
-  double lambdaMin,lambdaMax,slitParam,slitParam2,slitWidth;
+  double lambdaMin,lambdaMax,slitParam[NSFP],slitParamD[NSFP],slitWidth;
 
   int slitType,slitType2,deconvFlag,dispConv;
-  int lowFilterType,highFilterType,nFilter;
+  int lowFilterType,highFilterType,nFilter,i;
   RC rc;
 
   // Slit function
@@ -332,17 +347,23 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
 
   // Initialize buffers
 
-  memset(&XSCONV_slitFunction,0,sizeof(MATRIX_OBJECT));
-  memset(&XSCONV_slitFunction2,0,sizeof(MATRIX_OBJECT));
-  memset(&XSCONV_slitDFunction,0,sizeof(MATRIX_OBJECT));
-  memset(&XSCONV_slitDFunction2,0,sizeof(MATRIX_OBJECT));
+  memset(XSCONV_slitMatrix,0,sizeof(MATRIX_OBJECT)*NSFP);
+  memset(XSCONV_slitDMatrix,0,sizeof(MATRIX_OBJECT)*NSFP);
+
+  slitParam[0]=pSlitConv->slitParam;
+  slitParam[1]=pSlitConv->slitParam2;
+  slitParam[2]=pSlitConv->slitParam3;
+
+  slitParamD[0]=pSlitDConv->slitParam;
+  slitParamD[1]=pSlitDConv->slitParam2;
+  slitParamD[2]=pSlitDConv->slitParam3;
+
   memset(&XSCONV_xshr,0,sizeof(MATRIX_OBJECT));
   memset(&XSCONV_kurucz,0,sizeof(MATRIX_OBJECT));
   memset(pXsnew,0,sizeof(MATRIX_OBJECT));
 
   slitType=pSlitConv->slitType;
   slitType2=pSlitDConv->slitType;
-  slitParam=slitParam2=(double)0.;
 
   // Filtering
 
@@ -387,11 +408,11 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
      (((lowFilterType==PRJCT_FILTER_TYPE_NONE) && (highFilterType==PRJCT_FILTER_TYPE_NONE)) ||
       ((pEngineContext->filterVector=(double *)MEMORY_AllocDVector("mediateConvolutionCalculate","filterVector",0,pXsnew->nl-1))!=NULL)) &&
       ((pEngineContext->convolutionType==CONVOLUTION_TYPE_NONE) ||
-     (!(rc=XSCONV_LoadSlitFunction(&XSCONV_slitFunction,&XSCONV_slitFunction2,&pEngineContext->slitConv,&slitParam,&slitType)) &&
+     (!(rc=XSCONV_LoadSlitFunction(XSCONV_slitMatrix,&pEngineContext->slitConv,&slitParam[0],&slitType)) &&
 
-      (!deconvFlag || !(rc=XSCONV_LoadSlitFunction(&XSCONV_slitDFunction,&XSCONV_slitDFunction2,pSlitDConv,&slitParam2,&slitType2))))))
+      (!deconvFlag || !(rc=XSCONV_LoadSlitFunction(XSCONV_slitDMatrix,pSlitDConv,&slitParamD[0],&slitType2))))))
    {
-    slitWidth=(double)3.*slitParam;
+    slitWidth=(double)3.*slitParam[0];
 
     // Window in wavelength
 
@@ -402,8 +423,8 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
      }
     else
      {
-      lambdaMin=pXsnew->matrix[0][0]+XSCONV_slitFunction.matrix[0][0]-1.;                     // add 1 nm
-      lambdaMax=pXsnew->matrix[0][pXsnew->nl-1]+XSCONV_slitFunction.matrix[0][XSCONV_slitFunction.nl-1]+1.;
+      lambdaMin=pXsnew->matrix[0][0]+XSCONV_slitMatrix[0].matrix[0][0]-1.;                     // add 1 nm
+      lambdaMax=pXsnew->matrix[0][pXsnew->nl-1]+XSCONV_slitMatrix[0].matrix[0][XSCONV_slitMatrix[0].nl-1]+1.;
      }
 
     if (deconvFlag)
@@ -411,7 +432,7 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
 
     // Determine effective slit function when a deconvolution slit function is given
 
-    if ((!deconvFlag || !(rc=XSCONV_NewSlitFunction(pSlitConv,&XSCONV_slitFunction,slitParam,pSlitDConv,&XSCONV_slitDFunction,slitParam2))) &&
+    if ((!deconvFlag || !(rc=XSCONV_NewSlitFunction(pSlitConv,XSCONV_slitMatrix,slitParam[0],pSlitDConv,XSCONV_slitDMatrix,slitParamD[0]))) &&                 // --- TO UPDATE
 
     // Load high resolution Kurucz file in convolution with I0 correction method
 
@@ -436,13 +457,11 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
         break;
      // ----------------------------------------------------------------------
         case CONVOLUTION_TYPE_STANDARD :
-         rc=XSCONV_TypeStandard(pXsnew,0,pXsnew->nl,&XSCONV_xshr,&XSCONV_slitFunction,&XSCONV_slitFunction2,&XSCONV_xshr,NULL,slitType,slitParam,
-                                 pEngineContext->slitConv.slitParam2,pSlitConv->slitWveDptFlag);
-
+         rc=XSCONV_TypeStandard(pXsnew,0,pXsnew->nl,&XSCONV_xshr,&XSCONV_xshr,NULL,slitType,XSCONV_slitMatrix,slitParam,pSlitConv->slitWveDptFlag);
          break;
      // ----------------------------------------------------------------------
         case CONVOLUTION_TYPE_I0_CORRECTION :
-          rc=XSCONV_TypeI0Correction(pXsnew,&XSCONV_xshr,&XSCONV_kurucz,&XSCONV_slitFunction,&XSCONV_slitFunction2,pEngineContext->conc,slitType,slitParam,pEngineContext->slitConv.slitParam2,pSlitConv->slitWveDptFlag);
+          rc=XSCONV_TypeI0Correction(pXsnew,&XSCONV_xshr,&XSCONV_kurucz,pEngineContext->conc,slitType,XSCONV_slitMatrix,slitParam,pSlitConv->slitWveDptFlag);
         break;
      // ----------------------------------------------------------------------
      }
@@ -521,10 +540,12 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
 
   // Release allocated buffers
 
-  MATRIX_Free(&XSCONV_slitFunction,"mediateConvolutionCalculate");
-  MATRIX_Free(&XSCONV_slitFunction2,"mediateConvolutionCalculate");
-  MATRIX_Free(&XSCONV_slitDFunction,"mediateConvolutionCalculate");
-  MATRIX_Free(&XSCONV_slitDFunction2,"mediateConvolutionCalculate");
+  for (i=0;i<NSFP;i++)
+   {
+    MATRIX_Free(&XSCONV_slitMatrix[i],__func__);
+    MATRIX_Free(&XSCONV_slitDMatrix[i],__func__);
+   }
+
   MATRIX_Free(&XSCONV_xshr,"mediateConvolutionCalculate");
   MATRIX_Free(&XSCONV_kurucz,"mediateConvolutionCalculate");
   MATRIX_Free(pXsnew,"mediateConvolutionCalculate");
@@ -756,21 +777,30 @@ void mediateRingHeader(ENGINE_XSCONV_CONTEXT *pEngineContext,FILE *fp)
   fprintf(fp,"; Calibration file : %s\n",pEngineContext->calibrationFile);
   fprintf(fp,"; Slit function type : %s %s\n",XSCONV_slitTypes[(slitType=pEngineContext->slitConv.slitType)],(pEngineContext->slitConv.slitWveDptFlag)?"wavelength dependent":"");
 
-  if (pEngineContext->slitConv.slitWveDptFlag)
+  if (slitType==SLIT_TYPE_FILE)
+   fprintf(fp,"; Slit function file : %s\n",pEngineContext->slitConv.slitFile);
+  else if (pEngineContext->slitConv.slitWveDptFlag)
    {
-    if ((slitType==SLIT_TYPE_FILE) || pEngineContext->slitConv.slitWveDptFlag)
+    if (strlen(pEngineContext->slitConv.slitFile))
      fprintf(fp,"; Slit function file : %s\n",pEngineContext->slitConv.slitFile);
-    if (pEngineContext->slitConv.slitWveDptFlag && strlen(pEngineContext->slitConv.slitFile2))
+    if (strlen(pEngineContext->slitConv.slitFile2))
      fprintf(fp,"; Slit function file 2 : %s\n",pEngineContext->slitConv.slitFile2);
+    if (strlen(pEngineContext->slitConv.slitFile3))
+     fprintf(fp,"; Slit function file 3 : %s\n",pEngineContext->slitConv.slitFile3);          // Super gaussian
    }
   else
    {
-    if ((slitType==SLIT_TYPE_GAUSS) || (slitType==SLIT_TYPE_INVPOLY) || (slitType==SLIT_TYPE_ERF) || (slitType==SLIT_TYPE_AGAUSS))
+    if ((slitType==SLIT_TYPE_GAUSS) || (slitType==SLIT_TYPE_INVPOLY) || (slitType==SLIT_TYPE_ERF) || (slitType==SLIT_TYPE_AGAUSS) || (slitType==SLIT_TYPE_SUPERGAUSS))
      fprintf(fp,"; Gaussian FWHM : %.3f\n",pEngineContext->slitConv.slitParam);
     if (slitType==SLIT_TYPE_ERF)
      fprintf(fp,"; Boxcar width : %.3f\n",pEngineContext->slitConv.slitParam2);
     if (slitType==SLIT_TYPE_AGAUSS)
      fprintf(fp,"; Asymmetry factor : %.3f\n",pEngineContext->slitConv.slitParam2);
+    if (slitType==SLIT_TYPE_SUPERGAUSS)
+     {
+     	fprintf(fp,"; Exponential term : %.3f\n",pEngineContext->slitConv.slitParam2);
+      fprintf(fp,"; Asymmetry factor : %.3f\n",pEngineContext->slitConv.slitParam3);
+     }
 
     if ((slitType== SLIT_TYPE_APOD) || (slitType== SLIT_TYPE_APODNBS))
      {
@@ -821,13 +851,12 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
          *raman,*raman2,*ramanint,*ringEnd,                                     // output ring cross section
          *solarLambda,*solarVector,*solarDeriv2,                                // substitution vectors for solar spectrum
          *slitLambda,*slitVector,*slitDeriv2,                                   // substitution vectors for slit function
-         *slitLambda2,*slitVector2,*slitDeriv22,                                   // substitution vectors for slit function
+         *slitLambda2,*slitVector2,*slitDeriv22,                                // substitution vectors for slit function
          *ringLambda,*ringVector,                                               // substitution vectors for ring cross section
           temp,                                                                 // approximate average temperature in °K for scattering
-          slitParam,                                                            // gaussian full width at half maximum
-          slitParam2;                                                           // other slit function parameters
+          slitParam[NSFP];                                                      // gaussian full width at half maximum
 
-  MATRIX_OBJECT  xsSolar,xsSolarConv,xsSlit,xsSlit2,xsRing,*pSlit,*pSlit2;                     // solar spectrum and slit function
+  MATRIX_OBJECT  xsSolar,xsSolarConv,xsSlit[NSFP],xsRing,*pSlit,*pSlit2,*pSlit3;// solar spectrum and slit function
   int     nsolar,nslit,nslit2,nring,                                            // size of previous vectors
           wveDptFlag,
           slitType;                                                             // type of the slit function
@@ -845,15 +874,19 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
 
   memset(&xsSolar,0,sizeof(MATRIX_OBJECT));
   memset(&xsSolarConv,0,sizeof(MATRIX_OBJECT));
-  memset(&xsSlit,0,sizeof(MATRIX_OBJECT));
-  memset(&xsSlit2,0,sizeof(MATRIX_OBJECT));
+  memset(xsSlit,0,sizeof(MATRIX_OBJECT)*NSFP);
   memset(&xsRing,0,sizeof(MATRIX_OBJECT));
   memset(&slitTmp,0,sizeof(MATRIX_OBJECT));
 
+  slitParam[0]=pEngineContext->slitConv.slitParam;
+  slitParam[1]=pEngineContext->slitConv.slitParam2;
+  slitParam[2]=pEngineContext->slitConv.slitParam3;
+
+  slitLambda=slitVector=slitDeriv2=NULL;
+  slitLambda2=slitVector2=slitDeriv22=NULL;
 
   slitWidth=(double)RING_SLIT_WIDTH;                                            // NB : force slit width to 6 because of convolutions
   slitType=pEngineContext->slitConv.slitType;
-  slitParam2=pEngineContext->slitConv.slitParam2;
   o2xref=n2pos2=raman=raman2=ramanint=ringEnd=NULL;
   slitLambda2=slitVector2=slitDeriv22=NULL;
   temp=(double)pEngineContext->temperature;                                        // (double)250.;   May 2005/05/31
@@ -890,7 +923,7 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
 
   // Load slit function from file or pre-calculate the slit function
 
-          ((slitType==SLIT_TYPE_NONE) || !(rc=XSCONV_LoadSlitFunction(&xsSlit,&xsSlit2,&pEngineContext->slitConv,&slitParam,&slitType))) &&
+          ((slitType==SLIT_TYPE_NONE) || !(rc=XSCONV_LoadSlitFunction(xsSlit,&pEngineContext->slitConv,&slitParam[0],&slitType))) &&
 
   // Load solar spectrum in the range of wavelengths covered by the end wavelength scale corrected by the slit function
 
@@ -909,8 +942,9 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
     for (i=0;i<xsSolarConv.nl;i++)
      xsSolarConv.matrix[0][i]=xsSolar.matrix[0][i];
 
-    pSlit=&xsSlit;
-    pSlit2=&xsSlit2;
+    pSlit=&xsSlit[0];
+    pSlit2=&xsSlit[1];
+    pSlit3=&xsSlit[3];
 
     solarLambda=xsSolarConv.matrix[0];
     solarVector=xsSolarConv.matrix[1];
@@ -954,7 +988,7 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
         memcpy(slitTmp.matrix[0],(double *)pSlit->matrix[0]+1,sizeof(double)*(pSlit->nl-1));
        }
 
-      if (wveDptFlag && ((slitType==SLIT_TYPE_FILE) || (slitType==SLIT_TYPE_ERF) || (slitType==SLIT_TYPE_VOIGT) || (slitType==SLIT_TYPE_AGAUSS)))
+      if (wveDptFlag && ((slitType==SLIT_TYPE_FILE) || (slitType==SLIT_TYPE_ERF) || (slitType==SLIT_TYPE_VOIGT) || (slitType==SLIT_TYPE_AGAUSS) || (slitType==SLIT_TYPE_SUPERGAUSS)))
        {
         slitLambda2=pSlit2->matrix[0];
         slitVector2=pSlit2->matrix[1];
@@ -986,7 +1020,7 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
      {
      	// Start convolving the solar spectrum
 
-      if (((slitType!=SLIT_TYPE_NONE) && ((rc=XSCONV_TypeStandard(&xsSolarConv,0,xsSolarConv.nl,&xsSolar,&xsSlit,&xsSlit2,&xsSolar,NULL,slitType,slitParam,slitParam2,pEngineContext->slitConv.slitWveDptFlag))!=ERROR_ID_NO)) ||
+      if (((slitType!=SLIT_TYPE_NONE) && ((rc=XSCONV_TypeStandard(&xsSolarConv,0,xsSolarConv.nl,&xsSolar,&xsSolar,NULL,slitType,xsSlit,slitParam,pEngineContext->slitConv.slitWveDptFlag))!=ERROR_ID_NO)) ||
           ((rc=SPLINE_Deriv2(solarLambda,solarVector,solarDeriv2,nsolar,"mediateRingCalculate"))!=0))
        goto EndRing;
 
@@ -1008,21 +1042,21 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
           if (wveDptFlag)
            {
             if ((slitLambda2!=NULL) &&
-               ((rc=SPLINE_Vector(slitLambda2,slitVector2,slitDeriv22,nslit2,&lambda,&slitParam2,1,SPLINE_CUBIC,"mediateRingCalculate"))!=0))
+               ((rc=SPLINE_Vector(slitLambda2,slitVector2,slitDeriv22,nslit2,&lambda,&slitParam[1],1,SPLINE_CUBIC,"mediateRingCalculate"))!=0))
              goto EndRing;
 
             if (slitType==SLIT_TYPE_FILE)
              {
              	for (j=0;j<slitTmp.nl;j++)
-               slitLambda[j]=slitTmp.matrix[0][j]*slitParam2;
+               slitLambda[j]=slitTmp.matrix[0][j]*slitParam[1];
 
               // Recalculate second derivatives and the FWHM
 
               if (!(rc=SPLINE_Deriv2(slitLambda,slitVector,slitDeriv2,slitTmp.nl,"mediateRingCalculate ")))
-               rc=XSCONV_GetFwhm(slitLambda,slitVector,slitDeriv2,slitTmp.nl,SLIT_TYPE_FILE,&slitParam);
+               rc=XSCONV_GetFwhm(slitLambda,slitVector,slitDeriv2,slitTmp.nl,SLIT_TYPE_FILE,&slitParam[0]);
              }
             else
-            	rc=SPLINE_Vector(slitLambda,slitVector,slitDeriv2,nslit,&lambda,&slitParam,1,SPLINE_CUBIC,"mediateRingCalculate ");
+            	rc=SPLINE_Vector(slitLambda,slitVector,slitDeriv2,nslit,&lambda,&slitParam[0],1,SPLINE_CUBIC,"mediateRingCalculate ");
            }
           else if ((slitType==SLIT_TYPE_FILE) && (pSlit->nc>2))
            {
@@ -1153,8 +1187,11 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
 
   MATRIX_Free(&xsSolar,"mediateRingCalculate");
   MATRIX_Free(&xsSolarConv,"mediateRingCalculate");
-  MATRIX_Free(&xsSlit,"mediateRingCalculate");
-  MATRIX_Free(&xsSlit2,"mediateRingCalculate");
+
+  for (i=0;i<NSFP;i++)
+   MATRIX_Free(&xsSlit[i],"mediateRingCalculate");
+
+
   MATRIX_Free(&xsRing,"mediateRingCalculate");
   MATRIX_Free(&slitTmp,"mediateRingCalculate");
 
@@ -1280,21 +1317,30 @@ void UsampWriteHeader(ENGINE_XSCONV_CONTEXT *pEngineContext,FILE *fp,int phase)
 
   fprintf(fp,"; Slit function type : %s %s\n",XSCONV_slitTypes[(slitType=pEngineContext->slitConv.slitType)],(pEngineContext->slitConv.slitWveDptFlag)?"wavelength dependent":"");
 
-  if (pEngineContext->slitConv.slitWveDptFlag)
+  if (slitType==SLIT_TYPE_FILE)
+   fprintf(fp,"; Slit function file : %s\n",pEngineContext->slitConv.slitFile);
+  else if (pEngineContext->slitConv.slitWveDptFlag)
    {
-    if ((slitType==SLIT_TYPE_FILE) || pEngineContext->slitConv.slitWveDptFlag)
+    if (strlen(pEngineContext->slitConv.slitFile))
      fprintf(fp,"; Slit function file : %s\n",pEngineContext->slitConv.slitFile);
-    if (pEngineContext->slitConv.slitWveDptFlag && strlen(pEngineContext->slitConv.slitFile2))
+    if (strlen(pEngineContext->slitConv.slitFile2))
      fprintf(fp,"; Slit function file 2 : %s\n",pEngineContext->slitConv.slitFile2);
+    if (strlen(pEngineContext->slitConv.slitFile3))
+     fprintf(fp,"; Slit function file 3 : %s\n",pEngineContext->slitConv.slitFile3);          // Super gaussian
    }
   else
    {
-    if ((slitType==SLIT_TYPE_GAUSS) || (slitType==SLIT_TYPE_INVPOLY) || (slitType==SLIT_TYPE_ERF) || (slitType==SLIT_TYPE_AGAUSS))
+    if ((slitType==SLIT_TYPE_GAUSS) || (slitType==SLIT_TYPE_INVPOLY) || (slitType==SLIT_TYPE_ERF) || (slitType==SLIT_TYPE_AGAUSS) || (slitType==SLIT_TYPE_SUPERGAUSS))
      fprintf(fp,"; Gaussian FWHM : %.3f\n",pEngineContext->slitConv.slitParam);
     if (slitType==SLIT_TYPE_ERF)
      fprintf(fp,"; Boxcar width : %.3f\n",pEngineContext->slitConv.slitParam2);
     if (slitType==SLIT_TYPE_AGAUSS)
      fprintf(fp,"; Asymmetry factor : %.3f\n",pEngineContext->slitConv.slitParam2);
+    if (slitType==SLIT_TYPE_SUPERGAUSS)
+     {
+     	fprintf(fp,"; Exponential term : %.3f\n",pEngineContext->slitConv.slitParam2);
+      fprintf(fp,"; Asymmetry factor : %.3f\n",pEngineContext->slitConv.slitParam3);
+     }
 
     if ((slitType== SLIT_TYPE_APOD) || (slitType== SLIT_TYPE_APODNBS))
      {

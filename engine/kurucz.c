@@ -709,8 +709,8 @@ RC KuruczConvolveSolarSpectrum(MATRIX_OBJECT *pSolar,double *newlambda,int n_wav
  	// Declarations
 
  	CROSS_REFERENCE *TabCross;
- 	MATRIX_OBJECT slitXs;
-  MATRIX_OBJECT slitXs2;
+  MATRIX_OBJECT slitMatrix[NSFP],*pSlitMatrix;
+  double slitParam[NSFP];
   SLIT slitOptions;
   int slitType;
   int shiftIndex,i;
@@ -724,11 +724,13 @@ RC KuruczConvolveSolarSpectrum(MATRIX_OBJECT *pSolar,double *newlambda,int n_wav
   TabCross=Feno->TabCross;
   rc=ERROR_ID_NO;
 
-  memset(&slitXs,0,sizeof(MATRIX_OBJECT));
-  memset(&slitXs2,0,sizeof(MATRIX_OBJECT));
+  memset(slitMatrix,0,sizeof(MATRIX_OBJECT)*NSFP);
 
   memcpy(pSolar->matrix[0],newlambda,sizeof(double)*n_wavel);
   memcpy(pSolar->matrix[1],ANALYSE_zeros,sizeof(double)*n_wavel);
+
+  for (i=0;i<NSFP;i++)
+   slitParam[i]=(double)0.;
 
   slitType=pKuruczOptions->fwhmType;
 
@@ -743,24 +745,26 @@ RC KuruczConvolveSolarSpectrum(MATRIX_OBJECT *pSolar,double *newlambda,int n_wav
     fwhmStretch1=(Feno->indexFwhmParam[0]!=ITEM_NONE)?(double)TabCross[Feno->indexFwhmParam[0]].InitParam:(double)1.;
     fwhmStretch2=(Feno->indexFwhmParam[1]!=ITEM_NONE)?(double)TabCross[Feno->indexFwhmParam[1]].InitParam:(double)1.;
 
- 	  if (MATRIX_Allocate(&slitXs,nl,nc,0,0,1,__func__))
+    pSlitMatrix=&slitMatrix[0];
+
+ 	  if (MATRIX_Allocate(pSlitMatrix,nl,nc,0,0,1,__func__))
  	   rc=ERROR_ID_ALLOC;
     else
      {
       // make a backup of the matrix
 
       for (i=0;i<nc;i++)
-        memcpy(slitXs.matrix[i],KURUCZ_buffers[indexFenoColumn].slitFunction.matrix[i],sizeof(double)*nl);
+        memcpy(pSlitMatrix->matrix[i],KURUCZ_buffers[indexFenoColumn].slitFunction.matrix[i],sizeof(double)*nl);
 
  	    // Apply the stretch on the slit wavelength calibration
 
- 	    for (i=shiftIndex;i<slitXs.nl;i++)
-        slitXs.matrix[0][i]=(slitXs.matrix[0][i]<(double)0.)?fwhmStretch1*KURUCZ_buffers[indexFenoColumn].slitFunction.matrix[0][i]:fwhmStretch2*KURUCZ_buffers[indexFenoColumn].slitFunction.matrix[0][i];
+ 	    for (i=shiftIndex;i<pSlitMatrix->nl;i++)
+        pSlitMatrix->matrix[0][i]=(pSlitMatrix->matrix[0][i]<(double)0.)?fwhmStretch1*KURUCZ_buffers[indexFenoColumn].slitFunction.matrix[0][i]:fwhmStretch2*KURUCZ_buffers[indexFenoColumn].slitFunction.matrix[0][i];
 
  	    // Recalculate second derivatives and the FWHM
 
- 	    for (i=1;i<slitXs.nc;i++)
-        rc=SPLINE_Deriv2(slitXs.matrix[0]+shiftIndex,slitXs.matrix[1]+shiftIndex,slitXs.deriv2[i]+shiftIndex,slitXs.nl-shiftIndex,__func__);
+ 	    for (i=1;i<pSlitMatrix->nc;i++)
+        rc=SPLINE_Deriv2(pSlitMatrix->matrix[0]+shiftIndex,pSlitMatrix->matrix[1]+shiftIndex,pSlitMatrix->deriv2[i]+shiftIndex,pSlitMatrix->nl-shiftIndex,__func__);
      }
    }
   else
@@ -771,19 +775,20 @@ RC KuruczConvolveSolarSpectrum(MATRIX_OBJECT *pSolar,double *newlambda,int n_wav
     slitOptions.slitFile[0]=0;
     slitOptions.slitParam=TabCross[Feno->indexFwhmParam[0]].InitParam;
     slitOptions.slitParam2=(slitType==SLIT_TYPE_GAUSS)?(double)0.:TabCross[Feno->indexFwhmParam[1]].InitParam;
+    slitOptions.slitParam3=(slitType==SLIT_TYPE_SUPERGAUSS)?TabCross[Feno->indexFwhmParam[2]].InitParam:(double)0.;
 
-    rc=XSCONV_LoadSlitFunction(&slitXs,&slitXs2,&slitOptions,NULL,&slitType);
+    rc=XSCONV_LoadSlitFunction(slitMatrix,&slitOptions,NULL,&slitType);
    }
 
   // convolution of the solar spectrum
 
   if (!rc)
-   rc=XSCONV_TypeStandard(pSolar,0,n_wavel,&KURUCZ_buffers[indexFenoColumn].hrSolar,&slitXs,&slitXs2,&KURUCZ_buffers[indexFenoColumn].hrSolar,NULL,slitType,slitOptions.slitParam,slitOptions.slitParam2,0);
+   rc=XSCONV_TypeStandard(pSolar,0,n_wavel,&KURUCZ_buffers[indexFenoColumn].hrSolar,&KURUCZ_buffers[indexFenoColumn].hrSolar,NULL,slitType,slitMatrix,slitParam,0);
 
   // Release allocated buffers
 
-  MATRIX_Free(&slitXs,__func__);
-  MATRIX_Free(&slitXs2,__func__);
+  for (i=0;i<NSFP;i++)
+   MATRIX_Free(&slitMatrix[i],__func__);
 
   // Return
 
@@ -985,6 +990,7 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
   CROSS_RESULTS   *pResults,*Results;                                           // pointer to results associated to a symbol
   SVD             *svdFeno;                                                     // svd environments associated to list of little windows
   double          *VPix,*VSig,*Pcalib,                                          // polynomial coefficients computation
+     slitParam[NSFP],
     *shiftPoly,
     *pixMid,*VLambda,*VShift,
     *dispAbsolu,*dispSecX,
@@ -1014,6 +1020,10 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
   solar=NULL;
   const int oldNDET = NDET[indexFenoColumn];
   spectrumData=NULL;
+
+  slitParam[0]=pSlitOptions->slitFunction.slitParam;
+  slitParam[1]=pSlitOptions->slitFunction.slitParam2;
+  slitParam[2]=pSlitOptions->slitFunction.slitParam3;
 
   pKurucz->KuruczFeno[indexFeno].have_calibration = true;
 
@@ -1094,8 +1104,8 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
                          oldLambda,solar,n_wavel,pAnalysisOptions->interpol,__func__);
     } else {
       // 20130208 : a high resolution spectrum is now loaded from the slit page of project properties and convolved
-      rc=ANALYSE_ConvoluteXs(NULL,ANLYS_CROSS_ACTION_CONVOLUTE,(double)0.,&pKurucz->hrSolar,&ANALYSIS_slit,&ANALYSIS_slit2,
-                             pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,
+      rc=ANALYSE_ConvoluteXs(NULL,ANLYS_CROSS_ACTION_CONVOLUTE,(double)0.,&pKurucz->hrSolar,
+                             ANALYSIS_slitMatrix,slitParam,pSlitOptions->slitFunction.slitType,
                              oldLambda,solar,0,n_wavel,n_wavel,0,pSlitOptions->slitFunction.slitWveDptFlag);
     }
   } else {
@@ -1304,6 +1314,7 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
 
   if ((rc=ANALYSE_LinFit(&Feno->svd,Nb_Win,pKurucz->shiftDegree,VPix,NULL,VShift,Pcalib))!=ERROR_ID_NO)
     goto EndKuruczSpectrum;
+
 
   if (pKuruczOptions->fwhmFit) {
     for (indexParam=0;indexParam<maxParam;indexParam++)
@@ -1640,15 +1651,15 @@ RC KURUCZ_ApplyCalibration(FENO *pTabFeno,double *newLambda,INDEX indexFenoColum
 {
   // Declarations
 
-  MATRIX_OBJECT wveDptStretch;    // for slit function file type, the wavelength dependent stretch is saved as a slit matrix
-  double slitParam2;
-  INDEX indexWindow;
+  MATRIX_OBJECT slitMatrix[NSFP];
+  double slitParam[NSFP];
+  INDEX indexWindow,i;
   int newDimL = 0;
   RC rc;
 
   // Initializations
   const int n_wavel = NDET[indexFenoColumn];
-  memset(&wveDptStretch,0,sizeof(MATRIX_OBJECT));
+  memset(slitMatrix,0,sizeof(MATRIX_OBJECT)*NSFP);
   rc=0;
 
   // Rebuild gaps
@@ -1678,36 +1689,62 @@ RC KURUCZ_ApplyCalibration(FENO *pTabFeno,double *newLambda,INDEX indexFenoColum
   // Force decomposition
 
   pTabFeno->Decomp=1;
-  slitParam2=(pKuruczOptions->fwhmType!=SLIT_TYPE_INVPOLY)?(double)0.:(double)pKuruczOptions->invPolyDegree;
+
+  for (i=0;i<NSFP;i++)
+   slitParam[i]=(double)0.;
+
+  if (pKuruczOptions->fwhmType==SLIT_TYPE_INVPOLY)
+   slitParam[1]=(double)pKuruczOptions->invPolyDegree;
+
 
   if (pTabFeno->xsToConvolute &&                                                                // slit function to convolute
       (pTabFeno->useKurucz==ANLYS_KURUCZ_REF || pTabFeno->useKurucz==ANLYS_KURUCZ_SPEC) &&    // calibration applied on the reference or the spectrum
-      pKuruczOptions->fwhmFit &&                                                                // fit of the slit function
-      pKuruczOptions->fwhmType==SLIT_TYPE_FILE                                                // slit function is file type
-      ) {
-    if (MATRIX_Allocate(&wveDptStretch,n_wavel,3,0,0,1,__func__)!=0)
-      rc=ERROR_ID_ALLOC;
-    else {
-      memcpy(wveDptStretch.matrix[0],newLambda,sizeof(double)*n_wavel);
-      memcpy(wveDptStretch.matrix[1],pTabFeno->fwhmVector[0],sizeof(double)*n_wavel);
-      memcpy(wveDptStretch.matrix[2],pTabFeno->fwhmVector[1],sizeof(double)*n_wavel);
+      pKuruczOptions->fwhmFit)                                                               // fit of the slit function
+   {
+   	if (pKuruczOptions->fwhmType==SLIT_TYPE_FILE)                                                // slit function is file type
+   	 {
+   	 	if (!(rc=MATRIX_Copy(&slitMatrix[0],&KURUCZ_buffers[indexFenoColumn].slitFunction,__func__)) &&
+   	 	    !(rc=MATRIX_Allocate(&slitMatrix[1],n_wavel,3,0,0,1,__func__)))
+   	 	 {
+        memcpy(slitMatrix[1].matrix[0],newLambda,sizeof(double)*n_wavel);
+        memcpy(slitMatrix[1].matrix[1],pTabFeno->fwhmVector[0],sizeof(double)*n_wavel);
+        memcpy(slitMatrix[1].matrix[2],pTabFeno->fwhmVector[1],sizeof(double)*n_wavel);
 
-      if (!(rc=SPLINE_Deriv2(wveDptStretch.matrix[0],wveDptStretch.matrix[1],wveDptStretch.deriv2[1],wveDptStretch.nl,__func__)))
-        rc=SPLINE_Deriv2(wveDptStretch.matrix[0],wveDptStretch.matrix[2],wveDptStretch.deriv2[2],wveDptStretch.nl,__func__);
-    }
-  }
+        if (!(rc=SPLINE_Deriv2(slitMatrix[1].matrix[0],slitMatrix[1].matrix[1],slitMatrix[1].deriv2[1],slitMatrix[1].nl,__func__)))
+          rc=SPLINE_Deriv2(slitMatrix[1].matrix[0],slitMatrix[1].matrix[2],slitMatrix[1].deriv2[2],slitMatrix[1].nl,__func__);
+   	 	 }
+     }
+    else
+     {
+  	   for (i=0;(i<NSFP) && !rc;i++)
+  	    if (pTabFeno->fwhmVector[i]!=NULL)
+  	     {
+         if (MATRIX_Allocate(&slitMatrix[i],n_wavel,2,0,0,1,__func__)!=0)
+          rc=ERROR_ID_ALLOC;
+         else
+          {
+           memcpy(slitMatrix[i].matrix[0],newLambda,sizeof(double)*n_wavel);
+           memcpy(slitMatrix[i].matrix[1],pTabFeno->fwhmVector[i],sizeof(double)*n_wavel);
 
-  if (((pTabFeno->rcKurucz=ANALYSE_XsInterpolation(pTabFeno,newLambda,indexFenoColumn))!=ERROR_ID_NO) ||
+           rc=SPLINE_Deriv2(slitMatrix[i].matrix[0],slitMatrix[i].matrix[1],slitMatrix[i].deriv2[1],slitMatrix[i].nl,__func__);
+          }
+        }
+     }
+   }
+
+  if (!rc &&
+     (((pTabFeno->rcKurucz=ANALYSE_XsInterpolation(pTabFeno,newLambda,indexFenoColumn))!=ERROR_ID_NO) ||
        (pTabFeno->xsToConvolute && ((pTabFeno->useKurucz==ANLYS_KURUCZ_REF) || (pTabFeno->useKurucz==ANLYS_KURUCZ_SPEC)) &&
-      ((pKuruczOptions->fwhmFit && (pKuruczOptions->fwhmType!=SLIT_TYPE_FILE) && ((pTabFeno->rcKurucz=ANALYSE_XsConvolution(pTabFeno,newLambda,NULL,NULL,pKuruczOptions->fwhmType,pTabFeno->fwhmVector[0],(pKuruczOptions->fwhmType!=SLIT_TYPE_INVPOLY)?pTabFeno->fwhmVector[1]:&slitParam2,indexFenoColumn,0))!=ERROR_ID_NO)) ||
-       (pKuruczOptions->fwhmFit && (pKuruczOptions->fwhmType==SLIT_TYPE_FILE) && ((pTabFeno->rcKurucz=ANALYSE_XsConvolution(pTabFeno,newLambda,&KURUCZ_buffers[indexFenoColumn].slitFunction,&wveDptStretch,pKuruczOptions->fwhmType,&slitParam2,&slitParam2,indexFenoColumn,1))!=ERROR_ID_NO)) ||
-      (!pKuruczOptions->fwhmFit && ((pTabFeno->rcKurucz=ANALYSE_XsConvolution(pTabFeno,newLambda,&ANALYSIS_slit,&ANALYSIS_slit2,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,indexFenoColumn,pSlitOptions->slitFunction.slitWveDptFlag))!=ERROR_ID_NO)))))
+      ((pKuruczOptions->fwhmFit && (pKuruczOptions->fwhmType!=SLIT_TYPE_FILE) && ((pTabFeno->rcKurucz=ANALYSE_XsConvolution(pTabFeno,newLambda,slitMatrix,slitParam,pKuruczOptions->fwhmType,indexFenoColumn,1))!=ERROR_ID_NO)) ||
+       (pKuruczOptions->fwhmFit && (pKuruczOptions->fwhmType==SLIT_TYPE_FILE) && ((pTabFeno->rcKurucz=ANALYSE_XsConvolution(pTabFeno,newLambda,slitMatrix,slitParam,pKuruczOptions->fwhmType,indexFenoColumn,1))!=ERROR_ID_NO)) ||
+      (!pKuruczOptions->fwhmFit && ((pTabFeno->rcKurucz=ANALYSE_XsConvolution(pTabFeno,newLambda,ANALYSIS_slitMatrix,ANALYSIS_slitParam,pSlitOptions->slitFunction.slitType,indexFenoColumn,pSlitOptions->slitFunction.slitWveDptFlag))!=ERROR_ID_NO))))))
 
    rc=pTabFeno->rcKurucz;
 
   // Release allocated matrix object
 
-  MATRIX_Free(&wveDptStretch,__func__);
+  for (i=0;i<NSFP;i++)
+   MATRIX_Free(&slitMatrix[i],__func__);
 
   // Return
 

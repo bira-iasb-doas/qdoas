@@ -360,7 +360,7 @@ RC MKZY_ReadRecord(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp)
   const int n_wavel = NDET[0];
 
   // Initialize the spectrum
-  
+
   for (i=0;i<n_wavel;i++)
     spectrum[i]=(double)0.;
 
@@ -498,7 +498,7 @@ RC MKZY_ReadRecord(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp)
 
 RC MKZY_SearchForOffset(ENGINE_CONTEXT *pEngineContext,FILE *specFp) {
   // Declarations
-  
+
   INDEX indexRecord;
   double *offset,*darkCurrent;
   int i;
@@ -514,18 +514,18 @@ RC MKZY_SearchForOffset(ENGINE_CONTEXT *pEngineContext,FILE *specFp) {
   const int n_wavel = NDET[0];
 
   // Search for the spectrum
-  
+
   for (indexRecord=1;indexRecord<=pEngineContext->recordInfo.mkzy.recordNumber;indexRecord++)
     if (!(rc=MKZY_ReadRecord(pEngineContext,indexRecord,specFp))) {
       // Dark current
-      
+
       if ((darkCurrent!=NULL) && !strncasecmp(pEngineContext->recordInfo.Nom,"dark",4)) {
         memcpy(darkCurrent,pEngineContext->buffers.spectrum,sizeof(double)*n_wavel);
         pEngineContext->recordInfo.mkzy.darkFlag=1;
         pEngineContext->recordInfo.mkzy.darkScans=pEngineContext->recordInfo.NSomme;
         pEngineContext->recordInfo.mkzy.darkTint=pEngineContext->recordInfo.Tint;
       }
-      
+
      // Offset
 
      if ((offset!=NULL) && !strncasecmp(pEngineContext->recordInfo.Nom,"offset",6)) {
@@ -566,25 +566,25 @@ RC MKZY_SearchForSky(ENGINE_CONTEXT *pEngineContext,FILE *specFp) {
     if (!(rc=MKZY_ReadRecord(pEngineContext,indexRecord,specFp)) && !strncasecmp(pEngineContext->recordInfo.Nom,"sky",3)) {
       memcpy(pEngineContext->buffers.scanRef,pEngineContext->buffers.spectrum,sizeof(double)*n_wavel);
       pEngineContext->recordInfo.mkzy.skyFlag=1;
-      
+
       // Correct by offset and dark current
-      
+
       if (pEngineContext->recordInfo.mkzy.darkFlag && pEngineContext->recordInfo.mkzy.offsetFlag) // similar MFC correction
         for (i=0;i<n_wavel;i++)
           pEngineContext->buffers.scanRef[i]-=(double)(pEngineContext->buffers.offset[i]*pEngineContext->recordInfo.NSomme/pEngineContext->recordInfo.mkzy.offsetScans+
                                                        pEngineContext->buffers.darkCurrent[i]*pEngineContext->recordInfo.Tint/(pEngineContext->recordInfo.mkzy.darkTint*pEngineContext->recordInfo.mkzy.darkScans));
-      
+
       // Correct by the dark current
-     
+
       else if (pEngineContext->recordInfo.mkzy.darkFlag)
         for (i=0;i<n_wavel;i++)
           pEngineContext->buffers.scanRef[i]-=(double)pEngineContext->buffers.darkCurrent[i]*pEngineContext->recordInfo.NSomme/pEngineContext->recordInfo.mkzy.darkScans;
-      
+
       break;
     }
-  
+
   // Return
-  
+
   return rc;
 }
 
@@ -863,7 +863,7 @@ RC MKZY_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           if (((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef,0))!=ERROR_ID_NO) ||
               (!pKuruczOptions->fwhmFit && pTabFeno->xsToConvolute &&
-              ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,&ANALYSIS_slit,&ANALYSIS_slit2,pSlitOptions->slitFunction.slitType,&pSlitOptions->slitFunction.slitParam,&pSlitOptions->slitFunction.slitParam2,0,pSlitOptions->slitFunction.slitWveDptFlag))!=ERROR_ID_NO)))
+              ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,ANALYSIS_slitMatrix,ANALYSIS_slitParam,pSlitOptions->slitFunction.slitType,0,pSlitOptions->slitFunction.slitWveDptFlag))!=ERROR_ID_NO)))
 
            goto EndMKZY_LoadAnalysis;
          }
