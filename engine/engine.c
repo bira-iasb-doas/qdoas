@@ -670,7 +670,9 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
        rc=AIRBORNE_Set(pEngineContext,pFile->specFp);
        break;
      case PRJCT_INSTR_FORMAT_APEX :
+       printf("%s call apex_set\n",__func__);
        rc=apex_set(pEngineContext);
+       printf("%s exit apex_set\n",__func__);
        break;
        // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_MFC :
@@ -1736,7 +1738,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                useKurucz++;
               }
              else if (((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef,0))!=ERROR_ID_NO) ||
-                      ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,pSlitOptions->slitFunction.slitType,ANALYSIS_slitMatrix,ANALYSIS_slitParam,0,pSlitOptions->slitFunction.slitWveDptFlag))!=ERROR_ID_NO))
+                      ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,ANALYSIS_slitMatrix,ANALYSIS_slitParam,pSlitOptions->slitFunction.slitType,0,pSlitOptions->slitFunction.slitWveDptFlag))!=ERROR_ID_NO))
               break;
 
             }
