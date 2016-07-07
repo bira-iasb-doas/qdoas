@@ -1501,83 +1501,82 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex) {
       // re-enable CODA handling of "special types"
       coda_set_option_bypass_special_types(0);
 
-      if (!rc) {
-        utcTime=pGome2Info->mdr[indexMDR].startTime+tint* (recordNo-mdrObs-2);    // NOV 2011 : problem with integration time (FRESCO comparison)
-        coda_double_to_datetime(utcTime,&year,&month,&day,&hour,&min,&sec,&musec);
+      utcTime=pGome2Info->mdr[indexMDR].startTime+tint* (recordNo-mdrObs-2);    // NOV 2011 : problem with integration time (FRESCO comparison)
+      coda_double_to_datetime(utcTime,&year,&month,&day,&hour,&min,&sec,&musec);
 
-        // Output information on the current record
+      // Output information on the current record
 
-        pRecord->present_datetime.thedate.da_day= (char) day;
-        pRecord->present_datetime.thedate.da_mon= (char) month;
-        pRecord->present_datetime.thedate.da_year=year;
+      pRecord->present_datetime.thedate.da_day= (char) day;
+      pRecord->present_datetime.thedate.da_mon= (char) month;
+      pRecord->present_datetime.thedate.da_year=year;
 
-        pRecord->present_datetime.thetime.ti_hour= (unsigned char) hour;
-        pRecord->present_datetime.thetime.ti_min= (unsigned char) min;
-        pRecord->present_datetime.thetime.ti_sec= (unsigned char) sec;
+      pRecord->present_datetime.thetime.ti_hour= (unsigned char) hour;
+      pRecord->present_datetime.thetime.ti_min= (unsigned char) min;
+      pRecord->present_datetime.thetime.ti_sec= (unsigned char) sec;
 
-        pRecord->present_datetime.millis = -1;
-        pRecord->present_datetime.microseconds = musec;
+      pRecord->present_datetime.millis = -1;
+      pRecord->present_datetime.microseconds = musec;
 
-        // Geolocation
+      // Geolocation
 
-        struct gome2_geolocation *pGeoloc=&pOrbitFile->gome2Geolocations[recordNo-1];
+      struct gome2_geolocation *pGeoloc=&pOrbitFile->gome2Geolocations[recordNo-1];
 
-        for (int i=0; i<4; ++i) {
-          pRecord->gome2.latitudes[i] = pGeoloc->latCorners[i];
-          pRecord->gome2.longitudes[i] = pGeoloc->lonCorners[i];
-        }
-        for (int i=0; i<3; ++i) {
-          pRecord->gome2.solZen[i] = pGeoloc->solZen[i];
-          pRecord->gome2.solAzi[i] = pGeoloc->solAzi[i];
-          pRecord->gome2.losZen[i] = pGeoloc->losZen[i];
-          pRecord->gome2.losAzi[i] = pGeoloc->losAzi[i];
-        }
+      for (int i=0; i<4; ++i) {
+        pRecord->gome2.latitudes[i] = pGeoloc->latCorners[i];
+        pRecord->gome2.longitudes[i] = pGeoloc->lonCorners[i];
+      }
+      for (int i=0; i<3; ++i) {
+        pRecord->gome2.solZen[i] = pGeoloc->solZen[i];
+        pRecord->gome2.solAzi[i] = pGeoloc->solAzi[i];
+        pRecord->gome2.losZen[i] = pGeoloc->losZen[i];
+        pRecord->gome2.losAzi[i] = pGeoloc->losAzi[i];
+      }
 
-        pRecord->cloudTopPressure=pGeoloc->cloudTopPressure;
-        pRecord->cloudFraction=pGeoloc->cloudFraction;
+      pRecord->cloudTopPressure=pGeoloc->cloudTopPressure;
+      pRecord->cloudFraction=pGeoloc->cloudFraction;
 
-        pRecord->gome2.scanDirection=pGeoloc->scanDirection;
-        pRecord->gome2.observationMode=pGeoloc->observationMode;
-        pRecord->gome2.saaFlag=pGeoloc->saaFlag;
-        pRecord->gome2.sunglintDangerFlag=pGeoloc->sunglintDangerFlag;
-        pRecord->gome2.sunglintHighDangerFlag=pGeoloc->sunglintHighDangerFlag;
-        pRecord->gome2.rainbowFlag=pGeoloc->rainbowFlag;
+      pRecord->gome2.scanDirection=pGeoloc->scanDirection;
+      pRecord->gome2.observationMode=pGeoloc->observationMode;
+      pRecord->gome2.saaFlag=pGeoloc->saaFlag;
+      pRecord->gome2.sunglintDangerFlag=pGeoloc->sunglintDangerFlag;
+      pRecord->gome2.sunglintHighDangerFlag=pGeoloc->sunglintHighDangerFlag;
+      pRecord->gome2.rainbowFlag=pGeoloc->rainbowFlag;
 
-        // Miscellaneous data
+      // Miscellaneous data
 
-        pRecord->latitude=pGeoloc->latCenter;
-        pRecord->longitude=pGeoloc->lonCenter;
+      pRecord->latitude=pGeoloc->latCenter;
+      pRecord->longitude=pGeoloc->lonCenter;
 
-        pRecord->Zm=pGeoloc->solZen[1];
-        pRecord->Azimuth=pGeoloc->solAzi[1];
-        pRecord->zenithViewAngle=pGeoloc->losZen[1];
-        pRecord->azimuthViewAngle=pGeoloc->losAzi[1];
+      pRecord->Zm=pGeoloc->solZen[1];
+      pRecord->Azimuth=pGeoloc->solAzi[1];
+      pRecord->zenithViewAngle=pGeoloc->losZen[1];
+      pRecord->azimuthViewAngle=pGeoloc->losAzi[1];
+      
+      pRecord->satellite.earth_radius = pGeoloc->earth_radius;
 
-        pRecord->satellite.earth_radius = pGeoloc->earth_radius;
+      pRecord->satellite.altitude = pGeoloc->sat_alt;
+      pRecord->satellite.latitude = pGeoloc->sat_lat;
+      pRecord->satellite.longitude = pGeoloc->sat_lon;
+      pRecord->satellite.saa = pGeoloc->sat_saa;
+      pRecord->satellite.sza = pGeoloc->sat_sza;
+      pRecord->satellite.vza = pGeoloc->sat_vza;
 
-        pRecord->satellite.altitude = pGeoloc->sat_alt;
-        pRecord->satellite.latitude = pGeoloc->sat_lat;
-        pRecord->satellite.longitude = pGeoloc->sat_lon;
-        pRecord->satellite.saa = pGeoloc->sat_saa;
-        pRecord->satellite.sza = pGeoloc->sat_sza;
-        pRecord->satellite.vza = pGeoloc->sat_vza;
+      pRecord->Tint=tint;
 
-        pRecord->Tint=tint;
+      pRecord->TimeDec= (double) hour+min/60.+ (sec+musec*1.e-6) / (60.*60.);
+      pRecord->Tm= (double) ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
 
-        pRecord->TimeDec= (double) hour+min/60.+ (sec+musec*1.e-6) / (60.*60.);
-        pRecord->Tm= (double) ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
+      pRecord->satellite.orbit_number= pOrbitFile->gome2Info.orbitStart;
+      pRecord->gome2.mdrNumber = indexMDR;
+      pRecord->gome2.observationIndex = (recordNo-mdrObs-1);
 
-        pRecord->satellite.orbit_number= pOrbitFile->gome2Info.orbitStart;
-        pRecord->gome2.mdrNumber = indexMDR;
-        pRecord->gome2.observationIndex = (recordNo-mdrObs-1);
-
-        if ((pEngineContext->project.spectra.cloudMin>=0.) &&
-            (pEngineContext->project.spectra.cloudMax<=1.) &&
-            (fabs((double)(pEngineContext->project.spectra.cloudMax-pEngineContext->project.spectra.cloudMin)) >EPSILON) &&
-            (fabs((double)(pEngineContext->project.spectra.cloudMax-pEngineContext->project.spectra.cloudMin)) <1.-EPSILON) &&
-            ((pRecord->cloudFraction<pEngineContext->project.spectra.cloudMin-EPSILON) || (pRecord->cloudFraction>pEngineContext->project.spectra.cloudMax+EPSILON)))
-
-          rc=ERROR_ID_FILE_RECORD;
+      if ((pEngineContext->project.spectra.cloudMin>=0.) &&
+          (pEngineContext->project.spectra.cloudMax<=1.) &&
+          fabs(pEngineContext->project.spectra.cloudMax-pEngineContext->project.spectra.cloudMin) >EPSILON &&
+          fabs(pEngineContext->project.spectra.cloudMax-pEngineContext->project.spectra.cloudMin) <(1.-EPSILON) &&
+          (pRecord->cloudFraction < pEngineContext->project.spectra.cloudMin-EPSILON ||
+           pRecord->cloudFraction > pEngineContext->project.spectra.cloudMax+EPSILON) ) {
+        rc=ERROR_ID_FILE_RECORD;
       }
     }
   }
