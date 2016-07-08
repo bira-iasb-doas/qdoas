@@ -985,7 +985,7 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
 {
   // Declarations
 
-  char            string[MAX_ITEM_TEXT_LEN],pageTitle[MAX_ITEM_TEXT_LEN];
+  char            string[MAX_ITEM_TEXT_LEN];
   CROSS_REFERENCE *TabCross,*pTabCross;
   CROSS_RESULTS   *pResults,*Results;                                           // pointer to results associated to a symbol
   SVD             *svdFeno;                                                     // svd environments associated to list of little windows
@@ -2246,9 +2246,8 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
      pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
 
      if ((pTabFeno->hidden==1) ||
-        ((THRD_id!=THREAD_TYPE_KURUCZ) && !pTabFeno->hidden && pTabFeno->useKurucz))
-      {
-       int DimLMax=2*n_wavel/Nb_Win+1;
+        ((THRD_id!=THREAD_TYPE_KURUCZ) && !pTabFeno->hidden && pTabFeno->useKurucz)) {
+       int DimLMax=pTabFeno->NDET;
 
        if ((pKurucz->KuruczFeno[indexFeno].Grid=(double *)MEMORY_AllocDVector(__func__,"Grid",0,Nb_Win-1))==NULL)
         rc=ERROR_ID_ALLOC;
