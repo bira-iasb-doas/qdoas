@@ -670,9 +670,7 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
        rc=AIRBORNE_Set(pEngineContext,pFile->specFp);
        break;
      case PRJCT_INSTR_FORMAT_APEX :
-       printf("%s call apex_set\n",__func__);
        rc=apex_set(pEngineContext);
-       printf("%s exit apex_set\n",__func__);
        break;
        // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_MFC :
@@ -987,49 +985,51 @@ RC EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *sp
    pRef=&pEngineContext->analysisRef;
    rc=ERROR_ID_NO;
 
-    {
-     // Set file pointers
+   // Set file pointers
 
-     if ((!resetFlag || !(rc=EngineRequestEndBrowseSpectra(pEngineContext))) &&
-         !(rc=EngineSetFile(pEngineContext,spectraFileName,responseHandle)) &&
-         pEngineContext->recordNumber &&
-         ((THRD_id==THREAD_TYPE_SPECTRA) || !(rc=OUTPUT_LocalAlloc(pEngineContext))))
-      {
+   if ((!resetFlag || !(rc=EngineRequestEndBrowseSpectra(pEngineContext))) &&
+       !(rc=EngineSetFile(pEngineContext,spectraFileName,responseHandle)) &&
+       pEngineContext->recordNumber &&
+       ((THRD_id==THREAD_TYPE_SPECTRA) || !(rc=OUTPUT_LocalAlloc(pEngineContext))))
+     {
        pEngineContext->indexRecord=0;
        pEngineContext->currentRecord=1;
-      }
+     }
 
-      // For ground-based measurements, allocate a buffer for the indexes of selected reference spectra (automatic reference selection mode)
+   // For ground-based measurements, allocate a buffer for the indexes of selected reference spectra (automatic reference selection mode)
 
-      if (resetFlag && (THRD_id==THREAD_TYPE_ANALYSIS) && pEngineContext->analysisRef.refAuto && !pEngineContext->satelliteFlag && pEngineContext->recordNumber)
-       {
-       	if (   (pEngineContext->mfcDoasisFlag && (MFC_AllocFiles(pEngineContext)!=ERROR_ID_NO)) ||
-       	      !(recordNumber=(pEngineContext->mfcDoasisFlag)?pEngineContext->recordInfo.mfcDoasis.nFiles:pEngineContext->recordNumber) ||
-              ((pRef->refIndexes=(int *)MEMORY_AllocBuffer("EngineRequestBeginBrowseSpectra","refIndexes",recordNumber,sizeof(int),0,MEMORY_TYPE_INT))==NULL) ||
-              ((pRef->zmList=(double *)MEMORY_AllocDVector("EngineRequestBeginBrowseSpectra","zmList",0,recordNumber-1))==NULL) ||
-              ((pRef->timeDec=(double *)MEMORY_AllocDVector("EngineRequestBeginBrowseSpectra","timeDec",0,recordNumber-1))==NULL))
+   if (resetFlag && (THRD_id==THREAD_TYPE_ANALYSIS) && pEngineContext->analysisRef.refAuto && !pEngineContext->satelliteFlag && pEngineContext->recordNumber) {
+     if (   (pEngineContext->mfcDoasisFlag && (MFC_AllocFiles(pEngineContext)!=ERROR_ID_NO)) ||
+            !(recordNumber=(pEngineContext->mfcDoasisFlag)?pEngineContext->recordInfo.mfcDoasis.nFiles:pEngineContext->recordNumber) ||
+            ((pRef->refIndexes=(int *)MEMORY_AllocBuffer("EngineRequestBeginBrowseSpectra","refIndexes",recordNumber,sizeof(int),0,MEMORY_TYPE_INT))==NULL) ||
+            ((pRef->zmList=(double *)MEMORY_AllocDVector("EngineRequestBeginBrowseSpectra","zmList",0,recordNumber-1))==NULL) ||
+            ((pRef->timeDec=(double *)MEMORY_AllocDVector("EngineRequestBeginBrowseSpectra","timeDec",0,recordNumber-1))==NULL)) {
 
-       	 rc=ERROR_ID_ALLOC;
+       rc=ERROR_ID_ALLOC;
 
-       	else
-         {
-          pRef->nRef=0;
-          pRef->zmMinIndex=
-          pRef->indexScanBefore=
-          pRef->indexScanAfter=ITEM_NONE;
-         }
-       }
-
-     // retain calibration plot in case it is already there (e.g. for OMI)
-     if (ANALYSE_plotKurucz)
-       mediateResponseRetainPage(plotPageCalib,responseHandle);
-    }
+     } else {
+       pRef->nRef=0;
+       pRef->zmMinIndex=
+         pRef->indexScanBefore=
+         pRef->indexScanAfter=ITEM_NONE;
+     }
+   }
 
    // retain calibration plot in case it is already there (e.g. for OMI)
    if (ANALYSE_plotKurucz)
      mediateResponseRetainPage(plotPageCalib,responseHandle);
 
-   // Return
+   // in browsing mode, do initialisation:
+   // (otherwise this is done in mediateRequestSetAnalysisWindows
+   if (THRD_id == THREAD_TYPE_SPECTRA || THRD_id == THREAD_TYPE_EXPORT) {
+     switch(pEngineContext->project.instrumental.readOutFormat) {
+     case PRJCT_INSTR_FORMAT_APEX:
+       rc = apex_init(pEngineContext->fileInfo.fileName,pEngineContext);
+       break;
+     default:
+       break;
+     }
+   }
 
    return rc;
  }

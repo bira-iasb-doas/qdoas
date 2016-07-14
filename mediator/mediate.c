@@ -1810,7 +1810,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
          pTabFeno=&TabFeno[indexFenoColumn][indexWindow];
 
          if ((pSlitOptions->slitFunction.slitType==SLIT_TYPE_NONE) && pTabFeno->xsToConvolute)
-           rc = ERROR_SetLast("mediateRequestSetAnalysisWindows", ERROR_TYPE_FATAL, ERROR_ID_CONVOLUTION);
+           rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_CONVOLUTION);
          else if (pTabFeno->xsToConvolute && /* pTabFeno->useEtalon && */ (pTabFeno->gomeRefFlag || pEngineContext->refFlag) &&
                   ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,ANALYSIS_slitMatrix,ANALYSIS_slitParam,pSlitOptions->slitFunction.slitType,indexFenoColumn,pSlitOptions->slitFunction.slitWveDptFlag))!=0))
 
