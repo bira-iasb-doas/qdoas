@@ -124,6 +124,7 @@ unsigned int calib_num_fields = 0;
 // STATIC DEFINITIONS
 // ===================
 static unsigned int outputNbRecords; /*!< \brief Number of records written to output.*/
+static unsigned int output_data_buffer_length; /*!< \brief Number of rows allocated.*/
 static int NAmfSpace; /*!< \brief Number of elements in buffer OUTPUT_NAmfSpace */
 static OUTPUT_INFO *outputRecords; /*!< \brief Meta data on the records written to output.*/
 static int outputRunCalib, /*!< \brief ==1 in run calibration mode */
@@ -2157,14 +2158,10 @@ static void output_field_clear(struct output_field *this_field) {
     if(this_field->memory_type == OUTPUT_STRING) {
       // if data points to an array of char*, we have to iterate
       // through the array and free each char* as well.
-      size_t ncols = this_field->data_cols;
-      char* (*data)[ncols] = (char * (*)[ncols]) this_field->data;
 
-      // assume no strings occur after the first row with a null pointer:
-      for(size_t i = 0;  (*data)[0] != NULL &&  i < outputNbRecords; i++,data++) {
-        char *string = (*data)[0];
-        for(size_t j = 0; string != NULL && j < ncols; j++, string++)
-          free(string);
+      char **data = this_field->data;
+      for (size_t i=0; i< output_data_buffer_length*this_field->data_cols; ++i) {
+        free(data[i]);
       }
     }
     free(this_field->data);
@@ -2205,36 +2202,35 @@ RC OUTPUT_LocalAlloc(ENGINE_CONTEXT *pEngineContext)
 
   PROJECT             *pProject;                     // pointer to project data
   PRJCT_RESULTS *pResults;                     // pointer to results part of project
-  int newRecordNumber;
   RC rc;                                                                        // return code
 
   // Initializations
 
   rc=ERROR_ID_NO;
 
-  newRecordNumber=pEngineContext->recordNumber;
+  output_data_buffer_length=pEngineContext->recordNumber;
 
   pProject=(PROJECT *)&pEngineContext->project;
   pResults=(PRJCT_RESULTS *)&pProject->asciiResults;
 
   if ((THRD_id==THREAD_TYPE_EXPORT) || pResults->analysisFlag || pResults->calibFlag) {
-    assert(newRecordNumber > 0);
+    assert(output_data_buffer_length > 0);
 
     if (outputRecords!=NULL)
       MEMORY_ReleaseBuffer(__func__,"outputRecords",outputRecords);
     outputRecords=NULL;
 
     // Allocate new buffers
-    outputRecords=(OUTPUT_INFO *)MEMORY_AllocBuffer(__func__,"outputRecords",newRecordNumber,sizeof(OUTPUT_INFO),0,MEMORY_TYPE_STRUCT);
+    outputRecords=(OUTPUT_INFO *)MEMORY_AllocBuffer(__func__,"outputRecords",output_data_buffer_length,sizeof(OUTPUT_INFO),0,MEMORY_TYPE_STRUCT);
     if (!outputRecords)
       rc = ERROR_ID_ALLOC;
     else
-      memset(outputRecords,0,sizeof(OUTPUT_INFO)*newRecordNumber);
+      memset(outputRecords,0,sizeof(OUTPUT_INFO)*output_data_buffer_length);
 
     for (unsigned int i=0; i<output_num_fields; i++) {
       struct output_field *pfield = &output_data_analysis[i];
       output_field_clear(pfield);
-      pfield->data = calloc(newRecordNumber * pfield->data_cols , output_get_size(pfield->memory_type));
+      pfield->data = calloc(output_data_buffer_length * pfield->data_cols , output_get_size(pfield->memory_type));
     }
     for (unsigned int i=0; i<calib_num_fields; i++) {
       struct output_field *calib_field = &output_data_calib[i];

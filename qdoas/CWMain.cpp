@@ -155,7 +155,7 @@ CWMain::CWMain(QWidget *parent) :
   // Menu and toolbar actions
 
   // File Menu
-  QMenu *fileMenu = new QMenu("File");
+  QMenu *fileMenu = new QMenu("File", this);
 
   // Open...
   QAction *openAct = new QAction(QIcon(QPixmap(":/icons/file_open_16.png")), "Open...", this);
@@ -218,7 +218,7 @@ CWMain::CWMain(QWidget *parent) :
   m_toolBar->addSeparator();
 
   // Plot menu
-  QMenu *plotMenu = new QMenu("Plot");
+  QMenu *plotMenu = new QMenu("Plot", this);
 
   // plot properties and printing
   QAction *plotPropAction = new QAction(QIcon(QPixmap(":/icons/plot_prop_22.png")), "Plot Properties...", this);
@@ -239,7 +239,7 @@ CWMain::CWMain(QWidget *parent) :
   m_menuBar->addMenu(plotMenu);
 
   // Tools menu
-  QMenu *toolsMenu = new QMenu("Tools");
+  QMenu *toolsMenu = new QMenu("Tools", this);
   toolsMenu->addAction("Convolution", this, SLOT(slotConvolutionTool()));
   toolsMenu->addAction("Ring", this, SLOT(slotRingTool()));
   toolsMenu->addAction("Undersampling", this, SLOT(slotUndersamplingTool()));
@@ -247,7 +247,7 @@ CWMain::CWMain(QWidget *parent) :
   m_menuBar->addMenu(toolsMenu);
 
   // Help Menu
-  QMenu *helpMenu = new QMenu("Help");
+  QMenu *helpMenu = new QMenu("Help", this);
 
   // About
   helpMenu->addAction("Qdoas Help", this, SLOT(slotQdoasHelp()));

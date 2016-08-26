@@ -609,7 +609,7 @@ void CQdoasEngineController::slotViewCrossSections(const RefCountPtr<CViewCrossS
   int nFiles = d->crossSectionList.nCrossSection;
 
   char **filenames = new char*[nFiles];
-  char *awName=new char[strlen(d->name)];
+  char *awName=new char[1+strlen(d->name)];
 
   strcpy(awName,d->name);
 

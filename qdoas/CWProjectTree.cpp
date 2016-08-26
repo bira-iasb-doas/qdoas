@@ -1218,13 +1218,13 @@ void CWProjectTree::slotExportSpectra()
 
   if (parent->type()!=cAnalysisWindowBranchItemType)
    {
-   	mediate_project_t *projProp;
+     mediate_project_t *projProp;
 
     // locate the properties in the workspace then copy
     projProp = CWorkSpace::instance()->findProject(projItem->text(0).toAscii().data());
     assert(projProp != NULL);
 
-    CWEditor *exportEditor = new  CWProjectExportEditor(this,parent,projItem->text(0).toAscii().data(),&projProp->export_spectra,projProp->instrumental.format);
+    CWEditor *exportEditor = new  CWProjectExportEditor(this,parent,projItem->text(0),&projProp->export_spectra,projProp->instrumental.format);
     m_activeContext->addEditor(exportEditor);
    }
 }

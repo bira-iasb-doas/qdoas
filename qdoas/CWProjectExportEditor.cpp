@@ -40,7 +40,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 
 
-CWProjectExportEditor::CWProjectExportEditor(CWProjectTree *projectTree, QTreeWidgetItem *items,char *projectName,mediate_project_export_t *properties, int format,
+CWProjectExportEditor::CWProjectExportEditor(CWProjectTree *projectTree, QTreeWidgetItem *items, QString projectName,mediate_project_export_t *properties, int format,
                                                    QWidget *parent) :
   CWEditor(parent),
   m_projectTree(projectTree),
@@ -109,7 +109,7 @@ CWProjectExportEditor::CWProjectExportEditor(CWProjectTree *projectTree, QTreeWi
 
 bool CWProjectExportEditor::actionOk(void)
  {
- 	strcpy(m_properties->path, m_pathEdit->text().toAscii().data());
+   strcpy(m_properties->path, m_pathEdit->text().toAscii().data());
 
   m_properties->directoryFlag = (m_directoryCheck->checkState() == Qt::Checked) ? 1 : 0;
 

@@ -43,8 +43,8 @@ class CWProjectExportEditor : public CWEditor
 {
 Q_OBJECT
  public:
-  CWProjectExportEditor(CWProjectTree *projectTree, QTreeWidgetItem *items,char *projectName,mediate_project_export_t *properties, int format,
-                           QWidget *parent = 0);
+  CWProjectExportEditor(CWProjectTree *projectTree, QTreeWidgetItem *items, QString projectName,mediate_project_export_t *properties, int format,
+                        QWidget *parent = 0);
 
   virtual bool actionOk(void);
   virtual void actionHelp(void);
@@ -63,7 +63,7 @@ Q_OBJECT
   CWOutputSelector *m_selector;
   mediate_project_export_t *m_properties;
   int m_format;
-  char *m_projectName;
+  QString m_projectName;
 };
 
 #endif

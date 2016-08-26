@@ -1167,19 +1167,17 @@ RC ANALYSE_XsConvolution(FENO *pTabFeno,double *newlambda,
 
   MATRIX_OBJECT matrix,*pXs;
   CROSS_REFERENCE *pTabCross;
-  double *raman,*solar;
   INDEX indexTabCross,j,indexlambdaMin,indexlambdaMax;
   RC rc;
 
   // Initializations
 
 #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionBegin("ANALYSE_XsConvolution",DEBUG_FCTTYPE_APPL);
+  DEBUG_FunctionBegin(__func__,DEBUG_FCTTYPE_APPL);
 #endif
 
   const int n_wavel = NDET[indexFenoColumn];
   memset(&matrix,0,sizeof(MATRIX_OBJECT));
-  raman=solar=NULL;
   rc=ERROR_ID_NO;
 
   AnalyseGetFenoLim(pTabFeno,&indexlambdaMin,&indexlambdaMax, n_wavel);
@@ -1204,17 +1202,14 @@ RC ANALYSE_XsConvolution(FENO *pTabFeno,double *newlambda,
                                newlambda,pTabCross->vector,indexlambdaMin,indexlambdaMax,n_wavel,indexFenoColumn,wveDptFlag);
 
        else if ((pTabCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_RING) &&
-                !(rc=MATRIX_Allocate(&matrix,pXs->nl,2,pXs->basel,pXs->basec,1,"ANALYSE_XsConvolution ")))
-        {
+                !(rc=MATRIX_Allocate(&matrix,pXs->nl,2,pXs->basel,pXs->basec,1,__func__))) {
+
          // Temporary buffers allocation
-
-         if (((raman=MEMORY_AllocDVector("ANALYSE_XsConvolution ","raman",0,n_wavel-1))==NULL) ||
-             ((solar=MEMORY_AllocDVector("ANALYSE_XsConvolution ","solar",0,n_wavel-1))==NULL))
-
-          rc=ERROR_ID_ALLOC;
-
-         else
-          {
+         double *raman=MEMORY_AllocDVector(__func__,"raman",0,n_wavel-1);
+         double *solar=MEMORY_AllocDVector(__func__,"solar",0,n_wavel-1);
+         if (raman == NULL || solar == NULL) {
+           rc=ERROR_ID_ALLOC;
+         } else {
            // Raman spectrum
 
            memcpy(matrix.matrix[0],pXs->matrix[0],sizeof(double)*pXs->nl);   // lambda
@@ -1238,6 +1233,10 @@ RC ANALYSE_XsConvolution(FENO *pTabFeno,double *newlambda,
 
            for (j=indexlambdaMin;j<indexlambdaMax;j++)
             pTabCross->vector[j]=(solar[j]!=(double)0.)?(double)raman[j]/solar[j]:(double)0.;   // log added on 2011 October 7 - test for GOME2 (ISA) : not concluding
+
+           // Release allocated buffers
+           MEMORY_ReleaseDVector(__func__,"raman",raman,0);
+           MEMORY_ReleaseDVector(__func__,"solar",solar,0);
           }
         }
 
@@ -1255,23 +1254,16 @@ RC ANALYSE_XsConvolution(FENO *pTabFeno,double *newlambda,
 
             // Interpolation
 
-            ((rc=SPLINE_Deriv2(newlambda,pTabCross->vector,pTabCross->Deriv2,n_wavel,"ANALYSE_XsConvolution "))!=ERROR_ID_NO))
+            ((rc=SPLINE_Deriv2(newlambda,pTabCross->vector,pTabCross->Deriv2,n_wavel,__func__))!=ERROR_ID_NO))
 
         break;
       }
     }
 
-  // Release allocated buffers
-
-  if (raman!=NULL)
-   MEMORY_ReleaseDVector("ANALYSE_XsConvolution ","raman",raman,0);
-  if (solar!=NULL)
-   MEMORY_ReleaseDVector("ANALYSE_XsConvolution ","solar",solar,0);
-
-  MATRIX_Free(&matrix,"ANALYSE_XsConvolution ");
+  MATRIX_Free(&matrix,__func__);
 
 #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionStop("ANALYSE_XsConvolution",rc);
+  DEBUG_FunctionStop(__func__,rc);
 #endif
 
   // Return
