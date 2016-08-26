@@ -429,6 +429,9 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   case PRJCT_INSTR_FORMAT_BIRA_AIRBORNE:
     fprintf(fp, "\"biraairborne\"");
     break;
+  case PRJCT_INSTR_FORMAT_BIRA_MOBILE:
+    fprintf(fp,"\"biramobile\"");
+    break;
   case PRJCT_INSTR_FORMAT_APEX:
     fprintf(fp, "\"apex\"");
     break;
