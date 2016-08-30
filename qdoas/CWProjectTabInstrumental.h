@@ -54,8 +54,6 @@ class CWInstrMfcEdit;
 class CWInstrMfcStdEdit;
 class CWInstrMfcbiraEdit;
 class CWInstrOceanOpticsEdit;
-class CWInstrBiraAirborneEdit;
-class CWInstrBiraMobileEdit;
 
 //--------------------------------------------------------------------------
 class CWProjectTabInstrumental : public QFrame

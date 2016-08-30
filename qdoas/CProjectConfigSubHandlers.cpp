@@ -1172,12 +1172,17 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     m_instrumental->mkzy.lambdaMax = atts.value("lambda_max").toDouble();
     return helperLoadMinimum(atts, &(m_instrumental->mkzy));
   }
-  else if (element == "biraairborne")   // BIRA AIRBORNE
-   {
+  else if (element == "biraairborne") {  // BIRA AIRBORNE
     m_instrumental->biraairborne.straylight = (atts.value("straylight") == "true") ? 1 : 0;
     m_instrumental->biraairborne.lambdaMin = atts.value("lambda_min").toDouble();
     m_instrumental->biraairborne.lambdaMax = atts.value("lambda_max").toDouble();
     return helperLoadMinimum(atts, &(m_instrumental->biraairborne));
+  }
+  else if (element == "biramobile") {  // BIRA MOBILE
+    m_instrumental->biramobile.straylight = (atts.value("straylight") == "true") ? 1 : 0;
+    m_instrumental->biramobile.lambdaMin = atts.value("lambda_min").toDouble();
+    m_instrumental->biramobile.lambdaMax = atts.value("lambda_max").toDouble();
+    return helperLoadMinimum(atts, &(m_instrumental->biramobile));
   }
   else if (element == "oceanoptics") { // OCEAN OPTICS
     QString str;
