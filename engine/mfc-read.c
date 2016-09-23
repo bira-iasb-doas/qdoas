@@ -687,6 +687,17 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
         pRecord->altitude=(double)0.;
         pRecord->elevationViewAngle=(float)MFC_header.elevation;
 
+        if (strlen(pRecord->Nom))
+         {
+          if ((ptr=strchr(pRecord->Nom,','))!=NULL)
+           sscanf(pRecord->Nom,"%f,%f",&pRecord->elevationViewAngle,&pRecord->azimuthViewAngle);
+          else
+           sscanf(pRecord->Nom,"%f",&pRecord->elevationViewAngle);
+         }
+
+        if (pRecord->elevationViewAngle>100.)
+         pRecord->elevationViewAngle=180.-pRecord->elevationViewAngle;
+
         MFC_header.longitude=-MFC_header.longitude;
 
         pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);

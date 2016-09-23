@@ -981,13 +981,17 @@ RC EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *sp
 
    // Initializations
 
+   strcpy(pEngineContext->fileInfo.fileName,spectraFileName);
+
    resetFlag=(!pEngineContext->mfcDoasisFlag || (THRD_id!=THREAD_TYPE_ANALYSIS) || !pEngineContext->recordInfo.mfcDoasis.nFiles || (MFC_SearchForCurrentFileIndex(pEngineContext)==ITEM_NONE))?1:0;
+   pEngineContext->recordInfo.mfcDoasis.resetFlag=resetFlag;
+
    pRef=&pEngineContext->analysisRef;
    rc=ERROR_ID_NO;
 
    // Set file pointers
 
-   if ((!resetFlag || !(rc=EngineRequestEndBrowseSpectra(pEngineContext))) &&
+   if (!(rc=EngineRequestEndBrowseSpectra(pEngineContext)) &&
        !(rc=EngineSetFile(pEngineContext,spectraFileName,responseHandle)) &&
        pEngineContext->recordNumber &&
        ((THRD_id==THREAD_TYPE_SPECTRA) || !(rc=OUTPUT_LocalAlloc(pEngineContext))))
@@ -1060,7 +1064,7 @@ RC EngineRequestEndBrowseSpectra(ENGINE_CONTEXT *pEngineContext)
     {
      rc=OUTPUT_FlushBuffers(pEngineContext);
 
-     if (pEngineContext->analysisRef.refAuto && !pEngineContext->satelliteFlag)
+     if ((!pEngineContext->mfcDoasisFlag || pEngineContext->recordInfo.mfcDoasis.resetFlag) && pEngineContext->analysisRef.refAuto && !pEngineContext->satelliteFlag)
       {
        // Release buffers used for automatic reference
 
@@ -1514,7 +1518,7 @@ RC EngineLoadRefMFC(ENGINE_CONTEXT *pEngineContextRef,ENGINE_CONTEXT *pEngineCon
 
  	rc=ERROR_ID_NO;
 
- 	if ((indexRefRecord!=ITEM_NONE) && (indexRefRecord<pEngineContext->recordInfo.mfcDoasis.nFiles))
+ 	if ((indexRefRecord!=ITEM_NONE) && (indexRefRecord<=pEngineContext->recordInfo.mfcDoasis.nFiles))
  	 {
     // Build reference file name
 
@@ -1582,7 +1586,8 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
    // ENGINE_refStartDate : useful when records in the file cover two days in local time (due to the time shift).  In this case, compare starting date and time
 
    else if ((( ENGINE_refStartDate && (memcmp(&pEngineContext->fileInfo.startDate,&ENGINE_contextRef.fileInfo.startDate,sizeof(SHORT_DATE)) || memcmp(&pEngineContext->fileInfo.startTime,&ENGINE_contextRef.fileInfo.startTime,sizeof(struct time)))) ||
-             (!ENGINE_refStartDate && (pRecord->localCalDay!=ENGINE_contextRef.recordInfo.localCalDay))) &&
+             (!ENGINE_refStartDate && (pRecord->localCalDay!=ENGINE_contextRef.recordInfo.localCalDay)) ||
+             (pEngineContext->mfcDoasisFlag && pEngineContext->recordInfo.mfcDoasis.resetFlag)) &&
             !(rc=EngineBuildRefList(pEngineContext)))
 
     newref=1;  // Load a new set of reference files

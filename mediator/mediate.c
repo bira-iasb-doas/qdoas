@@ -1607,7 +1607,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
            pTabFeno->resolFwhm=pAnalysisWindows->resolFwhm;
 
            if ((pTabFeno->refSpectrumSelectionMode=pAnalysisWindows->refSpectrumSelection)==ANLYS_REF_SELECTION_MODE_AUTOMATIC) {
-             if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV) || (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) || (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA) ||
+             if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV) || (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC) || (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) || (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA) ||
                  ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_ASCII) && pEngineContext->project.instrumental.ascii.elevSaveFlag)) {
 
                if ((pTabFeno->refMaxdoasSelectionMode=pAnalysisWindows->refMaxdoasSelection)==ANLYS_MAXDOAS_REF_SCAN)
@@ -2068,6 +2068,13 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
          if (!TabFeno[indexFenoColumn][indexFeno].hidden)
            TabFeno[indexFenoColumn][indexFeno].rc=ERROR_ID_FILE_RECORD;             // force the output to default values
 
+       {
+        FILE *fp;
+        fp=fopen("toto.dat","a+t");
+        fprintf(fp,"Output 1\n");
+        fclose(fp);
+       }
+
        OUTPUT_SaveResults(pEngineContext,indexFenoColumn);
      }
 
@@ -2092,6 +2099,13 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
         for (int indexFeno=0;indexFeno<NFeno;indexFeno++)
           if (!TabFeno[indexFenoColumn][indexFeno].hidden)
             TabFeno[indexFenoColumn][indexFeno].rc=ERROR_ID_FILE_RECORD;             // force the output to default values
+
+       {
+        FILE *fp;
+        fp=fopen("toto.dat","a+t");
+        fprintf(fp,"Output 2\n");
+        fclose(fp);
+       }
 
         OUTPUT_SaveResults(pEngineContext,indexFenoColumn);
       }

@@ -4,6 +4,7 @@
 #include <cassert>
 #include <iostream>
 #include <sstream>
+#include <fstream>
 
 using std::string;
 using std::vector;
@@ -147,16 +148,30 @@ NetCDFFile& NetCDFFile::operator=(NetCDFFile &&other) {
 }
 
 static int openNetCDF(const string &filename, int mode) {
-  int groupid;
-  int rc = nc_open(filename.c_str(), mode, &groupid);
+	  std::ofstream myfile("toto.dat");
+  	myfile << "nc_open "  << filename.c_str() << " " << mode << " " << std::endl;
+  	myfile.close();
+   int groupid;
+   char fname_copy[2048];
+   strcpy(fname_copy,filename.c_str());
+  int rc = nc_open(fname_copy, mode, &groupid);
+   myfile.open("toto.dat");
+  	myfile << "nc_open returns" << rc << std::endl;
+  	myfile.close();
 
   if (rc != NC_NOERR && mode != NC_NOWRITE) {
     // file doesn't exist or is not a valid NetCDF file and we are in write mode
     rc = nc_create(filename.c_str(), NC_NETCDF4, &groupid);
   }
   if (rc == NC_NOERR) {
+  		 std::ofstream myfile("toto.dat");
+  	myfile << "nc_open ok" << std::endl;
+  	myfile.close();
     return groupid;
   } else {
+  	std::ofstream myfile("toto.dat");
+  	myfile << "nc_open error"  << std::endl;
+  	myfile.close();
     throw std::runtime_error("Error opening netCDF file '" + filename + "'");
   }
 }
@@ -212,7 +227,7 @@ int NetCDFGroup::defDim(const string& dimname, size_t len) {
     return dimid;
   } else {
     throw std::runtime_error("Error creating dimension '" + dimname + "'");
-  }    
+  }
 }
 
 int NetCDFGroup::defVar(const string& varname, const vector<int>& dimids, nc_type xtype) {

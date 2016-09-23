@@ -341,6 +341,7 @@ typedef struct _mfc
  	char    filePath[DOAS_MAX_PATH_LEN+1];
  	char   *fileNames;                                                            // in automatic selection of the reference spectrum, maxdoas measurements in MFC format (DOASIS binary or STD), it is important to save
  	int     nFiles;                                                               // the names of all files in the directory
+ 	int     resetFlag;
  }
 MFC_DOASIS;
 

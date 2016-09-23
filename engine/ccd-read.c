@@ -649,7 +649,12 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
               // This part is not elegant at all but the code should be more consistent in the acquisition program according to the different situations with the pointing mode
 
-              if ((fabs(header.trackerElevation+1.)<EPSILON) && (fabs(header.trackerAzimuth+1.)<EPSILON))
+              if (pRecord->ccd.measureType==PRJCT_INSTR_MAXDOAS_TYPE_OFFSET)
+               {
+               	pRecord->ccd.targetElevation=header.targetElevation=-1.;
+               	pRecord->ccd.targetAzimuth=header.targetAzimuth=-1.;
+               }
+              else if ((fabs(header.trackerElevation+1.)<EPSILON) && (fabs(header.trackerAzimuth+1.)<EPSILON))  // NO sun tracker
                {
                	pRecord->ccd.targetElevation=header.targetElevation=-1.;
                	pRecord->ccd.targetAzimuth=header.targetAzimuth=-1.;

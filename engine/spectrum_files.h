@@ -74,15 +74,15 @@ TOldFlags;
 
 typedef struct _TBinaryMFC
  {
-  char     version[20];           //     version number (not of interest)
-  int       no_chan;               // !!! number of channels - 1 (usually 1023)
-  void     *Spectrum;              //     pointer to the spectrum, only used at runtime
-  char     specname[20];          //     optional name of the spectrum
-  char     site[20];              //     name of measurement site
-  char     spectroname[20];       //     name of spectrograph
-  char     scan_dev[20];          //     name of scan device, e.g. PDA
-  char     first_line[80];
-  float     elevation;             //     elevation viewing angle
+  char     version[20];           //     version number (not of interest)                           0
+  int       no_chan;               // !!! number of channels - 1 (usually 1023)                     20
+  void     *Spectrum;              //     pointer to the spectrum, only used at runtime             24
+  char     specname[20];          //     optional name of the spectrum                              32
+  char     site[20];              //     name of measurement site                                   52
+  char     spectroname[20];       //     name of spectrograph                                       72
+  char     scan_dev[20];          //     name of scan device, e.g. PDA                              92
+  char     first_line[80];                                                               //        112
+  float     elevation;             //     elevation viewing angle                        //        192
   char     spaeter[72];
   int       ty;                    //     spectrum flags, can be used to distinguish between
                                    //     different types of spectrum (e.g. straylight,
