@@ -340,3 +340,7 @@ inline std::string default_fillvalue() {
 }
 
 #endif
+
+// Local Variables:
+// mode: c++
+// End:
