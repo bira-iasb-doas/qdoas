@@ -3,11 +3,6 @@
 #include <map>
 #include <cassert>
 
-#include <fstream>
-#include <string>
-#include <iostream>
-//using namespace std ;
-
 #include "apex_read.h"
 
 #include "netcdfwrapper.h"
@@ -17,7 +12,6 @@
 using std::vector;
 using std::string;
 using std::map;
-using std::cout; using std::endl;
 
 static NetCDFFile radiance_file;
 
@@ -44,9 +38,7 @@ static vector<vector<double> > load_reference_radiances(const NetCDFFile& refere
 }
 
 int apex_init(const char *reference_filename, ENGINE_CONTEXT *pEngineContext) {
-	  	 cout << __func__ << endl;
   try {
-  	 cout << __func__ << endl;
     NetCDFFile reference_file(reference_filename);
     col_dim = reference_file.dimLen("col_dim");
     spectral_dim = reference_file.dimLen("spectral_dim");
@@ -56,7 +48,6 @@ int apex_init(const char *reference_filename, ENGINE_CONTEXT *pEngineContext) {
       NDET[i] = spectral_dim;
     }
     init_filename = reference_filename;
-
   } catch(std::runtime_error& e) {
     return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, e.what());
   }
@@ -65,21 +56,9 @@ int apex_init(const char *reference_filename, ENGINE_CONTEXT *pEngineContext) {
 
 int apex_set(ENGINE_CONTEXT *pEngineContext) {
   int rc = 0;
-  	 cout << __func__ << endl;
-   std::ofstream myfile;
-   myfile.open ("toto.dat");
-   myfile << "Begin apex_set\n";
- // myfile.close();
 
   try {
-  	 myfile << "try to  read file " << pEngineContext->fileInfo.fileName;
-  	 myfile.close();
-  	 //cout << "open " << pEngineContext->fileInfo.fileName << endl;
-
     radiance_file = NetCDFFile(pEngineContext->fileInfo.fileName);
-
-    //myfile << "OK read file " << pEngineContext->fileInfo.fileName;
-    //myfile.close();
 
     row_dim = radiance_file.dimLen("row_dim");
     size_t file_spectral_dim = radiance_file.dimLen("spectral_dim");
@@ -104,19 +83,12 @@ int apex_set(ENGINE_CONTEXT *pEngineContext) {
     radiance_file.getVar("radiance_wavelength", start, count, pEngineContext->buffers.lambda);
 
   } catch(std::runtime_error& e) {
-  	myfile.open ("toto.dat");
-  	myfile << "exception" << std::endl;
-  	myfile.close();
     rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, e.what());
   }
-  myfile.open ("toto.dat");
-  myfile << "return fro, apex_set, rc =" << rc << endl;
-  myfile.close();
   return rc;
 }
 
 int apex_read(ENGINE_CONTEXT *pEngineContext, int record) {
-	 cout << __func__ << endl;
   int rc = 0;
 
   assert(record > 0);
@@ -166,7 +138,6 @@ int apex_get_reference(const char *filename, int i_crosstrack, double *lambda, d
     lambda[i] = lambda_ref[i];
     spectrum[i] = radiances.at(i_crosstrack)[i];
   }
-
   return ERROR_ID_NO;
 }
 

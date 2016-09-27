@@ -2068,13 +2068,6 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
          if (!TabFeno[indexFenoColumn][indexFeno].hidden)
            TabFeno[indexFenoColumn][indexFeno].rc=ERROR_ID_FILE_RECORD;             // force the output to default values
 
-       {
-        FILE *fp;
-        fp=fopen("toto.dat","a+t");
-        fprintf(fp,"Output 1\n");
-        fclose(fp);
-       }
-
        OUTPUT_SaveResults(pEngineContext,indexFenoColumn);
      }
 
@@ -2099,13 +2092,6 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
         for (int indexFeno=0;indexFeno<NFeno;indexFeno++)
           if (!TabFeno[indexFenoColumn][indexFeno].hidden)
             TabFeno[indexFenoColumn][indexFeno].rc=ERROR_ID_FILE_RECORD;             // force the output to default values
-
-       {
-        FILE *fp;
-        fp=fopen("toto.dat","a+t");
-        fprintf(fp,"Output 2\n");
-        fclose(fp);
-       }
 
         OUTPUT_SaveResults(pEngineContext,indexFenoColumn);
       }
