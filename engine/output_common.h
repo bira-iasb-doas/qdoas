@@ -31,8 +31,8 @@ enum output_datatype {
 };
 
 struct field_attribute{
-  const char *label;
-  const char *value;
+  char *label;
+  char *value;
 };
 
 struct output_field;

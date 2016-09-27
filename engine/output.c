@@ -670,6 +670,7 @@ static void OutputRegisterFluxes(const ENGINE_CONTEXT *pEngineContext)
      {
       sprintf(columnTitle,"Fluxes %g",OUTPUT_fluxes[OUTPUT_NFluxes]);
       struct output_field *output_flux = &output_data_analysis[output_num_fields++];
+      *output_flux =(struct output_field) {0}; // zero all struct fields
       output_flux->resulttype = PRJCT_RESULTS_FLUX;
       output_flux->fieldname = strdup(columnTitle);
       output_flux->memory_type = OUTPUT_DOUBLE;
@@ -1261,6 +1262,8 @@ static void register_analysis_field(const struct output_field* fieldcontent, int
   newfield->index_calib = (outputRunCalib) ? index_calib : ITEM_NONE;
   newfield->index_cross = index_cross;
   newfield->get_cross_results = (outputRunCalib) ? &get_cross_results_calib : &get_cross_results_analysis;
+  if (newfield->num_attributes) // if we have attributes, allocate a copy
+    newfield->attributes = copy_attributes(newfield->attributes, newfield->num_attributes);
 }
 
 /*! \brief Register output fields related to overall analysis (or run
@@ -1354,7 +1357,7 @@ static void register_cross_results(const PRJCT_RESULTS *pResults, const FENO *pT
       // don't add "cross_attribs_file" attribute if crossFileName is not a string (e.g. for polynomial components)
       bool has_file = ( xs_file != NULL && strlen(xs_file) );
 
-      const struct field_attribute cross_attribs_file[1] = {{ "Cross section file",
+      const struct field_attribute cross_attribs_file[] = {{ "Cross section file",
                                                               xs_file }};
 
       const struct analysis_output symbol_fitparams[] = {
@@ -1365,7 +1368,7 @@ static void register_cross_results(const PRJCT_RESULTS *pResults, const FENO *pT
         { pTabCrossResults->indexAmf!=ITEM_NONE && pTabCrossResults->StoreVrtErr, symbolName,
           { .basic_fieldname = "VErr", .format = FORMAT_DOUBLE, .resulttype = PRJCT_RESULTS_VERT_ERR, .memory_type = OUTPUT_DOUBLE, .get_data = (func_void) &get_vrt_err} },
         { pTabCrossResults->StoreSlntCol, symbolName,
-          { .basic_fieldname = "SlCol", .format = FORMAT_DOUBLE, .resulttype = PRJCT_RESULTS_SLANT_COL, .memory_type = OUTPUT_DOUBLE, .get_data = (func_void) &get_slant_column, .attributes = has_file ? copy_attributes(cross_attribs_file, sizeof(cross_attribs_file)/sizeof(cross_attribs_file[0])) : NULL, .num_attributes = has_file ? 1 : 0} },
+          { .basic_fieldname = "SlCol", .format = FORMAT_DOUBLE, .resulttype = PRJCT_RESULTS_SLANT_COL, .memory_type = OUTPUT_DOUBLE, .get_data = (func_void) &get_slant_column, .attributes = has_file ? cross_attribs_file : NULL, .num_attributes = has_file ? 1 : 0} },
         { pTabCrossResults->StoreSlntErr, symbolName,
           { .basic_fieldname = "SlErr", .format = FORMAT_DOUBLE, .resulttype = PRJCT_RESULTS_SLANT_ERR, .memory_type = OUTPUT_DOUBLE, .get_data = (func_void) &get_slant_err} },
         { pTabCrossResults->StoreShift, symbolName,
@@ -2178,6 +2181,10 @@ static void output_field_free(struct output_field *this_field) {
   free(this_field->windowname);
 
   if(this_field->attributes) {
+    for (int i=0; i<this_field->num_attributes; ++i) {
+      free(this_field->attributes[i].label);
+      free(this_field->attributes[i].value);
+    }
     free(this_field->attributes);
     this_field->attributes = NULL;
     this_field->num_attributes = 0;
@@ -2297,10 +2304,11 @@ enum output_format output_get_format(const char *fileext) {
 
 /*! \brief Make a deep copy of an attribute list. */
 struct field_attribute *copy_attributes(const struct field_attribute *attributes, int num_attributes) {
+  printf("%s, %d\n", __func__, num_attributes);
   struct field_attribute *copy = malloc(num_attributes * sizeof(*copy));
   for (int i=0; i<num_attributes; i++) {
-    copy[i].label = attributes[i].label;
-    copy[i].value = attributes[i].value;
+    copy[i].label = strdup(attributes[i].label);
+    copy[i].value = strdup(attributes[i].value);
   }
   return copy;
 }
