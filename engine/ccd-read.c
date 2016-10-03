@@ -776,8 +776,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
            // before 02/02/2016                  ((pRecord->ccd.measureType!=PRJCT_INSTR_MAXDOAS_TYPE_NONE) && (pRecord->ccd.measureType!=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH)))) ||                    // reference spectra are zenith only
            // before 02/02/2016    (!dateFlag && pEngineContext->analysisRef.refScan && !pEngineContext->analysisRef.refSza && (pRecord->elevationViewAngle>80.)))    // zenith sky spectra are not analyzed in scan reference selection mode
 
-           if (rc || (dateFlag && ((pRecord->elevationViewAngle<80.) || (pRecord->ccd.measureType!=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH))) )
-
+           if (rc || (dateFlag && ((pRecord->ccd.measureType!=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH) && (pRecord->elevationViewAngle<80.))))   // Bug fixed for Harestua
             rc=ERROR_ID_FILE_RECORD;
 
            else if (!dateFlag && (measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_NONE))
