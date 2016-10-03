@@ -79,6 +79,7 @@ static void OutputAscPrintTitles(FILE *fp)
         fprintf(fp, "%s.", thefield.windowname);
       }
       fprintf(fp, "%s",thefield.fieldname);
+
       if(thefield.data_cols > 1) {
         // in ascii format: print field name for each column, followed
         // by the column number

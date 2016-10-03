@@ -1060,7 +1060,7 @@ RC EngineRequestEndBrowseSpectra(ENGINE_CONTEXT *pEngineContext)
    pRef=&pEngineContext->analysisRef;
    rc=ERROR_ID_NO;
 
-   if ((THRD_id!=THREAD_TYPE_NONE) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_EXPORT))
+   if ((THRD_id!=THREAD_TYPE_NONE) && (THRD_id!=THREAD_TYPE_SPECTRA))
     {
      rc=OUTPUT_FlushBuffers(pEngineContext);
 
