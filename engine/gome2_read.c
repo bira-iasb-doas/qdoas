@@ -1218,7 +1218,6 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext) {
 
   // Initializations
 
-  const int n_wavel = NDET[0];
   ANALYSE_oldLatitude= (double) 99999.;
   pEngineContext->recordNumber=0;
   oldCurrentIndex=gome2CurrentFileIndex;
@@ -1367,6 +1366,7 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext) {
   else {
     if (!(rc=pOrbitFile->rc) && (pOrbitFile->gome2Pf==NULL) &&
         !(rc=Gome2Open(&pOrbitFile->gome2Pf,pEngineContext->fileInfo.fileName,&pOrbitFile->version))) {
+      const int n_wavel = pOrbitFile->gome2Info.no_of_pixels;
       coda_cursor_set_product(&pOrbitFile->gome2Cursor,pOrbitFile->gome2Pf);
       memcpy(pEngineContext->buffers.lambda,pOrbitFile->gome2SunWve,sizeof(double) *n_wavel);
       memcpy(pEngineContext->buffers.lambda_irrad,pOrbitFile->gome2SunWve,sizeof(double) *n_wavel);
@@ -2056,7 +2056,8 @@ RC Gome2BuildRef(GOME2_REF *refList,int nRef,int nSpectra,double *lambda,double 
     rc=ERROR_ID_NO;
   }
 
-  // Return
+  free(tempspectrum);
+  free(derivs);
 
   return rc;
 }
