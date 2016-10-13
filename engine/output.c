@@ -2304,7 +2304,6 @@ enum output_format output_get_format(const char *fileext) {
 
 /*! \brief Make a deep copy of an attribute list. */
 struct field_attribute *copy_attributes(const struct field_attribute *attributes, int num_attributes) {
-  printf("%s, %d\n", __func__, num_attributes);
   struct field_attribute *copy = malloc(num_attributes * sizeof(*copy));
   for (int i=0; i<num_attributes; i++) {
     copy[i].label = strdup(attributes[i].label);
