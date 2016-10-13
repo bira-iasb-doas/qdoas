@@ -160,6 +160,10 @@ hpc {
   INSTALL_PREFIX = /home/thomasd/
   INCLUDEPATH += $$INSTALL_PREFIX/include
 
+  INCLUDEPATH +=/space/hpc-apps/bira/2015a/hdf-eos5-1.14-hdf5-1.8.10/include64
+
+  QMAKE_LIBDIR += /space/hpc-apps/bira/2015a/hdf-eos5-1.14-hdf5-1.8.10/lib64
+  QMAKE_RPATHDIR += /space/hpc-apps/bira/2015a/hdf-eos5-1.14-hdf5-1.8.10/lib64
   QMAKE_LIBDIR += /$$INSTALL_PREFIX/lib /sw/sdev/intel/parallel_studio_xe_2015_update_3-pguyan/composer_xe_2015.3.187/compiler/lib/intel64
   QMAKE_RPATHDIR += /$$INSTALL_PREFIX/lib /sw/sdev/intel/parallel_studio_xe_2015_update_3-pguyan/composer_xe_2015.3.187/compiler/lib/intel64
 }
