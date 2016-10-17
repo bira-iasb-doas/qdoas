@@ -936,7 +936,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       // ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_APEX:
       for (int i=0; i<MAX_SWATHSIZE; ++i) {
-        NDET[i] = 1024;
+        NDET[i] = APEX_INIT_LENGTH;
         pEngineInstrumental->use_row[i]=false;
       }
 
@@ -1509,7 +1509,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
    const mediate_analysis_window_t *pAnalysisWindows;                                  // pointer to the current analysis window from the user interface
    mediate_analysis_window_t calibWindows;                                       // pointer to the calibration parameters
    FENO *pTabFeno;                                                               // pointer to the description of an analysis window
-   int indexFeno,indexFenoColumn,i;                                              // browse analysis windows
+   int indexFeno,indexFenoColumn;                                              // browse analysis windows
    MATRIX_OBJECT hr_solar_temp; // to preload high res solar spectrum
    RC rc;                                                                        // return code
 

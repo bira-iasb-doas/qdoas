@@ -3,6 +3,9 @@
 
 #include "doas.h"
 
+// initial length of allocated buffers
+#define APEX_INIT_LENGTH 2048
+
 #ifdef __cplusplus
 extern "C" {
 #endif

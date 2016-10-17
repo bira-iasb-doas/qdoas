@@ -85,9 +85,10 @@ typedef unsigned int MASK,SZ_LEN;
 
 #endif // __cplusplus
 
-// Standard arrays dimensions
-
-//#define BUFFER_SIZE                            4096                             // any buffer allocation
+// double macro expansion trick to convert preprocessor symbol values
+// to strings
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
 
 // Strings lengths
 
