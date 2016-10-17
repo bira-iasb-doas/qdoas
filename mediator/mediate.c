@@ -2198,24 +2198,6 @@ int mediateRequestBeginExportSpectra(void *engineContext,
 // should be posted with
 //    mediateResponseErrorMessage(functionName, messageString, errorLevel, responseHandle);
 
-int mediateRequestNextMatchingExportSpectrum(void *engineContext,
-					     void *responseHandle)
- {
-   // Declarations
-
-   ENGINE_CONTEXT *pEngineContext = (ENGINE_CONTEXT *)engineContext;
-
-   int rec = mediateRequestNextMatchingSpectrum(pEngineContext,responseHandle);
-
-   if (rec > 0 && (pEngineContext->indexRecord<=pEngineContext->recordNumber)) {
-    {
-     mediateRequestPlotSpectra(pEngineContext,responseHandle);
-    }
-   }
-
-   return rec;
- }
-
 int mediateRequestEndExportSpectra(void *engineContext,
 				   void *responseHandle)
  {

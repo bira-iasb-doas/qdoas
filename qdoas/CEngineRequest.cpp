@@ -271,7 +271,7 @@ bool CEngineRequestExportNextRecord::process(CEngineThread *engineThread)
   // create a response as the handle
   CEngineResponseSpecificRecord *resp = new CEngineResponseSpecificRecord;
 
-  int rc = mediateRequestNextMatchingExportSpectrum(engineThread->engineContext(),
+  int rc = mediateRequestNextMatchingBrowseSpectrum(engineThread->engineContext(),
 						    resp);
 
   resp->setRecordNumber(rc); // -1 if an error occurred
@@ -294,7 +294,7 @@ bool CEngineRequestExportSpecificRecord::process(CEngineThread *engineThread)
 
   if (rc > 0) {
     // successfully positioned .. now Export
-    rc = mediateRequestNextMatchingExportSpectrum(engineThread->engineContext(),
+    rc = mediateRequestNextMatchingBrowseSpectrum(engineThread->engineContext(),
 						  resp);
 
     resp->setRecordNumber(rc); // -1 if an error occurred
