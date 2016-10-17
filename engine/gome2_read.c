@@ -2031,6 +2031,8 @@ RC Gome2BuildRef(GOME2_REF *refList,int nRef,int nSpectra,double *lambda,double 
 
           nRec++;
           indexFile=pRef->indexFile;
+        } else {
+          ERROR_SetLast(__func__, ERROR_TYPE_FATAL, rc, pOrbitFile->gome2FileName);
         }
 
         if (!alreadyOpen) {
@@ -2043,9 +2045,9 @@ RC Gome2BuildRef(GOME2_REF *refList,int nRef,int nSpectra,double *lambda,double 
     }
   }
 
-  if (nRec==0)
-    rc=ERROR_ID_NO_REF;
-  else if (!rc || (rc==ERROR_ID_FILE_RECORD)) {
+  if (nRec==0) {
+    rc=ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NO_REF, "automatic reference",pOrbitFile->gome2FileName);
+  } else if (!rc || (rc==ERROR_ID_FILE_RECORD)) {
 
     strcpy(OUTPUT_refFile,gome2OrbitFiles[indexFile].gome2FileName);
     OUTPUT_nRec=nRec;
@@ -2173,8 +2175,9 @@ RC Gome2RefSelection(ENGINE_CONTEXT *pEngineContext,
     if (!rc) {
       // No reference spectrum is found for both hemispheres -> error message
 
-      if (!nRefN && !nRefS)
-        rc=ERROR_SetLast("SciaRefSelection",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the orbit",pEngineContext->fileInfo.fileName);
+      if (!nRefN && !nRefS) {
+        rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the orbit",pEngineContext->fileInfo.fileName);
+      }
 
       // No reference spectrum found for Northern hemisphere -> use the reference found for Southern hemisphere
 
@@ -2202,7 +2205,7 @@ RC Gome2RefSelection(ENGINE_CONTEXT *pEngineContext,
   ANALYSE_indexLine=indexLine+1;
 
   if (refList!=NULL)
-    MEMORY_ReleaseBuffer("Gome2RefSelection ","refList",refList);
+    MEMORY_ReleaseBuffer(__func__,"refList",refList);
 
   // Return
 
