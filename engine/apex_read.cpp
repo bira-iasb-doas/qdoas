@@ -8,6 +8,7 @@
 #include "netcdfwrapper.h"
 #include "engine_context.h"
 #include "analyse.h"
+#include "output.h"
 
 using std::vector;
 using std::string;
@@ -22,6 +23,13 @@ static string init_filename;
 static size_t spectral_dim; // number of wavelengths
 static size_t row_dim; // along track
 static size_t col_dim; // cross-track
+
+struct data_fields {
+  vector<double> sza, vza, raa, lon, lat;
+};
+
+static struct data_fields radiance_file_data;
+static double radiance_fillvalue;
 
 static vector<vector<double> > load_reference_radiances(const NetCDFFile& reference_file) {
   vector<vector<double> > radiances(reference_file.dimLen("col_dim"));
@@ -58,11 +66,30 @@ int apex_init(const char *reference_filename, ENGINE_CONTEXT *pEngineContext) {
   return ERROR_ID_NO;
 }
 
+static void read_data_fields(NetCDFFile& orbit_file) {
+  std::pair<string, vector<double>&> fields[] = {
+    {"solar_zenith_angle", radiance_file_data.sza},
+    {"viewing_zenith_angle", radiance_file_data.vza},
+    {"relative_azimuth_angle", radiance_file_data.raa},
+    {"longitude", radiance_file_data.lon},
+    {"latitude", radiance_file_data.lat}};
+
+  const size_t start[] = {0, 0};
+  const size_t count[] = {row_dim, col_dim};
+  for (auto& f: fields) {
+    if (orbit_file.hasVar(f.first)) {
+       f.second.resize(row_dim * col_dim);
+       orbit_file.getVar(f.first, start, count, f.second.data());
+    }
+  }
+}
+
 int apex_set(ENGINE_CONTEXT *pEngineContext) {
   int rc = 0;
 
   try {
     radiance_file = NetCDFFile(pEngineContext->fileInfo.fileName);
+    radiance_file_data = data_fields();
 
     row_dim = radiance_file.dimLen("row_dim");
     size_t file_spectral_dim = radiance_file.dimLen("spectral_dim");
@@ -86,6 +113,10 @@ int apex_set(ENGINE_CONTEXT *pEngineContext) {
     size_t count[] = {spectral_dim, 1};
     radiance_file.getVar("radiance_wavelength", start, count, pEngineContext->buffers.lambda);
 
+    radiance_fillvalue = radiance_file.getFillValue<double>("radiance");
+
+    read_data_fields(radiance_file);
+
   } catch(std::runtime_error& e) {
     rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, e.what());
   }
@@ -108,9 +139,20 @@ int apex_read(ENGINE_CONTEXT *pEngineContext, int record) {
     return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, e.what());
   }
 
+  // check for fill value:
+  if (pEngineContext->buffers.spectrum[0] == radiance_fillvalue) {
+    return ERROR_ID_FILE_RECORD; // "Spectrum doesn't match selection criteria"
+  }
+
   RECORD_INFO *pRecord = &pEngineContext->recordInfo;
   pRecord->i_alongtrack=i_alongtrack;
   pRecord->i_crosstrack=i_crosstrack;
+
+  pRecord->latitude = radiance_file_data.lat.size() ? radiance_file_data.lat[record -1] : QDOAS_FILL_DOUBLE;
+  pRecord->longitude = radiance_file_data.lon.size() ? radiance_file_data.lon[record-1] : QDOAS_FILL_DOUBLE;
+  pRecord->Zm = radiance_file_data.sza.size() ? radiance_file_data.sza[record-1] : QDOAS_FILL_DOUBLE;
+  pRecord->zenithViewAngle = radiance_file_data.vza.size() ? radiance_file_data.vza[record-1] : QDOAS_FILL_FLOAT;
+  pRecord->azimuthViewAngle = radiance_file_data.raa.size() ? radiance_file_data.raa[record-1] : QDOAS_FILL_FLOAT;
 
   return rc;
 }
