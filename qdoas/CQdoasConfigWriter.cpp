@@ -624,10 +624,10 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toAscii().constData());
 
   // mfc
-  fprintf(fp, "      <mfc size=\"%d\" first=\"%d\" revert=\"%s\" auto=\"%s\" omask=\"%d\" imask=\"%d\" dmask=\"%d\" smask=\"%d\"",
+  fprintf(fp, "      <mfc size=\"%d\" first=\"%d\" revert=\"%s\" auto=\"%s\" omask=\"%d\" imask=\"%d\" dmask=\"%d\" smask=\"%d\" straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"",
 	  d->mfc.detectorSize, d->mfc.firstWavelength,
 	  (d->mfc.revert ? sTrue: sFalse), (d->mfc.autoFileSelect ? sTrue : sFalse),
-	  d->mfc.offsetMask, d->mfc.instrFctnMask, d->mfc.darkCurrentMask, d->mfc.spectraMask);
+	  d->mfc.offsetMask, d->mfc.instrFctnMask, d->mfc.darkCurrentMask, d->mfc.spectraMask,(d->mfc.straylight ? sTrue : sFalse),d->mfc.lambdaMin,d->mfc.lambdaMax);
 
   tmpStr = pathMgr->simplifyPath(QString(d->mfc.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().constData());

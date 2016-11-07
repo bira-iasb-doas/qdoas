@@ -1059,6 +1059,10 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 
       NDET[0]=pMediateInstrumental->mfc.detectorSize;
 
+      pEngineInstrumental->offsetFlag=pMediateInstrumental->mfc.straylight;
+      pEngineInstrumental->lambdaMin=pMediateInstrumental->mfc.lambdaMin;
+      pEngineInstrumental->lambdaMax=pMediateInstrumental->mfc.lambdaMax;
+
       pEngineInstrumental->mfcRevert=pMediateInstrumental->mfc.revert;
 
       pEngineInstrumental->mfcMaskOffset=pMediateInstrumental->mfc.offsetMask;

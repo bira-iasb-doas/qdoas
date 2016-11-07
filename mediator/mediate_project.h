@@ -257,6 +257,8 @@ extern "C" {
     unsigned int instrFctnMask;
     unsigned int spectraMask;
     unsigned int darkCurrentMask;
+    int  straylight;
+    double lambdaMin,lambdaMax;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
     char transmissionFunctionFile[FILENAME_BUFFER_LENGTH];
     char darkCurrentFile[FILENAME_BUFFER_LENGTH];

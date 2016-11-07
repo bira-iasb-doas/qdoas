@@ -847,6 +847,10 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     m_instrumental->mfc.darkCurrentMask = atts.value("dmask").toUInt();
     m_instrumental->mfc.spectraMask = atts.value("smask").toUInt();
 
+    m_instrumental->mfc.straylight = (atts.value("straylight") == "true") ? 1 : 0;
+    m_instrumental->mfc.lambdaMin = atts.value("lambda_min").toDouble();
+    m_instrumental->mfc.lambdaMax = atts.value("lambda_max").toDouble();
+
     str = atts.value("calib");
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);

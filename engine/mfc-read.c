@@ -265,11 +265,45 @@ RC MFC_AllocFiles(ENGINE_CONTEXT *pEngineContext)
        {
         sprintf(fileName,"%s%c%s",filePath,PATH_SEP,fileInfo->d_name);
 
+        // TO CHECK WITH MPI PEOPLE !!!!!!!!!!!!!
+
         if (!STD_IsDir(fileName) &&
             ((((ptr=strrchr(fileInfo->d_name,'.'))==NULL) && !strlen(fileExt)) ||
              ((strlen(ptr+1)==strlen(fileExt)) && !strcasecmp(ptr+1,fileExt))))
          {
-          strcpy(&fileList[indexFile*(DOAS_MAX_PATH_LEN+1)],fileInfo->d_name);
+          if (!indexFile || (strcmp(&fileList[0],fileInfo->d_name)>=0))
+           {
+            for (int i=indexFile;i>0;i--)
+             memcpy(&fileList[i*(DOAS_MAX_PATH_LEN+1)],&fileList[(i-1)*(DOAS_MAX_PATH_LEN+1)],DOAS_MAX_PATH_LEN+1);
+            strcpy(&fileList[0],fileInfo->d_name);
+           }
+          else if (strcmp(&fileList[(indexFile-1)*(DOAS_MAX_PATH_LEN+1)],fileInfo->d_name)<=0)
+           strcpy(&fileList[indexFile*(DOAS_MAX_PATH_LEN+1)],fileInfo->d_name);
+          else
+           {
+            int ilow,ihigh,icur;
+
+            ilow=0;
+            ihigh=indexFile-1;
+            icur=(ilow+ihigh)>>1;
+
+            while (ilow<ihigh)
+             {
+              if ((strcmp(&fileList[icur],fileInfo->d_name)<=0) && (strcmp(&fileList[icur+1],fileInfo->d_name)>=0))
+               break;
+              else if (strcmp(&fileList[icur],fileInfo->d_name)<0)
+               ilow=icur;
+              else if (strcmp(&fileList[icur+1],fileInfo->d_name)>0)
+               ihigh=icur;
+
+              icur=(ilow+ihigh)>>1;
+             }
+
+            for (int i=indexFile;i>icur;i--)
+             memcpy(&fileList[i*(DOAS_MAX_PATH_LEN+1)],&fileList[(i-1)*(DOAS_MAX_PATH_LEN+1)],DOAS_MAX_PATH_LEN+1);
+            strcpy(&fileList[icur],fileInfo->d_name);
+           }
+
           indexFile++;
          }
        }

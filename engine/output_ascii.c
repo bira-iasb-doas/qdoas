@@ -71,6 +71,8 @@ void ascii_close_file(void) {
     fields.*/
 static void OutputAscPrintTitles(FILE *fp)
 {
+  fprintf(fp,"# Results obtained using Qdoas (%s), Belgian Institute for Space Aeronomy (BIRA-IASB), http://uv-vis.bira.be/software/QDOAS\n",cQdoasVersionString);
+
   fprintf(fp, "# ");
   for(unsigned int i=0; i<output_num_fields; i++) {
     struct output_field thefield = output_data_analysis[i];

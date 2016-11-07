@@ -1327,6 +1327,18 @@ RC EngineBuildRefList(ENGINE_CONTEXT *pEngineContext)
   pEngineContext->analysisRef.zmMinIndex=indexZmMin;
   pEngineContext->analysisRef.zmMaxIndex=indexZmMax;
 
+// TO CHECK WITH MPI PEOPLE   {
+// TO CHECK WITH MPI PEOPLE    FILE *fp;
+// TO CHECK WITH MPI PEOPLE    int i;
+// TO CHECK WITH MPI PEOPLE    fp=fopen("RefList.dat","w+t");
+// TO CHECK WITH MPI PEOPLE    fprintf(fp,"List of references : \n");
+// TO CHECK WITH MPI PEOPLE    for (i=0;i<NRecord;i++)
+// TO CHECK WITH MPI PEOPLE     fprintf(fp,"%d %g %s\n",indexList[i],ZmList[i],&pEngineContext->recordInfo.mfcDoasis.fileNames[(indexList[i]-1)*(DOAS_MAX_PATH_LEN+1)]);
+// TO CHECK WITH MPI PEOPLE
+// TO CHECK WITH MPI PEOPLE    fclose(fp);
+// TO CHECK WITH MPI PEOPLE   }
+
+
   // Copy information from the ref context to the main context
 
   pEngineContext->lastRefRecord=ENGINE_contextRef.lastRefRecord;

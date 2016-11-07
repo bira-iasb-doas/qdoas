@@ -257,6 +257,7 @@ class CWInstrMfcEdit : public CWAllFilesEdit
   QLineEdit *m_detSizeEdit, *m_firstLambdaEdit;
   QLineEdit *m_offsetMaskEdit, *m_instrMaskEdit, *m_darkMaskEdit, *m_spectraMaskEdit;
   QCheckBox *m_revertCheck, *m_autoCheck;
+  StrayLightConfig *m_strayLightConfig;
 };
 
 //--------------------------------------------------------------------------

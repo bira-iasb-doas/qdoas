@@ -117,6 +117,7 @@ void initializeMediateProjectInstrumental(mediate_project_instrumental_t *d)
 
   d->ascii.lambdaMin=d->ascii.lambdaMax=(double)0.;
   d->saozefm.lambdaMin=d->saozefm.lambdaMax=(double)0.;
+  d->mfc.lambdaMin=d->mfc.lambdaMax=(double)0.;
   d->mfcstd.lambdaMin=d->mfcstd.lambdaMax=(double)0.;
   d->mfcbira.lambdaMin=d->mfcbira.lambdaMax=(double)0.;
   d->rasas.lambdaMin=d->rasas.lambdaMax=(double)0.;

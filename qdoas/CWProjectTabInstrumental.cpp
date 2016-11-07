@@ -819,37 +819,36 @@ void CWInstrSaozEdit::apply(struct instrumental_saoz *d) const
 //--------------------------------------------------------------------------
 
 CWInstrMfcEdit::CWInstrMfcEdit(const struct instrumental_mfc *d, QWidget *parent) :
-  CWAllFilesEdit(parent)
+  CWAllFilesEdit(parent),
+  m_strayLightConfig(new StrayLightConfig(Qt::Vertical, this) )
 {
   QString tmpStr;
   int row = 0;
 
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
 
-  // detector size and first wavelength
-  QGridLayout *topLayout = new QGridLayout;
-  topLayout->addWidget(new QLabel("Detector Size", this), 0, 0);
-  m_detSizeEdit = new QLineEdit(this);
-  m_detSizeEdit->setFixedWidth(cStandardEditWidth);
-  m_detSizeEdit->setValidator(new QIntValidator(0, 8192, m_detSizeEdit));
-  topLayout->addWidget(m_detSizeEdit, 0, 1, Qt::AlignLeft);
-  topLayout->addWidget(new QLabel("1st Wavelength (nm)", this), 0, 2);
-  m_firstLambdaEdit = new QLineEdit(this);
-  m_firstLambdaEdit->setFixedWidth(cStandardEditWidth);
-  m_firstLambdaEdit->setValidator(new QIntValidator(100, 999, m_firstLambdaEdit));
-  topLayout->addWidget(m_firstLambdaEdit, 0, 3, Qt::AlignLeft);
-
-  mainLayout->addLayout(topLayout);
-
   // masks and check boxes
   QHBoxLayout *middleLayout = new QHBoxLayout;
   // check boxes
-  QVBoxLayout *checkLayout = new QVBoxLayout;
-  m_revertCheck = new QCheckBox("Revert", this);
-  checkLayout->addWidget(m_revertCheck);
-  m_autoCheck = new QCheckBox("Auto. File Selection", this);
-  checkLayout->addWidget(m_autoCheck);
-  middleLayout->addLayout(checkLayout);
+
+  QGroupBox *formatGroup = new QGroupBox("Format", this);
+  QGridLayout *checkLayout = new QGridLayout(formatGroup);
+
+  m_revertCheck = new QCheckBox("Revert", formatGroup);
+  checkLayout->addWidget(m_revertCheck,0,0);
+
+  checkLayout->addWidget(new QLabel("Detector Size", formatGroup), 1, 0);
+  m_detSizeEdit = new QLineEdit(formatGroup);
+  m_detSizeEdit->setFixedWidth(cStandardEditWidth);
+  m_detSizeEdit->setValidator(new QIntValidator(0, 8192, m_detSizeEdit));
+  checkLayout->addWidget(m_detSizeEdit, 1, 1, Qt::AlignLeft);
+  checkLayout->addWidget(new QLabel("1st Wavelength (nm)", formatGroup), 2, 0);
+  m_firstLambdaEdit = new QLineEdit(formatGroup);
+  m_firstLambdaEdit->setFixedWidth(cStandardEditWidth);
+  m_firstLambdaEdit->setValidator(new QIntValidator(100, 999, m_firstLambdaEdit));
+  checkLayout->addWidget(m_firstLambdaEdit, 2,1, Qt::AlignLeft);
+
+
   // mask group
   QGroupBox *maskGroup = new QGroupBox("Masks", this);
   QGridLayout *maskLayout = new QGridLayout(maskGroup);
@@ -878,7 +877,9 @@ CWInstrMfcEdit::CWInstrMfcEdit(const struct instrumental_mfc *d, QWidget *parent
   m_spectraMaskEdit->setValidator(new QIntValidator(0, 65535, m_spectraMaskEdit));
   maskLayout->addWidget(m_spectraMaskEdit, 1, 3);
 
+  middleLayout->addWidget(formatGroup);
   middleLayout->addWidget(maskGroup);
+  middleLayout->addWidget(m_strayLightConfig);
   mainLayout->addLayout(middleLayout);
 
   QGridLayout *gridLayout = new QGridLayout;
@@ -917,7 +918,7 @@ CWInstrMfcEdit::CWInstrMfcEdit(const struct instrumental_mfc *d, QWidget *parent
 
   // check boxes
   m_revertCheck->setCheckState(d->revert ? Qt::Checked : Qt::Unchecked);
-  m_autoCheck->setCheckState(d->autoFileSelect ? Qt::Checked : Qt::Unchecked);
+  // m_autoCheck->setCheckState(d->autoFileSelect ? Qt::Checked : Qt::Unchecked);
 
   // masks
   tmpStr.setNum(d->offsetMask);
@@ -936,6 +937,10 @@ CWInstrMfcEdit::CWInstrMfcEdit(const struct instrumental_mfc *d, QWidget *parent
   m_spectraMaskEdit->validator()->fixup(tmpStr);
   m_spectraMaskEdit->setText(tmpStr);
 
+  // straylight bias
+  m_strayLightConfig->setChecked(d->straylight ? true : false);
+  m_strayLightConfig->setLambdaMin(d->lambdaMin);
+  m_strayLightConfig->setLambdaMax(d->lambdaMax);
 }
 
 void CWInstrMfcEdit::apply(struct instrumental_mfc *d) const
@@ -948,13 +953,19 @@ void CWInstrMfcEdit::apply(struct instrumental_mfc *d) const
 
   // checkboxes
   d->revert = (m_revertCheck->checkState() == Qt::Checked) ? 1 : 0;
-  d->autoFileSelect = (m_autoCheck->checkState() == Qt::Checked) ? 1 : 0;
+  // d->autoFileSelect = (m_autoCheck->checkState() == Qt::Checked) ? 1 : 0;
 
   // masks
   d->offsetMask = m_offsetMaskEdit->text().toUInt();
   d->instrFctnMask = m_instrMaskEdit->text().toUInt();
   d->darkCurrentMask = m_darkMaskEdit->text().toUInt();
   d->spectraMask = m_spectraMaskEdit->text().toUInt();
+
+  // straylight
+
+  d->straylight = m_strayLightConfig->isChecked() ? 1 : 0;
+  d->lambdaMin = m_strayLightConfig->getLambdaMin();
+  d->lambdaMax = m_strayLightConfig->getLambdaMax();
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toAscii().data());
@@ -1944,7 +1955,7 @@ CWInstrTropomiEdit::CWInstrTropomiEdit(const struct instrumental_tropomi *pInstr
   helperConstructCalInsFileWidgets(gridLayout, row,
 				   pInstrTropomi->calibrationFile, sizeof(pInstrTropomi->calibrationFile),
 				   pInstrTropomi->instrFunctionFile, sizeof(pInstrTropomi->instrFunctionFile));
-  
+
 
 
 }
