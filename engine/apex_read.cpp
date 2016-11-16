@@ -139,8 +139,13 @@ int apex_read(ENGINE_CONTEXT *pEngineContext, int record) {
     return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, e.what());
   }
 
-  // check for fill value:
-  if (pEngineContext->buffers.spectrum[0] == radiance_fillvalue) {
+  // check the spectrum contains non-fill values:
+  bool is_fill = true;
+  for (size_t i=0; i!= spectral_dim && is_fill; ++i) {
+    if (pEngineContext->buffers.spectrum[i] != radiance_fillvalue)
+      is_fill = false;
+  }
+  if (is_fill) { // only fill-values
     return ERROR_ID_FILE_RECORD; // "Spectrum doesn't match selection criteria"
   }
 
