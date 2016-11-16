@@ -981,8 +981,6 @@ RC EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *sp
 
    // Initializations
 
-   strcpy(pEngineContext->fileInfo.fileName,spectraFileName);
-
    resetFlag=(!pEngineContext->mfcDoasisFlag || (THRD_id!=THREAD_TYPE_ANALYSIS) || !pEngineContext->recordInfo.mfcDoasis.nFiles || (MFC_SearchForCurrentFileIndex(pEngineContext)==ITEM_NONE))?1:0;
    pEngineContext->recordInfo.mfcDoasis.resetFlag=resetFlag;
 
