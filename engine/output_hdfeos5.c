@@ -51,7 +51,7 @@ static size_t nCalibWindows;
  *  - fill values/default values for fields
  */
 
-RC hdfeos5_open(const ENGINE_CONTEXT *pEngineContext, char *filename) {
+RC hdfeos5_open(const ENGINE_CONTEXT *pEngineContext, const char *filename) {
   strcat(filename, output_file_extensions[HDFEOS5]);
   RC rc = ERROR_ID_NO;
 

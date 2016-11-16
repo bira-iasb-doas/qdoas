@@ -637,7 +637,7 @@ struct _engineContext
   int     refFlag;                                                              // this flag is set when the reference spectrum is retrieved from spectra files
 
   CALIB_FENO        calibFeno;                                                  // transfer of wavelength calibration options from the project mediator to the analysis mediator
-  char   *outputPath;                                                           // pointer to the output path (from export or output part of the project)
+   const char   *outputPath;                                                           // pointer to the output path (from export or output part of the project)
 };
 
 #ifdef __cplusplus

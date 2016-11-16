@@ -175,9 +175,9 @@ size_t output_get_size(enum output_datatype datatype);
     opened
     \retval ERROR_ID_NONE else
 */
-RC open_output_file(const ENGINE_CONTEXT *pEngineContext, char *filename);
-RC ascii_open(const ENGINE_CONTEXT *pEngineContext,char *filename);
-RC hdfeos5_open(const ENGINE_CONTEXT *pEngineContext, char *filename);
+RC open_output_file(const ENGINE_CONTEXT *pEngineContext, const char *filename);
+RC ascii_open(const ENGINE_CONTEXT *pEngineContext, const char *filename);
+RC hdfeos5_open(const ENGINE_CONTEXT *pEngineContext, const char *filename);
 //!@}
 
 /** @name Close output file.*/

@@ -684,31 +684,6 @@ static void OutputRegisterFluxes(const ENGINE_CONTEXT *pEngineContext)
     if ((ptrNew=strchr(ptrOld,';'))!=NULL)
      ptrNew++;
    }
-
-  // Color indexes
-
-  // for (ptrOld=pEngineContext->project.asciiResults.cic;(ptrOld!=NULL) && (strlen(ptrOld)!=0);ptrOld=ptrNew)
-  //  {
-  //   if (OUTPUT_NCic>=MAX_CIC)
-  //    break;
-  //
-  //   if (sscanf(ptrOld,"%lf/%lf",&OUTPUT_cic[OUTPUT_NCic][0],&OUTPUT_cic[OUTPUT_NCic][1])>=2)
-  //    {
-  //     sprintf(columnTitle,"%g/%g",OUTPUT_cic[OUTPUT_NCic][0],OUTPUT_cic[OUTPUT_NCic][1]);
-  //     struct output_field *output_cic = &output_data_analysis[output_num_fields++];
-  //     output_cic->resulttype = PRJCT_RESULTS_CIC;
-  //     output_cic->fieldname = strdup(columnTitle);
-  //     output_cic->memory_type = OUTPUT_DOUBLE;
-  //     output_cic->format = "%#15.6le";
-  //     output_cic->index_cic = OUTPUT_NCic;
-  //     output_cic->get_data = (func_void)&get_cic;
-  //     output_cic->data_cols = 1;
-  //     OUTPUT_NCic++;
-  //    }
-  //
-  //   if ((ptrNew=strchr(ptrOld,';'))!=NULL)
-  //    ptrNew++;
-  //  }
 }
 
 static void register_field(struct output_field field) {
@@ -1714,13 +1689,13 @@ RC OutputBuildFileName(const ENGINE_CONTEXT *pEngineContext,char *outputPath)
     }
 
   } else { // user-chosen filename
-  	 if ((THRD_id!=THREAD_TYPE_EXPORT) && (pEngineContext->project.asciiResults.file_format!=ASCII))
-     remove_extension(fileNameStart);
+    if ((THRD_id!=THREAD_TYPE_EXPORT) && (pProject->asciiResults.file_format!=ASCII))
+      remove_extension(fileNameStart);
   }
   return rc;
 }
 
-RC open_output_file(const ENGINE_CONTEXT *pEngineContext, char *outputFileName)
+RC open_output_file(const ENGINE_CONTEXT *pEngineContext, const char *outputFileName)
 {
   if (pEngineContext->project.asciiResults.calibFlag)
     save_calibration();
@@ -1897,7 +1872,7 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
   RC rc=ERROR_ID_NO;
   char outputFileName[MAX_ITEM_TEXT_LEN] = {0};
 
-  pEngineContext->outputPath=(THRD_id==THREAD_TYPE_EXPORT)?(char *)pExport->path:(char *)pResults->path;
+  pEngineContext->outputPath=(THRD_id==THREAD_TYPE_EXPORT)? pExport->path: pResults->path;
 
   // select records for output according to date/site
   bool selected_records[outputNbRecords];

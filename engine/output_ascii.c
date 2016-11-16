@@ -15,7 +15,7 @@ static void write_automatic_reference_info(FILE *fp);
 static void write_calib_output(FILE *fp);
 static void OutputAscPrintTitles(FILE *fp);
 
-RC ascii_open(const ENGINE_CONTEXT *pEngineContext,char *filename) {
+RC ascii_open(const ENGINE_CONTEXT *pEngineContext, const char *filename) {
 
  char *ptr;
 
