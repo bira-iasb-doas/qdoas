@@ -471,7 +471,7 @@ bool CProjectCalibrationSubHandler::start(const QXmlAttributes &atts)
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(m_calibration->solarRefFile))
-      strcpy(m_calibration->solarRefFile, str.toAscii().data());
+      strcpy(m_calibration->solarRefFile, str.toLatin1().data());
     else
       return postErrorMessage("Solar Reference Filename too long");
   }
@@ -516,7 +516,7 @@ bool CProjectCalibrationSubHandler::start(const QString &element, const QXmlAttr
      {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(m_calibration->slfFile))
-        strcpy(m_calibration->slfFile, str.toAscii().data());
+        strcpy(m_calibration->slfFile, str.toLatin1().data());
       else
         return postErrorMessage("Slit function Filename too long");
      }
@@ -540,7 +540,7 @@ bool CProjectCalibrationSubHandler::start(const QString &element, const QXmlAttr
     m_calibration->windowSize = atts.value("size").toDouble();
     m_calibration->subWindows = atts.value("intervals").toInt();
 
-    const QByteArray& ascii=atts.value("custom_windows").toAscii();
+    const QByteArray& ascii=atts.value("custom_windows").toLatin1();
     const char *ptr = ascii.data();
     int i=0;
     double lambdaMin,lambdaMax;
@@ -626,7 +626,7 @@ bool CProjectUndersamplingSubHandler::start(const QXmlAttributes &atts)
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(m_undersampling->solarRefFile))
-      strcpy(m_undersampling->solarRefFile, str.toAscii().data());
+      strcpy(m_undersampling->solarRefFile, str.toLatin1().data());
     else
       return postErrorMessage("Solar Reference Filename too long");
   }
@@ -715,7 +715,7 @@ bool CProjectInstrumentalSubHandler::start(const QXmlAttributes &atts)
   str = atts.value("site");
   if (!str.isEmpty()) {
     if (str.length() < (int)sizeof(m_instrumental->siteName))
-      strcpy(m_instrumental->siteName, str.toAscii().data());
+      strcpy(m_instrumental->siteName, str.toLatin1().data());
     else
       return postErrorMessage("Instrumental Site Name too long");
   }
@@ -754,7 +754,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(m_instrumental->ascii.calibrationFile))
-	strcpy(m_instrumental->ascii.calibrationFile, str.toAscii().data());
+	strcpy(m_instrumental->ascii.calibrationFile, str.toLatin1().data());
       else
 	return postErrorMessage(CALIBRATION_FILENAME_ERR);
     }
@@ -765,7 +765,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(m_instrumental->ascii.transmissionFunctionFile))
-	strcpy(m_instrumental->ascii.transmissionFunctionFile, str.toAscii().data());
+	strcpy(m_instrumental->ascii.transmissionFunctionFile, str.toLatin1().data());
       else
 	return postErrorMessage(TRANSMISSION_FILENAME_ERR);
     }
@@ -790,7 +790,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(m_instrumental->acton.calibrationFile))
-	strcpy(m_instrumental->acton.calibrationFile, str.toAscii().data());
+	strcpy(m_instrumental->acton.calibrationFile, str.toLatin1().data());
       else
 	return postErrorMessage(CALIBRATION_FILENAME_ERR);
     }
@@ -801,7 +801,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(m_instrumental->acton.transmissionFunctionFile))
-	strcpy(m_instrumental->acton.transmissionFunctionFile, str.toAscii().data());
+	strcpy(m_instrumental->acton.transmissionFunctionFile, str.toLatin1().data());
       else
 	return postErrorMessage(TRANSMISSION_FILENAME_ERR);
     }
@@ -855,7 +855,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(m_instrumental->mfc.calibrationFile))
-	strcpy(m_instrumental->mfc.calibrationFile, str.toAscii().data());
+	strcpy(m_instrumental->mfc.calibrationFile, str.toLatin1().data());
       else
 	return postErrorMessage(CALIBRATION_FILENAME_ERR);
     }
@@ -866,7 +866,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(m_instrumental->mfc.transmissionFunctionFile))
-	strcpy(m_instrumental->mfc.transmissionFunctionFile, str.toAscii().data());
+	strcpy(m_instrumental->mfc.transmissionFunctionFile, str.toLatin1().data());
       else
 	return postErrorMessage(TRANSMISSION_FILENAME_ERR);
     }
@@ -874,7 +874,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(m_instrumental->mfc.darkCurrentFile))
-	strcpy(m_instrumental->mfc.darkCurrentFile, str.toAscii().data());
+	strcpy(m_instrumental->mfc.darkCurrentFile, str.toLatin1().data());
       else
 	return postErrorMessage("Dark Current Filename too long");
     }
@@ -883,7 +883,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(m_instrumental->mfc.offsetFile))
-	strcpy(m_instrumental->mfc.offsetFile, str.toAscii().data());
+	strcpy(m_instrumental->mfc.offsetFile, str.toLatin1().data());
       else
 	return postErrorMessage("Offset Filename too long");
     }
@@ -901,7 +901,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     str = atts.value("date");
     if (!str.isEmpty()) {
       if (str.length() < (int)sizeof(m_instrumental->mfcstd.dateFormat))
-        strcpy(m_instrumental->mfcstd.dateFormat, str.toAscii().data());
+        strcpy(m_instrumental->mfcstd.dateFormat, str.toLatin1().data());
       else
         return postErrorMessage("Date format too long");
      }
@@ -910,7 +910,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(m_instrumental->mfcstd.calibrationFile))
-	strcpy(m_instrumental->mfcstd.calibrationFile, str.toAscii().data());
+	strcpy(m_instrumental->mfcstd.calibrationFile, str.toLatin1().data());
       else
 	return postErrorMessage(CALIBRATION_FILENAME_ERR);
     }
@@ -921,7 +921,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(m_instrumental->mfcstd.transmissionFunctionFile))
-	strcpy(m_instrumental->mfcstd.transmissionFunctionFile, str.toAscii().data());
+	strcpy(m_instrumental->mfcstd.transmissionFunctionFile, str.toLatin1().data());
       else
 	return postErrorMessage(TRANSMISSION_FILENAME_ERR);
     }
@@ -929,7 +929,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(m_instrumental->mfcstd.darkCurrentFile))
-	strcpy(m_instrumental->mfcstd.darkCurrentFile, str.toAscii().data());
+	strcpy(m_instrumental->mfcstd.darkCurrentFile, str.toLatin1().data());
       else
 	return postErrorMessage("Dark Current Filename too long");
     }
@@ -938,7 +938,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(m_instrumental->mfcstd.offsetFile))
-	strcpy(m_instrumental->mfcstd.offsetFile, str.toAscii().data());
+	strcpy(m_instrumental->mfcstd.offsetFile, str.toLatin1().data());
       else
 	return postErrorMessage("Offset Filename too long");
     }
@@ -955,7 +955,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(m_instrumental->mfcbira.calibrationFile))
-	strcpy(m_instrumental->mfcbira.calibrationFile, str.toAscii().data());
+	strcpy(m_instrumental->mfcbira.calibrationFile, str.toLatin1().data());
       else
 	return postErrorMessage(CALIBRATION_FILENAME_ERR);
     }
@@ -966,7 +966,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(m_instrumental->mfcbira.transmissionFunctionFile))
-	strcpy(m_instrumental->mfcbira.transmissionFunctionFile, str.toAscii().data());
+	strcpy(m_instrumental->mfcbira.transmissionFunctionFile, str.toLatin1().data());
       else
 	return postErrorMessage(TRANSMISSION_FILENAME_ERR);
     }
@@ -999,7 +999,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(m_instrumental->ccdeev.calibrationFile))
-	strcpy(m_instrumental->ccdeev.calibrationFile, str.toAscii().data());
+	strcpy(m_instrumental->ccdeev.calibrationFile, str.toLatin1().data());
       else
 	return postErrorMessage(CALIBRATION_FILENAME_ERR);
     }
@@ -1010,7 +1010,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(m_instrumental->ccdeev.transmissionFunctionFile))
-	strcpy(m_instrumental->ccdeev.transmissionFunctionFile, str.toAscii().data());
+	strcpy(m_instrumental->ccdeev.transmissionFunctionFile, str.toLatin1().data());
       else
 	return postErrorMessage(TRANSMISSION_FILENAME_ERR);
     }
@@ -1019,7 +1019,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(m_instrumental->ccdeev.imagePath))
-	strcpy(m_instrumental->ccdeev.imagePath, str.toAscii().data());
+	strcpy(m_instrumental->ccdeev.imagePath, str.toLatin1().data());
       else
 	return postErrorMessage("Stray Light Correction Filename too long");
     }
@@ -1028,7 +1028,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(m_instrumental->ccdeev.straylightCorrectionFile))
-	strcpy(m_instrumental->ccdeev.straylightCorrectionFile, str.toAscii().data());
+	strcpy(m_instrumental->ccdeev.straylightCorrectionFile, str.toLatin1().data());
       else
 	return postErrorMessage("Stray Light Correction Filename too long");
     }
@@ -1037,7 +1037,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(m_instrumental->ccdeev.detectorNonLinearityFile))
-	strcpy(m_instrumental->ccdeev.detectorNonLinearityFile, str.toAscii().data());
+	strcpy(m_instrumental->ccdeev.detectorNonLinearityFile, str.toLatin1().data());
       else
 	return postErrorMessage("Detector Non-Linearity Filename too long");
     }
@@ -1104,13 +1104,13 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(m_instrumental->omi.trackSelection))
-	strcpy(m_instrumental->omi.trackSelection, str.toAscii().data());
+	strcpy(m_instrumental->omi.trackSelection, str.toLatin1().data());
       else
 	return postErrorMessage("Track selection string too long");
     }
 
     str = atts.value("xTrackMode");
-    m_instrumental->omi.xtrack_mode = str_to_mode(str.toAscii().constData());
+    m_instrumental->omi.xtrack_mode = str_to_mode(str.toLatin1().constData());
 
     m_instrumental->omi.pixelQFRejectionFlag = (atts.value("pixelQF_rejectionFlag") == "true") ? 1 : 0;
 
@@ -1122,7 +1122,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(m_instrumental->omi.calibrationFile))
-	strcpy(m_instrumental->omi.calibrationFile, str.toAscii().data());
+	strcpy(m_instrumental->omi.calibrationFile, str.toLatin1().data());
       else
 	return postErrorMessage(CALIBRATION_FILENAME_ERR);
     }
@@ -1133,7 +1133,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(m_instrumental->omi.transmissionFunctionFile))
-	strcpy(m_instrumental->omi.transmissionFunctionFile, str.toAscii().data());
+	strcpy(m_instrumental->omi.transmissionFunctionFile, str.toLatin1().data());
       else
 	return postErrorMessage(TRANSMISSION_FILENAME_ERR);
     }
@@ -1153,7 +1153,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < sizeof(m_instrumental->tropomi.calibrationFile))
-	strcpy(m_instrumental->tropomi.calibrationFile, str.toAscii().data());
+	strcpy(m_instrumental->tropomi.calibrationFile, str.toLatin1().data());
       else
 	return postErrorMessage("Calibration Filename too long");
     }
@@ -1162,7 +1162,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < sizeof(m_instrumental->tropomi.instrFunctionFile))
-	strcpy(m_instrumental->tropomi.instrFunctionFile, str.toAscii().data());
+	strcpy(m_instrumental->tropomi.instrFunctionFile, str.toLatin1().data());
       else
 	return postErrorMessage("Instrument Function  Filename too long");
     }
@@ -1200,7 +1200,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(m_instrumental->oceanoptics.calibrationFile))
-	strcpy(m_instrumental->oceanoptics.calibrationFile, str.toAscii().data());
+	strcpy(m_instrumental->oceanoptics.calibrationFile, str.toLatin1().data());
       else
 	return postErrorMessage(CALIBRATION_FILENAME_ERR);
     }
@@ -1211,7 +1211,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(m_instrumental->oceanoptics.transmissionFunctionFile))
-	strcpy(m_instrumental->oceanoptics.transmissionFunctionFile, str.toAscii().data());
+	strcpy(m_instrumental->oceanoptics.transmissionFunctionFile, str.toLatin1().data());
       else
 	return postErrorMessage(TRANSMISSION_FILENAME_ERR);
     }
@@ -1243,7 +1243,7 @@ bool CProjectInstrumentalSubHandler::helperLoadLogger(const QXmlAttributes &atts
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(d->calibrationFile))
-      strcpy(d->calibrationFile, str.toAscii().data());
+      strcpy(d->calibrationFile, str.toLatin1().data());
     else
       return postErrorMessage(CALIBRATION_FILENAME_ERR);
   }
@@ -1254,7 +1254,7 @@ bool CProjectInstrumentalSubHandler::helperLoadLogger(const QXmlAttributes &atts
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(d->transmissionFunctionFile))
-      strcpy(d->transmissionFunctionFile, str.toAscii().data());
+      strcpy(d->transmissionFunctionFile, str.toLatin1().data());
     else
       return postErrorMessage(TRANSMISSION_FILENAME_ERR);
   }
@@ -1279,7 +1279,7 @@ bool CProjectInstrumentalSubHandler::helperLoadSaoz(const QXmlAttributes &atts, 
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(d->calibrationFile))
-      strcpy(d->calibrationFile, str.toAscii().data());
+      strcpy(d->calibrationFile, str.toLatin1().data());
     else
       return postErrorMessage(CALIBRATION_FILENAME_ERR);
   }
@@ -1290,7 +1290,7 @@ bool CProjectInstrumentalSubHandler::helperLoadSaoz(const QXmlAttributes &atts, 
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(d->transmissionFunctionFile))
-      strcpy(d->transmissionFunctionFile, str.toAscii().data());
+      strcpy(d->transmissionFunctionFile, str.toLatin1().data());
     else
       return postErrorMessage(TRANSMISSION_FILENAME_ERR);
   }
@@ -1306,7 +1306,7 @@ bool CProjectInstrumentalSubHandler::helperLoadMinimum(const QXmlAttributes &att
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(d->calibrationFile))
-      strcpy(d->calibrationFile, str.toAscii().data());
+      strcpy(d->calibrationFile, str.toLatin1().data());
     else
       return postErrorMessage(CALIBRATION_FILENAME_ERR);
   }
@@ -1317,7 +1317,7 @@ bool CProjectInstrumentalSubHandler::helperLoadMinimum(const QXmlAttributes &att
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(d->transmissionFunctionFile))
-      strcpy(d->transmissionFunctionFile, str.toAscii().data());
+      strcpy(d->transmissionFunctionFile, str.toLatin1().data());
     else
       return postErrorMessage(TRANSMISSION_FILENAME_ERR);
   }
@@ -1333,7 +1333,7 @@ bool CProjectInstrumentalSubHandler::helperLoadCcd(const QXmlAttributes &atts, s
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(d->calibrationFile))
-      strcpy(d->calibrationFile, str.toAscii().data());
+      strcpy(d->calibrationFile, str.toLatin1().data());
     else
       return postErrorMessage(CALIBRATION_FILENAME_ERR);
   }
@@ -1344,7 +1344,7 @@ bool CProjectInstrumentalSubHandler::helperLoadCcd(const QXmlAttributes &atts, s
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(d->transmissionFunctionFile))
-      strcpy(d->transmissionFunctionFile, str.toAscii().data());
+      strcpy(d->transmissionFunctionFile, str.toLatin1().data());
     else
       return postErrorMessage(TRANSMISSION_FILENAME_ERR);
   }
@@ -1353,7 +1353,7 @@ bool CProjectInstrumentalSubHandler::helperLoadCcd(const QXmlAttributes &atts, s
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(d->interPixelVariabilityFile))
-      strcpy(d->interPixelVariabilityFile, str.toAscii().data());
+      strcpy(d->interPixelVariabilityFile, str.toLatin1().data());
     else
       return postErrorMessage("Inter Pixel Variability Filename too long");
   }
@@ -1362,7 +1362,7 @@ bool CProjectInstrumentalSubHandler::helperLoadCcd(const QXmlAttributes &atts, s
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(d->detectorNonLinearityFile))
-      strcpy(d->detectorNonLinearityFile, str.toAscii().data());
+      strcpy(d->detectorNonLinearityFile, str.toLatin1().data());
     else
       return postErrorMessage("Detector Non-Linearity Filename too long");
   }
@@ -1408,7 +1408,7 @@ bool CProjectInstrumentalSubHandler::helperLoadGdp(const QXmlAttributes &atts, s
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(d->calibrationFile))
-      strcpy(d->calibrationFile, str.toAscii().data());
+      strcpy(d->calibrationFile, str.toLatin1().data());
     else
       return postErrorMessage(CALIBRATION_FILENAME_ERR);
   }
@@ -1419,7 +1419,7 @@ bool CProjectInstrumentalSubHandler::helperLoadGdp(const QXmlAttributes &atts, s
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(d->transmissionFunctionFile))
-      strcpy(d->transmissionFunctionFile, str.toAscii().data());
+      strcpy(d->transmissionFunctionFile, str.toLatin1().data());
     else
       return postErrorMessage(TRANSMISSION_FILENAME_ERR);
   }
@@ -1451,7 +1451,7 @@ bool CProjectInstrumentalSubHandler::helperLoadGome2(const QXmlAttributes &atts,
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(d->calibrationFile))
-      strcpy(d->calibrationFile, str.toAscii().data());
+      strcpy(d->calibrationFile, str.toLatin1().data());
     else
       return postErrorMessage(CALIBRATION_FILENAME_ERR);
   }
@@ -1462,7 +1462,7 @@ bool CProjectInstrumentalSubHandler::helperLoadGome2(const QXmlAttributes &atts,
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(d->transmissionFunctionFile))
-      strcpy(d->transmissionFunctionFile, str.toAscii().data());
+      strcpy(d->transmissionFunctionFile, str.toLatin1().data());
     else
       return postErrorMessage(TRANSMISSION_FILENAME_ERR);
   }
@@ -1514,7 +1514,7 @@ bool CProjectInstrumentalSubHandler::helperLoadScia(const QXmlAttributes &atts, 
   str = atts.value("sunref");
   if (!str.isEmpty()) {
     if (str.length() < (int)sizeof(d->sunReference))
-      strcpy(d->sunReference, str.toAscii().data());
+      strcpy(d->sunReference, str.toLatin1().data());
     else
       return postErrorMessage("Sun Reference too long");
   }
@@ -1523,7 +1523,7 @@ bool CProjectInstrumentalSubHandler::helperLoadScia(const QXmlAttributes &atts, 
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(d->calibrationFile))
-      strcpy(d->calibrationFile, str.toAscii().data());
+      strcpy(d->calibrationFile, str.toLatin1().data());
     else
       return postErrorMessage(CALIBRATION_FILENAME_ERR);
   }
@@ -1534,7 +1534,7 @@ bool CProjectInstrumentalSubHandler::helperLoadScia(const QXmlAttributes &atts, 
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(d->transmissionFunctionFile))
-      strcpy(d->transmissionFunctionFile, str.toAscii().data());
+      strcpy(d->transmissionFunctionFile, str.toLatin1().data());
     else
       return postErrorMessage(TRANSMISSION_FILENAME_ERR);
   }
@@ -1543,7 +1543,7 @@ bool CProjectInstrumentalSubHandler::helperLoadScia(const QXmlAttributes &atts, 
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(d->detectorNonLinearityFile))
-	strcpy(d->detectorNonLinearityFile, str.toAscii().data());
+	strcpy(d->detectorNonLinearityFile, str.toLatin1().data());
       else
 	return postErrorMessage("Detector Non-Linearity Filename too long");
     }
@@ -1569,7 +1569,7 @@ bool CProjectSlitSubHandler::start(const QXmlAttributes &atts)
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(m_slit->solarRefFile))
-      strcpy(m_slit->solarRefFile, str.toAscii().data());
+      strcpy(m_slit->solarRefFile, str.toLatin1().data());
     else
       return postErrorMessage("Solar Reference Filename too long");
   }
@@ -1607,7 +1607,7 @@ bool CProjectOutputSubHandler::start(const QXmlAttributes &atts)
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(m_output->path))
-      strcpy(m_output->path, str.toAscii().data());
+      strcpy(m_output->path, str.toLatin1().data());
     else
       return postErrorMessage("Output path too long");
   }
@@ -1629,7 +1629,7 @@ bool CProjectOutputSubHandler::start(const QXmlAttributes &atts)
   str = atts.value("flux");
   if (!str.isEmpty()) {
     if (str.length()+1 < (int)sizeof(m_output->flux))
-      strcpy(m_output->flux, str.toAscii().data());
+      strcpy(m_output->flux, str.toLatin1().data());
     else
       return postErrorMessage("Output flux too long");
   }
@@ -1643,14 +1643,14 @@ bool CProjectOutputSubHandler::start(const QXmlAttributes &atts)
   str = atts.value("swathName");
   if (!str.isEmpty()) {
     if ((size_t) str.length()+1 < sizeof(m_output->swath_name))
-      strcpy(m_output->swath_name, str.toAscii().data());
+      strcpy(m_output->swath_name, str.toLatin1().data());
     else
       return postErrorMessage("Output file swath name too long.");
   }
 
   str = atts.value("fileFormat");
   if (!str.isEmpty()) {
-    enum output_format format = output_get_format(str.toAscii().data());
+    enum output_format format = output_get_format(str.toLatin1().data());
     if (format != -1)
       m_output->file_format = format;
   }
@@ -1676,7 +1676,7 @@ bool CProjectExportSubHandler::start(const QXmlAttributes &atts)
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(m_export->path))
-      strcpy(m_export->path, str.toAscii().data());
+      strcpy(m_export->path, str.toLatin1().data());
     else
       return postErrorMessage("Export path too long");
   }

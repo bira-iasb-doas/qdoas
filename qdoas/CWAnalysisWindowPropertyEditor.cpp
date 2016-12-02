@@ -543,9 +543,9 @@ bool CWAnalysisWindowPropertyEditor::actionOk(void)
     d->requirePredefined = (m_predefCheck->checkState() == Qt::Checked) ? 1 : 0;
     d->requireRefRatio = (m_ratioCheck->checkState() == Qt::Checked) ? 1 : 0;
 
-    strcpy(d->refOneFile, m_refOneEdit->text().toAscii().data());
-    strcpy(d->refTwoFile, m_refTwoEdit->text().toAscii().data());
-    strcpy(d->residualFile, m_residualEdit->text().toAscii().data());
+    strcpy(d->refOneFile, m_refOneEdit->text().toLatin1().data());
+    strcpy(d->refTwoFile, m_refTwoEdit->text().toLatin1().data());
+    strcpy(d->residualFile, m_residualEdit->text().toLatin1().data());
 
     if ((p->instrumental.format==PRJCT_INSTR_FORMAT_CCD_EEV) || (p->instrumental.format==PRJCT_INSTR_FORMAT_MFC) || (p->instrumental.format==PRJCT_INSTR_FORMAT_MFC_STD) || (p->instrumental.format==PRJCT_INSTR_FORMAT_MFC_BIRA) ||
        ((p->instrumental.format==PRJCT_INSTR_FORMAT_ASCII) && p->instrumental.ascii.flagElevationAngle))

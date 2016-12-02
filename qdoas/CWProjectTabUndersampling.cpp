@@ -91,7 +91,7 @@ CWProjectTabUndersampling::CWProjectTabUndersampling(const mediate_project_under
 void CWProjectTabUndersampling::apply(mediate_project_undersampling_t *properties) const
 {
   // a safe text length is assured.
-  strcpy(properties->solarRefFile, m_refFileEdit->text().toAscii().data());
+  strcpy(properties->solarRefFile, m_refFileEdit->text().toLatin1().data());
 
   properties->method = m_methodCombo->itemData(m_methodCombo->currentIndex()).toInt();
   

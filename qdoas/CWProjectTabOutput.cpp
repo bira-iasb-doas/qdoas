@@ -188,12 +188,12 @@ void CWProjectTabOutput::apply(mediate_project_output_t *properties) const
 
   properties->file_format = static_cast<enum output_format>(m_selectFileFormat->currentIndex());
 
-  strcpy(properties->flux, m_fluxEdit->text().toAscii().data());
+  strcpy(properties->flux, m_fluxEdit->text().toLatin1().data());
   properties->bandWidth = m_bandWidthEdit->text().toDouble();
-  strcpy(properties->path, m_pathEdit->text().toAscii().data());
+  strcpy(properties->path, m_pathEdit->text().toLatin1().data());
 
   strcpy(properties->swath_name, m_groupNameEdit->hasAcceptableInput()
-         ? m_groupNameEdit->text().toAscii().data()
+         ? m_groupNameEdit->text().toLatin1().data()
          : "QDOAS results");
 
   m_selector->apply(&(properties->selection));

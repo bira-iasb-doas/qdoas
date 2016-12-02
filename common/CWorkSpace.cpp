@@ -191,7 +191,7 @@ mediate_project_t* CWorkSpace::createProject(const QString &newProjectName)
     // does not exist
     tmp = new mediate_project_t;
 
-    initializeMediateProject(tmp, m_configFile.toAscii().data(), newProjectName.toAscii().data() );
+    initializeMediateProject(tmp, m_configFile.toLatin1().data(), newProjectName.toLatin1().data() );
 
     // insert the project (with no windows)
     m_projMap.insert(std::map<QString,SProjBucket>::value_type(newProjectName,SProjBucket(tmp)));
@@ -235,7 +235,7 @@ mediate_analysis_window_t*  CWorkSpace::createAnalysisWindow(const QString &proj
       if (newWindowName.length() < (int)sizeof(tmp->name)) {
 	initializeMediateAnalysisWindow(tmp);
 	// set its name ...
-	strcpy(tmp->name, newWindowName.toAscii().data());
+	strcpy(tmp->name, newWindowName.toLatin1().data());
 
 	// insert at the specified position - ie. before nextIt
 	if (nextIt == (pIt->second).window.end())
@@ -269,8 +269,8 @@ bool CWorkSpace::createSite(const QString &newSiteName, const QString &abbr,
   if (it == m_siteMap.end()) {
     tmp = new mediate_site_t;
 
-    strcpy(tmp->name, newSiteName.toAscii().data());
-    strcpy(tmp->abbreviation, abbr.toAscii().data());
+    strcpy(tmp->name, newSiteName.toLatin1().data());
+    strcpy(tmp->abbreviation, abbr.toLatin1().data());
     tmp->longitude = longitude;
     tmp->latitude = latitude;
     tmp->altitude = altitude;
@@ -342,7 +342,7 @@ bool CWorkSpace::renameProject(const QString &oldProjectName, const QString &new
       m_projMap.erase(oldIt);
 
       // update project name metadata in mediate_project_t structure:
-      strncpy(inserted.project->project_name, newProjectName.toAscii().data(), PROJECT_NAME_BUFFER_LENGTH-1);
+      strncpy(inserted.project->project_name, newProjectName.toLatin1().data(), PROJECT_NAME_BUFFER_LENGTH-1);
 
       // notify the observers again
       obs = m_projectObserverList.begin();
@@ -376,7 +376,7 @@ bool CWorkSpace::renameAnalysisWindow(const QString &projectName, const QString 
       while (newIt != (pIt->second).window.end() && newWindowName != newIt->aw->name) ++ newIt;
       if (newIt == (pIt->second).window.end()) {
 	// new name is not in use .. ok to change the name
-	strcpy(oldIt->aw->name, newWindowName.toAscii().data());
+	strcpy(oldIt->aw->name, newWindowName.toLatin1().data());
 
 	// notify the observers - Treated as a modification to the project
 	notifyProjectObserversModified(projectName);
@@ -410,7 +410,7 @@ bool CWorkSpace::modifySite(const QString &siteName, const QString &abbr,
     tmp = it->second;
 
     // cant change the name
-    strcpy(tmp->abbreviation, abbr.toAscii().data());
+    strcpy(tmp->abbreviation, abbr.toLatin1().data());
     tmp->longitude = longitude;
     tmp->latitude = latitude;
     tmp->altitude = altitude;
@@ -491,8 +491,8 @@ mediate_symbol_t* CWorkSpace::symbolList(int &listLength) const
     // walk the list and copy
     symbolmap_t::const_iterator it = m_symbolMap.begin();
     while (it != m_symbolMap.end()) {
-      strcpy(tmp->name, (it->first).toAscii().data());
-      strcpy(tmp->description, (it->second).description.toAscii().data());
+      strcpy(tmp->name, (it->first).toLatin1().data());
+      strcpy(tmp->description, (it->second).description.toLatin1().data());
       ++tmp;
       ++it;
     }

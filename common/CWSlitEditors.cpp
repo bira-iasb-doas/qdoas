@@ -158,10 +158,10 @@ void CWSlitFileEdit::reset(const struct slit_file *d)
 void CWSlitFileEdit::apply(struct slit_file *d) const
 {
   d->wveDptFlag = m_wavelengthDependent->isChecked() ? 1 : 0;
-  strcpy(d->filename, m_slitFileEdit->text().toAscii().data());
+  strcpy(d->filename, m_slitFileEdit->text().toLatin1().data());
 
   if (d->wveDptFlag)
-   strcpy(d->filename2, m_stretchEdit->text().toAscii().data());
+   strcpy(d->filename2, m_stretchEdit->text().toLatin1().data());
 }
 
 //--------------------------------------------------------
@@ -228,7 +228,7 @@ void CWSlitGaussianEdit::apply(struct slit_gaussian *d) const
 {
   d->fwhm = m_fwhmEdit->text().toDouble();
   d->wveDptFlag = m_wavelengthDependent->isChecked() ? 1 : 0;
-  strcpy(d->filename, m_slitFileEdit->text().toAscii().data());
+  strcpy(d->filename, m_slitFileEdit->text().toLatin1().data());
 
   m_toggleWavelengthStack->setCurrentIndex(d->wveDptFlag);
 }
@@ -320,7 +320,7 @@ void CWSlitLorentzEdit::apply(struct slit_lorentz *d) const
   d->order = m_orderSpin->value();
 
   d->wveDptFlag = m_wavelengthDependent->isChecked() ? 1 : 0;
-  strcpy(d->filename, m_slitFileEdit->text().toAscii().data());
+  strcpy(d->filename, m_slitFileEdit->text().toLatin1().data());
 
   m_toggleWavelengthStack->setCurrentIndex(d->wveDptFlag);
 }
@@ -408,8 +408,8 @@ void CWSlitVoigtEdit::apply(struct slit_voigt *d) const
   d->glRatioL = m_ratioLeftEdit->text().toDouble();
 
   d->wveDptFlag = m_wavelengthDependent->isChecked() ? 1 : 0;
-  strcpy(d->filename, m_fwhmFileEdit->text().toAscii().data());
-  strcpy(d->filename2, m_ratioFileEdit->text().toAscii().data());
+  strcpy(d->filename, m_fwhmFileEdit->text().toLatin1().data());
+  strcpy(d->filename2, m_ratioFileEdit->text().toLatin1().data());
 
   m_toggleWavelengthStack->setCurrentIndex(d->wveDptFlag);
 }
@@ -499,8 +499,8 @@ void CWSlitErrorEdit::apply(struct slit_error *d) const
   d->width = m_widthEdit->text().toDouble();
 
   d->wveDptFlag = m_wavelengthDependent->isChecked() ? 1 : 0;
-  strcpy(d->filename, m_fwhmFileEdit->text().toAscii().data());
-  strcpy(d->filename2, m_ratioFileEdit->text().toAscii().data());
+  strcpy(d->filename, m_fwhmFileEdit->text().toLatin1().data());
+  strcpy(d->filename2, m_ratioFileEdit->text().toLatin1().data());
 
   m_toggleWavelengthStack->setCurrentIndex(d->wveDptFlag);
 }
@@ -638,8 +638,8 @@ void CWSlitAGaussEdit::apply(struct slit_agauss *d) const
   d->asym = m_asymEdit->text().toDouble();
 
   d->wveDptFlag = m_wavelengthDependent->isChecked() ? 1 : 0;
-  strcpy(d->filename, m_fwhmFileEdit->text().toAscii().data());
-  strcpy(d->filename2, m_asymFileEdit->text().toAscii().data());
+  strcpy(d->filename, m_fwhmFileEdit->text().toLatin1().data());
+  strcpy(d->filename2, m_asymFileEdit->text().toLatin1().data());
 
   m_toggleWavelengthStack->setCurrentIndex(d->wveDptFlag);
 }
@@ -746,9 +746,9 @@ void CWSlitSuperGaussEdit::apply(struct slit_supergauss *d) const
   d->asym= m_asymEdit->text().toDouble();
 
   d->wveDptFlag = m_wavelengthDependent->isChecked() ? 1 : 0;
-  strcpy(d->filename, m_fwhmFileEdit->text().toAscii().data());
-  strcpy(d->filename2, m_expFileEdit->text().toAscii().data());
-  strcpy(d->filename3, m_asymFileEdit->text().toAscii().data());
+  strcpy(d->filename, m_fwhmFileEdit->text().toLatin1().data());
+  strcpy(d->filename2, m_expFileEdit->text().toLatin1().data());
+  strcpy(d->filename3, m_asymFileEdit->text().toLatin1().data());
 
   m_toggleWavelengthStack->setCurrentIndex(d->wveDptFlag);
 }

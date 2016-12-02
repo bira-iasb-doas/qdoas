@@ -280,7 +280,7 @@ enum BatchTool requiredBatchTool(const QString &filename)
 {
   enum BatchTool type = Unknown;
 
-  FILE *fp = fopen(filename.toAscii().constData(), "r");
+  FILE *fp = fopen(filename.toLatin1().constData(), "r");
   if (fp != NULL) {
     char buffer[256];
 
@@ -563,7 +563,7 @@ int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *p
 
   if (!outputDir.isEmpty() && outputDir.size() < FILENAME_BUFFER_LENGTH-1) {
     // override the output directory
-    strcpy(projectData.output.path, outputDir.toAscii().data());
+    strcpy(projectData.output.path, outputDir.toLatin1().data());
   }
 
   // create engine
@@ -640,9 +640,9 @@ int analyseProjectQdoasFile(void *engineContext, CBatchEngineController *control
 
   result = (!calibSwitch)
     ? mediateRequestBeginAnalyseSpectra(engineContext,
-                                        CWorkSpace::instance()->getConfigFile().toAscii().constData(),
-                                        filename.toAscii().constData(), beginFileResp)
-    : mediateRequestBeginCalibrateSpectra(engineContext, filename.toAscii().constData(), beginFileResp);
+                                        CWorkSpace::instance()->getConfigFile().toLatin1().constData(),
+                                        filename.toLatin1().constData(), beginFileResp)
+    : mediateRequestBeginCalibrateSpectra(engineContext, filename.toLatin1().constData(), beginFileResp);
 
   beginFileResp->setNumberOfRecords(result);
 
@@ -793,7 +793,7 @@ int batchProcessConvolution(commands_t *cmd)
 
     if (!cmd->outputDir.isEmpty() && cmd->outputDir.size() < FILENAME_BUFFER_LENGTH-1) {
       // override the output directory
-      strcpy(properties.general.outputFile, cmd->outputDir.toAscii().data());
+      strcpy(properties.general.outputFile, cmd->outputDir.toLatin1().data());
     }
 
     if (mediateXsconvCreateContext(&engineContext, resp) != 0) {
@@ -809,7 +809,7 @@ int batchProcessConvolution(commands_t *cmd)
 
 	QList<QString>::const_iterator it = filenames.begin();
 
-	strcpy(properties.general.inputFile, it->toAscii().data());
+	strcpy(properties.general.inputFile, it->toLatin1().data());
 
 	if ((retCode=mediateRequestConvolution(engineContext, &properties, resp))==ERROR_ID_NO)
 	 retCode = mediateConvolutionCalculate(engineContext,resp);
@@ -889,7 +889,7 @@ int batchProcessRing(commands_t *cmd)
 
     if (!cmd->outputDir.isEmpty() && cmd->outputDir.size() < FILENAME_BUFFER_LENGTH-1)
      {
-    	 strcpy(properties.outputFile,cmd->outputDir.toAscii().data());
+    	 strcpy(properties.outputFile,cmd->outputDir.toLatin1().data());
      }
 
     if (mediateXsconvCreateContext(&engineContext, resp) != 0)
@@ -906,7 +906,7 @@ int batchProcessRing(commands_t *cmd)
 
        	QList<QString>::const_iterator it = filenames.begin();
 
-       	strcpy(properties.calibrationFile, it->toAscii().data());
+       	strcpy(properties.calibrationFile, it->toLatin1().data());
 
        	if ((retCode=mediateRequestRing(engineContext, &properties, resp))==ERROR_ID_NO)
        	 retCode = mediateRingCalculate(engineContext,resp);
@@ -988,7 +988,7 @@ int batchProcessUsamp(commands_t *cmd)
     	 char *ptr;
     	 char  tmpFile[FILENAME_BUFFER_LENGTH];
 
-    	 strcpy(tmpFile,cmd->outputDir.toAscii().data());
+    	 strcpy(tmpFile,cmd->outputDir.toLatin1().data());
 
     	 if ((ptr=strchr(tmpFile,'_'))!=NULL)
     	  {
@@ -1017,7 +1017,7 @@ int batchProcessUsamp(commands_t *cmd)
 
        	QList<QString>::const_iterator it = filenames.begin();
 
-       	strcpy(properties.calibrationFile, it->toAscii().data());
+       	strcpy(properties.calibrationFile, it->toLatin1().data());
 
        	if ((retCode=mediateRequestUsamp(engineContext, &properties, resp))==ERROR_ID_NO)
        	 retCode = mediateUsampCalculate(engineContext,resp);

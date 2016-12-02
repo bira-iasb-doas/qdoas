@@ -134,7 +134,7 @@ void CWProjectTabSlit::apply(mediate_project_slit_t *slit) const
 
   slit->function.type = m_slitCombo->itemData(m_slitCombo->currentIndex()).toInt();
   // slit->applyFwhmCorrection = m_fwhmCorrectionCheck->isChecked() ? 1 : 0;
-  strcpy(slit->solarRefFile, m_solarRefFileEdit->text().toAscii().data());
+  strcpy(slit->solarRefFile, m_solarRefFileEdit->text().toLatin1().data());
 
   m_noneEdit->apply(NULL);
   m_fileEdit->apply(&(slit->function.file));

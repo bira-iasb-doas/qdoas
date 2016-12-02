@@ -89,7 +89,7 @@ bool CUsampGeneralSubHandler::start(const QXmlAttributes &atts)
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(m_d->outputPhaseOneFile))
-      strcpy(m_d->outputPhaseOneFile, str.toAscii().data());
+      strcpy(m_d->outputPhaseOneFile, str.toLatin1().data());
     else
       return postErrorMessage("Output Phase 1 Filename too long");
   }
@@ -97,7 +97,7 @@ bool CUsampGeneralSubHandler::start(const QXmlAttributes &atts)
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(m_d->outputPhaseTwoFile))
-      strcpy(m_d->outputPhaseTwoFile, str.toAscii().data());
+      strcpy(m_d->outputPhaseTwoFile, str.toLatin1().data());
     else
       return postErrorMessage("Output Phase 2 Filename too long");
   }
@@ -105,7 +105,7 @@ bool CUsampGeneralSubHandler::start(const QXmlAttributes &atts)
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(m_d->calibrationFile))
-      strcpy(m_d->calibrationFile, str.toAscii().data());
+      strcpy(m_d->calibrationFile, str.toLatin1().data());
     else
       return postErrorMessage("Calibration Filename too long");
   }
@@ -113,7 +113,7 @@ bool CUsampGeneralSubHandler::start(const QXmlAttributes &atts)
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(m_d->solarRefFile))
-      strcpy(m_d->solarRefFile, str.toAscii().data());
+      strcpy(m_d->solarRefFile, str.toLatin1().data());
     else
       return postErrorMessage("Solar Reference Filename too long");
   }

@@ -81,13 +81,13 @@ void ProjectApplyDouble(const CProjectConfigItem *p,                            
  	// Build message with old and new values
 
   sprintf(msgString,"%s : %.2lf replaced by %s (%s)",
-                     pXmlKey->toAscii().constData(),
-                    *pDoubleField,pXmlValue->toAscii().constData(),p->name().toAscii().constData());
+                     pXmlKey->toLatin1().constData(),
+                    *pDoubleField,pXmlValue->toLatin1().constData(),p->name().toLatin1().constData());
   std::cout << msgString << std::endl;
 
   // Replace the old value by the new one
 
-  *pDoubleField=(double)atof(pXmlValue->toAscii().constData());
+  *pDoubleField=(double)atof(pXmlValue->toLatin1().constData());
  }
 
 void ProjectApplyInt(const CProjectConfigItem *p,                               // project to modify
@@ -102,13 +102,13 @@ void ProjectApplyInt(const CProjectConfigItem *p,                               
  	// Build message with old and new values
 
   sprintf(msgString,"%s : %d replaced by %s (%s)",
-                     pXmlKey->toAscii().constData(),
-                    *pIntField,pXmlValue->toAscii().constData(),p->name().toAscii().constData());
+                     pXmlKey->toLatin1().constData(),
+                    *pIntField,pXmlValue->toLatin1().constData(),p->name().toLatin1().constData());
   std::cout << msgString << std::endl;
 
   // Replace the old value by the new one
 
-  *pIntField=atoi(pXmlValue->toAscii().constData());
+  *pIntField=atoi(pXmlValue->toLatin1().constData());
  }
 
 void ProjectApplyChoice(const CProjectConfigItem *p,                            // project to modify
@@ -132,8 +132,8 @@ void ProjectApplyChoice(const CProjectConfigItem *p,                            
  	  // Build message with old and new values
 
     sprintf(msgString,"%s : %s replaced by %s (%s)",
-                       pXmlKey->toAscii().constData(),
-                       optionsList[*pNewIndexOption],pXmlValue->toAscii().constData(),p->name().toAscii().constData());
+                       pXmlKey->toLatin1().constData(),
+                       optionsList[*pNewIndexOption],pXmlValue->toLatin1().constData(),p->name().toLatin1().constData());
 
     std::cout << msgString << std::endl;
 
@@ -230,10 +230,10 @@ RC ParseSelection(QStringList &xmlFields,int xmlFieldN,int startingField,QString
  	 	 	   ProjectApplyDouble(p,pXmlKey,pXmlValue,&newProjectProperties.selection.geo.sites.radius);
  	 	 	 }
  	 	  else
-       std::cout << pXmlKey->toAscii().constData() << " unknown path" << std::endl;
+       std::cout << pXmlKey->toLatin1().constData() << " unknown path" << std::endl;
  	 	 }
  	 	else
-     std::cout << pXmlKey->toAscii().constData() << " unknown path" << std::endl;
+     std::cout << pXmlKey->toLatin1().constData() << " unknown path" << std::endl;
    }
 
   p->SetProperties((mediate_project_t *)&newProjectProperties);
@@ -268,14 +268,14 @@ RC ParseAnalysis(QStringList &xmlFields,int xmlFieldN,int startingField,QString 
  	 	    (xmlFields.at(indexField)=="interpolation") ||
  	 	    (xmlFields.at(indexField)=="gap"))
 
- 	 	 std::cout << pXmlKey->toAscii().constData() << " can not be changed" << std::endl;
+ 	 	 std::cout << pXmlKey->toLatin1().constData() << " can not be changed" << std::endl;
 
  	 	else if (xmlFields.at(indexField)=="converge")
  	 	 ProjectApplyDouble(p,pXmlKey,pXmlValue,&newProjectProperties.analysis.convergenceCriterion);
  	 	else if (xmlFields.at(indexField)=="max_iterations")
  	 	 ProjectApplyInt(p,pXmlKey,pXmlValue,&newProjectProperties.analysis.maxIterations);
  	 	else
- 	 	 std::cout << pXmlKey->toAscii().constData() << " unknown path" << std::endl;
+ 	 	 std::cout << pXmlKey->toLatin1().constData() << " unknown path" << std::endl;
  	 }
 
   p->SetProperties((mediate_project_t *)&newProjectProperties);
@@ -362,13 +362,13 @@ RC ParseInstrumental(QStringList &xmlFields,int xmlFieldN,int startingField,QStr
         std::cout << "project/instrumental/omi/ave field can not be changed" << std::endl;
        else if (xmlFields.at(indexField+1)=="trackSelection")
         {
-         std::cout << "project/instrumental/omi/trackSelection : " << newProjectProperties.instrumental.omi.trackSelection << " replaced by " << pXmlValue->toAscii().constData() << std::endl;
-         strcpy(newProjectProperties.instrumental.omi.trackSelection,pXmlValue->toAscii().constData());
+         std::cout << "project/instrumental/omi/trackSelection : " << newProjectProperties.instrumental.omi.trackSelection << " replaced by " << pXmlValue->toLatin1().constData() << std::endl;
+         strcpy(newProjectProperties.instrumental.omi.trackSelection,pXmlValue->toLatin1().constData());
         }
        else if (xmlFields.at(indexField+1)=="xTrackMode")
         {
-         std::cout << "project/instrumental/omi/xTrackMode : " << pXmlValue->toAscii().constData() << std::endl;
-         newProjectProperties.instrumental.omi.xtrack_mode = str_to_mode(pXmlValue->toAscii().constData());
+         std::cout << "project/instrumental/omi/xTrackMode : " << pXmlValue->toLatin1().constData() << std::endl;
+         newProjectProperties.instrumental.omi.xtrack_mode = str_to_mode(pXmlValue->toLatin1().constData());
         }
        else if (xmlFields.at(indexField+1)=="calib")
         std::cout << "project/instrumental/omi/calib field can not be changed" << std::endl;
@@ -415,8 +415,8 @@ void AnalysisWindowApplyInt(const QList<const CAnalysisWindowConfigItem*>awList,
     if (pWindowName->isEmpty() || (*pWindowName==(*awIt)->name())) {
       memcpy(pNewAnalysisWindow,(mediate_analysis_window_t *)((*awIt)->properties()),sizeof(mediate_analysis_window_t));
       sprintf(msgString,"%s : %d replaced by %d (%s)",
-              pXmlKey->toAscii().constData(),
-              *pIntField,newValue,(*awIt)->name().toAscii().constData());
+              pXmlKey->toLatin1().constData(),
+              *pIntField,newValue,(*awIt)->name().toLatin1().constData());
       std::cout << msgString << std::endl;
       *pIntField=newValue;
       (*awIt)->SetProperties(( mediate_analysis_window_t *)pNewAnalysisWindow);
@@ -443,10 +443,10 @@ void AnalysisWindowApplyDouble(const QList<const CAnalysisWindowConfigItem*>awLi
     if (pWindowName->isEmpty() || (*pWindowName==(*awIt)->name())) {
       memcpy(pNewAnalysisWindow,(mediate_analysis_window_t *)((*awIt)->properties()),sizeof(mediate_analysis_window_t));
       sprintf(msgString,"%s : %.2lf replaced by %s (%s)",
-              pXmlKey->toAscii().constData(),
-              *pDoubleField,pXmlValue->toAscii().constData(),(*awIt)->name().toAscii().constData());
+              pXmlKey->toLatin1().constData(),
+              *pDoubleField,pXmlValue->toLatin1().constData(),(*awIt)->name().toLatin1().constData());
       std::cout << msgString << std::endl;
-      *pDoubleField=(double)atof(pXmlValue->toAscii().constData());
+      *pDoubleField=(double)atof(pXmlValue->toLatin1().constData());
       (*awIt)->SetProperties(( mediate_analysis_window_t *)pNewAnalysisWindow);
     }
     ++awIt;
@@ -473,10 +473,10 @@ void AnalysisWindowApplyString(const QList<const CAnalysisWindowConfigItem*>awLi
    	 {
       memcpy(pNewAnalysisWindow,(mediate_analysis_window_t *)((*awIt)->properties()),sizeof(mediate_analysis_window_t));
       sprintf(msgString,"%s : %s replaced by %s (%s)",
-              pXmlKey->toAscii().constData(),
-              field,pXmlValue->toAscii().constData(),(*awIt)->name().toAscii().constData());
+              pXmlKey->toLatin1().constData(),
+              field,pXmlValue->toLatin1().constData(),(*awIt)->name().toLatin1().constData());
       std::cout << msgString << std::endl;
-      strcpy(field,pXmlValue->toAscii().constData());
+      strcpy(field,pXmlValue->toLatin1().constData());
       (*awIt)->SetProperties(( mediate_analysis_window_t *)pNewAnalysisWindow);
      }
     ++awIt;
@@ -512,7 +512,7 @@ RC ParseAnalysisWindow(QStringList &xmlFields,int xmlFieldN,int startingField,QS
           if ((xmlFields.at(indexField)=="disable") ||
               (xmlFields.at(indexField)=="kurucz"))
 
-            std::cout << pXmlKey->toAscii().constData() << " can not be changed" << std::endl;
+            std::cout << pXmlKey->toLatin1().constData() << " can not be changed" << std::endl;
 
           // Fitting interval
 
@@ -527,7 +527,7 @@ RC ParseAnalysisWindow(QStringList &xmlFields,int xmlFieldN,int startingField,QS
           else if (xmlFields.at(indexField)=="refsel")
             {
               if ((*pXmlValue!="auto") && (*pXmlValue!="file"))
-                std::cout << pXmlKey->toAscii().constData() << " do not support " << pXmlValue->toAscii().constData() << std::endl;
+                std::cout << pXmlKey->toLatin1().constData() << " do not support " << pXmlValue->toLatin1().constData() << std::endl;
               else
                 AnalysisWindowApplyInt(awList,&windowName,pXmlKey,(*pXmlValue=="auto")?ANLYS_REF_SELECTION_MODE_AUTOMATIC:ANLYS_REF_SELECTION_MODE_FILE,&newAnalysisProperties,&newAnalysisProperties.refSpectrumSelection);
             }
@@ -560,7 +560,7 @@ RC ParseAnalysisWindow(QStringList &xmlFields,int xmlFieldN,int startingField,QS
           else if (xmlFields.at(indexField)=="maxlat")
             AnalysisWindowApplyDouble(awList,&windowName,pXmlKey,pXmlValue,&newAnalysisProperties,&newAnalysisProperties.refMaxLatitude);
           else if (xmlFields.at(indexField)=="refns")
-            AnalysisWindowApplyInt(awList,&windowName,pXmlKey,atoi(pXmlValue->toAscii().constData()),&newAnalysisProperties,&newAnalysisProperties.refSpectrumSelection);
+            AnalysisWindowApplyInt(awList,&windowName,pXmlKey,atoi(pXmlValue->toLatin1().constData()),&newAnalysisProperties,&newAnalysisProperties.refSpectrumSelection);
           else if (xmlFields.at(indexField)=="cloudfmin")
             AnalysisWindowApplyDouble(awList,&windowName,pXmlKey,pXmlValue,&newAnalysisProperties,&newAnalysisProperties.cloudFractionMin);
           else if (xmlFields.at(indexField)=="cloudfmax")
@@ -568,7 +568,7 @@ RC ParseAnalysisWindow(QStringList &xmlFields,int xmlFieldN,int startingField,QS
           else if (xmlFields.at(indexField)=="maxdoasrefmode")
             {
               if ((*pXmlValue!="scan") && (*pXmlValue!="sza"))
-                std::cout << pXmlKey->toAscii().constData() << " do not support " << pXmlValue->toAscii().constData() << std::endl;
+                std::cout << pXmlKey->toLatin1().constData() << " do not support " << pXmlValue->toLatin1().constData() << std::endl;
               else
                 AnalysisWindowApplyInt(awList,&windowName,pXmlKey,(*pXmlValue=="scan")?ANLYS_MAXDOAS_REF_SCAN:ANLYS_MAXDOAS_REF_SZA,&newAnalysisProperties,&newAnalysisProperties.refSpectrumSelection);
             }
@@ -583,7 +583,7 @@ RC ParseAnalysisWindow(QStringList &xmlFields,int xmlFieldN,int startingField,QS
             	 else if (*pXmlValue=="interpolate")
             	  AnalysisWindowApplyInt(awList,&windowName,pXmlKey,ANLYS_MAXDOAS_REF_SCAN_INTERPOLATE,&newAnalysisProperties,&newAnalysisProperties.refSpectrumSelection);
             	 else
-               std::cout << pXmlKey->toAscii().constData() << " do not support " << pXmlValue->toAscii().constData() << std::endl;
+               std::cout << pXmlKey->toLatin1().constData() << " do not support " << pXmlValue->toLatin1().constData() << std::endl;
             }
 
           // pixel selection for GOME-ERS2 -> not supported
@@ -593,7 +593,7 @@ RC ParseAnalysisWindow(QStringList &xmlFields,int xmlFieldN,int startingField,QS
  	 	           (xmlFields.at(indexField)=="west") ||
  	 	           (xmlFields.at(indexField)=="backscan"))
 
-                    std::cout << pXmlKey->toAscii().constData() << " can not be changed" << std::endl;
+                    std::cout << pXmlKey->toLatin1().constData() << " can not be changed" << std::endl;
         }
     }
 
@@ -638,7 +638,7 @@ RC QDOASXML_Parse(QList<QString> &xmlCommands,const CProjectConfigItem *p)
         if (projectField)
          {
          	if (xmlFields.at(indexField)=="display")
-         	  std::cout << xmlKey.toAscii().constData() << " fields can not be changed" << std::endl;
+         	  std::cout << xmlKey.toLatin1().constData() << " fields can not be changed" << std::endl;
          	else if (xmlFields.at(indexField)=="selection")
          	 rc=ParseSelection(xmlFields,xmlFieldsN,indexField+1,&xmlKey,&xmlValue,p);
          	else if (xmlFields.at(indexField)=="analysis")

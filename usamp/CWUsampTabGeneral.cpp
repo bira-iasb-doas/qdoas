@@ -157,10 +157,10 @@ void CWUsampTabGeneral::apply(mediate_usamp_t *properties) const
   properties->methodType = m_analysisCombo->itemData(m_analysisCombo->currentIndex()).toInt();
   properties->shift = m_shiftEdit->text().toDouble();
 
-  strcpy(properties->outputPhaseOneFile, m_outputPhaseOneFileEdit->text().toAscii().constData());
-  strcpy(properties->outputPhaseTwoFile, m_outputPhaseTwoFileEdit->text().toAscii().constData());
-  strcpy(properties->calibrationFile, m_calibFileEdit->text().toAscii().constData());
-  strcpy(properties->solarRefFile, m_refFileEdit->text().toAscii().constData());
+  strcpy(properties->outputPhaseOneFile, m_outputPhaseOneFileEdit->text().toLatin1().constData());
+  strcpy(properties->outputPhaseTwoFile, m_outputPhaseTwoFileEdit->text().toLatin1().constData());
+  strcpy(properties->calibrationFile, m_calibFileEdit->text().toLatin1().constData());
+  strcpy(properties->solarRefFile, m_refFileEdit->text().toLatin1().constData());
 
   m_slitEdit->apply(&(properties->slit));
 }

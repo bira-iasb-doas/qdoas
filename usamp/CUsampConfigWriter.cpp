@@ -43,7 +43,7 @@ CUsampConfigWriter::~CUsampConfigWriter()
 QString CUsampConfigWriter::write(const QString &fileName)
 {
   QString msg;
-  FILE *fp = fopen(fileName.toAscii().constData(), "w");
+  FILE *fp = fopen(fileName.toLatin1().constData(), "w");
 
   if (fp == NULL) {
     QTextStream stream(&msg);
@@ -77,16 +77,16 @@ QString CUsampConfigWriter::write(const QString &fileName)
 	  (d->noheader ? sTrue : sFalse));
 
   tmpStr = pathMgr->simplifyPath(QString(d->outputPhaseOneFile));
-  fprintf(fp, " outphase1=\"%s\"", tmpStr.toAscii().data());
+  fprintf(fp, " outphase1=\"%s\"", tmpStr.toLatin1().data());
 
   tmpStr = pathMgr->simplifyPath(QString(d->outputPhaseTwoFile));
-  fprintf(fp, " outphase2=\"%s\"", tmpStr.toAscii().data());
+  fprintf(fp, " outphase2=\"%s\"", tmpStr.toLatin1().data());
 
   tmpStr = pathMgr->simplifyPath(QString(d->calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().data());
+  fprintf(fp, " calib=\"%s\"", tmpStr.toLatin1().data());
 
   tmpStr = pathMgr->simplifyPath(QString(d->solarRefFile));
-  fprintf(fp, " ref=\"%s\"", tmpStr.toAscii().data());
+  fprintf(fp, " ref=\"%s\"", tmpStr.toLatin1().data());
 
   fprintf(fp, " >\n");
 

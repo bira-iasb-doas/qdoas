@@ -80,12 +80,12 @@ void ConvApplyString(QString *pXmlKey,                                          
 
  	// Build message with old and new values
 
-  sprintf(msgString,"%s : %s replaced by %s",pXmlKey->toAscii().constData(),newstring,pXmlValue->toAscii().constData());
+  sprintf(msgString,"%s : %s replaced by %s",pXmlKey->toLatin1().constData(),newstring,pXmlValue->toLatin1().constData());
   std::cout << msgString << std::endl;
 
   // Replace the old value by the new one
 
-  strcpy(newstring,pXmlValue->toAscii().constData());
+  strcpy(newstring,pXmlValue->toLatin1().constData());
  }
 
 void ConvApplyChoice(QString *pXmlKey,                                          // the path of the field to replace
@@ -108,8 +108,8 @@ void ConvApplyChoice(QString *pXmlKey,                                          
  	  // Build message with old and new values
 
     sprintf(msgString,"%s : %s replaced by %s",
-                       pXmlKey->toAscii().constData(),
-                       optionsList[*pNewIndexOption],pXmlValue->toAscii().constData());
+                       pXmlKey->toLatin1().constData(),
+                       optionsList[*pNewIndexOption],pXmlValue->toLatin1().constData());
 
     std::cout << msgString << std::endl;
 
@@ -143,7 +143,7 @@ RC ParseSlit(QStringList &xmlFields,int xmlFieldN,int startingField,QString *pXm
      	if (xmlFields.at(indexField)=="file")
      	 {
      	 	if (indexField+1>=xmlFieldN)
-     	 	 std::cout << xmlFields.at(indexField).toAscii().constData() << " attribute is missing" << std::endl;
+     	 	 std::cout << xmlFields.at(indexField).toLatin1().constData() << " attribute is missing" << std::endl;
      	 	else if (xmlFields.at(indexField+1)=="file")
      	 	 ConvApplyString(pXmlKey,pXmlValue,pSlit->file.filename);
      	 	else if (xmlFields.at(indexField+1)=="file2")
@@ -154,12 +154,12 @@ RC ParseSlit(QStringList &xmlFields,int xmlFieldN,int startingField,QString *pXm
         break;
      	 }
      	else
-     	 std::cout << xmlFields.at(indexField).toAscii().constData() << " fields can not be changed yet" << std::endl;
+     	 std::cout << xmlFields.at(indexField).toLatin1().constData() << " fields can not be changed yet" << std::endl;
  	 	 }
  	 	else if (xmlFields.at(indexField)=="slit_func")
  	 	 slitFuncFlag=1;
  	 	else
-     std::cout << pXmlKey->toAscii().constData() << " unknown path" << std::endl;
+     std::cout << pXmlKey->toLatin1().constData() << " unknown path" << std::endl;
    }
 
   // Return
@@ -213,11 +213,11 @@ RC CONVXML_Parse(QList<QString> &xmlCommands,mediate_convolution_t *properties)
           break;
          }
         else if (xmlFields.at(indexField)=="dec_slit")
-         std::cout << xmlKey.toAscii().constData() << " fields can not be changed yet" << std::endl;
+         std::cout << xmlKey.toLatin1().constData() << " fields can not be changed yet" << std::endl;
         else if (xmlFields.at(indexField)=="lowpass_filter")
-         std::cout << xmlKey.toAscii().constData() << " fields can not be changed yet" << std::endl;
+         std::cout << xmlKey.toLatin1().constData() << " fields can not be changed yet" << std::endl;
         else if (xmlFields.at(indexField)=="highpass_filter")
-     	 	 std::cout << xmlKey.toAscii().constData() << " fields can not be changed yet" << std::endl;
+     	 	 std::cout << xmlKey.toLatin1().constData() << " fields can not be changed yet" << std::endl;
      	 }
      }
 

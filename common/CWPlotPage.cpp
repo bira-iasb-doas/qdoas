@@ -29,7 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QMessageBox>
 #include <QFont>
 
-#include <QtGui/QGraphicsView>
+#include <QGraphicsView>
 
 #include <qwt_plot_curve.h>
 #include <qwt_symbol.h>
@@ -58,14 +58,14 @@ bool CWPlot::getImageSaveNameAndFormat(QWidget *parent, QString &fileName, QStri
   dialog.setConfirmOverwrite(true);
   QStringList filters;
   filters << "PNG (*.png)" << "BMP (*.bmp)" << "JPEG (*.jpg)";
-  dialog.setFilters(filters);
+  dialog.setNameFilters(filters);
 
   if (dialog.exec()) {
 
     QStringList fileList = dialog.selectedFiles();
     if (!fileList.isEmpty()) {
 
-      QString format = dialog.selectedFilter();
+      QString format = dialog.selectedNameFilter();
       fileName = fileList.first();
 
       // update the preference
@@ -219,7 +219,7 @@ CWPlot::CWPlot(const RefCountConstPtr<CPlotImage> &dataImage,
  {
   QString filename=m_dataImage->GetFile();
   QwtText tmpTitle=title();
-  const char *ptr=strrchr(filename.toAscii().constData(),'/')+1;
+  const char *ptr=strrchr(filename.toLatin1().constData(),'/')+1;
 
   // Example code for font changes ... TODO
 
@@ -302,7 +302,7 @@ void CWPlot::slotOverlay()
 
       bool failed = false;
 
-      FILE *fp = fopen(filename.toAscii().constData(), "r");
+      FILE *fp = fopen(filename.toLatin1().constData(), "r");
       if (fp != NULL) {
         char buffer[32];
         int nCurves, nPoints, i, j;
@@ -380,14 +380,14 @@ void CWPlot::slotSaveAs() {
 
       pref->setDirectoryNameGivenFile("ASCII_Plot", filename);
 
-      FILE *fp = fopen(filename.toAscii().constData(), "w");
+      FILE *fp = fopen(filename.toLatin1().constData(), "w");
       if (fp != NULL)
        {
         int nCurves, nPoints, i, j, n, maxPoints;
 
         nCurves = m_dataSet->count();
         fprintf(fp,";\n");
-        fprintf(fp, "; Plot %s (%d %s)\n;\n", m_dataSet->plotTitle().toAscii().constData(),nCurves,(nCurves>1)?"curves":"curve");
+        fprintf(fp, "; Plot %s (%d %s)\n;\n", m_dataSet->plotTitle().toLatin1().constData(),nCurves,(nCurves>1)?"curves":"curve");
         for (i=0,maxPoints=0;i<nCurves;i++)
          {
          	n=m_dataSet->rawData(i).size();
@@ -726,6 +726,6 @@ void CWPlotPage::slotExportAsImageAllPlots()
       ++it;
     }
 
-    img.save(fileName, format.toAscii().constData());
+    img.save(fileName, format.toLatin1().constData());
   }
 }

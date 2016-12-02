@@ -43,7 +43,7 @@ CConvConfigWriter::~CConvConfigWriter()
 QString CConvConfigWriter::write(const QString &fileName)
 {
   QString msg;
-  FILE *fp = fopen(fileName.toAscii().constData(), "w");
+  FILE *fp = fopen(fileName.toLatin1().constData(), "w");
 
   if (fp == NULL) {
     QTextStream stream(&msg);
@@ -109,16 +109,16 @@ void CConvConfigWriter::writeGeneral(FILE *fp, const mediate_conv_general_t *d)
 	  d->shift, d->conc, (d->noheader ? sTrue : sFalse));
 
   tmpStr = pathMgr->simplifyPath(QString(d->inputFile));
-  fprintf(fp, " input=\"%s\"", tmpStr.toAscii().data());
+  fprintf(fp, " input=\"%s\"", tmpStr.toLatin1().data());
 
   tmpStr = pathMgr->simplifyPath(QString(d->outputFile));
-  fprintf(fp, " output=\"%s\"", tmpStr.toAscii().data());
+  fprintf(fp, " output=\"%s\"", tmpStr.toLatin1().data());
 
   tmpStr = pathMgr->simplifyPath(QString(d->calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toAscii().data());
+  fprintf(fp, " calib=\"%s\"", tmpStr.toLatin1().data());
 
   tmpStr = pathMgr->simplifyPath(QString(d->solarRefFile));
-  fprintf(fp, " ref=\"%s\"", tmpStr.toAscii().data());
+  fprintf(fp, " ref=\"%s\"", tmpStr.toLatin1().data());
 
   fprintf(fp, " />\n");
 }

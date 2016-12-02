@@ -3,7 +3,7 @@ TEMPLATE = lib
 include( ../config.pri )
 
 CONFIG += staticlib qt thread $$CODE_GENERATION
-QT += core gui xml
+QT += core gui xml widgets printsupport
 
 SOURCES       = CConfigHandler.cpp \
 		CConfigSubHandlerUtils.cpp \
