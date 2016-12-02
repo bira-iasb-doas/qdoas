@@ -126,7 +126,7 @@ CWSlitFileEdit::CWSlitFileEdit(const struct slit_file *d, QWidget *parent) :
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
 
   // Wavelength dependent
-  m_wavelengthDependent = new QCheckBox("Wavelength dependent", this);
+  m_wavelengthDependent = new QCheckBox("Wavelength dependent stretch factor", this);
   mainLayout->addWidget(m_wavelengthDependent, Qt::AlignLeft);
   connect (m_wavelengthDependent, SIGNAL(stateChanged(int)), this, SLOT (slotToggleWavelength(int)));
 
@@ -197,7 +197,7 @@ CWSlitGaussianEdit::CWSlitGaussianEdit(const struct slit_gaussian *d, QWidget *p
   QGridLayout *fileFrameLayout = new QGridLayout(fileFrame);
   fileFrameLayout->setMargin(0);
 
-  m_slitFileEdit = helperConstructFileEdit(fileFrameLayout, 0, "Slit Function File",d->filename, sizeof(d->filename)-1);
+  m_slitFileEdit = helperConstructFileEdit(fileFrameLayout, 0, "FWHM (nm)",d->filename, sizeof(d->filename)-1);
 
   m_toggleWavelengthStack = new QStackedLayout;
   m_toggleWavelengthStack->setMargin(0);
@@ -268,7 +268,7 @@ CWSlitLorentzEdit::CWSlitLorentzEdit(const struct slit_lorentz *d, QWidget *pare
   QGridLayout *fileFrameLayout = new QGridLayout(fileFrame);
   fileFrameLayout->setMargin(0);
 
-  m_slitFileEdit = helperConstructFileEdit(fileFrameLayout, 0, "Slit Function File",d->filename, sizeof(d->filename));
+  m_slitFileEdit = helperConstructFileEdit(fileFrameLayout, 0, "Width (nm)",d->filename, sizeof(d->filename));
 
   m_toggleWavelengthStack = new QStackedLayout;
   m_toggleWavelengthStack->setMargin(0);
