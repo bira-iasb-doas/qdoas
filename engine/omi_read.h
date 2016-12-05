@@ -3,6 +3,8 @@
 
 #include "doas.h"
 
+#define OMI_TOTAL_ROWS 60 // 60 detector rows for OMI
+
 void OMI_TrackSelection(const char *omiTrackSelection,bool *use_row);
 void OMI_ReleaseReference(void);
 void OMI_ReleaseBuffers(void);

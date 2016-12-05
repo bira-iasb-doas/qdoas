@@ -7,6 +7,7 @@
 #include "output_common.h"
 #include "output.h"
 #include "engine_context.h"
+#include "omi_read.h"
 
 /*! current output file (NULL if no file is open) */
 static FILE *output_file;

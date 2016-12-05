@@ -7,6 +7,7 @@
 #include "netcdfwrapper.h"
 #include "output_netcdf.h"
 #include "engine_context.h"
+#include "omi_read.h"
 
 using std::string;
 using std::vector;

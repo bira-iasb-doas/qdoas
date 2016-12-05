@@ -70,7 +70,6 @@
 #define REFERENCE_COLUMN "WavelengthReferenceColumn"
 #define WAVELENGTH_COEFFICIENT "WavelengthCoefficient"
 #define OMI_NUM_COEFFICIENTS 5 // 5 coefficients in wavelength polynomial
-#define OMI_NUM_ROWS 60
 #define OMI_XTRACK_NOTUSED 255 // XTrackQualityFlags = 255 is used to label unused rows in the detector during special zoom mode.
 #define RADIANCE_MANTISSA "RadianceMantissa"
 #define RADIANCE_PRECISION_MANTISSA "RadiancePrecisionMantissa"
@@ -194,7 +193,7 @@ static struct omi_ref OMI_ref[MAX_FENO]; // the number of reference spectra is l
 
 static struct omi_orbit_file* reference_orbit_files[MAX_OMI_FILES]; // List of filenames for which the current automatic reference spectrum is valid. -> all spectra from the same day/same directory.
 static int num_reference_orbit_files = 0;
-static bool automatic_reference_ok[OMI_NUM_ROWS]; // array to keep track if automatic reference creation spectrum failed for one of the detector rows
+static bool automatic_reference_ok[OMI_TOTAL_ROWS]; // array to keep track if automatic reference creation spectrum failed for one of the detector rows
 
 int omiSwathOld=ITEM_NONE;
 

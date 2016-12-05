@@ -14,6 +14,7 @@
 #include "HE5_HdfEosDef.h"
 
 #include "engine_context.h"
+#include "omi_read.h"
 #include "output_common.h"
 
 enum fieldtype { DATA, GEO};
