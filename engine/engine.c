@@ -1131,6 +1131,9 @@ RC EngineEndCurrentSession(ENGINE_CONTEXT *pEngineContext)
        ANALYSE_ResetData();
       }
 
+     if (THRD_id==THREAD_TYPE_EXPORT)
+      OUTPUT_ResetData();
+
      // Reset the context of the engine
 
      EngineResetContext(pEngineContext);
