@@ -480,7 +480,7 @@ RC MFC_ReadRecord(char *fileName,
     if (!fread(pHeaderSpe,sizeof(TBinaryMFC),1,fp) ||                  // header
        ((mask!=maskSpec) && ((pHeaderSpe->ty&mask)==0) && ((unsigned int)pHeaderSpe->wavelength1!=mask)) ||                    // spectrum selection
         (pHeaderSpe->no_chan==0) || (pHeaderSpe->no_chan>n_wavel) ||      // verify the size of the spectrum
-        !fread(specTmp,sizeof(float)*pHeaderSpe->no_chan,1,fp))        // spectrum read out
+        !fread(specTmp,sizeof(float)*pHeaderSpe->no_chan,1,fp))           // spectrum read out
      {
       memset(pHeaderSpe,0,sizeof(TBinaryMFC));
       pHeaderSpe->int_time=(float)0.;

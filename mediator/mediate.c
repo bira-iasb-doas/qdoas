@@ -2272,7 +2272,7 @@ int mediateRequestNextMatchingAnalyseSpectrum(void *engineContext,
    // NB if the function returns -1, the problem is that it is not possible to process
    // next records.
 
-   return (rc != ERROR_ID_REF_ALIGNMENT) ? rec : -1;
+   return ((rc != ERROR_ID_REF_ALIGNMENT) || pEngineContext->analysisRef.refScan) ? rec : -1;
  }
 
 int mediateRequestPrevMatchingAnalyseSpectrum(void *engineContext,
