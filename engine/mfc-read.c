@@ -480,7 +480,7 @@ RC MFC_ReadRecord(char *fileName,
     if (!fread(pHeaderSpe,sizeof(TBinaryMFC),1,fp) ||                  // header
        ((mask!=maskSpec) && ((pHeaderSpe->ty&mask)==0) && ((unsigned int)pHeaderSpe->wavelength1!=mask)) ||                    // spectrum selection
         (pHeaderSpe->no_chan==0) || (pHeaderSpe->no_chan>n_wavel) ||      // verify the size of the spectrum
-        !fread(specTmp,sizeof(float)*pHeaderSpe->no_chan,1,fp))           // spectrum read out
+        !fread(specTmp,sizeof(float),pHeaderSpe->no_chan,fp))           // spectrum read out
      {
       memset(pHeaderSpe,0,sizeof(TBinaryMFC));
       pHeaderSpe->int_time=(float)0.;
@@ -1223,7 +1223,7 @@ RC MFCBIRA_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
    	      if (header.measurementType==PRJCT_INSTR_MAXDOAS_TYPE_OFFSET)
    	       {
-   	        fread(spectrum,sizeof(float)*n_wavel,1,specFp);
+   	        fread(spectrum,sizeof(float),n_wavel,specFp);
    	        for (j=0;j<n_wavel;j++)
    	         offset[j]+=(double)spectrum[j];
 
@@ -1234,7 +1234,7 @@ RC MFCBIRA_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
    	      else if (header.measurementType==PRJCT_INSTR_MAXDOAS_TYPE_DARK)
    	       {
-   	        fread(spectrum,sizeof(float)*n_wavel,1,specFp);
+   	        fread(spectrum,sizeof(float),n_wavel,specFp);
    	        for (j=0;j<n_wavel;j++)
    	         darkCurrent[j]+=(double)spectrum[j];
 
@@ -1317,7 +1317,7 @@ RC MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
 
    	fseek(specFp,2L*sizeof(int)+(recordNo-1)*(sizeof(MFCBIRA_HEADER)+n_wavel*sizeof(float)),SEEK_SET);
    	fread(&header,sizeof(MFCBIRA_HEADER),1,specFp);
-   	fread(spectrum,sizeof(float)*n_wavel,1,specFp);
+   	fread(spectrum,sizeof(float),n_wavel,specFp);
 
    	// Retrieve the main information from the header
 
