@@ -71,7 +71,7 @@
 #include <ctype.h>
 #include <dirent.h>
 
-#include "spectrum_files.h"
+#include "mfc-read.h"
 
 #include "doas.h"
 #include "winfiles.h"
@@ -89,9 +89,16 @@
 // GLOBAL VARIABLES
 // ================
 
-char MFC_fileInstr[MAX_STR_SHORT_LEN+1],      // instrumental function file name
-      MFC_fileDark[MAX_STR_SHORT_LEN+1],       // dark current file name
-      MFC_fileOffset[MAX_STR_SHORT_LEN+1];     // offset file name
+TBinaryMFC MFC_headerDrk,                                                       // header of the dark current file
+           MFC_headerOff,                                                       // header of the offset file
+           MFC_header,                                                          // header of the spectra file
+           MFC_headerInstr;                                                     // header of the instrumental function file
+
+char MFC_fileInstr[MAX_STR_SHORT_LEN+1],
+  MFC_fileSpectra[MAX_STR_SHORT_LEN+1],
+  MFC_fileMin[MAX_STR_SHORT_LEN+1],
+  MFC_fileDark[MAX_STR_SHORT_LEN+1],
+  MFC_fileOffset[MAX_STR_SHORT_LEN+1];
 
 int mfcLastSpectrum=0;
 
@@ -415,11 +422,6 @@ RC SetMFC(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 // MFC BINARY FORMAT
 // =================
 
-TBinaryMFC MFC_headerDrk,                                                       // header of the dark current file
-           MFC_headerOff,                                                       // header of the offset file
-           MFC_header,                                                          // header of the spectra file
-           MFC_headerInstr;                                                     // header of the instrumental function file
-
 // -----------------------------------------------------------------------------
 // FUNCTION      MFC_ReadRecord
 // -----------------------------------------------------------------------------
@@ -464,30 +466,26 @@ RC MFC_ReadRecord(char *fileName,
   if ((fp=fopen(fileName,"rb"))==NULL)
    rc=ERROR_ID_FILE_NOT_FOUND;
   else if (!STD_FileLength(fp))
-   rc=ERROR_SetLast("ReadMFCRecord",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,fileName);
+   rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,fileName);
 
   // Allocate a buffer for the spectrum
 
-  else if ((specTmp=(float *)MEMORY_AllocBuffer("MFC_ReadRecord ","specTmp",n_wavel,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL)
+  else if ((specTmp=(float *)MEMORY_AllocBuffer(__func__,"specTmp",n_wavel,sizeof(float),0,MEMORY_TYPE_FLOAT))==NULL)
    rc=ERROR_ID_ALLOC;
   else
    {
     for (i=0;i<n_wavel;i++)
-     specTmp[i]=(float)0.;
+     specTmp[i]=0.0f;
 
-    // Complete record read out
-
-    if (!fread(pHeaderSpe,sizeof(TBinaryMFC),1,fp) ||                  // header
+    if (!fread(pHeaderSpe,MFC_BIN_HEADER_SIZE,1,fp) ||                  // header
        ((mask!=maskSpec) && ((pHeaderSpe->ty&mask)==0) && ((unsigned int)pHeaderSpe->wavelength1!=mask)) ||                    // spectrum selection
-        (pHeaderSpe->no_chan==0) || (pHeaderSpe->no_chan>n_wavel) ||      // verify the size of the spectrum
-        // read spectrum: DOASIS will sometimes write less values than what's specified in no_chan
-        !fread(specTmp,sizeof(float),pHeaderSpe->no_chan,fp)) {
+        (pHeaderSpe->no_chan==0) || (pHeaderSpe->no_chan>n_wavel) || // verify the size of the spectrum
+        !fread(specTmp,sizeof(*specTmp)*pHeaderSpe->no_chan,1,fp)) { // read spectrum
       memset(pHeaderSpe,0,sizeof(TBinaryMFC));
-      pHeaderSpe->int_time=(float)0.;
-      rc=ERROR_ID_FILE_RECORD;
-     }
-    else
-     {
+      pHeaderSpe->int_time= 0.0f;
+      rc=ERROR_ID_FILE_BAD_FORMAT;
+    } else {
+
       // Copy original spectrum to the output buffer
 
       for (i=0;i<n_wavel;i++)
@@ -514,7 +512,6 @@ RC MFC_ReadRecord(char *fileName,
      }
    }
 
-
   // Close file
 
   if (fp!=NULL)
@@ -523,7 +520,7 @@ RC MFC_ReadRecord(char *fileName,
   // Release the allocated buffer
 
   if (specTmp!=NULL)
-   MEMORY_ReleaseBuffer("MFC_ReadRecord ","specTmp",specTmp);
+   MEMORY_ReleaseBuffer(__func__,"specTmp",specTmp);
 
   // Return
 
@@ -823,7 +820,6 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,char *fileName,
   // Open file
 
   if ((fp=fopen(fileName,"rt"))==NULL)
-//   rc=ERROR_ID_FILE_RECORD;
    rc=ERROR_ID_FILE_NOT_FOUND;
   else if (!STD_FileLength(fp))
    rc=ERROR_SetLast("ReadMFCRecordStd",ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,fileName);

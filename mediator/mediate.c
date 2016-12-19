@@ -41,6 +41,7 @@
 #include "omi_read.h"
 #include "tropomi_read.h"
 #include "apex_read.h"
+#include "mfc-read.h"
 
 int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHandle)
  {
