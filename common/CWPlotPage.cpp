@@ -219,7 +219,8 @@ CWPlot::CWPlot(const RefCountConstPtr<CPlotImage> &dataImage,
  {
   QString filename=m_dataImage->GetFile();
   QwtText tmpTitle=title();
-  const char *ptr=strrchr(filename.toLocal8Bit().constData(),'/')+1;
+  const QByteArray fname=filename.toLocal8Bit();
+  const char *ptr=strrchr(fname.constData(),'/')+1;
 
   // Example code for font changes ... TODO
 
@@ -388,13 +389,12 @@ void CWPlot::slotSaveAs() {
         nCurves = m_dataSet->count();
         fprintf(fp,";\n");
         fprintf(fp, "; Plot %s (%d %s)\n;\n", m_dataSet->plotTitle().toLocal8Bit().constData(),nCurves,(nCurves>1)?"curves":"curve");
-        for (i=0,maxPoints=0;i<nCurves;i++)
-         {
-         	n=m_dataSet->rawData(i).size();
-          fprintf(fp,";      Curve %d : %s (%d data points)\n",i+1,m_dataSet->rawData(i).curveName(),n);
+        for (i=0,maxPoints=0;i<nCurves;i++) {
+          n=m_dataSet->rawData(i).size();
+          fprintf(fp,";      Curve %d : %s (%d data points)\n",i+1,m_dataSet->rawData(i).curveName().toLocal8Bit().constData(),n);
           if (n>maxPoints)
-           maxPoints=n;
-         }
+            maxPoints=n;
+        }
         fprintf(fp,";\n");
 
         for (j=0;j<maxPoints;j++)

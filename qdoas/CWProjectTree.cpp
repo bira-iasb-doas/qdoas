@@ -1221,7 +1221,7 @@ void CWProjectTree::slotExportSpectra()
      mediate_project_t *projProp;
 
     // locate the properties in the workspace then copy
-    projProp = CWorkSpace::instance()->findProject(projItem->text(0).toLocal8Bit().data());
+    projProp = CWorkSpace::instance()->findProject(projItem->text(0));
     assert(projProp != NULL);
 
     CWEditor *exportEditor = new  CWProjectExportEditor(this,parent,projItem->text(0),&projProp->export_spectra,projProp->instrumental.format);
