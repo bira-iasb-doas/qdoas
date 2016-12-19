@@ -176,7 +176,7 @@ RC CONVXML_Parse(QList<QString> &xmlCommands,mediate_convolution_t *properties)
   QStringList xmlFields;
   QString xmlKey,xmlValue;
 
-  int xmlFieldsN,indexField,projectField,analysisField;
+  int xmlFieldsN,indexField;
   RC rc;
 
   // Initializations
@@ -194,8 +194,6 @@ RC CONVXML_Parse(QList<QString> &xmlCommands,mediate_convolution_t *properties)
 
      	xmlFields=xmlKey.split("/");
      	xmlFieldsN=xmlFields.size();
-
-     	projectField=analysisField=0;
 
      	for (indexField=0;(indexField<xmlFieldsN) && !rc;indexField++)
      	 {
@@ -237,7 +235,7 @@ RC RINGXML_Parse(QList<QString> &xmlCommands,mediate_ring *properties)
   QStringList xmlFields;
   QString xmlKey,xmlValue;
 
-  int xmlFieldsN,indexField,projectField,analysisField;
+  int xmlFieldsN,indexField;
   RC rc;
 
   // Initializations
@@ -255,8 +253,6 @@ RC RINGXML_Parse(QList<QString> &xmlCommands,mediate_ring *properties)
 
      	xmlFields=xmlKey.split("/");
      	xmlFieldsN=xmlFields.size();
-
-     	projectField=analysisField=0;
 
      	for (indexField=0;(indexField<xmlFieldsN) && !rc;indexField++)
      	 {
