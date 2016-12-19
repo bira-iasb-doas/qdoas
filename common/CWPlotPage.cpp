@@ -219,7 +219,7 @@ CWPlot::CWPlot(const RefCountConstPtr<CPlotImage> &dataImage,
  {
   QString filename=m_dataImage->GetFile();
   QwtText tmpTitle=title();
-  const char *ptr=strrchr(filename.toLatin1().constData(),'/')+1;
+  const char *ptr=strrchr(filename.toLocal8Bit().constData(),'/')+1;
 
   // Example code for font changes ... TODO
 
@@ -302,7 +302,7 @@ void CWPlot::slotOverlay()
 
       bool failed = false;
 
-      FILE *fp = fopen(filename.toLatin1().constData(), "r");
+      FILE *fp = fopen(filename.toLocal8Bit().constData(), "r");
       if (fp != NULL) {
         char buffer[32];
         int nCurves, nPoints, i, j;
@@ -380,14 +380,14 @@ void CWPlot::slotSaveAs() {
 
       pref->setDirectoryNameGivenFile("ASCII_Plot", filename);
 
-      FILE *fp = fopen(filename.toLatin1().constData(), "w");
+      FILE *fp = fopen(filename.toLocal8Bit().constData(), "w");
       if (fp != NULL)
        {
         int nCurves, nPoints, i, j, n, maxPoints;
 
         nCurves = m_dataSet->count();
         fprintf(fp,";\n");
-        fprintf(fp, "; Plot %s (%d %s)\n;\n", m_dataSet->plotTitle().toLatin1().constData(),nCurves,(nCurves>1)?"curves":"curve");
+        fprintf(fp, "; Plot %s (%d %s)\n;\n", m_dataSet->plotTitle().toLocal8Bit().constData(),nCurves,(nCurves>1)?"curves":"curve");
         for (i=0,maxPoints=0;i<nCurves;i++)
          {
          	n=m_dataSet->rawData(i).size();
@@ -726,6 +726,6 @@ void CWPlotPage::slotExportAsImageAllPlots()
       ++it;
     }
 
-    img.save(fileName, format.toLatin1().constData());
+    img.save(fileName, format.toLocal8Bit().constData());
   }
 }

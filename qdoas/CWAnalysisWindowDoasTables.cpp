@@ -203,19 +203,19 @@ void CWMoleculesDoasTable::apply(cross_section_list_t *data) const
     QList<QVariant> state = getCellData(row);
 
     // certain that the length of the symbol is below the limit ...
-    strcpy(d->symbol, m_symbols.at(row).toLatin1().data());
+    strcpy(d->symbol, m_symbols.at(row).toLocal8Bit().data());
 
     if (m_csFilename.at(row).length() < (int)sizeof(d->crossSectionFile))
-      strcpy(d->crossSectionFile, m_csFilename.at(row).toLatin1().data());
+      strcpy(d->crossSectionFile, m_csFilename.at(row).toLocal8Bit().data());
     else
       *(d->crossSectionFile) = '\0';
 
-    strcpy(d->orthogonal, state.at(0).toString().toLatin1().data());
+    strcpy(d->orthogonal, state.at(0).toString().toLocal8Bit().data());
     d->crossType = mapComboStringToCrossType(state.at(1).toString());
     d->amfType = mapComboStringToAmfType(state.at(2).toString());
 
     if (m_amfFilename.at(row).length() < (int)sizeof(d->amfFile))
-      strcpy(d->amfFile, m_amfFilename.at(row).toLatin1().data());
+      strcpy(d->amfFile, m_amfFilename.at(row).toLocal8Bit().data());
     else
       *(d->amfFile) = '\0';
 
@@ -734,17 +734,17 @@ void CWNonLinearParametersDoasTable::apply(struct anlyswin_nonlinear *data) cons
   // filenames
 
   if (m_comFilename.length() < (int)sizeof(data->comFile))
-    strcpy(data->comFile, m_comFilename.toLatin1().data());
+    strcpy(data->comFile, m_comFilename.toLocal8Bit().data());
   else
     *(data->comFile) = '\0';
 
   if (m_usamp1Filename.length() < (int)sizeof(data->usamp1File))
-    strcpy(data->usamp1File, m_usamp1Filename.toLatin1().data());
+    strcpy(data->usamp1File, m_usamp1Filename.toLocal8Bit().data());
   else
     *(data->usamp1File) = '\0';
 
   if (m_usamp2Filename.length() < (int)sizeof(data->usamp2File))
-    strcpy(data->usamp2File, m_usamp2Filename.toLatin1().data());
+    strcpy(data->usamp2File, m_usamp2Filename.toLocal8Bit().data());
   else
     *(data->usamp2File) = '\0';
 }
@@ -952,7 +952,7 @@ void CWShiftAndStretchDoasTable::apply(shift_stretch_list_t *data) const
     int nSym = 0;
     while (nSym < d->nSymbol && nSym < MAX_AW_SHIFT_STRETCH) {
       // certain that the length of the symbol is below the limit ...
-      strcpy(&(d->symbol[nSym][0]), tmp.at(nSym).toLatin1().data());
+      strcpy(&(d->symbol[nSym][0]), tmp.at(nSym).toLocal8Bit().data());
       ++nSym;
     }
 
@@ -1382,7 +1382,7 @@ void CWOutputDoasTable::apply(output_list_t *data) const
 
   while (row < data->nOutput && row < MAX_AW_CROSS_SECTION) {
 
-    strcpy(d->symbol, m_symbols.at(row).toLatin1().data());
+    strcpy(d->symbol, m_symbols.at(row).toLocal8Bit().data());
 
     QList<QVariant> state = getCellData(row);
 

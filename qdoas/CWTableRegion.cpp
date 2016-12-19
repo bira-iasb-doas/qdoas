@@ -87,7 +87,7 @@ void CWTableRegion::slotSaveAs()
     
     prefs->setDirectoryNameGivenFile("Table", fileName);
    
-    FILE *fp = fopen(fileName.toLatin1().constData(), "w");
+    FILE *fp = fopen(fileName.toLocal8Bit().constData(), "w");
 
     if (fp != NULL) {
       int rows = m_model->rowCount();
@@ -99,7 +99,7 @@ void CWTableRegion::slotSaveAs()
 	
 	  if (i != 0)
 	    fputc('\t', fp);
-	  fprintf(fp, "%s", tmp.toLatin1().constData());
+	  fprintf(fp, "%s", tmp.toLocal8Bit().constData());
 	}
 	fputc('\n', fp);
       }

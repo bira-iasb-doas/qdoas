@@ -80,7 +80,7 @@ bool CAnalysisWindowSubHandler::start(const QString &element, const QXmlAttribut
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(d->refOneFile))
-	strcpy(d->refOneFile, str.toLatin1().data());
+	strcpy(d->refOneFile, str.toLocal8Bit().data());
       else
 	return postErrorMessage("Reference 1 Filename too long");
     }
@@ -89,7 +89,7 @@ bool CAnalysisWindowSubHandler::start(const QString &element, const QXmlAttribut
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(d->refTwoFile))
-	strcpy(d->refTwoFile, str.toLatin1().data());
+	strcpy(d->refTwoFile, str.toLocal8Bit().data());
       else
 	return postErrorMessage("Reference 2 Filename too long");
     }
@@ -98,7 +98,7 @@ bool CAnalysisWindowSubHandler::start(const QString &element, const QXmlAttribut
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(d->residualFile))
-	strcpy(d->residualFile, str.toLatin1().data());
+	strcpy(d->residualFile, str.toLocal8Bit().data());
       else
 	return postErrorMessage("Residual Filename too long");
     }
@@ -201,13 +201,13 @@ bool CAnalysisWindowCrossSectionSubHandler::start(const QXmlAttributes &atts)
 
     str = atts.value("sym");
     if (!str.isEmpty() && str.length() < (int)sizeof(d->symbol))
-      strcpy(d->symbol, str.toLatin1().data());
+      strcpy(d->symbol, str.toLocal8Bit().data());
     else
       return postErrorMessage("missing symbol (or name too long)");
 
     str = atts.value("ortho");
     if (!str.isEmpty() && str.length() < (int)sizeof(d->orthogonal))
-      strcpy(d->orthogonal, str.toLatin1().data());
+      strcpy(d->orthogonal, str.toLocal8Bit().data());
     else
       return postErrorMessage("missing ortho (or name too long)");
 
@@ -243,7 +243,7 @@ bool CAnalysisWindowCrossSectionSubHandler::start(const QXmlAttributes &atts)
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(d->crossSectionFile))
-	strcpy(d->crossSectionFile, str.toLatin1().data());
+	strcpy(d->crossSectionFile, str.toLocal8Bit().data());
       else
 	return postErrorMessage("Cross Section filename too long");
     }
@@ -254,7 +254,7 @@ bool CAnalysisWindowCrossSectionSubHandler::start(const QXmlAttributes &atts)
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
       if (str.length() < (int)sizeof(d->amfFile))
-	strcpy(d->amfFile, str.toLatin1().data());
+	strcpy(d->amfFile, str.toLocal8Bit().data());
       else
 	return postErrorMessage("AMF filename too long");
     }
@@ -382,7 +382,7 @@ bool CAnalysisWindowNonLinearSubHandler::start(const QXmlAttributes &atts)
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(m_d->comFile))
-      strcpy(m_d->comFile, str.toLatin1().data());
+      strcpy(m_d->comFile, str.toLocal8Bit().data());
     else
       return postErrorMessage("Com filename too long");
   }
@@ -391,7 +391,7 @@ bool CAnalysisWindowNonLinearSubHandler::start(const QXmlAttributes &atts)
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(m_d->usamp1File))
-      strcpy(m_d->usamp1File, str.toLatin1().data());
+      strcpy(m_d->usamp1File, str.toLocal8Bit().data());
     else
       return postErrorMessage("Usamp1 filename too long");
   }
@@ -400,7 +400,7 @@ bool CAnalysisWindowNonLinearSubHandler::start(const QXmlAttributes &atts)
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(m_d->usamp2File))
-      strcpy(m_d->usamp2File, str.toLatin1().data());
+      strcpy(m_d->usamp2File, str.toLocal8Bit().data());
     else
       return postErrorMessage("Usamp2 filename too long");
   }
@@ -472,7 +472,7 @@ bool CAnalysisWindowShiftStretchSubHandler::start(const QString &element, const 
 
       QString str = atts.value("name");
       if (!str.isEmpty() && str.length() < (int)SYMBOL_NAME_BUFFER_LENGTH) {
-	strcpy(&(d->symbol[d->nSymbol][0]), str.toLatin1().data());
+	strcpy(&(d->symbol[d->nSymbol][0]), str.toLocal8Bit().data());
 	++(d->nSymbol);
 
 	return true;
@@ -534,7 +534,7 @@ bool CAnalysisWindowOutputSubHandler::start(const QXmlAttributes &atts)
 
     str = atts.value("sym");
     if (!str.isEmpty() && str.length() < (int)sizeof(d->symbol))
-      strcpy(d->symbol, str.toLatin1().data());
+      strcpy(d->symbol, str.toLocal8Bit().data());
     else
       return postErrorMessage("missing symbol (or name too long)");
 

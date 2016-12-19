@@ -143,9 +143,9 @@ void CWRingTabGeneral::apply(mediate_ring_t *properties) const
   properties->saveraman = (m_ramanCheck->checkState() == Qt::Checked) ? 1 : 0;
   properties->temperature = m_tempEdit->text().toDouble();
 
-  strcpy(properties->outputFile, m_outputFileEdit->text().toLatin1().constData());
-  strcpy(properties->calibrationFile, m_calibFileEdit->text().toLatin1().constData());
-  strcpy(properties->solarRefFile, m_refFileEdit->text().toLatin1().constData());
+  strcpy(properties->outputFile, m_outputFileEdit->text().toLocal8Bit().constData());
+  strcpy(properties->calibrationFile, m_calibFileEdit->text().toLocal8Bit().constData());
+  strcpy(properties->solarRefFile, m_refFileEdit->text().toLocal8Bit().constData());
 
   m_slitEdit->apply(&(properties->slit));
 }

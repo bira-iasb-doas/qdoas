@@ -109,7 +109,7 @@ CWProjectExportEditor::CWProjectExportEditor(CWProjectTree *projectTree, QTreeWi
 
 bool CWProjectExportEditor::actionOk(void)
  {
-   strcpy(m_properties->path, m_pathEdit->text().toLatin1().data());
+   strcpy(m_properties->path, m_pathEdit->text().toLocal8Bit().data());
 
   m_properties->directoryFlag = (m_directoryCheck->checkState() == Qt::Checked) ? 1 : 0;
 

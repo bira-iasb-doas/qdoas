@@ -32,6 +32,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QFileDialog>
 #include <QCloseEvent>
 #include <QApplication>
+#include <QLocale>
+#include <QTextCodec>
 
 #include "CWMain.h"
 #include "CWAboutDialog.h"
@@ -56,6 +58,11 @@ CWMain::CWMain(QWidget *parent) :
   QFrame(parent),
   m_plotArea(NULL)
 {
+  setlocale(LC_NUMERIC, "C");
+
+  // all internal C strings should use the local 8-bit encoding.
+  QTextCodec::setCodecForCStrings(QTextCodec::codecForLocale());
+
   initializeMediateConvolution(&m_guiProperties);
 
   setConfigFileName(QString());

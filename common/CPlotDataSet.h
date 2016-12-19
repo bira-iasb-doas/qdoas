@@ -53,7 +53,7 @@ class CXYPlotData
 };
 
 inline enum eCurveStyleType CXYPlotData::curveType(void) const { return m_curveType; }
-inline const char *CXYPlotData::curveName(void) const { return m_curveName.toLatin1().constData(); }
+inline const char *CXYPlotData::curveName(void) const { return m_curveName.toLocal8Bit().constData(); }
 inline const double* CXYPlotData::xRawData(void) const { return m_xData; }
 inline const double* CXYPlotData::yRawData(void) const { return m_yData; }
 inline int CXYPlotData::size(void) const { return m_nSamples; }

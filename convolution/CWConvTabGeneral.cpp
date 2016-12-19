@@ -187,10 +187,10 @@ void CWConvTabGeneral::apply(mediate_conv_general_t *properties) const
   properties->shift = m_shiftEdit->text().toDouble();
   properties->conc = m_concEdit->text().toDouble();
 
-  strcpy(properties->inputFile, m_inputFileEdit->text().toLatin1().constData());
-  strcpy(properties->outputFile, m_outputFileEdit->text().toLatin1().constData());
-  strcpy(properties->calibrationFile, m_calibFileEdit->text().toLatin1().constData());
-  strcpy(properties->solarRefFile, m_refFileEdit->text().toLatin1().constData());
+  strcpy(properties->inputFile, m_inputFileEdit->text().toLocal8Bit().constData());
+  strcpy(properties->outputFile, m_outputFileEdit->text().toLocal8Bit().constData());
+  strcpy(properties->calibrationFile, m_calibFileEdit->text().toLocal8Bit().constData());
+  strcpy(properties->solarRefFile, m_refFileEdit->text().toLocal8Bit().constData());
 
   properties->noheader = (m_headerCheck->checkState() == Qt::Checked) ? 1 : 0;
 }

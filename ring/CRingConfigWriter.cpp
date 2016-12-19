@@ -43,7 +43,7 @@ CRingConfigWriter::~CRingConfigWriter()
 QString CRingConfigWriter::write(const QString &fileName)
 {
   QString msg;
-  FILE *fp = fopen(fileName.toLatin1().constData(), "w");
+  FILE *fp = fopen(fileName.toLocal8Bit().constData(), "w");
 
   if (fp == NULL) {
     QTextStream stream(&msg);
@@ -66,13 +66,13 @@ QString CRingConfigWriter::write(const QString &fileName)
 	  (d->noheader ? sTrue : sFalse),(d->saveraman ? sTrue : sFalse));
 
   tmpStr = pathMgr->simplifyPath(QString(d->outputFile));
-  fprintf(fp, " output=\"%s\"", tmpStr.toLatin1().data());
+  fprintf(fp, " output=\"%s\"", tmpStr.toLocal8Bit().data());
 
   tmpStr = pathMgr->simplifyPath(QString(d->calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toLatin1().data());
+  fprintf(fp, " calib=\"%s\"", tmpStr.toLocal8Bit().data());
 
   tmpStr = pathMgr->simplifyPath(QString(d->solarRefFile));
-  fprintf(fp, " ref=\"%s\"", tmpStr.toLatin1().data());
+  fprintf(fp, " ref=\"%s\"", tmpStr.toLocal8Bit().data());
 
   fprintf(fp, " >\n");
 

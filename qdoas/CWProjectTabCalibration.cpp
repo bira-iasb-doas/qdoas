@@ -341,8 +341,8 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
 void CWProjectTabCalibration::apply(mediate_project_calibration_t *properties) const
 {
 	 // a safe text length is assured.
-  strcpy(properties->solarRefFile, m_refFileEdit->text().toLatin1().data());
-  strcpy(properties->slfFile, m_slfFileEdit->text().toLatin1().data());
+  strcpy(properties->solarRefFile, m_refFileEdit->text().toLocal8Bit().data());
+  strcpy(properties->slfFile, m_slfFileEdit->text().toLocal8Bit().data());
 
   properties->methodType = m_methodCombo->itemData(m_methodCombo->currentIndex()).toInt();
 

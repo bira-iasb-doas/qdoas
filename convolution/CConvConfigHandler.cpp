@@ -114,7 +114,7 @@ bool CConvGeneralSubHandler::start(const QXmlAttributes &atts)
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(m_d->inputFile))
-      strcpy(m_d->inputFile, str.toLatin1().data());
+      strcpy(m_d->inputFile, str.toLocal8Bit().data());
     else
       return postErrorMessage("Input Filename too long");
   }
@@ -122,7 +122,7 @@ bool CConvGeneralSubHandler::start(const QXmlAttributes &atts)
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(m_d->outputFile))
-      strcpy(m_d->outputFile, str.toLatin1().data());
+      strcpy(m_d->outputFile, str.toLocal8Bit().data());
     else
       return postErrorMessage("Output Filename too long");
   }
@@ -130,7 +130,7 @@ bool CConvGeneralSubHandler::start(const QXmlAttributes &atts)
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(m_d->calibrationFile))
-      strcpy(m_d->calibrationFile, str.toLatin1().data());
+      strcpy(m_d->calibrationFile, str.toLocal8Bit().data());
     else
       return postErrorMessage("Calibration Filename too long");
   }
@@ -138,7 +138,7 @@ bool CConvGeneralSubHandler::start(const QXmlAttributes &atts)
   if (!str.isEmpty()) {
     str = m_master->pathExpand(str);
     if (str.length() < (int)sizeof(m_d->solarRefFile))
-      strcpy(m_d->solarRefFile, str.toLatin1().data());
+      strcpy(m_d->solarRefFile, str.toLocal8Bit().data());
     else
       return postErrorMessage("Solar Reference Filename too long");
   }

@@ -12,7 +12,7 @@ bool CAnalysisWindowConfigItem::setName(const QString &name)
 {
   if (name.length() < (int)sizeof(m_awProp.name)) {
 
-    strcpy(m_awProp.name, name.toLatin1().data());
+    strcpy(m_awProp.name, name.toLocal8Bit().data());
     m_name = name;
 
     return true;
@@ -76,7 +76,7 @@ CProjectConfigItem::~CProjectConfigItem()
 void CProjectConfigItem::setName(const QString &name)
 {
   m_name = name;
-  strncpy(m_projProp.project_name, name.toLatin1().data(), PROJECT_NAME_BUFFER_LENGTH-1);
+  strncpy(m_projProp.project_name, name.toLocal8Bit().data(), PROJECT_NAME_BUFFER_LENGTH-1);
 }
 
 const QString& CProjectConfigItem::name(void) const

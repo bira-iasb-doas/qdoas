@@ -32,6 +32,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QFileDialog>
 #include <QCloseEvent>
 #include <QApplication>
+#include <QLocale>
+#include <QTextCodec>
 
 #include "CWMain.h"
 #include "CWAboutDialog.h"
@@ -58,12 +60,10 @@ CWMain::CWMain(QWidget *parent) :
 {
   // ----------------------------------------------------------------------------
   
-  // to avoid that a thousands comma separator (QT 4.7.3)
-
-  QLocale qlocale=QLocale::system();
-  qlocale.setNumberOptions(QLocale::OmitGroupSeparator);
-  QLocale::setDefault(qlocale);
   setlocale(LC_NUMERIC, "C");
+
+  // all internal C strings should use the local 8-bit encoding.
+  QTextCodec::setCodecForCStrings(QTextCodec::codecForLocale());
 
   // ----------------------------------------------------------------------------
   initializeMediateRing(&m_guiProperties);

@@ -36,7 +36,7 @@ const char sFalse[] = "false";
 QString CQdoasConfigWriter::write(const QString &fileName)
 {
   QString msg;
-  FILE *fp = fopen(fileName.toLatin1().constData(), "w");
+  FILE *fp = fopen(fileName.toLocal8Bit().constData(), "w");
 
   if (fp == NULL) {
     QTextStream stream(&msg);
@@ -61,7 +61,7 @@ QString CQdoasConfigWriter::write(const QString &fileName)
   for (i=0; i<10; ++i) {
     QString path = pathMgr->path(i);
     if (!path.isNull()) {
-      fprintf(fp, "    <path index=\"%d\">%s</path>\n", i, path.toLatin1().constData());
+      fprintf(fp, "    <path index=\"%d\">%s</path>\n", i, path.toUtf8().constData());
     }
   }
   fprintf(fp, "  </paths>\n");
@@ -124,7 +124,7 @@ void CQdoasConfigWriter::writeProjects(FILE *fp)
       properties = CWorkSpace::instance()->findProject(projName);
       if (properties != NULL) {
 	// write the project data
-	fprintf(fp, "  <project name=\"%s\" disable=\"%s\">\n", projName.toLatin1().constData(),
+	fprintf(fp, "  <project name=\"%s\" disable=\"%s\">\n", projName.toUtf8().constData(),
 		(projItem->isEnabled() ? sFalse : sTrue));
 	writeProperties(fp, properties);
 
@@ -462,10 +462,10 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
 	  (d->ascii.straylight ? sTrue : sFalse),d->ascii.lambdaMin,d->ascii.lambdaMax);
 
   tmpStr = pathMgr->simplifyPath(QString(d->ascii.calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->ascii.transmissionFunctionFile));
-  fprintf(fp, " transmission=\"%s\" />\n", tmpStr.toLatin1().constData());
+  fprintf(fp, " transmission=\"%s\" />\n", tmpStr.toUtf8().constData());
 
   // logger
   fprintf(fp, "      <logger type=");
@@ -485,10 +485,10 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   fprintf(fp, " azi=\"%s\"", (d->logger.flagAzimuthAngle ? sTrue : sFalse));
 
   tmpStr = pathMgr->simplifyPath(QString(d->logger.calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->logger.transmissionFunctionFile));
-  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toLatin1().constData());
+  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
 
   // acton
   fprintf(fp, "      <acton type=");
@@ -504,10 +504,10 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   }
 
   tmpStr = pathMgr->simplifyPath(QString(d->acton.calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->acton.transmissionFunctionFile));
-  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toLatin1().constData());
+  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
 
   // pdaegg
   fprintf(fp, "      <pdaegg type=");
@@ -527,10 +527,10 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   fprintf(fp, " azi=\"%s\"", (d->pdaegg.flagAzimuthAngle ? sTrue : sFalse));
 
   tmpStr = pathMgr->simplifyPath(QString(d->pdaegg.calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->pdaegg.transmissionFunctionFile));
-  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toLatin1().constData());
+  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
 
   // pdaeggold
   fprintf(fp, "      <pdaeggold type=");
@@ -550,10 +550,10 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   fprintf(fp, " azi=\"%s\"", (d->pdaeggold.flagAzimuthAngle ? sTrue : sFalse));
 
   tmpStr = pathMgr->simplifyPath(QString(d->pdaeggold.calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->pdaeggold.transmissionFunctionFile));
-  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toLatin1().constData());
+  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
 
   // pdaeggold
   fprintf(fp, "      <pdaeggold type=");
@@ -573,55 +573,55 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   fprintf(fp, " azi=\"%s\"", (d->pdaeggold.flagAzimuthAngle ? sTrue : sFalse));
 
   tmpStr = pathMgr->simplifyPath(QString(d->pdaeggold.calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->pdaeggold.transmissionFunctionFile));
-  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toLatin1().constData());
+  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
 
   // ccdohp96
   tmpStr = pathMgr->simplifyPath(QString(d->ccdohp96.calibrationFile));
-  fprintf(fp, "      <ccdohp96 calib=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, "      <ccdohp96 calib=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->ccdohp96.transmissionFunctionFile));
-  fprintf(fp, " instr=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " instr=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->ccdohp96.interPixelVariabilityFile));
-  fprintf(fp, " ipv=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " ipv=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->ccdohp96.detectorNonLinearityFile));
-  fprintf(fp, " dnl=\"%s\" />\n", tmpStr.toLatin1().constData());
+  fprintf(fp, " dnl=\"%s\" />\n", tmpStr.toUtf8().constData());
 
   // ccdha94
   tmpStr = pathMgr->simplifyPath(QString(d->ccdha94.calibrationFile));
-  fprintf(fp, "      <ccdha94 calib=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, "      <ccdha94 calib=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->ccdha94.transmissionFunctionFile));
-  fprintf(fp, " instr=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " instr=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->ccdha94.interPixelVariabilityFile));
-  fprintf(fp, " ipv=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " ipv=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->ccdha94.detectorNonLinearityFile));
-  fprintf(fp, " dnl=\"%s\" />\n", tmpStr.toLatin1().constData());
+  fprintf(fp, " dnl=\"%s\" />\n", tmpStr.toUtf8().constData());
 
   // saozvis
 
   fprintf(fp, "      <saozvis type=\"%s\"",(d->saozvis.spectralType==PRJCT_INSTR_SAOZ_TYPE_ZENITHAL)?"zenithal":"pointed");
 
   tmpStr = pathMgr->simplifyPath(QString(d->saozvis.calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->saozvis.transmissionFunctionFile));
-  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toLatin1().constData());
+  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
 
   fprintf(fp, "      <saozefm straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"",(d->saozefm.straylight ? sTrue : sFalse),d->saozefm.lambdaMin,d->saozefm.lambdaMax);
 
   // saozefm
   tmpStr = pathMgr->simplifyPath(QString(d->saozefm.calibrationFile));
-  fprintf(fp, "      calib=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, "      calib=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->saozefm.transmissionFunctionFile));
-  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toLatin1().constData());
+  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
 
   // mfc
   fprintf(fp, "      <mfc size=\"%d\" first=\"%d\" revert=\"%s\" auto=\"%s\" omask=\"%d\" imask=\"%d\" dmask=\"%d\" smask=\"%d\" straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"",
@@ -630,25 +630,25 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
 	  d->mfc.offsetMask, d->mfc.instrFctnMask, d->mfc.darkCurrentMask, d->mfc.spectraMask,(d->mfc.straylight ? sTrue : sFalse),d->mfc.lambdaMin,d->mfc.lambdaMax);
 
   tmpStr = pathMgr->simplifyPath(QString(d->mfc.calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->mfc.transmissionFunctionFile));
-  fprintf(fp, " instr=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " instr=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->mfc.darkCurrentFile));
-  fprintf(fp, " dark=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " dark=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->mfc.offsetFile));
-  fprintf(fp, " offset=\"%s\" />\n", tmpStr.toLatin1().constData());
+  fprintf(fp, " offset=\"%s\" />\n", tmpStr.toUtf8().constData());
 
   // mfcbira
   fprintf(fp, "      <mfcbira size=\"%d\" straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"",d->mfcbira.detectorSize,
   (d->mfcbira.straylight ? sTrue : sFalse),d->mfcbira.lambdaMin,d->mfcbira.lambdaMax);
 
   tmpStr = pathMgr->simplifyPath(QString(d->mfcbira.calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
   tmpStr = pathMgr->simplifyPath(QString(d->mfcbira.transmissionFunctionFile));
-  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toLatin1().constData());
+  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
 
   // mfcstd
   fprintf(fp, "      <mfcstd size=\"%d\" revert=\"%s\" straylight=\"%s\" date=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"",
@@ -656,52 +656,52 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
    (d->mfcstd.straylight ? sTrue : sFalse),d->mfcstd.dateFormat,d->mfcstd.lambdaMin,d->mfcstd.lambdaMax);
 
   tmpStr = pathMgr->simplifyPath(QString(d->mfcstd.calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->mfcstd.transmissionFunctionFile));
-  fprintf(fp, " instr=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " instr=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->mfcstd.darkCurrentFile));
-  fprintf(fp, " dark=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " dark=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->mfcstd.offsetFile));
-  fprintf(fp, " offset=\"%s\" />\n", tmpStr.toLatin1().constData());
+  fprintf(fp, " offset=\"%s\" />\n", tmpStr.toUtf8().constData());
 
   // rasas
 
   fprintf(fp, "      <rasas straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"",(d->rasas.straylight ? sTrue : sFalse),d->rasas.lambdaMin,d->rasas.lambdaMax);
   tmpStr = pathMgr->simplifyPath(QString(d->rasas.calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->rasas.transmissionFunctionFile));
-  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toLatin1().constData());
+  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
 
   // pdasieasoe
 
   fprintf(fp, "      <pdasieasoe straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"",(d->pdasieasoe.straylight ? sTrue : sFalse),d->pdasieasoe.lambdaMin,d->pdasieasoe.lambdaMax);
   tmpStr = pathMgr->simplifyPath(QString(d->pdasieasoe.calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->pdasieasoe.transmissionFunctionFile));
-  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toLatin1().constData());
+  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
 
   // ccdeev
   fprintf(fp, "      <ccdeev size=\"%d\" straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"", d->ccdeev.detectorSize,(d->ccdeev.straylight ? sTrue : sFalse),d->ccdeev.lambdaMin,d->ccdeev.lambdaMax);
 
   tmpStr = pathMgr->simplifyPath(QString(d->ccdeev.calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->ccdeev.transmissionFunctionFile));
-  fprintf(fp, " instr=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " instr=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->ccdeev.imagePath));
-  fprintf(fp, " image=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " image=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->ccdeev.straylightCorrectionFile));
-  fprintf(fp, " stray=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " stray=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->ccdeev.detectorNonLinearityFile));
-  fprintf(fp, " dnl=\"%s\" ", tmpStr.toLatin1().constData());
+  fprintf(fp, " dnl=\"%s\" ", tmpStr.toUtf8().constData());
 
   fprintf(fp, " type=");
   switch (d->ccdeev.spectralType) {
@@ -777,10 +777,10 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
    };
 
   tmpStr = pathMgr->simplifyPath(QString(d->gdpascii.calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->gdpascii.transmissionFunctionFile));
-  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toLatin1().constData());
+  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
 
   // gdpbin
   fprintf(fp, "      <gdpbin type=");
@@ -836,10 +836,10 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
    };
 
   tmpStr = pathMgr->simplifyPath(QString(d->gdpbin.calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->gdpbin.transmissionFunctionFile));
-  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toLatin1().constData());
+  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
 
   // sciapds
   fprintf(fp, "      <sciapds channel=");
@@ -878,30 +878,30 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   }
 
   tmpStr = pathMgr->simplifyPath(QString(d->sciapds.calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->sciapds.transmissionFunctionFile));
-  fprintf(fp, " instr=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " instr=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->sciapds.detectorNonLinearityFile));
-  fprintf(fp, " dnl=\"%s\" />\n", tmpStr.toLatin1().constData());
+  fprintf(fp, " dnl=\"%s\" />\n", tmpStr.toUtf8().constData());
 
   // uoft
 
   fprintf(fp, "      <uoft straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"",(d->uoft.straylight ? sTrue : sFalse),d->uoft.lambdaMin,d->uoft.lambdaMax);
   tmpStr = pathMgr->simplifyPath(QString(d->uoft.calibrationFile));
-  fprintf(fp, "      calib=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, "      calib=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->uoft.transmissionFunctionFile));
-  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toLatin1().constData());
+  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
 
   // noaa
   fprintf(fp, "      <noaa straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"",(d->noaa.straylight ? sTrue : sFalse),d->noaa.lambdaMin,d->noaa.lambdaMax);
   tmpStr = pathMgr->simplifyPath(QString(d->noaa.calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->noaa.transmissionFunctionFile));
-  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toLatin1().constData());
+  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
 
   // omi
   fprintf(fp, "      <omi type=");
@@ -938,10 +938,10 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
           this_xtrack_mode);
 
   tmpStr = pathMgr->simplifyPath(QString(d->omi.calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->omi.transmissionFunctionFile));
-  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toLatin1().constData());
+  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
 
   // tropomi
   const char *tropomiSpectralBand;
@@ -958,10 +958,10 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   fprintf(fp, "      <tropomi band=\"%s\"", tropomiSpectralBand);
 
   tmpStr = pathMgr->simplifyPath(QString(d->tropomi.calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->tropomi.instrFunctionFile));
-  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toLatin1().constData());
+  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
 
 
   // gome2
@@ -990,46 +990,46 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   }
 
   tmpStr = pathMgr->simplifyPath(QString(d->gome2.calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->gome2.transmissionFunctionFile));
-  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toLatin1().constData());
+  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
 
   // mkzy
   fprintf(fp, "      <mkzy straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"",(d->mkzy.straylight ? sTrue : sFalse),d->mkzy.lambdaMin,d->mkzy.lambdaMax);
   tmpStr = pathMgr->simplifyPath(QString(d->mkzy.calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->mkzy.transmissionFunctionFile));
-  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toLatin1().constData());
+  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
 
   // biraairborne
   fprintf(fp, "      <biraairborne straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"",
     (d->biraairborne.straylight ? sTrue : sFalse),d->biraairborne.lambdaMin,d->biraairborne.lambdaMax);
   tmpStr = pathMgr->simplifyPath(QString(d->biraairborne.calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->biraairborne.transmissionFunctionFile));
-  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toLatin1().constData());
+  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
 
   // biramobile
   fprintf(fp, "      <biramobile straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"",
     (d->biramobile.straylight ? sTrue : sFalse),d->biramobile.lambdaMin,d->biramobile.lambdaMax);
   tmpStr = pathMgr->simplifyPath(QString(d->biramobile.calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->biramobile.transmissionFunctionFile));
-  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toLatin1().constData());
+  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
 
   // ocean optics
 
   fprintf(fp, "      <oceanoptics size=\"%d\" straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"", d->oceanoptics.detectorSize,(d->oceanoptics.straylight ? sTrue : sFalse),d->oceanoptics.lambdaMin,d->oceanoptics.lambdaMax);
 
   tmpStr = pathMgr->simplifyPath(QString(d->oceanoptics.calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toLatin1().constData());
+  fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->oceanoptics.transmissionFunctionFile));
-  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toLatin1().constData());
+  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
 
   fprintf(fp, "    </instrumental>\n");
 }
@@ -1038,7 +1038,7 @@ void CQdoasConfigWriter::writePropertiesSlit(FILE *fp, const mediate_project_sli
 {
   QString tmpStr = CPathMgr::instance()->simplifyPath(QString(d->solarRefFile));
 
-  fprintf(fp, "    <slit ref=\"%s\" fwhmcor=\"%s\">\n", tmpStr.toLatin1().constData(),
+  fprintf(fp, "    <slit ref=\"%s\" fwhmcor=\"%s\">\n", tmpStr.toUtf8().constData(),
 	  (d->applyFwhmCorrection ? sTrue : sFalse));
 
   writeSlitFunction(fp, 6, &(d->function));
@@ -1051,7 +1051,7 @@ void CQdoasConfigWriter::writePropertiesOutput(FILE *fp, const mediate_project_o
   QString tmpStr = CPathMgr::instance()->simplifyPath(QString(d->path));
 
   fprintf(fp, "    <output path=\"%s\" anlys=\"%s\" calib=\"%s\" ref=\"%s\" conf=\"%s\" dirs=\"%s\" file=\"%s\" success=\"%s\" flux=\"%s\" cic=\" \" bandWidth=\"%f\" swathName=\"%s\" fileFormat=\"%s\">\n",
-          tmpStr.toLatin1().constData(), (d->analysisFlag ? sTrue : sFalse),
+          tmpStr.toUtf8().constData(), (d->analysisFlag ? sTrue : sFalse),
           (d->calibrationFlag ? sTrue : sFalse), (d->referenceFlag ? sTrue : sFalse),
           (d->configurationFlag ? sTrue : sFalse),
           (d->directoryFlag ? sTrue : sFalse),
@@ -1071,7 +1071,7 @@ void CQdoasConfigWriter::writePropertiesExport(FILE *fp, const mediate_project_e
   QString tmpStr = CPathMgr::instance()->simplifyPath(QString(d->path));
 
   fprintf(fp, "    <export path=\"%s\" titles=\"%s\" dir=\"%s\" >\n",
-          tmpStr.toLatin1().constData(),
+          tmpStr.toUtf8().constData(),
           (d->titlesFlag ? sTrue : sFalse),(d->directoryFlag ? sTrue : sFalse));
 
   writeDataSelectList(fp, &(d->selection));
@@ -1109,7 +1109,7 @@ void CQdoasConfigWriter::writeSpectraTreeNode(FILE *fp, const QTreeWidgetItem *i
       int nChildren = item->childCount();
 
       for (i=0; i<depth; ++i) fprintf(fp, "  "); // indenting
-      fprintf(fp, "<folder name=\"%s\"", item->text(0).toLatin1().constData());
+      fprintf(fp, "<folder name=\"%s\"", item->text(0).toUtf8().constData());
       if (folderItem->isEnabled())
 	fprintf(fp, ">\n");
       else
@@ -1133,8 +1133,8 @@ void CQdoasConfigWriter::writeSpectraTreeNode(FILE *fp, const QTreeWidgetItem *i
 
       for (i=0; i<depth; ++i) fprintf(fp, "  "); // indenting
       fprintf(fp, "<directory name=\"%s\" filters=\"%s\" recursive=\"%s\"",
-	      dirName.toLatin1().constData(),
-	      dirItem->fileFilters().toLatin1().constData(),
+	      dirName.toUtf8().constData(),
+	      dirItem->fileFilters().toUtf8().constData(),
 	      (dirItem->isRecursive() ? sTrue : sFalse));
       if (dirItem->isEnabled())
 	fprintf(fp, " />\n");
@@ -1148,7 +1148,7 @@ void CQdoasConfigWriter::writeSpectraTreeNode(FILE *fp, const QTreeWidgetItem *i
       QString fileName = CPathMgr::instance()->simplifyPath(fileItem->file().filePath());
 
       for (i=0; i<depth; ++i) fprintf(fp, "  "); // indenting
-      fprintf(fp, "<file name=\"%s\"", fileName.toLatin1().constData());
+      fprintf(fp, "<file name=\"%s\"", fileName.toUtf8().constData());
       if (fileItem->isEnabled())
 	fprintf(fp, " />\n");
       else
@@ -1177,7 +1177,7 @@ void CQdoasConfigWriter::writeAnalysisWindows(FILE *fp, const QString &projectNa
       properties = CWorkSpace::instance()->findAnalysisWindow(projectName, awName);
       if (properties != NULL) {
 
-	fprintf(fp, "    <analysis_window name=\"%s\" disable=\"%s\" kurucz=", awName.toLatin1().constData(),
+	fprintf(fp, "    <analysis_window name=\"%s\" disable=\"%s\" kurucz=", awName.toUtf8().constData(),
 		(awItem->isEnabled() ? sFalse : sTrue));
 
 	switch (properties->kuruczMode) {
@@ -1207,12 +1207,12 @@ void CQdoasConfigWriter::writeAnalysisWindows(FILE *fp, const QString &projectNa
 		(properties->requireRefRatio ? sTrue : sFalse));
 
 	tmpStr = pathMgr->simplifyPath(QString(properties->refOneFile));
-	fprintf(fp, "      <files refone=\"%s\"\n", tmpStr.toLatin1().constData());
+	fprintf(fp, "      <files refone=\"%s\"\n", tmpStr.toUtf8().constData());
 	tmpStr = pathMgr->simplifyPath(QString(properties->refTwoFile));
-	fprintf(fp, "             reftwo=\"%s\"\n", tmpStr.toLatin1().constData());
+	fprintf(fp, "             reftwo=\"%s\"\n", tmpStr.toUtf8().constData());
 	tmpStr = pathMgr->simplifyPath(QString(properties->residualFile));
 
-	fprintf(fp, "             residual=\"%s\"\nszacenter=\"%.3f\" szadelta=\"%.3f\" scanmode=",tmpStr.toLatin1().constData(),properties->refSzaCenter , properties->refSzaDelta);
+	fprintf(fp, "             residual=\"%s\"\nszacenter=\"%.3f\" szadelta=\"%.3f\" scanmode=",tmpStr.toUtf8().constData(),properties->refSzaCenter , properties->refSzaDelta);
 
 	switch(properties->refSpectrumSelectionScanMode)
 	 {
@@ -1335,10 +1335,10 @@ void CQdoasConfigWriter::writeCrossSectionList(FILE *fp, const cross_section_lis
 	    (d->constrainedCc ? sTrue : sFalse),
 	    (d->requireCcFit ? sTrue : sFalse),
 	    d->initialCc, d->deltaCc, d->ccIo,d->ccMin,d->ccMax);
-    tmpStr = pathMgr->simplifyPath(QString(d->crossSectionFile));
-    fprintf(fp, " csfile=\"%s\"", tmpStr.toLatin1().constData());
+    tmpStr = pathMgr->simplifyPath(QString(d->crossSectionFile)); // TODO: use fromUtf8() here...
+    fprintf(fp, " csfile=\"%s\"", tmpStr.toUtf8().constData());
     tmpStr = pathMgr->simplifyPath(QString(d->amfFile));
-    fprintf(fp, " amffile=\"%s\" />\n", tmpStr.toLatin1().constData());
+    fprintf(fp, " amffile=\"%s\" />\n", tmpStr.toUtf8().constData());
 
     ++d;
     ++j;
@@ -1400,13 +1400,13 @@ void CQdoasConfigWriter::writeNonLinear(FILE *fp, const struct anlyswin_nonlinea
 	  (d->resolFlagFitStore ? sTrue : sFalse), (d->resolFlagErrStore ? sTrue : sFalse));
 
   tmpStr = pathMgr->simplifyPath(QString(d->comFile));
-  fprintf(fp, "                 comfile=\"%s\"\n", tmpStr.toLatin1().constData());
+  fprintf(fp, "                 comfile=\"%s\"\n", tmpStr.toUtf8().constData());
   tmpStr = pathMgr->simplifyPath(QString(d->usamp1File));
-  fprintf(fp, "                 u1file=\"%s\"\n", tmpStr.toLatin1().constData());
+  fprintf(fp, "                 u1file=\"%s\"\n", tmpStr.toUtf8().constData());
   tmpStr = pathMgr->simplifyPath(QString(d->usamp2File));
-  fprintf(fp, "                 u2file=\"%s\"\n", tmpStr.toLatin1().constData());
+  fprintf(fp, "                 u2file=\"%s\"\n", tmpStr.toUtf8().constData());
   tmpStr = pathMgr->simplifyPath(QString(d->ramanFile));
-  fprintf(fp, "                 ramfile=\"%s\" />\n", tmpStr.toLatin1().constData());
+  fprintf(fp, "                 ramfile=\"%s\" />\n", tmpStr.toUtf8().constData());
 
 }
 

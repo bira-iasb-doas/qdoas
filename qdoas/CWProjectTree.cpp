@@ -1221,7 +1221,7 @@ void CWProjectTree::slotExportSpectra()
      mediate_project_t *projProp;
 
     // locate the properties in the workspace then copy
-    projProp = CWorkSpace::instance()->findProject(projItem->text(0).toLatin1().data());
+    projProp = CWorkSpace::instance()->findProject(projItem->text(0).toLocal8Bit().data());
     assert(projProp != NULL);
 
     CWEditor *exportEditor = new  CWProjectExportEditor(this,parent,projItem->text(0),&projProp->export_spectra,projProp->instrumental.format);
@@ -1626,7 +1626,7 @@ void CWProjectTree::slotPasteAnalysisWindows()
       // copy the properties data
       *awData = *awDataHandle;
       // NOTE, because the window name could have been changed, it MUST be reset. (no length check required)
-      strcpy(awData->name, awName.toLatin1().data());
+      strcpy(awData->name, awName.toLocal8Bit().data());
       // create the tree item ...
       preceedingWindow = new CAnalysisWindowItem(parent, preceedingWindow, awName);
       preceedingWindowName = awName; // ensure ordered insertion

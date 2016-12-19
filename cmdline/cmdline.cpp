@@ -12,6 +12,8 @@
 #include <QList>
 #include <QDir>
 #include <QFileInfo>
+#include <QLocale>
+#include <QTextCodec>
 
 #include "CWorkSpace.h"
 #include "CQdoasConfigHandler.h"
@@ -98,17 +100,14 @@ int main(int argc, char **argv)
 {
   int retCode = 0;
 
-	// ----------------------------------------------------------------------------
-
-	// to avoid that a thousands comma separator (QT 4.7.3)
-
-  QLocale qlocale=QLocale::system();
-  qlocale.setNumberOptions(QLocale::OmitGroupSeparator);
-  QLocale::setDefault(qlocale);
+  // ----------------------------------------------------------------------------
 
   setlocale(LC_NUMERIC, "C");
 
-	// ----------------------------------------------------------------------------
+  // all internal C strings should use the local 8-bit encoding.
+  QTextCodec::setCodecForCStrings(QTextCodec::codecForLocale());
+
+  // ----------------------------------------------------------------------------
 
   if (argc == 1) {
 
@@ -280,7 +279,7 @@ enum BatchTool requiredBatchTool(const QString &filename)
 {
   enum BatchTool type = Unknown;
 
-  FILE *fp = fopen(filename.toLatin1().constData(), "r");
+  FILE *fp = fopen(filename.toLocal8Bit().constData(), "r");
   if (fp != NULL) {
     char buffer[256];
 
@@ -563,7 +562,7 @@ int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *p
 
   if (!outputDir.isEmpty() && outputDir.size() < FILENAME_BUFFER_LENGTH-1) {
     // override the output directory
-    strcpy(projectData.output.path, outputDir.toLatin1().data());
+    strcpy(projectData.output.path, outputDir.toLocal8Bit().data());
   }
 
   // create engine
@@ -640,9 +639,9 @@ int analyseProjectQdoasFile(void *engineContext, CBatchEngineController *control
 
   result = (!calibSwitch)
     ? mediateRequestBeginAnalyseSpectra(engineContext,
-                                        CWorkSpace::instance()->getConfigFile().toLatin1().constData(),
-                                        filename.toLatin1().constData(), beginFileResp)
-    : mediateRequestBeginCalibrateSpectra(engineContext, filename.toLatin1().constData(), beginFileResp);
+                                        CWorkSpace::instance()->getConfigFile().toLocal8Bit().constData(),
+                                        filename.toLocal8Bit().constData(), beginFileResp)
+    : mediateRequestBeginCalibrateSpectra(engineContext, filename.toLocal8Bit().constData(), beginFileResp);
 
   beginFileResp->setNumberOfRecords(result);
 
@@ -793,7 +792,7 @@ int batchProcessConvolution(commands_t *cmd)
 
     if (!cmd->outputDir.isEmpty() && cmd->outputDir.size() < FILENAME_BUFFER_LENGTH-1) {
       // override the output directory
-      strcpy(properties.general.outputFile, cmd->outputDir.toLatin1().data());
+      strcpy(properties.general.outputFile, cmd->outputDir.toLocal8Bit().data());
     }
 
     if (mediateXsconvCreateContext(&engineContext, resp) != 0) {
@@ -809,7 +808,7 @@ int batchProcessConvolution(commands_t *cmd)
 
 	QList<QString>::const_iterator it = filenames.begin();
 
-	strcpy(properties.general.inputFile, it->toLatin1().data());
+	strcpy(properties.general.inputFile, it->toLocal8Bit().data());
 
 	if ((retCode=mediateRequestConvolution(engineContext, &properties, resp))==ERROR_ID_NO)
 	 retCode = mediateConvolutionCalculate(engineContext,resp);
@@ -889,7 +888,7 @@ int batchProcessRing(commands_t *cmd)
 
     if (!cmd->outputDir.isEmpty() && cmd->outputDir.size() < FILENAME_BUFFER_LENGTH-1)
      {
-    	 strcpy(properties.outputFile,cmd->outputDir.toLatin1().data());
+    	 strcpy(properties.outputFile,cmd->outputDir.toLocal8Bit().data());
      }
 
     if (mediateXsconvCreateContext(&engineContext, resp) != 0)
@@ -906,7 +905,7 @@ int batchProcessRing(commands_t *cmd)
 
        	QList<QString>::const_iterator it = filenames.begin();
 
-       	strcpy(properties.calibrationFile, it->toLatin1().data());
+       	strcpy(properties.calibrationFile, it->toLocal8Bit().data());
 
        	if ((retCode=mediateRequestRing(engineContext, &properties, resp))==ERROR_ID_NO)
        	 retCode = mediateRingCalculate(engineContext,resp);
@@ -988,7 +987,7 @@ int batchProcessUsamp(commands_t *cmd)
     	 char *ptr;
     	 char  tmpFile[FILENAME_BUFFER_LENGTH];
 
-    	 strcpy(tmpFile,cmd->outputDir.toLatin1().data());
+    	 strcpy(tmpFile,cmd->outputDir.toLocal8Bit().data());
 
     	 if ((ptr=strchr(tmpFile,'_'))!=NULL)
     	  {
@@ -1017,7 +1016,7 @@ int batchProcessUsamp(commands_t *cmd)
 
        	QList<QString>::const_iterator it = filenames.begin();
 
-       	strcpy(properties.calibrationFile, it->toLatin1().data());
+       	strcpy(properties.calibrationFile, it->toLocal8Bit().data());
 
        	if ((retCode=mediateRequestUsamp(engineContext, &properties, resp))==ERROR_ID_NO)
        	 retCode = mediateUsampCalculate(engineContext,resp);

@@ -268,7 +268,7 @@ void CWProjectTabInstrumental::apply(mediate_project_instrumental_t *instr) cons
 
   QString siteName = m_siteCombo->currentText();
 //  if (siteName != "No Site Specified" && siteName.length() < (int)sizeof(instr->siteName))
-    strcpy(instr->siteName, siteName.toLatin1().data());
+    strcpy(instr->siteName, siteName.toLocal8Bit().data());
 
   m_asciiEdit->apply(&(instr->ascii));
   m_loggerEdit->apply(&(instr->logger));
@@ -659,8 +659,8 @@ void CWInstrAsciiEdit::apply(struct instrumental_ascii *d) const
   d->lambdaMax = m_strayLightConfig->getLambdaMax();
 
   // files
-  strcpy(d->calibrationFile, m_fileOneEdit->text().toLatin1().data());
-  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLatin1().data());
+  strcpy(d->calibrationFile, m_fileOneEdit->text().toLocal8Bit().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLocal8Bit().data());
 
 }
 
@@ -718,8 +718,8 @@ void CWInstrLoggerEdit::apply(struct instrumental_logger *d) const
   d->flagAzimuthAngle = m_aziCheck->isChecked() ? 1 : 0;
 
   // files
-  strcpy(d->calibrationFile, m_fileOneEdit->text().toLatin1().data());
-  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLatin1().data());
+  strcpy(d->calibrationFile, m_fileOneEdit->text().toLocal8Bit().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLocal8Bit().data());
 }
 
 //--------------------------------------------------------
@@ -765,8 +765,8 @@ void CWInstrActonEdit::apply(struct instrumental_acton *d) const
   d->niluType = m_niluTypeCombo->itemData(m_niluTypeCombo->currentIndex()).toInt();
 
   // files
-  strcpy(d->calibrationFile, m_fileOneEdit->text().toLatin1().data());
-  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLatin1().data());
+  strcpy(d->calibrationFile, m_fileOneEdit->text().toLocal8Bit().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLocal8Bit().data());
 }
 
 //--------------------------------------------------------
@@ -812,8 +812,8 @@ void CWInstrSaozEdit::apply(struct instrumental_saoz *d) const
   d->spectralType = m_spectralTypeCombo->itemData(m_spectralTypeCombo->currentIndex()).toInt();
 
   // files
-  strcpy(d->calibrationFile, m_fileOneEdit->text().toLatin1().data());
-  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLatin1().data());
+  strcpy(d->calibrationFile, m_fileOneEdit->text().toLocal8Bit().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLocal8Bit().data());
 }
 
 //--------------------------------------------------------------------------
@@ -968,10 +968,10 @@ void CWInstrMfcEdit::apply(struct instrumental_mfc *d) const
   d->lambdaMax = m_strayLightConfig->getLambdaMax();
 
   // files
-  strcpy(d->calibrationFile, m_fileOneEdit->text().toLatin1().data());
-  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLatin1().data());
-  strcpy(d->darkCurrentFile, m_fileThreeEdit->text().toLatin1().data());
-  strcpy(d->offsetFile, m_fileFourEdit->text().toLatin1().data());
+  strcpy(d->calibrationFile, m_fileOneEdit->text().toLocal8Bit().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLocal8Bit().data());
+  strcpy(d->darkCurrentFile, m_fileThreeEdit->text().toLocal8Bit().data());
+  strcpy(d->offsetFile, m_fileFourEdit->text().toLocal8Bit().data());
 }
 
 //--------------------------------------------------------------------------
@@ -1067,13 +1067,13 @@ void CWInstrMfcStdEdit::apply(struct instrumental_mfcstd *d) const
   d->lambdaMin = m_strayLightConfig->getLambdaMin();
   d->lambdaMax = m_strayLightConfig->getLambdaMax();
 
-  strcpy(d->dateFormat,m_dateFormatEdit->text().toLatin1().data());
+  strcpy(d->dateFormat,m_dateFormatEdit->text().toLocal8Bit().data());
 
   // files
-  strcpy(d->calibrationFile, m_fileOneEdit->text().toLatin1().data());
-  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLatin1().data());
-  strcpy(d->darkCurrentFile, m_fileThreeEdit->text().toLatin1().data());
-  strcpy(d->offsetFile, m_fileFourEdit->text().toLatin1().data());
+  strcpy(d->calibrationFile, m_fileOneEdit->text().toLocal8Bit().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLocal8Bit().data());
+  strcpy(d->darkCurrentFile, m_fileThreeEdit->text().toLocal8Bit().data());
+  strcpy(d->offsetFile, m_fileFourEdit->text().toLocal8Bit().data());
 }
 
 //--------------------------------------------------------------------------
@@ -1125,8 +1125,8 @@ void CWInstrMfcbiraEdit::apply(struct instrumental_mfcbira *d) const
   d->detectorSize = m_detSizeEdit->text().toInt();
 
   // files
-  strcpy(d->calibrationFile, m_fileOneEdit->text().toLatin1().data());
-  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLatin1().data());
+  strcpy(d->calibrationFile, m_fileOneEdit->text().toLocal8Bit().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLocal8Bit().data());
 
   d->straylight = m_strayLightConfig->isChecked() ? 1 : 0;
   d->lambdaMin = m_strayLightConfig->getLambdaMin();
@@ -1166,8 +1166,8 @@ CWInstrMinimumEdit::CWInstrMinimumEdit(const struct instrumental_minimum *d, QWi
 void CWInstrMinimumEdit::apply(struct instrumental_minimum *d) const
 {
   // files
-  strcpy(d->calibrationFile, m_fileOneEdit->text().toLatin1().data());
-  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLatin1().data());
+  strcpy(d->calibrationFile, m_fileOneEdit->text().toLocal8Bit().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLocal8Bit().data());
 
   // straylight bias
   d->straylight = m_strayLightConfig->isChecked() ? 1 : 0;
@@ -1201,10 +1201,10 @@ CWInstrCcdEdit::CWInstrCcdEdit(const struct instrumental_ccd *d, QWidget *parent
 void CWInstrCcdEdit::apply(struct instrumental_ccd *d) const
 {
   // files
-  strcpy(d->calibrationFile, m_fileOneEdit->text().toLatin1().data());
-  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLatin1().data());
-  strcpy(d->interPixelVariabilityFile, m_fileThreeEdit->text().toLatin1().data());
-  strcpy(d->detectorNonLinearityFile, m_fileFourEdit->text().toLatin1().data());
+  strcpy(d->calibrationFile, m_fileOneEdit->text().toLocal8Bit().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLocal8Bit().data());
+  strcpy(d->interPixelVariabilityFile, m_fileThreeEdit->text().toLocal8Bit().data());
+  strcpy(d->detectorNonLinearityFile, m_fileFourEdit->text().toLocal8Bit().data());
 }
 
 //--------------------------------------------------------
@@ -1266,10 +1266,10 @@ void CWInstrCcdUlbEdit::apply(struct instrumental_ccdulb *d) const
   d->centralWavelength = m_cenLambdaEdit->text().toInt();
 
   // files
-  strcpy(d->calibrationFile, m_fileOneEdit->text().toLatin1().data());
-  strcpy(d->offsetFile, m_fileTwoEdit->text().toLatin1().data());
-  strcpy(d->interPixelVariabilityFile, m_fileThreeEdit->text().toLatin1().data());
-  strcpy(d->detectorNonLinearityFile, m_fileFourEdit->text().toLatin1().data());
+  strcpy(d->calibrationFile, m_fileOneEdit->text().toLocal8Bit().data());
+  strcpy(d->offsetFile, m_fileTwoEdit->text().toLocal8Bit().data());
+  strcpy(d->interPixelVariabilityFile, m_fileThreeEdit->text().toLocal8Bit().data());
+  strcpy(d->detectorNonLinearityFile, m_fileFourEdit->text().toLocal8Bit().data());
 }
 
 //--------------------------------------------------------
@@ -1318,10 +1318,10 @@ void CWInstrPdaEggUlbEdit::apply(struct instrumental_pdaeggulb *d) const
   d->curveType = m_curveTypeCombo->itemData(m_curveTypeCombo->currentIndex()).toInt();
 
   // files
-  strcpy(d->calibrationFile, m_fileOneEdit->text().toLatin1().data());
-  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLatin1().data());
-  strcpy(d->interPixelVariabilityFile, m_fileThreeEdit->text().toLatin1().data());
-  strcpy(d->detectorNonLinearityFile, m_fileFourEdit->text().toLatin1().data());
+  strcpy(d->calibrationFile, m_fileOneEdit->text().toLocal8Bit().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLocal8Bit().data());
+  strcpy(d->interPixelVariabilityFile, m_fileThreeEdit->text().toLocal8Bit().data());
+  strcpy(d->detectorNonLinearityFile, m_fileFourEdit->text().toLocal8Bit().data());
 }
 
 //--------------------------------------------------------
@@ -1408,11 +1408,11 @@ void CWInstrCcdEevEdit::apply(struct instrumental_ccdeev *d) const
   d->spectralType = m_spectralTypeCombo->itemData(m_spectralTypeCombo->currentIndex()).toInt();
 
   // files
-  strcpy(d->calibrationFile, m_fileOneEdit->text().toLatin1().data());
-  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLatin1().data());
-  strcpy(d->straylightCorrectionFile, m_fileThreeEdit->text().toLatin1().data());
-  strcpy(d->detectorNonLinearityFile, m_fileFourEdit->text().toLatin1().data());
-  strcpy(d->imagePath, m_fileFiveEdit->text().toLatin1().data());
+  strcpy(d->calibrationFile, m_fileOneEdit->text().toLocal8Bit().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLocal8Bit().data());
+  strcpy(d->straylightCorrectionFile, m_fileThreeEdit->text().toLocal8Bit().data());
+  strcpy(d->detectorNonLinearityFile, m_fileFourEdit->text().toLocal8Bit().data());
+  strcpy(d->imagePath, m_fileFiveEdit->text().toLocal8Bit().data());
 
   // straylight bias
   d->straylight = m_strayLightConfig->isChecked() ? 1 : 0;
@@ -1491,8 +1491,8 @@ void CWInstrOpusEdit::apply(struct instrumental_opus *d) const
   d->flagTransmittance = (m_transmittanceCheck->checkState() == Qt::Checked) ? 1 : 0;
 
   // files
-  strcpy(d->calibrationFile, m_fileOneEdit->text().toLatin1().data());
-  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLatin1().data());
+  strcpy(d->calibrationFile, m_fileOneEdit->text().toLocal8Bit().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLocal8Bit().data());
 }
 
 //--------------------------------------------------------
@@ -1562,8 +1562,8 @@ void CWInstrGdpEdit::apply(struct instrumental_gdp *d) const
   d->pixelType = m_pixelTypeCombo->itemData(m_pixelTypeCombo->currentIndex()).toInt();
 
   // files
-  strcpy(d->calibrationFile, m_fileOneEdit->text().toLatin1().data());
-  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLatin1().data());
+  strcpy(d->calibrationFile, m_fileOneEdit->text().toLocal8Bit().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLocal8Bit().data());
 }
 
 //--------------------------------------------------------------------------
@@ -1613,8 +1613,8 @@ void CWInstrGome2Edit::apply(struct instrumental_gome2 *d) const
   d->bandType = m_bandTypeCombo->itemData(m_bandTypeCombo->currentIndex()).toInt();
 
   // files
-  strcpy(d->calibrationFile, m_fileOneEdit->text().toLatin1().data());
-  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLatin1().data());
+  strcpy(d->calibrationFile, m_fileOneEdit->text().toLocal8Bit().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLocal8Bit().data());
 }
 
 //--------------------------------------------------------------------------
@@ -1707,12 +1707,12 @@ void CWInstrSciaEdit::apply(struct instrumental_scia *d) const
   memcpy(d->clusters, m_clusterState, sizeof(d->clusters));
 
   // sun reference
-  strcpy(d->sunReference, m_referenceEdit->text().toLatin1().data());
+  strcpy(d->sunReference, m_referenceEdit->text().toLocal8Bit().data());
 
   // files
-  strcpy(d->calibrationFile, m_fileOneEdit->text().toLatin1().data());
-  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLatin1().data());
-  strcpy(d->detectorNonLinearityFile, m_fileFourEdit->text().toLatin1().data());
+  strcpy(d->calibrationFile, m_fileOneEdit->text().toLocal8Bit().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLocal8Bit().data());
+  strcpy(d->detectorNonLinearityFile, m_fileFourEdit->text().toLocal8Bit().data());
 }
 
 void CWInstrSciaEdit::slotChannelChanged(int index)
@@ -1909,9 +1909,9 @@ void CWInstrOmiEdit::apply(struct instrumental_omi *d) const
   d->pixelQFRejectionFlag= m_pixelQFGroup->isChecked() ? 1 : 0;
   d->pixelQFMaxGaps=m_pixelQFMaxGapsEdit->text().toInt();
 
-  sscanf(m_pixelQFMaskEdit->text().toLatin1().data(),"%02X",&d->pixelQFMask);
+  sscanf(m_pixelQFMaskEdit->text().toLocal8Bit().data(),"%02X",&d->pixelQFMask);
 
-  strcpy(d->trackSelection, m_trackSelection->text().toLatin1().data());
+  strcpy(d->trackSelection, m_trackSelection->text().toLocal8Bit().data());
 
   // XTrack Quality Flags:
   if(m_xtrackQFBox->isChecked() ) {
@@ -1924,8 +1924,8 @@ void CWInstrOmiEdit::apply(struct instrumental_omi *d) const
   }
 
   // files
-  strcpy(d->calibrationFile, m_fileOneEdit->text().toLatin1().data());
-  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLatin1().data());
+  strcpy(d->calibrationFile, m_fileOneEdit->text().toLocal8Bit().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLocal8Bit().data());
 }
 
 //--------------------------------------------------------
@@ -1962,8 +1962,8 @@ CWInstrTropomiEdit::CWInstrTropomiEdit(const struct instrumental_tropomi *pInstr
 
 void CWInstrTropomiEdit::apply(struct instrumental_tropomi *pInstrTropomi) const
 {
-  strcpy(pInstrTropomi->calibrationFile, m_fileOneEdit->text().toLatin1().data());
-  strcpy(pInstrTropomi->instrFunctionFile, m_fileTwoEdit->text().toLatin1().data());
+  strcpy(pInstrTropomi->calibrationFile, m_fileOneEdit->text().toLocal8Bit().data());
+  strcpy(pInstrTropomi->instrFunctionFile, m_fileTwoEdit->text().toLocal8Bit().data());
   // spectral band
   pInstrTropomi->spectralBand = static_cast<tropomiSpectralBand>(m_spectralBandCombo->itemData(m_spectralBandCombo->currentIndex()).toInt());
 }
@@ -2024,8 +2024,8 @@ void CWInstrOceanOpticsEdit::apply(struct instrumental_oceanoptics *d) const
   d->detectorSize = m_detSizeEdit->text().toInt();
 
   // files
-  strcpy(d->calibrationFile, m_fileOneEdit->text().toLatin1().data());
-  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLatin1().data());
+  strcpy(d->calibrationFile, m_fileOneEdit->text().toLocal8Bit().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLocal8Bit().data());
 }
 
 //--------------------------------------------------------
