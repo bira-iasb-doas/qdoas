@@ -477,7 +477,7 @@ RC MFC_ReadRecord(char *fileName,
     for (i=0;i<n_wavel;i++)
      specTmp[i]=0.0f;
 
-    if (!fread(pHeaderSpe,MFC_BIN_HEADER_SIZE,1,fp) ||                  // header
+    if (!fread(pHeaderSpe,sizeof(*pHeaderSpe),1,fp) || // header
        ((mask!=maskSpec) && ((pHeaderSpe->ty&mask)==0) && ((unsigned int)pHeaderSpe->wavelength1!=mask)) ||                    // spectrum selection
         (pHeaderSpe->no_chan==0) || (pHeaderSpe->no_chan>n_wavel) || // verify the size of the spectrum
         !fread(specTmp,sizeof(*specTmp)*pHeaderSpe->no_chan,1,fp)) { // read spectrum

@@ -17,8 +17,8 @@ struct _TOldFlags {
 
 typedef struct _TBinaryMFC {
   char     version[20];           //     version number (not of interest)                           0
-  int       no_chan;               // !!! number of channels - 1 (usually 1023)                     20
-  char p_spec_32bit[4];              // in 32-bits, this contained a runtime pointer to the spectrum data, used at runtime.
+  int       no_chan;              // !!! number of channels - 1 (usually 1023)                      20
+  char p_spec_32bit[4];           // 32-bit pointer used by DOASIS at runtime (?).
   char     specname[20];          //     optional name of the spectrum                              32
   char     site[20];              //     name of measurement site                                   52
   char     spectroname[20];       //     name of spectrograph                                       72
@@ -59,11 +59,9 @@ typedef struct _TBinaryMFC {
   char    *comment;
   int       reg_no;
   char p_prev_32bit[4], p_next_32bit[4];   //  2 32-bit pointers, presumably used by DOASIS at runtime
-  void *Spectrum; // pointer used at runtime, not part of the actual files
 } TBinaryMFC;
 
-// When reading MFC_BIN headers from disk, we must exclude the Spectrum field:
-#define MFC_BIN_HEADER_SIZE (sizeof(struct _TBinaryMFC) - sizeof(((struct _TBinaryMFC *)0)->Spectrum))
+#pragma pack(pop)
 
 extern TBinaryMFC MFC_header;
 extern char MFC_fileDark[MAX_STR_SHORT_LEN+1],  // dark current file name
@@ -86,7 +84,5 @@ RC    MFCBIRA_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 RC    MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp);
 
 RC MFC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle);
-
-#pragma pack(pop)
 
 #endif
