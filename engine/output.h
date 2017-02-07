@@ -39,6 +39,8 @@ extern char OUTPUT_refFile[DOAS_MAX_PATH_LEN+1];
 /*! \brief For GOME-2/Sciamachy automatic reference spectrum: number
     of spectra used. */
 extern int         OUTPUT_nRec;
+/*! \brief 1 to save lambda and/or spectra with Export spectra option; 0 otherwise */
+extern int         OUTPUT_exportSpectraFlag;
 
 // Air Mass Factors (AMF) table cross reference
 // --------------------------------------------

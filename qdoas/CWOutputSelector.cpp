@@ -314,9 +314,10 @@ void getValidFieldFlags(int *validFlags, int instrument,bool exportFlag)
   validFlags[PRJCT_RESULTS_TIFRAC]=                                       // fractional time
   validFlags[PRJCT_RESULTS_SZA]=                                          // solar zenith angle (can be calculated if date, time and observation site specified)
   validFlags[PRJCT_RESULTS_AZIM]=                                         // solar azimuth angle (can be calculated if date, time and observation site specified)
-  validFlags[PRJCT_RESULTS_COVAR]=
-  validFlags[PRJCT_RESULTS_CORR]=
   validFlags[PRJCT_RESULTS_TINT]=1;                                       // the integration time
+
+  validFlags[PRJCT_RESULTS_COVAR]=!exportFlag;
+  validFlags[PRJCT_RESULTS_CORR]=!exportFlag;
 
   // Output fields related to overall analysis (or run calibration) results (per analysis window)
 
@@ -355,9 +356,27 @@ void getValidFieldFlags(int *validFlags, int instrument,bool exportFlag)
  // ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_ASCII:
      {
+      validFlags[PRJCT_RESULTS_DATE]=1;
+      validFlags[PRJCT_RESULTS_TIME]=1;
+      validFlags[PRJCT_RESULTS_YEAR]=1;
+      validFlags[PRJCT_RESULTS_JULIAN]=1;
+      validFlags[PRJCT_RESULTS_JDFRAC]=1;
+      validFlags[PRJCT_RESULTS_TIFRAC]=1;
+      validFlags[PRJCT_RESULTS_SCANS]=1;
+      validFlags[PRJCT_RESULTS_TINT]=1;
+      validFlags[PRJCT_RESULTS_SZA]=1;
+      validFlags[PRJCT_RESULTS_AZIM]=1;
+      validFlags[PRJCT_RESULTS_LONGIT]=1;
+      validFlags[PRJCT_RESULTS_LATIT]=1;
+      validFlags[PRJCT_RESULTS_ALTIT]=1;
       validFlags[PRJCT_RESULTS_VIEW_ELEVATION]=1;
       validFlags[PRJCT_RESULTS_VIEW_AZIMUTH]=1;
-      validFlags[PRJCT_RESULTS_TINT]=0;
+      validFlags[PRJCT_RESULTS_VIEW_ZENITH]=1;
+      validFlags[PRJCT_RESULTS_STARTDATE]=1;
+      validFlags[PRJCT_RESULTS_ENDDATE]=1;
+      validFlags[PRJCT_RESULTS_STARTTIME]=1;
+      validFlags[PRJCT_RESULTS_ENDTIME]=1;
+      validFlags[PRJCT_RESULTS_MEASTYPE]=1;
      }
     break;
  // ----------------------------------------------------------------------------
@@ -372,8 +391,8 @@ void getValidFieldFlags(int *validFlags, int instrument,bool exportFlag)
     case PRJCT_INSTR_FORMAT_LOGGER:
      {
       validFlags[PRJCT_RESULTS_NAME]=1;
-      validFlags[PRJCT_RESULTS_VIEW_ELEVATION]=1;                         // absent for Harestua, present for OHP MAX-DOAS
-      validFlags[PRJCT_RESULTS_VIEW_AZIMUTH]=1;                           // absent for Harestua, present for OHP MAX-DOAS
+      validFlags[PRJCT_RESULTS_VIEW_ELEVATION]=1;                         // absent for Harestua]=1; present for OHP MAX-DOAS
+      validFlags[PRJCT_RESULTS_VIEW_AZIMUTH]=1;                           // absent for Harestua]=1; present for OHP MAX-DOAS
       validFlags[PRJCT_RESULTS_SCANS]=1;
       validFlags[PRJCT_RESULTS_NREJ]=1;
       validFlags[PRJCT_RESULTS_COOLING_STATUS]=1;
@@ -384,15 +403,15 @@ void getValidFieldFlags(int *validFlags, int instrument,bool exportFlag)
     case PRJCT_INSTR_FORMAT_PDAEGG :
      {
       validFlags[PRJCT_RESULTS_NAME]=1;
-      validFlags[PRJCT_RESULTS_VIEW_ELEVATION]=1;                         // absent for Harestua, present for OHP MAX-DOAS
-      validFlags[PRJCT_RESULTS_VIEW_AZIMUTH]=1;                           // absent for Harestua, present for OHP MAX-DOAS
+      validFlags[PRJCT_RESULTS_VIEW_ELEVATION]=1;                         // absent for Harestua]=1; present for OHP MAX-DOAS
+      validFlags[PRJCT_RESULTS_VIEW_AZIMUTH]=1;                           // absent for Harestua]=1; present for OHP MAX-DOAS
       validFlags[PRJCT_RESULTS_SCANS]=1;
       validFlags[PRJCT_RESULTS_NREJ]=1;
       validFlags[PRJCT_RESULTS_TDET]=1;
      }
     break;
  // ----------------------------------------------------------------------------
-    case PRJCT_INSTR_FORMAT_PDAEGG_OLD :                                        // Before spring 94, no viewing angles
+    case PRJCT_INSTR_FORMAT_PDAEGG_OLD :                                        // Before spring 94]=1; no viewing angles
      {
       validFlags[PRJCT_RESULTS_NAME]=1;
       validFlags[PRJCT_RESULTS_SCANS]=1;
@@ -469,14 +488,14 @@ void getValidFieldFlags(int *validFlags, int instrument,bool exportFlag)
       validFlags[PRJCT_RESULTS_NREJ]=1;
       validFlags[PRJCT_RESULTS_TDET]=1;
       validFlags[PRJCT_RESULTS_VIEW_ELEVATION]=1;
-      validFlags[PRJCT_RESULTS_VIEW_AZIMUTH]=1;                           // not present in all measurements, but could be in the next future
+      validFlags[PRJCT_RESULTS_VIEW_AZIMUTH]=1;                                 // not present in all measurements]=1; but could be in the next future
       validFlags[PRJCT_RESULTS_SCANNING]=1;
       validFlags[PRJCT_RESULTS_FILTERNUMBER]=1;
       validFlags[PRJCT_RESULTS_MEASTYPE]=1;
       validFlags[PRJCT_RESULTS_CCD_HEADTEMPERATURE]=1;
       validFlags[PRJCT_RESULTS_STARTTIME]=1;
       validFlags[PRJCT_RESULTS_ENDTIME]=1;
-      validFlags[PRJCT_RESULTS_COMPASS]=1;
+      validFlags[PRJCT_RESULTS_COMPASS]=1;                                      // TODO : separate CCD_EEV ground-based and airborne
       validFlags[PRJCT_RESULTS_PITCH]=1;
       validFlags[PRJCT_RESULTS_ROLL]=1;
       validFlags[PRJCT_RESULTS_CCD_DIODES]=1;

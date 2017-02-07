@@ -67,6 +67,7 @@
 #include "zenithal.h"
 
 #include "doas.h"
+
 // ===================
 // CONSTANT DEFINITION
 // ===================
@@ -76,6 +77,8 @@
 #define NEXT_FLOAT "%f%*[^0-9.\n-]"
 #define NEXT_DATE "%d/%d/%d%*[^\n0-9.-]"
 #define COMMENT_LINE " %1[*;#]%*[^\n]"
+
+#define MAX_ASC_FIELDS 29
 
 // ================
 // GLOBAL VARIABLES

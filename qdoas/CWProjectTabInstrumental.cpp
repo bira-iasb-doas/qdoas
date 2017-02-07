@@ -638,6 +638,7 @@ CWInstrAsciiEdit::CWInstrAsciiEdit(const struct instrumental_ascii *d, QWidget *
 void CWInstrAsciiEdit::apply(struct instrumental_ascii *d) const
 {
   // detected size
+
   d->detectorSize = m_detSizeEdit->text().toInt();
 
   // format
@@ -661,7 +662,6 @@ void CWInstrAsciiEdit::apply(struct instrumental_ascii *d) const
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toLocal8Bit().data());
   strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLocal8Bit().data());
-
 }
 
 //--------------------------------------------------------

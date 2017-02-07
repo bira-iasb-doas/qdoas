@@ -218,7 +218,7 @@ struct _prjctAsciiResults {
 // --------------
 
 struct _prjctExport {
-  char path[MAX_ITEM_TEXT_LEN];                                               // path for ASCII files
+  char path[MAX_ITEM_TEXT_LEN];                                                 // path for ASCII files
   int   lambdaFlag,spectraFlag,titlesFlag,directoryFlag;                        // additional options
   int fieldsNumber;                                                             // number of ascii flags set in the next list
   char fieldsFlag[PRJCT_RESULTS_MAX];                                           // fields used in output
@@ -239,6 +239,14 @@ struct _ccd {
   INDEX         indexImage;
   float         wve1,wve2,flux1,flux2;
 };
+
+// Record information specific to ASCII format
+
+typedef struct _ascformat
+ {
+  int measurementType;
+ }
+ASCFORMAT;
 
 // common location data for satellite instruments
 struct satellite_location {
@@ -481,6 +489,9 @@ typedef struct _engineRecordInfo
   INDEX  indexBand;                                                             // index of the band
 
   struct satellite_location satellite;                                          // satellite location data
+
+  // Specific formats
+
   GOME_DATA gome;                                                               // GOME format
   SCIA_DATA scia;                                                               // SCIAMACHY format
   GOME2_DATA gome2;                                                             // GOME2 format
@@ -492,6 +503,8 @@ typedef struct _engineRecordInfo
 
   UOFT_DATA uoft;
   UAVBIRA_DATA uavBira;
+  CCD    ccd;    // !!! This field should always be the last one -> cfr. ENGINE_CopyContext
+  ASCFORMAT asc;
 
   double longitude;                                                             // longitude
   double latitude;                                                              // latitude
@@ -520,10 +533,6 @@ typedef struct _engineRecordInfo
 
   char  refFileName[DOAS_MAX_PATH_LEN+1];
   int    refRecord;
-
-  // CCD
-
-  CCD    ccd;    // !!! This field should always be the last one -> cfr. ENGINE_CopyContext
  }
 RECORD_INFO;
 

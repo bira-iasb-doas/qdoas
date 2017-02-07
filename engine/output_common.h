@@ -50,7 +50,7 @@ typedef CROSS_RESULTS *(*func_cross_results)(struct output_field *this_field, in
 /*! \brief contains all data related to an output field selected by
   the user, and function pointers that tell the program how to get the
   data.
-  
+
   Each output_field is used to store one type of output data (e.g RMS,
   latitude, slant column density of a single absorber, ...).  The
   buffer used to store the data, output_field::data, is a \c void*,
@@ -73,7 +73,7 @@ struct output_field {
   char *windowname;
   /*!< Name of the analysis window the data is from.*/
   const char *basic_fieldname;
-  char *fieldname; 
+  char *fieldname;
   /*!< title of the field in the output file */
   const char *format;
   /*!< format string used to generate an ascii string of the data */
@@ -100,7 +100,7 @@ struct output_field {
   size_t data_cols;
  /*!< the data can contain multiple columns (i.e. latitude of pixel
    corners) */
-  func_void get_data; 
+  func_void get_data;
   /*!< pointer to function that will store the correct data in the
     buffer */
   int index_feno;
@@ -123,7 +123,7 @@ struct output_field {
  /*!< Pointer to function to retrieve the \ref CROSS_RESULTS structure
      relevant for this field.  A different function is used for
      analyis or calibration fields */
-  int index_row; 
+  int index_row;
   /*!< For reference calibration output, a different output field is
      registered for each detector row.  In this case, index_row is
      used to store the number of the row.*/
@@ -168,7 +168,7 @@ size_t output_get_size(enum output_datatype datatype);
     and write calibration data if necessary.
 
     \param [in] pEngineContext structure including information on
-    
+
     \param [in] outputFileName the name of the outputFile
 
     \retval ERROR_ID_FILE_OPEN if the requested file could not be
@@ -202,6 +202,7 @@ void output_write_data(const bool selected_records[]);
 RC hdfeos5_write_analysis_data(const bool selected_records[], int num_records, const OUTPUT_INFO *outputRecords);
 RC hdfeos5_allow_file(const char *filename);
 void ascii_write_analysis_data(const bool selected_records[], int num_records);
+void ascii_write_spectra_data(const bool selected_records[], int num_records);
 //!@}
 
 #endif

@@ -44,8 +44,11 @@ RC   ReliActon_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,i
 RC   SetOceanOptics(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 RC   ReliOceanOptics(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp);
 RC   ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
+RC   ASCII_QDOAS_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 RC   ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp);
+RC   ASCII_QDOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp);
 void ASCII_Free(const char *functionStr);
+void ASCII_QDOAS_Reset(void);
 RC   SetRAS(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 RC   ReliRAS(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp);
 

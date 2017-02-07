@@ -151,6 +151,7 @@ void EngineResetContext(ENGINE_CONTEXT *pEngineContext)
    MFC_ResetFiles(pEngineContext);
    CCD_ResetInstrumental(&pRecord->ccd);
    ASCII_Free("EngineResetContext");
+   ASCII_QDOAS_Reset();
 
    // Reset structure
 
@@ -630,7 +631,10 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
      {
       // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_ASCII :
-       rc=ASCII_Set(pEngineContext,pFile->specFp);
+       if ((pEngineContext->project.instrumental.ascii.format==PRJCT_INSTR_ASCII_FORMAT_LINE)  && (pEngineContext->project.instrumental.ascii.format==PRJCT_INSTR_ASCII_FORMAT_COLUMN))
+        rc=ASCII_Set(pEngineContext,pFile->specFp);
+       else
+        rc=ASCII_QDOAS_Set(pEngineContext,pFile->specFp);
        break;
        // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_ACTON :
@@ -810,7 +814,10 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
     {
      // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_ASCII :
-      rc=ASCII_Read(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
+      // if ((pEngineContext->project.instrumental.ascii.format==PRJCT_INSTR_ASCII_FORMAT_LINE)  && (pEngineContext->project.instrumental.ascii.format==PRJCT_INSTR_ASCII_FORMAT_COLUMN))
+      //  rc=ASCII_Read(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
+      // else
+       rc=ASCII_QDOAS_Read(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_ACTON :
@@ -1051,16 +1058,13 @@ RC EngineRequestEndBrowseSpectra(ENGINE_CONTEXT *pEngineContext)
    // Declarations
 
    ANALYSIS_REF *pRef;
-   RC rc;
+   RC rc=ERROR_ID_NO;
 
    // Initializations
 
-   pRef=&pEngineContext->analysisRef;
-   rc=ERROR_ID_NO;
-
    if ((THRD_id!=THREAD_TYPE_NONE) && (THRD_id!=THREAD_TYPE_SPECTRA))
     {
-     rc=OUTPUT_FlushBuffers(pEngineContext);
+     rc=OUTPUT_FlushBuffers(pEngineContext);   // For export option (without lambda and spectra), format is similar as ASCII results
 
      if ((!pEngineContext->mfcDoasisFlag || pEngineContext->recordInfo.mfcDoasis.resetFlag) && pEngineContext->analysisRef.refAuto && !pEngineContext->satelliteFlag)
       {

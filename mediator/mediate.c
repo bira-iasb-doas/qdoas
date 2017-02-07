@@ -266,6 +266,8 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Measurement type","%s",MAXDOAS_measureTypes[pRecord->ccd.measureType]);
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_MEASTYPE] && (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA))
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Measurement type","%s",MAXDOAS_measureTypes[pRecord->mfcBira.measurementType]);
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_MEASTYPE] && (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_ASCII))
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Measurement type","%s",MAXDOAS_measureTypes[pRecord->asc.measurementType]);   // TEST FORMAT ASCII
 
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_TDET])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Detector temperature","%.3f",pRecord->TDet);

@@ -119,6 +119,9 @@ struct output_field output_data_analysis[MAX_FIELDS];
 unsigned int output_num_fields = 0;
 struct output_field output_data_calib[MAX_FIELDS];
 unsigned int calib_num_fields = 0;
+/*! \brief For GOME-2/Sciamachy automatic reference spectrum: number
+    of spectra used. */
+int OUTPUT_exportSpectraFlag=0;
 
 // ===================
 // STATIC DEFINITIONS
@@ -823,6 +826,8 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
     lon_fieldname = "Longitude";
   }
 
+  OUTPUT_exportSpectraFlag=0;
+
   // Browse fields
   for (int j=0;j<fieldsNumber;j++)
    {
@@ -842,7 +847,7 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
        register_field( (struct output_field) { .basic_fieldname = "Date (DD/MM/YYYY)", .memory_type = OUTPUT_DATE, .resulttype = fieldtype, .format = "%02d/%02d/%d", .get_data = (func_void)&get_date });
        break;
      case PRJCT_RESULTS_TIME:
-       register_field( (struct output_field) { .basic_fieldname = "Time (hh:mm:ss)", .memory_type = OUTPUT_TIME, .resulttype = fieldtype, .format = "%02d:%02d:%02d", .get_data = (func_void)&get_time });
+       register_field( (struct output_field) { .basic_fieldname = "UTC Time (hh:mm:ss)", .memory_type = OUTPUT_TIME, .resulttype = fieldtype, .format = "%02d:%02d:%02d", .get_data = (func_void)&get_time });
        break;
      case PRJCT_RESULTS_YEAR:
        register_field( (struct output_field) { .basic_fieldname = "Year", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#4d", .get_data = (func_void)&get_year });
@@ -863,7 +868,7 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
        register_field( (struct output_field) { .basic_fieldname = "Rejected", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#5d", .get_data = (func_void)&get_n_rejected });
        break;
      case PRJCT_RESULTS_TINT:
-       register_field( (struct output_field) { .basic_fieldname = "Tint", .memory_type = OUTPUT_DOUBLE, .resulttype = fieldtype, .format = "%#12.6lf", .get_data = (func_void)&get_t_int });
+       register_field( (struct output_field) { .basic_fieldname = "Exposure time", .memory_type = OUTPUT_DOUBLE, .resulttype = fieldtype, .format = "%#12.6lf", .get_data = (func_void)&get_t_int });
        break;
      case PRJCT_RESULTS_SZA:
        register_field( (struct output_field) { .basic_fieldname = title_sza, .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)func_sza, .data_cols = num_sza, .column_number_format="(%c)", .column_number_alphabetic = true });
@@ -938,13 +943,13 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
        register_field( (struct output_field) { .basic_fieldname = "Earth radius", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_earth_radius });
        break;
      case PRJCT_RESULTS_VIEW_ELEVATION:
-       register_field( (struct output_field) { .basic_fieldname = "Elev. viewing angle", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_view_elevation });
+       register_field( (struct output_field) { .basic_fieldname = "Viewing elevation angle", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_view_elevation });
        break;
      case PRJCT_RESULTS_VIEW_AZIMUTH:
-       register_field( (struct output_field) { .basic_fieldname = "Azim. viewing angle", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_view_azimuth });
+       register_field( (struct output_field) { .basic_fieldname = "Viewing azimuth angle", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_view_azimuth });
        break;
      case PRJCT_RESULTS_VIEW_ZENITH:
-       register_field( (struct output_field) { .basic_fieldname = "Zenith viewing angle", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_view_zenith });
+       register_field( (struct output_field) { .basic_fieldname = "Viewing zenith angle", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_view_zenith });
        break;
      case PRJCT_RESULTS_SCIA_QUALITY:
        register_field( (struct output_field) { .basic_fieldname = "SCIAMACHY Quality Flag", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#5d", .get_data = (func_void)&get_scia_quality });
@@ -956,10 +961,10 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
        register_field( (struct output_field) { .basic_fieldname = "SCIAMACHY State Id", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#5d", .get_data = (func_void)&get_scia_state_id });
        break;
      case PRJCT_RESULTS_STARTTIME:
-       register_field( (struct output_field) { .basic_fieldname = "Start Time (hhmmss)", .memory_type = OUTPUT_TIME, .resulttype = fieldtype, .format = "%02d%02d%02d", .get_data = (func_void)&get_start_time });
+       register_field( (struct output_field) { .basic_fieldname = "UTC Start Time", .memory_type = OUTPUT_TIME, .resulttype = fieldtype, .format = "%02d%02d%02d", .get_data = (func_void)&get_start_time });
        break;
      case PRJCT_RESULTS_ENDTIME:
-       register_field( (struct output_field) { .basic_fieldname = "Stop Time (hhmmss)", .memory_type = OUTPUT_TIME, .resulttype = fieldtype, .format = "%02d%02d%02d", .get_data = (func_void)&get_end_time });
+       register_field( (struct output_field) { .basic_fieldname = "UTC Stop Time", .memory_type = OUTPUT_TIME, .resulttype = fieldtype, .format = "%02d%02d%02d", .get_data = (func_void)&get_end_time });
        break;
      case PRJCT_RESULTS_SCANNING:
        register_field( (struct output_field) { .basic_fieldname = "Scanning angle", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)func_scanning_angle });
@@ -1073,10 +1078,10 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
        register_field( (struct output_field) { .basic_fieldname = "Precalculated flux", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_precalculated_flux, .data_cols = 4, .column_number_format="(%d)" });
        break;
      case PRJCT_RESULTS_STARTGPSTIME:
-       register_field( (struct output_field) { .basic_fieldname = "Start Time (hhmmss.ms)", .memory_type = OUTPUT_DATETIME, .resulttype = fieldtype, .format = format_datetime, .get_data = (func_void)&get_gps_start_time });
+       register_field( (struct output_field) { .basic_fieldname = "UTC Start Time (hhmmss.ms)", .memory_type = OUTPUT_DATETIME, .resulttype = fieldtype, .format = format_datetime, .get_data = (func_void)&get_gps_start_time });
        break;
      case PRJCT_RESULTS_ENDGPSTIME:
-       register_field( (struct output_field) { .basic_fieldname = "Stop Time (hhmmss.ms)", .memory_type = OUTPUT_DATETIME, .resulttype = fieldtype, .format = format_datetime, .get_data = (func_void)&get_gps_end_time });
+       register_field( (struct output_field) { .basic_fieldname = "UTC Stop Time (hhmmss.ms)", .memory_type = OUTPUT_DATETIME, .resulttype = fieldtype, .format = format_datetime, .get_data = (func_void)&get_gps_end_time });
        break;
      case PRJCT_RESULTS_LONGITEND:
        register_field( (struct output_field) { .basic_fieldname = "Longitude End", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_longitude_end });
@@ -1085,13 +1090,409 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
        register_field( (struct output_field) { .basic_fieldname = "Latitude End", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_latitude_end });
        break;
      case PRJCT_RESULTS_ALTITEND:
-       register_field( (struct output_field) { .basic_fieldname = "AltitudeEnd", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_altitude_end });
+       register_field( (struct output_field) { .basic_fieldname = "Altitude End", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_altitude_end });
+       break;
+     default:
+       break;
+     }
+   }
+}
+
+/*! \brief Register all the fields that can be exported
+
+  \param [in] pEngineContext   structure including information on project options
+  \param [in] fieldsFlag       list of fields to output
+  \param [in] fieldsNumber     the number of fields in the previous list
+*/
+static void OutputRegisterFieldsToExport(const ENGINE_CONTEXT *pEngineContext, const char *fieldsFlag,int fieldsNumber)
+{
+  PROJECT *pProject=(PROJECT *)&pEngineContext->project;
+
+  // default values for instrument-dependent output functions:
+  func_int func_meastype = &mfc_get_meastype;
+  func_float func_corner_latitudes = NULL;
+  func_float func_corner_longitudes = NULL;
+  size_t num_sza = 1;
+  func_float func_sza = &get_sza;
+  size_t num_azimuth = 1;
+  func_float func_azimuth = &get_azim;
+  size_t num_los_azimuth = 1;
+  func_float func_los_azimuth = &get_los_azimuth;
+  size_t num_los_zenith = 1;
+  func_float func_los_zenith = &get_los_zenith;
+  func_float func_scanning_angle = &get_scanning_angle;
+  const char *format_datetime = "%02d/%02d/%d %02d:%02d:%02d"; // day, month, year, hour, min, sec
+  func_datetime func_datetime = &get_datetime;
+  func_double func_frac_time = &get_frac_time;
+
+  const char *title_sza = "Solar Zenith Angle (deg)";
+  const char *title_azimuth = "Solar Azimuth Angle (deg)";
+  const char *title_los_zenith = "LoS ZA";
+  const char *title_los_azimuth = "LoS Azimuth";
+
+  // for variables that depend on spectrum length: find maximum length over all detector rows:
+  int max_ndet = 0;
+  for (int i=0; i<ANALYSE_swathSize; ++i) {
+    if (NDET[i] > max_ndet)
+      max_ndet = NDET[i];
+  }
+
+  switch(pProject->instrumental.readOutFormat) {
+  case PRJCT_INSTR_FORMAT_SCIA_PDS:
+  case PRJCT_INSTR_FORMAT_GOME2:
+  case PRJCT_INSTR_FORMAT_GDP_BIN:
+  case PRJCT_INSTR_FORMAT_GDP_ASCII:
+    num_sza = num_azimuth = num_los_zenith = num_los_azimuth = 3;
+    break;
+  }
+
+  switch(pProject->instrumental.readOutFormat) {
+  case PRJCT_INSTR_FORMAT_SCIA_PDS:
+    func_frac_time = &get_frac_time_recordinfo;
+    func_corner_longitudes = &scia_get_corner_longitudes;
+    func_corner_latitudes = &scia_get_corner_latitudes;
+    func_los_azimuth = &scia_get_los_azimuth;
+    func_los_zenith = &scia_get_los_zenith;
+    func_sza = &scia_get_sza;
+    func_azimuth = &scia_get_azim;
+    format_datetime = "%4d%02d%02d%02d%02d%02d.%03d"; // year, month, day, hour, min, sec, milliseconds
+    break;
+  case PRJCT_INSTR_FORMAT_GOME2:
+    func_sza = &gome2_get_sza;
+    func_azimuth = &gome2_get_azim;
+    func_corner_longitudes = &gome2_get_corner_longitudes;
+    func_corner_latitudes = &gome2_get_corner_latitudes;
+    func_los_azimuth = &gome2_get_los_azimuth;
+    func_los_zenith = &gome2_get_los_zenith;
+    format_datetime = "%4d%02d%02d%02d%02d%02d.%06d"; // year, month, day, hour, min, sec, microseconds
+    func_frac_time = &get_frac_time_recordinfo;
+    break;
+  case PRJCT_INSTR_FORMAT_GDP_BIN:
+    if (GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex].gdpBinHeader.version<40) {
+      func_sza = &gdp3_get_sza;
+      func_azimuth = &gdp3_get_azim;
+      func_corner_longitudes = &gdp3_get_corner_longitudes;
+      func_corner_latitudes = &gdp3_get_corner_latitudes;
+      func_los_azimuth = &gdp3_get_los_azimuth;
+      func_los_zenith = &gdp3_get_los_zenith;
+    }
+   else {
+     func_sza = &gdp4_get_sza;
+     func_azimuth = &gdp4_get_azim;
+     func_corner_longitudes = &gdp4_get_corner_longitudes;
+     func_corner_latitudes = &gdp4_get_corner_latitudes;
+     func_los_azimuth = &gdp4_get_los_azimuth;
+     func_los_zenith = &gdp4_get_los_zenith;
+   }
+    break;
+  case PRJCT_INSTR_FORMAT_BIRA_AIRBORNE :
+  case PRJCT_INSTR_FORMAT_BIRA_MOBILE :
+    func_frac_time = &get_frac_time_recordinfo;
+    format_datetime = "%4d%02d%02d%02d%02d%02d.%03d"; // year, month, day, hour, min, sec, milliseconds
+    break;
+  case PRJCT_INSTR_FORMAT_GDP_ASCII:
+    func_sza = &gdpasc_get_sza;
+    func_azimuth = &gdpasc_get_azim;
+    func_corner_longitudes = &gdpasc_get_corner_longitudes;
+    func_corner_latitudes = &gdpasc_get_corner_latitudes;
+    break;
+  case PRJCT_INSTR_FORMAT_MKZY:
+    func_scanning_angle = &mkzy_get_scanning_angle;
+    break;
+  case PRJCT_INSTR_FORMAT_CCD_EEV:
+    func_meastype = ccd_get_meastype;
+    break;
+  case PRJCT_INSTR_FORMAT_MFC_BIRA:
+    func_meastype= mfc_get_meastype;
+    break;
+  }
+
+  const char *lat_fieldname, *lon_fieldname;
+  if (is_satellite(pProject->instrumental.readOutFormat) ) {
+    // for satellites, we keep the convention that
+    // "Latitude/Longitude" means "pixel corner latitude/longitude",
+    // and the latitudes/longitudes of the observations are called
+    // "Latitude(pixel center)"
+    lat_fieldname = "Latitude(pixel center)";
+    lon_fieldname = "Longitude(pixel center)";
+  } else {
+    lat_fieldname = "Latitude";
+    lon_fieldname = "Longitude";
+  }
+
+  OUTPUT_exportSpectraFlag=0;
+
+  // Browse fields
+  for (int j=0;j<fieldsNumber;j++)
+   {
+     enum _prjctResults fieldtype = fieldsFlag[j];
+
+     switch(fieldtype) {
+     case PRJCT_RESULTS_SPECNO:
+       register_field( (struct output_field) { .basic_fieldname = "Spec No", .resulttype = fieldtype, .format = "%-7d", .memory_type = OUTPUT_INT, .get_data = (func_void)&get_specno } );
+       break;
+     case PRJCT_RESULTS_NAME:
+       register_field( (struct output_field) { .basic_fieldname = "Name", .memory_type = OUTPUT_STRING, .resulttype = fieldtype, .format = "%s", .get_data = (func_void)&get_name });
+       break;
+     case PRJCT_RESULTS_DATE_TIME:
+       register_field( (struct output_field) { .basic_fieldname = "Date & time (DD/MM/YYYY hh:mm:ss)", .memory_type = OUTPUT_DATETIME, .resulttype = fieldtype, .format = format_datetime, .get_data = (func_void)func_datetime });
+       break;
+     case PRJCT_RESULTS_DATE:
+       register_field( (struct output_field) { .basic_fieldname = "Date (DD/MM/YYYY)", .memory_type = OUTPUT_DATE, .resulttype = fieldtype, .format = "%02d/%02d/%d", .get_data = (func_void)&get_date });
+       break;
+     case PRJCT_RESULTS_TIME:
+       register_field( (struct output_field) { .basic_fieldname = "Time (hh:mm:ss)", .memory_type = OUTPUT_TIME, .resulttype = fieldtype, .format = "%02d:%02d:%02d", .get_data = (func_void)&get_time });
+       break;
+     case PRJCT_RESULTS_YEAR:
+       register_field( (struct output_field) { .basic_fieldname = "Year", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%-4d", .get_data = (func_void)&get_year });
+       break;
+     case PRJCT_RESULTS_JULIAN:
+       register_field( (struct output_field) { .basic_fieldname = "Day number", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%-5d", .get_data = (func_void)&get_julian });
+       break;
+     case PRJCT_RESULTS_JDFRAC:
+       register_field( (struct output_field) { .basic_fieldname = "Fractional day", .memory_type = OUTPUT_DOUBLE, .resulttype = fieldtype, .format = "%-10.6lf", .get_data = (func_void)&get_frac_julian });
+       break;
+     case PRJCT_RESULTS_TIFRAC:
+       register_field( (struct output_field) { .basic_fieldname = "Fractional time", .memory_type = OUTPUT_DOUBLE, .resulttype = fieldtype, .format = "%-20.15lf", .get_data = (func_void)func_frac_time });
+       break;
+     case PRJCT_RESULTS_SCANS:
+       register_field( (struct output_field) { .basic_fieldname = "Scans", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%-5d", .get_data = (func_void)&get_scans });
+       break;
+     case PRJCT_RESULTS_NREJ:
+       register_field( (struct output_field) { .basic_fieldname = "Rejected", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%-5d", .get_data = (func_void)&get_n_rejected });
+       break;
+     case PRJCT_RESULTS_TINT:
+       register_field( (struct output_field) { .basic_fieldname = "Exposure time (sec)", .memory_type = OUTPUT_DOUBLE, .resulttype = fieldtype, .format = "%-12.6lf", .get_data = (func_void)&get_t_int });
+       break;
+     case PRJCT_RESULTS_SZA:
+       register_field( (struct output_field) { .basic_fieldname = title_sza, .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)func_sza, .data_cols = num_sza, .column_number_format="(%c)", .column_number_alphabetic = true });
+       break;
+     case PRJCT_RESULTS_AZIM:
+       register_field( (struct output_field) { .basic_fieldname = title_azimuth, .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)func_azimuth, .data_cols = num_azimuth, .column_number_format="(%c)", .column_number_alphabetic = true });
+       break;
+     case PRJCT_RESULTS_TDET:
+       register_field( (struct output_field) { .basic_fieldname = "Tdet", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_tdet });
+       break;
+     case PRJCT_RESULTS_SKY:
+       register_field( (struct output_field) { .basic_fieldname = "Sky Obs", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%-2d", .get_data = (func_void)&get_sky });
+       break;
+     case PRJCT_RESULTS_BESTSHIFT:
+       register_field( (struct output_field) { .basic_fieldname = "Best shift", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_bestshift });
+       break;
+     case PRJCT_RESULTS_PIXEL:
+       register_field( (struct output_field) { .basic_fieldname = "Pixel number", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%-5d", .get_data = (func_void)&get_pixel_number });
+       break;
+     case PRJCT_RESULTS_PIXEL_TYPE:
+       register_field( (struct output_field) { .basic_fieldname = "Pixel type", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%-5d" , .get_data = (func_void)&get_pixel_type});
+       break;
+     case PRJCT_RESULTS_ORBIT:
+       register_field( (struct output_field) { .basic_fieldname = "Orbit number", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%-8d", .get_data = (func_void)&get_orbit_number});
+       break;
+     case PRJCT_RESULTS_LONGIT:
+       if(func_corner_longitudes) { // we have pixel corners
+         register_field( (struct output_field) { .basic_fieldname = "Longitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)func_corner_longitudes, .data_cols = 4, .column_number_format="(%d)" });
+       }
+       register_field( (struct output_field) { .basic_fieldname = lon_fieldname, .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_longitude }); // pixel centre
+       break;
+     case PRJCT_RESULTS_LATIT:
+       if(func_corner_latitudes) { // we have pixel corners
+         register_field( (struct output_field) { .basic_fieldname = "Latitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)func_corner_latitudes, .data_cols = 4, .column_number_format="(%d)" });
+       }
+       register_field( (struct output_field) { .basic_fieldname = lat_fieldname, .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_latitude });
+       break;
+     case PRJCT_RESULTS_ALTIT:
+       register_field( (struct output_field) { .basic_fieldname = "Altitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_altitude });
+       break;
+     case PRJCT_RESULTS_CLOUD:
+       register_field( (struct output_field) { .basic_fieldname = "Cloud fraction", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_cloud_fraction });
+       break;
+     case PRJCT_RESULTS_CLOUDTOPP:
+       register_field( (struct output_field) { .basic_fieldname = "Cloud Top Pressure", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_cloud_top_pressure });
+       break;
+     case PRJCT_RESULTS_LOS_ZA:
+       register_field( (struct output_field) { .basic_fieldname = title_los_zenith, .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)func_los_zenith, .data_cols = num_los_zenith, .column_number_format="(%c)", .column_number_alphabetic = true });
+       break;
+     case PRJCT_RESULTS_LOS_AZIMUTH:
+       register_field( (struct output_field) { .basic_fieldname = title_los_azimuth, .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)func_los_azimuth, .data_cols = num_los_azimuth, .column_number_format="(%c)", .column_number_alphabetic = true });
+       break;
+     case PRJCT_RESULTS_SAT_HEIGHT:
+       register_field( (struct output_field) { .basic_fieldname = "Satellite height", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_sat_altitude });
+       break;
+     case PRJCT_RESULTS_SAT_LAT:
+       register_field( (struct output_field) { .basic_fieldname = "Satellite latitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_sat_latitude });
+       break;
+     case PRJCT_RESULTS_SAT_LON:
+       register_field( (struct output_field) { .basic_fieldname = "Satellite longitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_sat_longitude });
+       break;
+     case PRJCT_RESULTS_SAT_SZA:
+       register_field( (struct output_field) { .basic_fieldname = "Solar zenith angle at satellite", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_sat_sza });
+       break;
+     case PRJCT_RESULTS_SAT_SAA:
+       register_field( (struct output_field) { .basic_fieldname = "Solar azimuth angle at satellite", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_sat_saa });
+       break;
+     case PRJCT_RESULTS_SAT_VZA:
+       register_field( (struct output_field) { .basic_fieldname = "Viewing zenith angle at satellite", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_sat_vza });
+       break;
+     case PRJCT_RESULTS_EARTH_RADIUS:
+       register_field( (struct output_field) { .basic_fieldname = "Earth radius", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_earth_radius });
+       break;
+     case PRJCT_RESULTS_VIEW_ELEVATION:
+       register_field( (struct output_field) { .basic_fieldname = "Elev. viewing angle (deg)", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_view_elevation });
+       break;
+     case PRJCT_RESULTS_VIEW_AZIMUTH:
+       register_field( (struct output_field) { .basic_fieldname = "Azim. viewing angle (deg)", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_view_azimuth });
+       break;
+     case PRJCT_RESULTS_VIEW_ZENITH:
+       register_field( (struct output_field) { .basic_fieldname = "Zenith viewing angle", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_view_zenith });
+       break;
+     case PRJCT_RESULTS_SCIA_QUALITY:
+       register_field( (struct output_field) { .basic_fieldname = "SCIAMACHY Quality Flag", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%-5d", .get_data = (func_void)&get_scia_quality });
+       break;
+     case PRJCT_RESULTS_SCIA_STATE_INDEX:
+       register_field( (struct output_field) { .basic_fieldname = "SCIAMACHY State Index", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%-5d", .get_data = (func_void)&get_scia_state_index });
+       break;
+     case PRJCT_RESULTS_SCIA_STATE_ID:
+       register_field( (struct output_field) { .basic_fieldname = "SCIAMACHY State Id", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%-5d", .get_data = (func_void)&get_scia_state_id });
+       break;
+     case PRJCT_RESULTS_STARTTIME:
+       register_field( (struct output_field) { .basic_fieldname = "Start Time (hh:mm:ss)", .memory_type = OUTPUT_TIME, .resulttype = fieldtype, .format = "%02d:%02d:%02d", .get_data = (func_void)&get_start_time });
+       break;
+     case PRJCT_RESULTS_ENDTIME:
+       register_field( (struct output_field) { .basic_fieldname = "Stop Time (hh:mm:ss)", .memory_type = OUTPUT_TIME, .resulttype = fieldtype, .format = "%02d:%02d:%02d", .get_data = (func_void)&get_end_time });
+       break;
+     case PRJCT_RESULTS_SCANNING:
+       register_field( (struct output_field) { .basic_fieldname = "Scanning angle", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)func_scanning_angle });
+       break;
+     case PRJCT_RESULTS_FILTERNUMBER:
+       register_field( (struct output_field) { .basic_fieldname = "Filter number", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%-3d", .get_data = (func_void)&get_filter_number });
+       break;
+     case PRJCT_RESULTS_MEASTYPE:
+       register_field( (struct output_field) { .basic_fieldname = "Measurement type", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%-3d", .get_data = (func_void)func_meastype });
+       break;
+     case PRJCT_RESULTS_CCD_HEADTEMPERATURE:
+       register_field( (struct output_field) { .basic_fieldname = "Head temperature", .memory_type = OUTPUT_DOUBLE, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&ccd_get_head_temperature });
+       break;
+     case PRJCT_RESULTS_COOLING_STATUS:
+       register_field( (struct output_field) { .basic_fieldname = "Cooler status", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%-5d", .get_data = (func_void)&get_cooling_status });
+       break;
+     case PRJCT_RESULTS_MIRROR_ERROR:
+       register_field( (struct output_field) { .basic_fieldname = "Mirror status", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%-5d", .get_data = (func_void)&get_mirror_error });
+       break;
+     case PRJCT_RESULTS_COMPASS:
+       register_field( (struct output_field) { .basic_fieldname = "Compass angle", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_compass_angle });
+       break;
+     case PRJCT_RESULTS_PITCH:
+       register_field( (struct output_field) { .basic_fieldname = "Pitch angle", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_pitch_angle });
+       break;
+     case PRJCT_RESULTS_ROLL:
+       register_field( (struct output_field) { .basic_fieldname = "Roll angle", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_roll_angle });
+       break;
+     case PRJCT_RESULTS_GOME2_MDR_NUMBER:
+       register_field( (struct output_field) { .basic_fieldname = "GOME2 MDR index", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%-6d", .get_data = (func_void)&gome2_get_mdr_number });
+       break;
+     case PRJCT_RESULTS_GOME2_OBSERVATION_INDEX:
+       register_field( (struct output_field) { .basic_fieldname = "GOME2 observation index", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%-6d", .get_data = (func_void)&gome2_get_observation_index });
+       break;
+     case PRJCT_RESULTS_GOME2_SCANDIRECTION:
+       register_field( (struct output_field) { .basic_fieldname = "GOME2 scan direction", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%-6d", .get_data = (func_void)&gome2_get_scan_direction });
+       break;
+     case PRJCT_RESULTS_GOME2_OBSERVATION_MODE:
+       register_field( (struct output_field) { .basic_fieldname = "GOME2 observation mode", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%-5d", .get_data = (func_void)&gome2_get_observation_mode });
+       break;
+     case PRJCT_RESULTS_GOME2_SAA:
+       register_field( (struct output_field) { .basic_fieldname = "GOME2 SAA flag", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%-6d", .get_data = (func_void)&gome2_get_saa });
+       break;
+     case PRJCT_RESULTS_GOME2_SUNGLINT_RISK:
+       register_field( (struct output_field) { .basic_fieldname = "GOME2 sunglint risk flag", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%-6d", .get_data = (func_void)&gome2_get_sunglint_risk });
+       break;
+     case PRJCT_RESULTS_GOME2_SUNGLINT_HIGHRISK:
+       register_field( (struct output_field) { .basic_fieldname = "GOME2 sunglint high risk flag", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%-6d", .get_data = (func_void)&gome2_get_sunglint_high_risk });
+       break;
+     case PRJCT_RESULTS_GOME2_RAINBOW:
+       register_field( (struct output_field) { .basic_fieldname = "GOME2 rainbow flag", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%-6d", .get_data = (func_void)&gome2_get_rainbow });
+       break;
+     case PRJCT_RESULTS_CCD_DIODES:
+       register_field( (struct output_field) { .basic_fieldname = "Diodes", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_diodes, .data_cols = 4, .column_number_format="(%d)" });
+       break;
+     case PRJCT_RESULTS_CCD_TARGETAZIMUTH:
+       register_field( (struct output_field) { .basic_fieldname = "Target Azimuth", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_target_azimuth });
+       break;
+     case PRJCT_RESULTS_CCD_TARGETELEVATION:
+       register_field( (struct output_field) { .basic_fieldname = "Target Elevation", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_target_elevation });
+       break;
+     case PRJCT_RESULTS_SATURATED:
+       register_field( (struct output_field) { .basic_fieldname = "Saturated", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%-5d", .get_data = (func_void)&get_saturated_flag });
+       break;
+     case PRJCT_RESULTS_INDEX_ALONGTRACK:
+       register_field( (struct output_field) { .basic_fieldname = "along-track index", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%-6d", .get_data = (func_void)&get_alongtrack_index });
+       break;
+     case PRJCT_RESULTS_INDEX_CROSSTRACK:
+       register_field( (struct output_field) { .basic_fieldname = "cross-track index", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%-3d", .get_data = (func_void)&get_crosstrack_index });
+       break;
+     case PRJCT_RESULTS_OMI_GROUNDP_QF:
+       register_field( (struct output_field) { .basic_fieldname = "OMI groundpixel quality flag", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%-6d", .get_data = (func_void)&get_omi_groundpixelqf });
+       break;
+     case PRJCT_RESULTS_OMI_XTRACK_QF:
+       register_field( (struct output_field) { .basic_fieldname = "OMI xtrack quality flag", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%-6d", .get_data = (func_void)&get_omi_xtrackqf });
+       break;
+     case PRJCT_RESULTS_OMI_CONFIGURATION_ID:
+       register_field( (struct output_field) { .basic_fieldname = "OMI instrument configuration id", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%-6d", .get_data = (func_void)&get_omi_configuration_id });
+       break;
+     case PRJCT_RESULTS_UAV_SERVO_BYTE_SENT:
+       register_field( (struct output_field) { .basic_fieldname = "UAV servo sent position byte", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%-3d", .get_data = (func_void)&get_uav_servo_byte_sent });
+       break;
+     case PRJCT_RESULTS_UAV_SERVO_BYTE_RECEIVED:
+       register_field( (struct output_field) { .basic_fieldname = "UAV servo received position byte", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%-3d", .get_data = (func_void)&get_uav_servo_byte_received });
+       break;
+     case PRJCT_RESULTS_UAV_INSIDE_TEMP:
+       register_field( (struct output_field) { .basic_fieldname = "Inside temperature", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-9.3f", .get_data = (func_void)&get_uav_insideTemp });
+       break;
+     case PRJCT_RESULTS_UAV_OUTSIDE_TEMP:
+       register_field( (struct output_field) { .basic_fieldname = "Outside temperature", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-9.3f", .get_data = (func_void)&get_uav_outsideTemp });
+       break;
+     case PRJCT_RESULTS_UAV_PRESSURE:
+       register_field( (struct output_field) { .basic_fieldname = "Pressure", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-9.3f", .get_data = (func_void)&get_uav_pressure });
+       break;
+     case PRJCT_RESULTS_UAV_HUMIDITY:
+       register_field( (struct output_field) { .basic_fieldname = "Humidity", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-9.3f", .get_data = (func_void)&get_uav_humidity });
+       break;
+     case PRJCT_RESULTS_UAV_DEWPOINT:
+       register_field( (struct output_field) { .basic_fieldname = "Dewpoint", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-9.3f", .get_data = (func_void)&get_uav_dewpoint });
+       break;
+     case PRJCT_RESULTS_UAV_PITCH:
+       register_field( (struct output_field) { .basic_fieldname = "Pitch", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-9.3f", .get_data = (func_void)&get_uav_pitch });
+       break;
+     case PRJCT_RESULTS_UAV_ROLL:
+       register_field( (struct output_field) { .basic_fieldname = "Roll", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-9.3f", .get_data = (func_void)&get_uav_roll });
+       break;
+     case PRJCT_RESULTS_UAV_HEADING:
+       register_field( (struct output_field) { .basic_fieldname = "Heading", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-9.3f", .get_data = (func_void)&get_uav_heading });
+       break;
+     case PRJCT_RESULTS_PRECALCULATED_FLUXES:
+       register_field( (struct output_field) { .basic_fieldname = "Precalculated flux", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_precalculated_flux, .data_cols = 4, .column_number_format="(%d)" });
+       break;
+     case PRJCT_RESULTS_STARTGPSTIME:
+       register_field( (struct output_field) { .basic_fieldname = "Start Time (hhmmss.ms)", .memory_type = OUTPUT_DATETIME, .resulttype = fieldtype, .format = format_datetime, .get_data = (func_void)&get_gps_start_time });
+       break;
+     case PRJCT_RESULTS_ENDGPSTIME:
+       register_field( (struct output_field) { .basic_fieldname = "Stop Time (hhmmss.ms)", .memory_type = OUTPUT_DATETIME, .resulttype = fieldtype, .format = format_datetime, .get_data = (func_void)&get_gps_end_time });
+       break;
+     case PRJCT_RESULTS_LONGITEND:
+       register_field( (struct output_field) { .basic_fieldname = "Longitude End", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_longitude_end });
+       break;
+     case PRJCT_RESULTS_LATITEND:
+       register_field( (struct output_field) { .basic_fieldname = "Latitude End", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_latitude_end });
+       break;
+     case PRJCT_RESULTS_ALTITEND:
+       register_field( (struct output_field) { .basic_fieldname = "Altitude End", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_altitude_end });
        break;
      case PRJCT_RESULTS_LAMBDA:
-       register_field( (struct output_field) { .basic_fieldname = "Lambda", .memory_type = OUTPUT_DOUBLE, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_lambda, .data_cols = max_ndet, .column_number_format="(%d)" });
+       register_field( (struct output_field) { .basic_fieldname = "Lambda", .memory_type = OUTPUT_DOUBLE, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_lambda, .data_cols = max_ndet, .column_number_format="(%d)" });
+       OUTPUT_exportSpectraFlag=1;
        break;
      case PRJCT_RESULTS_SPECTRA:
-       register_field( (struct output_field) { .basic_fieldname = "Spec", .memory_type = OUTPUT_DOUBLE, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_spectrum, .data_cols = max_ndet, .column_number_format="(%d)" });
+       register_field( (struct output_field) { .basic_fieldname = "Spectrum", .memory_type = OUTPUT_DOUBLE, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_spectrum, .data_cols = max_ndet, .column_number_format="(%d)" });
+       OUTPUT_exportSpectraFlag=1;
        break;
      default:
        break;
@@ -1482,10 +1883,32 @@ RC OUTPUT_RegisterData(const ENGINE_CONTEXT *pEngineContext)
 
 RC OUTPUT_RegisterSpectra(const ENGINE_CONTEXT *pEngineContext)
  {
-   if (THRD_id==THREAD_TYPE_EXPORT)
-     OutputRegisterFields(pEngineContext,pEngineContext->project.exportSpectra.fieldsFlag,pEngineContext->project.exportSpectra.fieldsNumber);  // do not depend on swath size
+  // Declarations
 
-   return ERROR_ID_NO;
+  char *fieldsFlag;
+  int i,fieldsNumber;
+
+  // Initializations
+
+  fieldsFlag=pEngineContext->project.exportSpectra.fieldsFlag;
+  fieldsNumber=pEngineContext->project.exportSpectra.fieldsNumber;
+
+  // Browse fields
+
+  for (i=0;i<fieldsNumber;i++)
+   if ((fieldsFlag[i]==PRJCT_RESULTS_LAMBDA) || (fieldsFlag[i]==PRJCT_RESULTS_SPECTRA))
+    break;
+
+  // Register fields
+
+  if (i<fieldsNumber)
+   OutputRegisterFieldsToExport(pEngineContext,fieldsFlag,fieldsNumber);  // do not depend on swath size
+  else
+   OutputRegisterFields(pEngineContext,fieldsFlag,fieldsNumber);  // do not depend on swath size
+
+  // Return
+
+  return ERROR_ID_NO;
  }
 
 /*! \brief Save results of the last processed record. */
@@ -1732,7 +2155,10 @@ void output_close_file(void) {
 void output_write_data(const bool selected_records[]) {
   switch(selected_format) {
   case ASCII:
-    ascii_write_analysis_data(selected_records, outputNbRecords);
+    if (OUTPUT_exportSpectraFlag)
+     ascii_write_spectra_data(selected_records, outputNbRecords);
+    else
+     ascii_write_analysis_data(selected_records, outputNbRecords);
     break;
   case HDFEOS5:
     hdfeos5_write_analysis_data(selected_records, outputNbRecords, outputRecords);
@@ -1877,89 +2303,90 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
   // select records for output according to date/site
   bool selected_records[outputNbRecords];
 
-  if (((THRD_id==THREAD_TYPE_EXPORT) || pResults->analysisFlag || pResults->calibFlag)
-      && outputNbRecords
-      && !(rc=OutputBuildFileName(pEngineContext,outputFileName))) {
-    char *ptr = strrchr(outputFileName,PATH_SEP);
-    if ( ptr==NULL )
-      ptr=outputFileName;
-    else
-      ptr++;
+ if (((THRD_id==THREAD_TYPE_EXPORT) || pResults->analysisFlag || pResults->calibFlag)
+     && outputNbRecords
+     && !(rc=OutputBuildFileName(pEngineContext,outputFileName))) {
+   char *ptr = strrchr(outputFileName,PATH_SEP);
 
-    if ( strcasecmp(ptr,"automatic") != 0) {
-      // - we have a user-specified filename (not 'automatic'), or
-      //
-      // the complete filename was already built in 'OutputBuildFileName' because we have
-      //
-      // - satellite measurements, not in overpass mode, or
-      //
-      // - groundbased measurements, not in "observation site mode"
+   if ( ptr==NULL )
+     ptr=outputFileName;
+   else
+     ptr++;
 
-      rc = open_output_file(pEngineContext,outputFileName);
-      if (!rc ) {
-        for(unsigned int i=0; i<outputNbRecords; i++)
-          selected_records[i] = true; // select all records
-        output_write_data(selected_records);
-        output_close_file();
-      } else {
-        rc=ERROR_SetLast("OUTPUT_FlushBuffers",ERROR_TYPE_FATAL,ERROR_ID_FILE_OPEN,outputFileName);
-      }
-    } else {
-      // -------------------
-      // FULL AUTOMATIC MODE
-      // -------------------
-      for(unsigned int i=0; i<outputNbRecords; i++)
-        selected_records[i] = false;
+   if ( strcasecmp(ptr,"automatic") != 0) {
+     // - we have a user-specified filename (not 'automatic'), or
+     //
+     // the complete filename was already built in 'OutputBuildFileName' because we have
+     //
+     // - satellite measurements, not in overpass mode, or
+     //
+     // - groundbased measurements, not in "observation site mode"
 
-      // satellite, overpasses: records are distributed using information on the measurement date and the geolocation
-      if ((pProject->spectra.mode==PRJCT_SPECTRA_MODES_OBSLIST) && (pProject->spectra.radius>1.)) {
-        for (int indexSite=0;indexSite<SITES_itemN;indexSite++) {
-          unsigned int indexRecord=0;
-          OBSERVATION_SITE *pSite=&SITES_itemList[indexSite];
+     rc = open_output_file(pEngineContext,outputFileName);
+     if (!rc ) {
+       for(unsigned int i=0; i<outputNbRecords; i++)
+         selected_records[i] = true; // select all records
+       output_write_data(selected_records);
+       output_close_file();
+     } else {
+       rc=ERROR_SetLast("OUTPUT_FlushBuffers",ERROR_TYPE_FATAL,ERROR_ID_FILE_OPEN,outputFileName);
+     }
+   } else {
+     // -------------------
+     // FULL AUTOMATIC MODE
+     // -------------------
+     for(unsigned int i=0; i<outputNbRecords; i++)
+       selected_records[i] = false;
 
-          while ((indexRecord<outputNbRecords) && !rc) {
-            int oldYear=outputRecords[indexRecord].year;
-            int oldMonth=outputRecords[indexRecord].month;
+     // satellite, overpasses: records are distributed using information on the measurement date and the geolocation
+     if ((pProject->spectra.mode==PRJCT_SPECTRA_MODES_OBSLIST) && (pProject->spectra.radius>1.)) {
+       for (int indexSite=0;indexSite<SITES_itemN;indexSite++) {
+         unsigned int indexRecord=0;
+         OBSERVATION_SITE *pSite=&SITES_itemList[indexSite];
 
-            int nbRecords=0;
-            while( indexRecord<outputNbRecords
-                   && (outputRecords[indexRecord].year==oldYear || outputRecords[indexRecord].month==oldMonth) ){
-              if (THRD_GetDist((double)outputRecords[indexRecord].longit,(double)outputRecords[indexRecord].latit,
-                               (double)pSite->longitude,(double)pSite->latitude)<=(double)pProject->spectra.radius) {
-                selected_records[indexRecord] = true;
-                nbRecords++;
-                indexRecord++;
-              }
-            }
-            if (nbRecords) {
-              rc = output_write_automatic_file(selected_records, oldYear, oldMonth, indexSite, pEngineContext);
-            }
-          }
-        }
-      } else {
-        // Groundbased, records are saved using the information on the date only
-        unsigned int indexRecord=0;
-        int indexSite=SITES_GetIndex(pProject->instrumental.observationSite);
+         while ((indexRecord<outputNbRecords) && !rc) {
+           int oldYear=outputRecords[indexRecord].year;
+           int oldMonth=outputRecords[indexRecord].month;
 
-        while (indexRecord<outputNbRecords) {
-          int oldYear=outputRecords[indexRecord].year;
-          int oldMonth=outputRecords[indexRecord].month;
+           int nbRecords=0;
+           while( indexRecord<outputNbRecords
+                  && (outputRecords[indexRecord].year==oldYear || outputRecords[indexRecord].month==oldMonth) ){
+             if (THRD_GetDist((double)outputRecords[indexRecord].longit,(double)outputRecords[indexRecord].latit,
+                              (double)pSite->longitude,(double)pSite->latitude)<=(double)pProject->spectra.radius) {
+               selected_records[indexRecord] = true;
+               nbRecords++;
+               indexRecord++;
+             }
+           }
+           if (nbRecords) {
+             rc = output_write_automatic_file(selected_records, oldYear, oldMonth, indexSite, pEngineContext);
+           }
+         }
+       }
+     } else {
+       // Groundbased, records are saved using the information on the date only
+       unsigned int indexRecord=0;
+       int indexSite=SITES_GetIndex(pProject->instrumental.observationSite);
 
-          int nbRecords = 0;
-          while( indexRecord<outputNbRecords
-                 && (outputRecords[indexRecord].year==oldYear || outputRecords[indexRecord].month==oldMonth) ) {
-            selected_records[indexRecord] = true;
-            indexRecord++;
-            nbRecords++;
-          }
+       while (indexRecord<outputNbRecords) {
+         int oldYear=outputRecords[indexRecord].year;
+         int oldMonth=outputRecords[indexRecord].month;
 
-          if (nbRecords) {
-            rc = output_write_automatic_file(selected_records, oldYear, oldMonth, indexSite, pEngineContext);
-          }
-        }
-      }
-    }
-  }
+         int nbRecords = 0;
+         while( indexRecord<outputNbRecords
+                && (outputRecords[indexRecord].year==oldYear || outputRecords[indexRecord].month==oldMonth) ) {
+           selected_records[indexRecord] = true;
+           indexRecord++;
+           nbRecords++;
+         }
+
+         if (nbRecords) {
+           rc = output_write_automatic_file(selected_records, oldYear, oldMonth, indexSite, pEngineContext);
+         }
+       }
+     }
+   }
+ }
 
   outputNbRecords=0;
   pEngineContext->lastSavedRecord=0;

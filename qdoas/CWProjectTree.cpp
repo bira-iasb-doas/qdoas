@@ -162,7 +162,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
     menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()))->setEnabled(!m_sessionActive);
     menu.addAction("Run Calibration", this, SLOT(slotRunCalibration()))->setEnabled(!m_sessionActive);
     menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
-    menu.addAction("Export Spectra", this, SLOT(slotExportSpectra()))->setEnabled(!m_sessionActive);
+    menu.addAction("Export Data/Spectra", this, SLOT(slotExportSpectra()))->setEnabled(!m_sessionActive);
     menu.addSeparator();
     menu.addAction("Cut", this, SLOT(slotCutSelection()));
     menu.addAction("Copy", this, SLOT(slotCopySelection()));
@@ -187,7 +187,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()))->setEnabled(!m_sessionActive);
       menu.addAction("Run Calibration", this, SLOT(slotRunCalibration()))->setEnabled(!m_sessionActive);
       menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
-      menu.addAction("Export Spectra", this, SLOT(slotExportSpectra()))->setEnabled(!m_sessionActive);
+      menu.addAction("Export Data/Spectra", this, SLOT(slotExportSpectra()))->setEnabled(!m_sessionActive);
       menu.addSeparator();
 
       // Can't cut, delete or paste below an item that is a child of a directory item
@@ -216,7 +216,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()))->setEnabled(!m_sessionActive);
       menu.addAction("Run Calibration", this, SLOT(slotRunCalibration()))->setEnabled(!m_sessionActive);
       menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
-      menu.addAction("Export Spectra", this, SLOT(slotExportSpectra()))->setEnabled(!m_sessionActive);
+      menu.addAction("Export Data/Spectra", this, SLOT(slotExportSpectra()))->setEnabled(!m_sessionActive);
       menu.addSeparator();
 
       bool enablePaste = !m_clipboard->spectraGroupIsEmpty();
@@ -238,7 +238,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()))->setEnabled(!m_sessionActive);
       menu.addAction("Run Calibration", this, SLOT(slotRunCalibration()))->setEnabled(!m_sessionActive);
       menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
-      menu.addAction("Export Spectra", this, SLOT(slotExportSpectra()))->setEnabled(!m_sessionActive);
+      menu.addAction("Export Data/Spectra", this, SLOT(slotExportSpectra()))->setEnabled(!m_sessionActive);
       menu.addSeparator();
 
       // Can't cut, delete or paste below an item that is a child of a directory item
@@ -262,7 +262,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()))->setEnabled(!m_sessionActive);
       menu.addAction("Run Calibration", this, SLOT(slotRunCalibration()))->setEnabled(!m_sessionActive);
       menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
-      menu.addAction("Export Spectra", this, SLOT(slotExportSpectra()))->setEnabled(!m_sessionActive);
+      menu.addAction("Export Data/Spectra", this, SLOT(slotExportSpectra()))->setEnabled(!m_sessionActive);
       menu.addSeparator();
 
       // cant remove this item - refers to all children
@@ -320,7 +320,7 @@ void CWProjectTree::contextMenuEvent(QContextMenuEvent *e)
       menu.addAction("Run Analysis", this, SLOT(slotRunAnalysis()))->setEnabled(!m_sessionActive);
       menu.addAction("Run Calibration", this, SLOT(slotRunCalibration()))->setEnabled(!m_sessionActive);
       menu.addAction("Browse Spectra", this, SLOT(slotBrowseSpectra()))->setEnabled(!m_sessionActive);
-      menu.addAction("Export Spectra", this, SLOT(slotExportSpectra()))->setEnabled(!m_sessionActive);
+      menu.addAction("Export Data/Spectra", this, SLOT(slotExportSpectra()))->setEnabled(!m_sessionActive);
       menu.addSeparator();
 
       bool enablePaste = !m_clipboard->projectGroupIsEmpty();
@@ -1202,7 +1202,7 @@ void CWProjectTree::slotBrowseSpectra()
 void CWProjectTree::ExportSpectra()
  {
     if (m_sessionActive)
-      QMessageBox::information(this, "Export Spectra", "A session is currently active.");
+      QMessageBox::information(this, "Export Data/Spectra", "A session is currently active.");
     else
       buildAndStartSession(CSession::Export);
  }

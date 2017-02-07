@@ -49,8 +49,8 @@ CWProjectExportEditor::CWProjectExportEditor(CWProjectTree *projectTree, QTreeWi
   m_properties(properties),
   m_format(format)
 {
-	 m_captionStr = "Export spectra";
-	 m_contextTag = "Export spectra";
+	 m_captionStr = "Export Data/Spectra";
+	 m_contextTag = "Export Data/Spectra";
 
 	 // main layout: VBox
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
