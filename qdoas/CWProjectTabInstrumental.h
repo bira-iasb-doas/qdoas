@@ -192,14 +192,21 @@ Q_OBJECT
 //--------------------------------------------------------------------------
 class CWInstrAsciiEdit : public CWCalibInstrEdit
 {
+ Q_OBJECT
 public:
   CWInstrAsciiEdit(const struct instrumental_ascii *d, QWidget *parent = 0);
-
+  void setflagsEnabled(bool enableFlag);
   void apply(struct instrumental_ascii *d) const;
 
+public slots :
+
+  void slotAsciiFormatChanged (bool state);
+  void slotAsciiExtendedFormatChanged(bool state);
+
 private:
+  QGroupBox *m_flagsGroup;
   QLineEdit *m_detSizeEdit;
-  QRadioButton *m_lineRadioButton, *m_columnRadioButton;
+  QRadioButton *m_lineRadioButton, *m_columnRadioButton,*m_columnExtendedRadioButton;
   QCheckBox *m_zenCheck, *m_aziCheck, *m_eleCheck, *m_dateCheck, *m_timeCheck, *m_lambdaCheck;
   StrayLightConfig *m_strayLightConfig;
 };

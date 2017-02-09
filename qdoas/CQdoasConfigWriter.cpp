@@ -452,6 +452,9 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   case PRJCT_INSTR_ASCII_FORMAT_COLUMN:
     fprintf(fp, "\"column\"");
     break;
+  case PRJCT_INSTR_ASCII_FORMAT_COLUMN_EXTENDED:
+    fprintf(fp, "\"column_extended\"");
+    break;
   default:
     fprintf(fp, "\"invalid\"");
   }

@@ -737,6 +737,8 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
       m_instrumental->ascii.format = PRJCT_INSTR_ASCII_FORMAT_LINE;
     else if (str == "column")
       m_instrumental->ascii.format = PRJCT_INSTR_ASCII_FORMAT_COLUMN;
+    else if (str == "column_extended")
+      m_instrumental->ascii.format = PRJCT_INSTR_ASCII_FORMAT_COLUMN_EXTENDED;
     else
       return postErrorMessage("Invalid ascii format");
 

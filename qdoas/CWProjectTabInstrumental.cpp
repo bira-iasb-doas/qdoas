@@ -554,30 +554,32 @@ CWInstrAsciiEdit::CWInstrAsciiEdit(const struct instrumental_ascii *d, QWidget *
   formatLayout->addWidget(m_lineRadioButton);
   m_columnRadioButton = new QRadioButton("column", formatGroup);
   formatLayout->addWidget(m_columnRadioButton);
+  m_columnExtendedRadioButton = new QRadioButton("column extended", formatGroup);
+  formatLayout->addWidget(m_columnExtendedRadioButton);
   formatLayout->addStretch(1);
 
   groupLayout->addWidget(formatGroup);
 
   // Flags
-  QGroupBox *flagsGroup = new QGroupBox("Read from file", this);
-  QGridLayout *flagsLayout = new QGridLayout(flagsGroup);
+  m_flagsGroup = new QGroupBox("Read from file", this);
+  QGridLayout *flagsLayout = new QGridLayout(m_flagsGroup);
 
-  m_zenCheck = new QCheckBox("Solar Zenith Angle", flagsGroup);
+  m_zenCheck = new QCheckBox("Solar Zenith Angle", m_flagsGroup);
   flagsLayout->addWidget(m_zenCheck, 0, 0);
-  m_dateCheck = new QCheckBox("DD/MM/YYYY", flagsGroup);
+  m_dateCheck = new QCheckBox("DD/MM/YYYY", m_flagsGroup);
   flagsLayout->addWidget(m_dateCheck, 0, 1);
 
-  m_aziCheck = new QCheckBox("Azimuth Viewing Angle", flagsGroup);
+  m_aziCheck = new QCheckBox("Azimuth Viewing Angle", m_flagsGroup);
   flagsLayout->addWidget(m_aziCheck, 1, 0);
-  m_timeCheck = new QCheckBox("Decimal Time", flagsGroup);
+  m_timeCheck = new QCheckBox("Decimal Time", m_flagsGroup);
   flagsLayout->addWidget(m_timeCheck, 1, 1);
 
-  m_eleCheck = new QCheckBox("Elevation Viewing Angle", flagsGroup);
+  m_eleCheck = new QCheckBox("Elevation Viewing Angle", m_flagsGroup);
   flagsLayout->addWidget(m_eleCheck, 2, 0);
-  m_lambdaCheck = new QCheckBox("Lambda", flagsGroup);
+  m_lambdaCheck = new QCheckBox("Lambda", m_flagsGroup);
   flagsLayout->addWidget(m_lambdaCheck, 2, 1);
 
-  groupLayout->addWidget(flagsGroup);
+  groupLayout->addWidget(m_flagsGroup);
 
   row=0;
 
@@ -620,6 +622,8 @@ CWInstrAsciiEdit::CWInstrAsciiEdit(const struct instrumental_ascii *d, QWidget *
     m_lineRadioButton->setChecked(true);
   else if (d->format == PRJCT_INSTR_ASCII_FORMAT_COLUMN)
     m_columnRadioButton->setChecked(true);
+  else if (d->format == PRJCT_INSTR_ASCII_FORMAT_COLUMN_EXTENDED)
+    m_columnExtendedRadioButton->setChecked(true);
 
   // flags
   m_zenCheck->setCheckState(d->flagZenithAngle ? Qt::Checked : Qt::Unchecked);
@@ -633,6 +637,12 @@ CWInstrAsciiEdit::CWInstrAsciiEdit(const struct instrumental_ascii *d, QWidget *
   m_strayLightConfig->setChecked(d->straylight ? true : false);
   m_strayLightConfig->setLambdaMin(d->lambdaMin);
   m_strayLightConfig->setLambdaMax(d->lambdaMax);
+
+  connect(m_lineRadioButton, SIGNAL(toggled(bool)), this, SLOT(slotAsciiFormatChanged(bool)));
+  connect(m_columnRadioButton, SIGNAL(toggled(bool)), this, SLOT(slotAsciiFormatChanged(bool)));
+  connect(m_columnExtendedRadioButton, SIGNAL(toggled(bool)), this, SLOT(slotAsciiExtendedFormatChanged(bool)));
+
+  setflagsEnabled((m_columnExtendedRadioButton->isChecked())?false:true);
 }
 
 void CWInstrAsciiEdit::apply(struct instrumental_ascii *d) const
@@ -644,6 +654,7 @@ void CWInstrAsciiEdit::apply(struct instrumental_ascii *d) const
   // format
   if (m_lineRadioButton->isChecked()) d->format = PRJCT_INSTR_ASCII_FORMAT_LINE;
   if (m_columnRadioButton->isChecked()) d->format = PRJCT_INSTR_ASCII_FORMAT_COLUMN;
+  if (m_columnExtendedRadioButton->isChecked()) d->format = PRJCT_INSTR_ASCII_FORMAT_COLUMN_EXTENDED;
 
   // flags
   d->flagZenithAngle = m_zenCheck->isChecked() ? 1 : 0;
@@ -662,6 +673,40 @@ void CWInstrAsciiEdit::apply(struct instrumental_ascii *d) const
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toLocal8Bit().data());
   strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLocal8Bit().data());
+}
+
+void CWInstrAsciiEdit::setflagsEnabled(bool enableFlag)
+{
+ if (enableFlag)
+  {
+   m_zenCheck->show();
+   m_aziCheck->show();
+   m_eleCheck->show();
+   m_dateCheck->show();
+   m_timeCheck->show();
+   m_lambdaCheck->show();
+   m_flagsGroup->show();
+  }
+ else
+  {
+   m_zenCheck->hide();
+   m_aziCheck->hide();
+   m_eleCheck->hide();
+   m_dateCheck->hide();
+   m_timeCheck->hide();
+   m_lambdaCheck->hide();
+   m_flagsGroup->hide();
+  }
+}
+
+void CWInstrAsciiEdit::slotAsciiFormatChanged(bool state)
+{
+  setflagsEnabled(state);
+}
+
+void CWInstrAsciiEdit::slotAsciiExtendedFormatChanged(bool state)
+{
+  setflagsEnabled(!state);
 }
 
 //--------------------------------------------------------

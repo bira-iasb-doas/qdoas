@@ -168,7 +168,7 @@ char *ascFieldsNames[PRJCT_RESULTS_MAX]=
   (char *)"Start Date (dd/mm/yyyy)",                                            // PRJCT_RESULTS_STARTDATE,
   (char *)"End Date (dd/mm/yyyy)",                                              // PRJCT_RESULTS_ENDDATE,
   (char *)"UTC Start Time (hh:mm:ss)",                                          // PRJCT_RESULTS_STARTTIME,
-  (char *)"UTC Stop Time (hh:mm:ss)",                                           // PRJCT_RESULTS_ENDTIME,
+  (char *)"UTC End Time (hh:mm:ss)",                                            // PRJCT_RESULTS_ENDTIME,
   (char *)"Scanning Angle",                                                     // PRJCT_RESULTS_SCANNING,
   (char *)"Filter Number",                                                      // PRJCT_RESULTS_FILTERNUMBER,
   (char *)"Measurement Type",                                                   // PRJCT_RESULTS_MEASTYPE,
@@ -557,7 +557,7 @@ RC ASCII_QDOAS_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
   // Return
 
-  return ERROR_ID_ALLOC; // rc;
+  return rc;
  }
 
 // -----------------------------------------------------------------------------
@@ -598,6 +598,7 @@ RC ASCII_QDOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int
   char keyValue[STRING_LENGTH+1];
   char *ptr;
   int useDate,useTime;
+  int measurementType;
   RC rc;                                                                        // return code
   int n_wavel;
 
@@ -790,11 +791,18 @@ RC ASCII_QDOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int
      if (!rc)
       {
        if (useDate && useTime)
-        pRecordInfo->Tm=(double)ZEN_NbSec(&pRecordInfo->present_datetime.thedate,&pRecordInfo->present_datetime.thetime,0);
+        {
+         pRecordInfo->Tm=(double)ZEN_NbSec(&pRecordInfo->present_datetime.thedate,&pRecordInfo->present_datetime.thetime,0);
+         tmLocal=pRecordInfo->Tm+THRD_localShift*3600.;
+         pRecordInfo->localCalDay=ZEN_FNCaljda(&tmLocal);
 
-       //  pRecordInfo->TotalExpTime = (double)pRecordInfo->NSomme*pRecordInfo->Tint;
-       if (useTime)
-        pRecordInfo->TimeDec = (double)pRecordInfo->present_datetime.thetime.ti_hour+pRecordInfo->present_datetime.thetime.ti_min/60.;
+         //  pRecordInfo->TotalExpTime = (double)pRecordInfo->NSomme*pRecordInfo->Tint;
+         if (useTime)
+          {
+           pRecordInfo->TimeDec = (double)pRecordInfo->present_datetime.thetime.ti_hour+pRecordInfo->present_datetime.thetime.ti_min/60.;
+           pRecordInfo->localTimeDec=fmod(pRecordInfo->TimeDec+24.+THRD_localShift,(double)24.);
+          }
+        }
 
        if (recordNo<pEngineContext->recordNumber)
         {
@@ -803,17 +811,20 @@ RC ASCII_QDOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int
         }
       }
 
+    measurementType=pEngineContext->project.instrumental.user;
 
+    if (rc || (dateFlag && ((pRecordInfo->asc.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH) && (pRecordInfo->elevationViewAngle<80.))))
+     rc=ERROR_ID_FILE_RECORD;
 
-     // {
-     //  FILE *fp;
-     //  fp=fopen("toto.dat" : break;"a+t");
-     //  for (int i=0;i<n_wavel;i++)
-     //   fprintf(fp : break;"%g\n" : break; spectrum[i]);
-     //  fclose(fp);
-     // }
+    else if (!dateFlag && (measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_NONE))
+     {
+     	if (((measurementType==PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) && (pRecordInfo->asc.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) && (pRecordInfo->asc.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH)) ||
+     	    ((measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) && (pRecordInfo->asc.measurementType!=measurementType)))
+
+     	 rc=ERROR_ID_FILE_RECORD;
+     }
 
    }
 
-  return ERROR_ID_NO;
+  return rc;
  }

@@ -631,7 +631,8 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
      {
       // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_ASCII :
-       if ((pEngineContext->project.instrumental.ascii.format==PRJCT_INSTR_ASCII_FORMAT_LINE)  && (pEngineContext->project.instrumental.ascii.format==PRJCT_INSTR_ASCII_FORMAT_COLUMN))
+       if ((pEngineContext->project.instrumental.ascii.format==PRJCT_INSTR_ASCII_FORMAT_LINE)  ||
+           (pEngineContext->project.instrumental.ascii.format==PRJCT_INSTR_ASCII_FORMAT_COLUMN))
         rc=ASCII_Set(pEngineContext,pFile->specFp);
        else
         rc=ASCII_QDOAS_Set(pEngineContext,pFile->specFp);
@@ -814,9 +815,10 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
     {
      // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_ASCII :
-      // if ((pEngineContext->project.instrumental.ascii.format==PRJCT_INSTR_ASCII_FORMAT_LINE)  && (pEngineContext->project.instrumental.ascii.format==PRJCT_INSTR_ASCII_FORMAT_COLUMN))
-      //  rc=ASCII_Read(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
-      // else
+      if ((pEngineContext->project.instrumental.ascii.format==PRJCT_INSTR_ASCII_FORMAT_LINE)  ||
+          (pEngineContext->project.instrumental.ascii.format==PRJCT_INSTR_ASCII_FORMAT_COLUMN))
+       rc=ASCII_Read(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
+      else
        rc=ASCII_QDOAS_Read(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
       break;
       // ---------------------------------------------------------------------------

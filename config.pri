@@ -10,7 +10,10 @@ QMAKE_CFLAGS += -g -std=gnu99 -Wall -Wextra -pedantic \
           -Wwrite-strings -Wstrict-prototypes -Wold-style-definition \
           -Wredundant-decls -Wnested-externs -Wlogical-op
 
-QMAKE_CXXFLAGS += -std=c++0x
+QMAKE_LFLAGS += -g
+QMAKE_LFLAGS_RELEASE=
+
+# QMAKE_CXXFLAGS += -std=c++0x
 
 QDOAS_VERSION=2.112.1
 
@@ -110,15 +113,15 @@ caro {
 
   DEFINES += QT_NODLL
 
-  HDFEOS_INC_PATH  = D:/My_Libraries/HDF/hdfeos2_18/hdfeos2.18/hdfeos/include D:/My_Applications/QDOAS/winlibs/hdfeos5/include D:/My_Libraries/HDF/hdfeos5_1_15/hdfeos5.1.15/hdfeos5/include_qdoas
-  HDFEOS_LIB_PATH  = D:/My_Libraries/HDF/hdfeos2_18/hdfeos2.18/hdfeos/src
+  HDFEOS_INC_PATH  = D:/My_Applications/QDOAS/winlibs/hdfeos/include D:/My_Applications/QDOAS/winlibs/hdfeos5/include
+  HDFEOS_LIB_PATH  = D:/My_Applications/QDOAS/winlibs/hdfeos/lib
   HDFEOS5_LIB_PATH = D:/My_Applications/QDOAS/winlibs/hdfeos5/lib
-  HDF_INC_PATH     = D:/My_Libraries/HDF/hdf-4.2.8/include D:/My_Applications/QDOAS/winlibs/hdf5-1.8.15/include
-  HDF_LIB_PATH     = D:/My_Libraries/HDF/hdf-4.2.8/Src/hdf-4.2.8/hdf/src
-  MFHDF_LIB_PATH   = D:/My_Libraries/HDF/hdf-4.2.8/Src/hdf-4.2.8/mfhdf/libsrc
-  HDF5_LIB_PATH    = D:/My_Applications/QDOAS/winlibs/hdf5-1.8.15/lib
+  HDF_INC_PATH     = D:/My_Applications/QDOAS/winlibs/hdf/include D:/My_Applications/QDOAS/winlibs/hdf5/include
+  HDF_LIB_PATH     = D:/My_Applications/QDOAS/winlibs/hdf/lib
+  MFHDF_LIB_PATH   = D:/My_Applications/QDOAS/winlibs/hdf/lib
+  HDF5_LIB_PATH    = D:/My_Applications/QDOAS/winlibs/hdf5/lib
   NETCDF_INC_PATH  = D:/My_Applications/QDOAS/winlibs/netCDF/include
-  NETCDF_LIB_PATH  = D:/My_Applications/QDOAS/winlibs/netCDF/lib
+  NETCDF_LIB_PATH  = D:/My_Applications/QDOAS/winlibs/netcdf/lib
 
   CODE_GENERATION = release # Override because debug is broken
 }
@@ -135,7 +138,7 @@ thomas {
   INCLUDEPATH += /usr/include/hdf5/serial
   INCLUDEPATH += /usr/include/hdf-eos5
   INCLUDEPATH += /usr/include/x86_64-linux-gnu/hdf
-  
+
   QMAKE_LIBDIR += /usr/lib/x86_64-linux-gnu/hdf5/serial/
   QMAKE_LIBDIR += /home/thomasd/lib
   QMAKE_RPATHDIR += /home/thomasd/lib
@@ -151,8 +154,8 @@ asan { # use 'CONFIG+=asan' to build with adress sanitizer support
 #
 # hdf-eos5:
 #
-#   CC=/space/hpc-apps/bira/2015a/hdf5-1.8.10-64/bin/h5cc ./configure \
-#     --prefix=/home/thomasd --with-szlib=/home/thomasd \
+#   CC=/space/hpc-apps/bira/2015a/hdf5-1.8.10-64/bin/h5cc ./configure /
+#     --prefix=/home/thomasd --with-szlib=/home/thomasd /
 #     --enable-install-include
 hpc {
   LIBS += -lirc -lsvml
