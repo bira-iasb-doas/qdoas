@@ -104,9 +104,6 @@ int main(int argc, char **argv)
 
   setlocale(LC_NUMERIC, "C");
 
-  // all internal C strings should use the local 8-bit encoding.
-  QTextCodec::setCodecForCStrings(QTextCodec::codecForLocale());
-
   // ----------------------------------------------------------------------------
 
   if (argc == 1) {

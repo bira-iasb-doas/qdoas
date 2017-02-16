@@ -62,9 +62,6 @@ CWMain::CWMain(QWidget *parent) :
 
   setlocale(LC_NUMERIC, "C");
 
-  // all internal C strings should use the local 8-bit encoding.
-  QTextCodec::setCodecForCStrings(QTextCodec::codecForLocale());
-
   // ----------------------------------------------------------------------------
   initializeMediateUsamp(&m_guiProperties);
 
