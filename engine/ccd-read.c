@@ -647,7 +647,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
               pRecord->ccd.headTemperature=header.headTemperature;
 
               if ((pRecord->ccd.measureType=header.measureType)==PRJCT_INSTR_MAXDOAS_TYPE_AZIMUTH)
-               pRecord->ccd.measureType=PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS;
+                pRecord->ccd.measureType=PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS;
 
 
               // This part is not elegant at all but the code should be more consistent in the acquisition program according to the different situations with the pointing mode

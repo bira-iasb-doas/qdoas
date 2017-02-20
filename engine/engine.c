@@ -1060,9 +1060,12 @@ RC EngineRequestEndBrowseSpectra(ENGINE_CONTEXT *pEngineContext)
    // Declarations
 
    ANALYSIS_REF *pRef;
-   RC rc=ERROR_ID_NO;
+   RC rc;
 
    // Initializations
+
+   pRef=&pEngineContext->analysisRef;
+   rc=ERROR_ID_NO;
 
    if ((THRD_id!=THREAD_TYPE_NONE) && (THRD_id!=THREAD_TYPE_SPECTRA))
     {

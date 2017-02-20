@@ -59,7 +59,13 @@ CWMain::CWMain(QWidget *parent) :
   m_plotArea(NULL)
 {
   // ----------------------------------------------------------------------------
-  
+
+	// to avoid that a thousands comma separator (QT 4.7.3)
+
+	   QLocale qlocale=QLocale::system();
+	   qlocale.setNumberOptions(QLocale::OmitGroupSeparator);
+	   QLocale::setDefault(qlocale);
+
   setlocale(LC_NUMERIC, "C");
 
   // ----------------------------------------------------------------------------

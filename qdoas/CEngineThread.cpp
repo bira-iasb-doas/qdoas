@@ -21,6 +21,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <assert.h>
 
 #include <QCoreApplication>
+#include <QLocale>
 
 #include "CEngineThread.h"
 #include "CQdoasEngineController.h"
@@ -114,8 +115,14 @@ void CEngineThread::run()
   //
   // m_terminated, m_requests and are protected by
   // m_reqQueueMutex
-  
+
   // set the locale to "C" to avoid parsing problems when the system locale uses a different decimal separator
+	// to avoid that a thousands comma separator (QT 4.7.3)
+
+	   QLocale qlocale=QLocale::system();
+	   qlocale.setNumberOptions(QLocale::OmitGroupSeparator);
+	   QLocale::setDefault(qlocale);
+
   setlocale(LC_NUMERIC, "C");
 
   CEngineRequest *activeRequest;
