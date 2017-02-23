@@ -961,10 +961,10 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
        register_field( (struct output_field) { .basic_fieldname = "SCIAMACHY State Id", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#5d", .get_data = (func_void)&get_scia_state_id });
        break;
      case PRJCT_RESULTS_STARTTIME:
-       register_field( (struct output_field) { .basic_fieldname = "Start Time (hh:mm:ss)", .memory_type = OUTPUT_TIME, .resulttype = fieldtype, .format = "%02d:%02d:%02d", .get_data = (func_void)&get_start_time });
+       register_field( (struct output_field) { .basic_fieldname = "Start Time (hhmmss)", .memory_type = OUTPUT_TIME, .resulttype = fieldtype, .format = "%02d%02d%02d", .get_data = (func_void)&get_start_time });
        break;
      case PRJCT_RESULTS_ENDTIME:
-       register_field( (struct output_field) { .basic_fieldname = "Stop Time (hh:mm:ss)", .memory_type = OUTPUT_TIME, .resulttype = fieldtype, .format = "%02d:%02d:%02d", .get_data = (func_void)&get_end_time });
+       register_field( (struct output_field) { .basic_fieldname = "Stop Time (hhmmss)", .memory_type = OUTPUT_TIME, .resulttype = fieldtype, .format = "%02d%02d%02d", .get_data = (func_void)&get_end_time });
        break;
      case PRJCT_RESULTS_SCANNING:
        register_field( (struct output_field) { .basic_fieldname = "Scanning angle", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)func_scanning_angle });
@@ -1355,10 +1355,10 @@ static void OutputRegisterFieldsToExport(const ENGINE_CONTEXT *pEngineContext, c
        register_field( (struct output_field) { .basic_fieldname = "SCIAMACHY State Id", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%-5d", .get_data = (func_void)&get_scia_state_id });
        break;
      case PRJCT_RESULTS_STARTTIME:
-       register_field( (struct output_field) { .basic_fieldname = "UTC Start Time", .memory_type = OUTPUT_TIME, .resulttype = fieldtype, .format = "%02d%02d%02d", .get_data = (func_void)&get_start_time });
+       register_field( (struct output_field) { .basic_fieldname = "UTC Start Time", .memory_type = OUTPUT_TIME, .resulttype = fieldtype, .format = "%02d:%02d:%02d", .get_data = (func_void)&get_start_time });
        break;
      case PRJCT_RESULTS_ENDTIME:
-       register_field( (struct output_field) { .basic_fieldname = "UTC End Time", .memory_type = OUTPUT_TIME, .resulttype = fieldtype, .format = "%02d%02d%02d", .get_data = (func_void)&get_end_time });
+       register_field( (struct output_field) { .basic_fieldname = "UTC End Time", .memory_type = OUTPUT_TIME, .resulttype = fieldtype, .format = "%02d:%02d:%02d", .get_data = (func_void)&get_end_time });
        break;
      case PRJCT_RESULTS_SCANNING:
        register_field( (struct output_field) { .basic_fieldname = "Scanning angle", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)func_scanning_angle });
