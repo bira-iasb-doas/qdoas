@@ -338,27 +338,11 @@
 // VECTOR_Norm : Vector norm computation
 // -------------------------------------
 
-double VECTOR_Norm(double *v,int dim)
+double VECTOR_Norm(const double *v,int dim)
  {
-  // Declarations
-
-  double norm;
-  INDEX i;
-
-  #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionBegin("VECTOR_Norm",DEBUG_FCTTYPE_MATH);
-  #endif
-
-  // Norm computation
-
-  for (i=1,norm=(double) 0.;i<=dim;i++)
-   norm+=v[i]*v[i];
-
-  // Return norm
-
-  #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionStop("VECTOR_Norm",0);
-  #endif
+  double norm = 0;
+  for (int i=1 ; i<=dim; i++)
+    norm+=v[i]*v[i];
 
   return norm;
  }

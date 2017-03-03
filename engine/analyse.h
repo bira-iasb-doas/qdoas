@@ -3,7 +3,7 @@
 
 #include "doas.h"
 #include "matrix.h"
-#include "svd.h"
+#include "fit_properties.h"
 
 typedef struct anlyswin_cross_section ANALYSIS_CROSS;
 typedef struct anlyswin_shift_stretch ANALYSIS_SHIFT_STRETCH;
@@ -230,7 +230,7 @@ struct _feno {
   char           *ref_description;                                              // string describing spectra used in automatic reference.
   int             nIter;                                                        // number of iterations
   int             Decomp;                                                       // force SVD decomposition
-  SVD             svd;                                                          // SVD decomposition data
+  struct  fit_properties fit_properties;
   CROSS_REFERENCE TabCross[MAX_FIT];                                            // symbol cross reference
   CROSS_RESULTS   TabCrossResults[MAX_FIT];                                     // results stored per symbol in previous list
   bool           *spikes;                                                       // spikes[i] is true if the residual at pixel i has a spike
@@ -288,7 +288,7 @@ extern char *ANLYS_amf[ANLYS_AMF_TYPE_MAX];
 
 extern PRJCT_FILTER *ANALYSE_plFilter,*ANALYSE_phFilter;
 extern MATRIX_OBJECT ANALYSIS_slitMatrix[NSFP],O3TD;
-extern double      **U,*x,*Lambda,*LambdaSpec,
+extern double *x,*Lambda,*LambdaSpec,
                     ANALYSIS_slitParam[NSFP],
                     *ANALYSE_pixels,
                     *ANALYSE_splineX,              // abscissa used for spectra, in the units selected by user
@@ -308,19 +308,16 @@ extern double      **U,*x,*Lambda,*LambdaSpec,
 // ----------
 
 RC ANALYSE_Function ( double * const X, double * const Y, double *SigmaY, double *Yfit, int Npts,
-              double *fitParamsC, double *fitParamsF,INDEX indexFenoColumn);
-RC   ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol, const double *lambda, const int n_wavel, const char *callingFunction);
+                      double *fitParamsC, double *fitParamsF,INDEX indexFenoColumn, struct fit_properties *fitprops);
+RC   ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol, const double *lambda, const int n_wavel);
 RC   ANALYSE_XsInterpolation(FENO *pTabFeno, const double *newLambda,INDEX indexFenoColumn);
 RC   ANALYSE_ConvoluteXs(const FENO *pTabFeno,int action,double conc,const MATRIX_OBJECT *pXs,
                          const MATRIX_OBJECT *slitMatrix,const double *slitParam, int slitType,
                          const double *newlambda, double *output, INDEX indexlambdaMin, INDEX indexlambdaMax, const int n_wavel,
                          INDEX indexFenoColumn, int wveDptFlag);
 RC   ANALYSE_XsConvolution(FENO *pTabFeno,double *newLambda,MATRIX_OBJECT *slitMatrix,double *slitParam,int slitType,INDEX indexFenoColumn,int wveDptFlag);
-RC   ANALYSE_LinFit(SVD *pSvd,int Npts,int Degree, const double *a, const double *sigma, const double *b, double *x);
-void ANALYSE_SvdFree(char *callingFunctionShort,SVD *pSvd);
-RC   ANALYSE_SvdLocalAlloc(char *callingFunctionShort,SVD *pSvd);
-RC   ANALYSE_SvdInit(SVD *pSvd, const int n_wavel);
-RC   ANALYSE_CurFitMethod(INDEX indexFenoColumn, const double *Spectre, const double *SigmaSpec, const double *Sref, int n_wavel, double *residuals, double *Chisqr,int *pNiter,double speNormFact,double refNormFact);
+RC   ANALYSE_SvdInit(FENO *feno, struct fit_properties *fit, const int n_wavel);
+RC   ANALYSE_CurFitMethod(INDEX indexFenoColumn, const double *Spectre, const double *SigmaSpec, const double *Sref, int n_wavel, double *residuals, double *Chisqr,int *pNiter,double speNormFact,double refNormFact, struct fit_properties *fit);
 void ANALYSE_ResetData(void);
 RC   ANALYSE_SetInit(ENGINE_CONTEXT *pEngineContext);
 RC   ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,int refFlag,void *responseHandle,INDEX indexFenoColumn);
@@ -328,7 +325,7 @@ RC   ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle);
 
 void ANALYSE_SetAnalysisType(INDEX indexFenoColumn);
 RC   ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn);
-RC   ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *crossSectionList,int nCross,int hidden, const double *lambda,INDEX indexFenoColumn);
+RC   ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *crossSectionList,int nCross, const double *lambda,INDEX indexFenoColumn);
 RC   ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,int nLinear,INDEX indexFenoColumn);
 RC   ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAMETERS *nonLinearList,int nNonLinear,double *lambda,INDEX indexFenoColumn);
 RC   ANALYSE_LoadShiftStretch(const ANALYSIS_SHIFT_STRETCH *shiftStretchList,int nShiftStretch,INDEX indexFenoColumn);

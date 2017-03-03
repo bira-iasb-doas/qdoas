@@ -222,13 +222,13 @@ void OMI_ReleaseReference(void)
     pRef=&OMI_ref[i];
 
     if (pRef->omiRefLambda!=NULL)
-      MEMORY_ReleaseDMatrix(__func__,"omiRefLambda",pRef->omiRefLambda,0,pRef->nXtrack-1,0);
+      MEMORY_ReleaseDMatrix(__func__,"omiRefLambda",pRef->omiRefLambda,0,0);
     if (pRef->omiRefSpectrum!=NULL)
-      MEMORY_ReleaseDMatrix(__func__,"omiRefSpectrum",pRef->omiRefSpectrum,0,pRef->nXtrack-1,0);
+      MEMORY_ReleaseDMatrix(__func__,"omiRefSpectrum",pRef->omiRefSpectrum,0,0);
     if (pRef->omiRefFact!=NULL)
       MEMORY_ReleaseDVector(__func__,"omiRefSpectrumK",pRef->omiRefFact,0);
     if (pRef->omiRefSigma!=NULL)
-      MEMORY_ReleaseDMatrix(__func__,"omiRefSigma",pRef->omiRefSigma,0,pRef->nXtrack-1,0);
+      MEMORY_ReleaseDMatrix(__func__,"omiRefSigma",pRef->omiRefSigma,0,0);
 
     if (pRef->spectrum.pixelQualityFlags!=NULL)                                          // pixelquality
       MEMORY_ReleaseBuffer(__func__,"pRef->spectrum.pixelQualityFlags",pRef->spectrum.pixelQualityFlags);

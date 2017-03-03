@@ -53,8 +53,6 @@
 //  SVD WORKSPACE MEMORY MANAGEMENT
 //  ===============================
 //
-//  SVD_Free - release allocated buffers used for SVD decomposition;
-//  SVD_LocalAlloc - allocate SVD matrices for the current window;
 //  AnalyseSvdGlobalAlloc - global allocations;
 //
 //  ===============
@@ -128,6 +126,7 @@
 #include <ctype.h>
 #include <math.h>
 #include <assert.h>
+#include <strings.h>
 
 #ifndef WIN32
 // for "is_same_file" implementation on unix:
@@ -138,6 +137,7 @@
 #include "analyse.h"
 
 #include "engine_context.h"
+#include "fit_properties.h"
 #include "mediate.h"
 #include "winfiles.h"
 #include "winsymb.h"
@@ -147,7 +147,6 @@
 #include "xsconv.h"
 #include "filter.h"
 #include "usamp.h"
-#include "svd.h"
 #include "spectral_range.h"
 #include "tropomi_read.h"
 #include "output.h"
@@ -172,8 +171,7 @@ doas_spectrum *global_doas_spectrum; // Should better remove this global variabl
 
 int    ANALYSE_plotKurucz,ANALYSE_plotRef,ANALYSE_indexLine;
 
-int NFeno,                             // number of analysis windows
-  DimC;                              // number of columns in SVD matrix == number of symbols to take into account for SVD decomposition
+int NFeno;                             // number of analysis windows
 
 int SvdPDeb,SvdPFin,                   // analysis window limits
   LimMin,LimMax,LimN;
@@ -184,7 +182,7 @@ FENO **TabFeno,*Feno;                  // list of analysis windows in a project
 
 int ANALYSE_swathSize=0;
 
-double **U,*x,*Lambda,*LambdaSpec,
+double *x,*Lambda,*LambdaSpec,
   *ANALYSE_pixels,
   *ANALYSE_splineX,              // abscissa used for spectra, in the units selected by user
   *ANALYSE_absolu,               // residual spectrum
@@ -214,21 +212,13 @@ int NOrtho,
 int NDET[MAX_SWATHSIZE];
 // description of an analysis windows
 
-int Dim,                             // security for border effects
-  DimL,                              // number of lines in SVD matrix == total number of pixels to take into account for SVD decomposition
-  DimP,
-  NF,NP,FAST;                        // number of non linear parameters to fit
-
 PRJCT_FILTER *ANALYSE_plFilter,*ANALYSE_phFilter;
 PRJCT_ANLYS  *pAnalysisOptions;        // analysis options
 PRJCT_SLIT   *pSlitOptions;            // slit function options
 PRJCT_KURUCZ *pKuruczOptions;          // Kurucz options
 PRJCT_USAMP  *pUsamp;                  // undersampling options
 
-double **A,**V,*W,**P,                 // SVD matrices
-  **covar,
-  *SigmaSqr,
-  *Fitp,
+double *Fitp,
   *FitDeltap,
   *FitMinp,
   *FitMaxp,
@@ -259,7 +249,7 @@ INDEX analyseIndexRecord;
  * \param curve_data (num_curves x 2) array of pointers to the x and y data of the curves.
  * \param num_curves The number of different curves to plot.
  * \param type
- * \param forceAutoscaling
+ * \param forceAutoScaling
  * \param title
  * \param responseHandle
  * \param specrange The doas_spectrum describing the gaps in the spectrum
@@ -357,14 +347,13 @@ bool remove_spikes(double *residuals,
   return spikes;
  }
 
-int reinit_analysis(FENO *pFeno, const int n_wavel)
- {
-  pFeno->svd.DimL = spectrum_length(pFeno->svd.specrange);
+int reinit_analysis(FENO *pFeno, const int n_wavel) {
+  pFeno->fit_properties.DimL = spectrum_length(pFeno->fit_properties.specrange);
   pFeno->Decomp = 1;
 
   memcpy(ANALYSE_absolu, ANALYSE_zeros, sizeof(double) * n_wavel);
 
-  return ANALYSE_SvdInit(&Feno->svd, n_wavel);
+  return ANALYSE_SvdInit(pFeno,&pFeno->fit_properties, n_wavel);
  }
 
 void AnalyseGetFenoLim(FENO *pFeno,INDEX *pLimMin,INDEX *pLimMax, const int n_wavel)
@@ -383,8 +372,8 @@ void AnalyseGetFenoLim(FENO *pFeno,INDEX *pLimMin,INDEX *pLimMax, const int n_wa
   if (!pFeno->hidden)
    {
 
-    deb = spectrum_start(pFeno->svd.specrange);
-    fin = spectrum_end(pFeno->svd.specrange);
+    deb = spectrum_start(pFeno->fit_properties.specrange);
+    fin = spectrum_end(pFeno->fit_properties.specrange);
 
     Dim=0;
 
@@ -485,74 +474,61 @@ RC FNPixel(double *lambdaVector,double lambdaValue,int npts,int pixelSelection)
 // ---------------------------------------------------------------------------------------
 // OrthogonalizeVector : Orthogonalize a column in A matrix to a set of other columns of A
 // ---------------------------------------------------------------------------------------
+//
+// OrthoSet[0..NOrthoSet-1]: column indices in A of the orthogonal base
+// NormSet: norms of the orthogonal base
+// NOrthoSet: number of orthogonal base vectors.
+// indexColumn: column index in A of the vector we want to orghogonalize
+// A[..][1..DimL]: vectors
+// DimL: vector dimension
+void OrthogonalizeVector(const int *OrthoSet, const double *NormSet,int NOrthoSet,INDEX indexColumn,double **A,int DimL) {
+  for (int j=0;j<NOrthoSet;j++) {
 
-void OrthogonalizeVector(int *OrthoSet,double *NormSet,int NOrthoSet,INDEX indexColumn)
-{
-  // Declarations
+    if (NormSet[j]!=0.) {
+      const int indexSvd=Feno->TabCross[OrthoSet[j]].IndSvdA;
 
-  INDEX indexOrthoSet,                   // browse OrthoSet vector
-    indexSvd,                        // index of column in A SVD matrix
-    i;
-  double dot,norm;
+      double dot = 0.;
+      for (int i=1;i<=DimL;i++)
+        dot+=A[indexSvd][i]*A[indexColumn][i];
 
-#if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionBegin("OrthogonalizeVector",DEBUG_FCTTYPE_UTIL);
-#endif
+      dot /=NormSet[j];
 
-  // Orthogonalization
-
-  for (indexOrthoSet=0;indexOrthoSet<NOrthoSet;indexOrthoSet++)
-
-   if ((norm=NormSet[indexOrthoSet])!=(double)0.)
-    {
-     indexSvd=Feno->TabCross[OrthoSet[indexOrthoSet]].IndSvdA;
-     norm=(double)1./norm;
-
-     for (i=1,dot=(double)0.;i<=DimL;i++)
-      dot+=A[indexSvd][i]*A[indexColumn][i];
-
-     for (i=1;i<=DimL;i++)
-      A[indexColumn][i]-=dot*A[indexSvd][i]*norm;
+      for (int i=1;i<=DimL;i++)
+        A[indexColumn][i]-=dot*A[indexSvd][i];
     }
-
-#if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionStop("OrthogonalizeVector",0);
-#endif
+  }
 }
 
-void OrthogonalizeToCross(int indexCross,double *NormSet,int currentNOrtho)
-{
+static void OrthogonalizeToCross(int indexCross,double *NormSet,int currentNOrtho, double **A, int DimL) {
   // Declarations
 
   CROSS_REFERENCE *pTabCross;
   INDEX indexTabCross;
 
 #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionBegin("OrthogonalizeToCross",DEBUG_FCTTYPE_UTIL);
+  DEBUG_FunctionBegin(__func__,DEBUG_FCTTYPE_UTIL);
 #endif
 
-  for (indexTabCross=0;indexTabCross<Feno->NTabCross;indexTabCross++)
-   {
+  for (indexTabCross=0;indexTabCross<Feno->NTabCross;indexTabCross++) {
     pTabCross=&Feno->TabCross[indexTabCross];
 
-    if (pTabCross->IndOrthog==indexCross)
-     {
+    if (pTabCross->IndOrthog==indexCross) {
       OrthoSet[currentNOrtho]=indexCross;
       NormSet[currentNOrtho]=VECTOR_Norm(A[Feno->TabCross[indexCross].IndSvdA],DimL);
 
       if ((ANALYSE_phFilter->filterFunction==NULL) ||
 	  (!Feno->hidden && !ANALYSE_phFilter->hpFilterAnalysis) ||
 	  ((Feno->hidden==1) && !ANALYSE_phFilter->hpFilterCalib))
-       OrthogonalizeVector(OrthoSet,NormSet,currentNOrtho+1,pTabCross->IndSvdA);
+        OrthogonalizeVector(OrthoSet,NormSet,currentNOrtho+1,pTabCross->IndSvdA,A,DimL);
       else
-       OrthogonalizeVector(&OrthoSet[NOrtho],&NormSet[NOrtho],currentNOrtho-NOrtho+1,pTabCross->IndSvdA);
+        OrthogonalizeVector(&OrthoSet[NOrtho],&NormSet[NOrtho],currentNOrtho-NOrtho+1,pTabCross->IndSvdA,A,DimL);
 
-      OrthogonalizeToCross(indexTabCross,NormSet,currentNOrtho+1);
-     }
-   }
+      OrthogonalizeToCross(indexTabCross,NormSet,currentNOrtho+1,A,DimL);
+    }
+  }
 
 #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionStop("OrthogonalizeToCross",0);
+  DEBUG_FunctionStop(__func__,0);
 #endif
 }
 
@@ -560,30 +536,18 @@ void OrthogonalizeToCross(int indexCross,double *NormSet,int currentNOrtho)
 // Orthogonalization : Orthogonalization of matrix A processing
 // ------------------------------------------------------------
 
-void Orthogonalization(void)
-{
-  // Declarations
+static void Orthogonalization(double **A, int DimL) {
+  if (NOrtho) { // if no orthogonal base, cross sections can not be orthogonalized to another cross section
 
-  INDEX indexOrthoSet,indexTabCross;
-  CROSS_REFERENCE *pTabCross;
-  double NormSet[MAX_FIT];
+    double NormSet[Feno->NTabCross];
 
-#if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionBegin("Orthogonalization",DEBUG_FCTTYPE_UTIL);
-#endif
-
-  if (NOrtho)                                                                   // if no orthogonal base, cross sections can not be orthogonalized to another cross section
-   {
-    // Orthogonal base
-
-    memcpy(NormSet,ANALYSE_ones,NOrtho*sizeof(double));
-
-    for (indexOrthoSet=1;indexOrthoSet<NOrtho;indexOrthoSet++)
-     {
-      OrthogonalizeVector(OrthoSet,NormSet,indexOrthoSet,Feno->TabCross[OrthoSet[indexOrthoSet]].IndSvdA);
-      //    VECTOR_NormalizeVector(A[Feno->TabCross[OrthoSet[indexOrthoSet]].IndSvdA],DimL,&norm /* Vector norm before normalisation */,"Orthogonalization ");
-      NormSet[indexOrthoSet]=VECTOR_Norm(A[Feno->TabCross[OrthoSet[indexOrthoSet]].IndSvdA],DimL);
-     }
+    NormSet[0]=VECTOR_Norm(A[Feno->TabCross[OrthoSet[0]].IndSvdA],DimL);
+    for (int i=1;i<NOrtho;++i) {
+      // orthogonalize vector i w.r.t. vectors 0..i-1:
+      OrthogonalizeVector(OrthoSet,NormSet,i,Feno->TabCross[OrthoSet[i]].IndSvdA,A,DimL);
+      // calculate norm of orthogonalized vector i:
+      NormSet[i]=VECTOR_Norm(A[Feno->TabCross[OrthoSet[i]].IndSvdA],DimL);
+    }
 
     // Orthogonalization to base only
 
@@ -591,29 +555,22 @@ void Orthogonalization(void)
         (!Feno->hidden && !ANALYSE_phFilter->hpFilterAnalysis) ||
         ((Feno->hidden==1) && !ANALYSE_phFilter->hpFilterCalib))
 
-     for (indexTabCross=0;indexTabCross<Feno->NTabCross;indexTabCross++)
-      {
-       pTabCross=&Feno->TabCross[indexTabCross];
+      for (int j=0;j<Feno->NTabCross;j++) {
+        CROSS_REFERENCE *pTabCross=&Feno->TabCross[j];
 
-       if (pTabCross->IndSvdA && (pTabCross->IndOrthog==ORTHOGONAL_BASE))
-        OrthogonalizeVector(OrthoSet,NormSet,NOrtho,pTabCross->IndSvdA);
+        if (pTabCross->IndSvdA && (pTabCross->IndOrthog==ORTHOGONAL_BASE))
+          OrthogonalizeVector(OrthoSet,NormSet,NOrtho,pTabCross->IndSvdA,A,DimL);
       }
 
     // Orthogonalization to base plus another vector
 
-    for (indexTabCross=0;indexTabCross<Feno->NTabCross;indexTabCross++)
-     {
-      pTabCross=&Feno->TabCross[indexTabCross];
+    for (int j=0;j<Feno->NTabCross;j++) {
+      CROSS_REFERENCE *pTabCross=&Feno->TabCross[j];
 
       if (pTabCross->IndSvdA && (pTabCross->IndOrthog==ORTHOGONAL_BASE))
-       OrthogonalizeToCross(indexTabCross,NormSet,NOrtho);
-     }
-
-   }
-
-#if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionStop("Orthogonalization",0);
-#endif
+        OrthogonalizeToCross(j,NormSet,NOrtho,A,DimL);
+    }
+  }
 }
 
 // =======================================
@@ -650,35 +607,24 @@ RC ShiftVector(const double *lambda, double *source, const double *deriv, double
                double DSH_,double DST_,double DST2_,                        // second shift and stretch
                const double *Param,int fwhmDir,int kuruczFlag,INDEX indexFenoColumn)
 {
-  // Declarations
-
-  CROSS_REFERENCE *TabCross;
-  INDEX i,j;
-  double lambda0;
-  double x0,y,fwhm,deltaX;
-  int fwhmFlag;
-  RC rc;
-
-  // Initializations
-
 #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin(__func__,DEBUG_FCTTYPE_APPL);
 #endif
 
-  lambda0 = center_pixel_wavelength(SvdPDeb, SvdPFin);
+  double lambda0 = center_pixel_wavelength(SvdPDeb, SvdPFin);
   memcpy(ANALYSE_shift,ANALYSE_zeros,sizeof(double)*n_wavel);
-  fwhmFlag=((Feno->analysisType==ANALYSIS_TYPE_FWHM_NLFIT) && (fwhmDir!=0) && (Param!=NULL))?1:0;
-  TabCross=Feno->TabCross;
+  int fwhmFlag=((Feno->analysisType==ANALYSIS_TYPE_FWHM_NLFIT) && (fwhmDir!=0) && (Param!=NULL))?1:0;
+  CROSS_REFERENCE *TabCross=Feno->TabCross;
 
-  rc=ERROR_ID_NO;
+  RC rc=ERROR_ID_NO;
 
   // Buffer allocation for second derivative
 
-  for (j=LimMin;j<=LimMax;j++) {             // !! p'=p-(DSH+DST*(p-p0)+DST2*(p-p0)^2
+  for (int j=LimMin;j<=LimMax;j++) {             // !! p'=p-(DSH+DST*(p-p0)+DST2*(p-p0)^2
     // Second shift and stretch              //    p''=p'-(DSH'+DST'*(p'-p0')+DST2'*(p'-p0')^2
     // with   p=ANALYSE_splineX (Lambda if unit is nm;pixels if unit is pixels)
-    x0=(ANALYSE_splineX[j]-lambda0);        //        p0'=p0-DSH
-    y=ANALYSE_splineX[j]-(DSH_+DST_*x0+DST2_*x0*x0);
+    double x0=(ANALYSE_splineX[j]-lambda0);        //        p0'=p0-DSH
+    double y=ANALYSE_splineX[j]-(DSH_+DST_*x0+DST2_*x0*x0);
 
     // First shift and stretch
 
@@ -687,11 +633,10 @@ RC ShiftVector(const double *lambda, double *source, const double *deriv, double
 
     // Fit difference of resolution between spectrum and reference
 
-    if (fwhmFlag)
-     {
-      fwhm=(double)0.;
+    if (fwhmFlag) {
+      double fwhm= 0.;
 
-      deltaX=(ANALYSE_splineX[j]-lambda0);
+      const double deltaX=(ANALYSE_splineX[j]-lambda0);
 
       if (Feno->indexFwhmConst!=ITEM_NONE)
        fwhm+=(TabCross[Feno->indexFwhmConst].FitParam!=ITEM_NONE)?(double)Param[TabCross[Feno->indexFwhmConst].FitParam]:(double)TabCross[Feno->indexFwhmConst].InitParam;
@@ -805,7 +750,7 @@ RC ShiftVector(const double *lambda, double *source, const double *deriv, double
 
         memset(&xsNew,0,sizeof(MATRIX_OBJECT));
 
-        for (i=0;i<NSFP;i++)
+        for (int i=0;i<NSFP;i++)
          slitParamVector[i]=(double)0.;
 
         if (MATRIX_Allocate(&xsNew,n_wavel,2,0,0,0,__func__))
@@ -842,17 +787,17 @@ RC ShiftVector(const double *lambda, double *source, const double *deriv, double
              {
               // make a backup of the matrix
 
-              for (i=0;i<nc;i++)
+              for (int i=0;i<nc;i++)
                 memcpy(slitMatrix[0].matrix[i],KURUCZ_buffers[indexFenoColumn].slitFunction.matrix[i],sizeof(double)*nl);
 
        	      // Apply the stretch on the slit wavelength calibration
 
-       	      for (i=shiftIndex;i<slitMatrix[0].nl;i++)
+       	      for (int i=shiftIndex;i<slitMatrix[0].nl;i++)
                 slitMatrix[0].matrix[0][i]=(slitMatrix[0].matrix[0][i]<(double)0.)?fwhmStretch1*KURUCZ_buffers[indexFenoColumn].slitFunction.matrix[0][i]:fwhmStretch2*KURUCZ_buffers[indexFenoColumn].slitFunction.matrix[0][i];
 
        	      // Recalculate second derivatives and the FWHM
 
-       	      for (i=1;i<slitMatrix[0].nc;i++)
+       	      for (int i=1;i<slitMatrix[0].nc;i++)
                 rc=SPLINE_Deriv2(slitMatrix[0].matrix[0]+shiftIndex,slitMatrix[0].matrix[1]+shiftIndex,slitMatrix[0].deriv2[i]+shiftIndex,slitMatrix[0].nl-shiftIndex,__func__);
              }
            }
@@ -872,28 +817,28 @@ RC ShiftVector(const double *lambda, double *source, const double *deriv, double
            }
 
           if (!rc &&
-	      !(rc=XSCONV_TypeStandard(&xsNew,LimMin,LimMax+1,&KURUCZ_buffers[indexFenoColumn].hrSolar,
-				       &KURUCZ_buffers[indexFenoColumn].hrSolar,NULL,slitType,slitMatrix,slitParamVector,0)))
+               !(rc=XSCONV_TypeStandard(&xsNew,LimMin,LimMax+1,&KURUCZ_buffers[indexFenoColumn].hrSolar,
+                                        &KURUCZ_buffers[indexFenoColumn].hrSolar,NULL,slitType,slitMatrix,slitParamVector,0)))
 
             memcpy(target,xsNew.matrix[1],sizeof(double)*n_wavel);
          }
 
-        for (i=0;i<NSFP;i++)
-         MATRIX_Free(&slitMatrix[i],__func__);
+        for (int i=0;i<NSFP;i++)
+          MATRIX_Free(&slitMatrix[i],__func__);
 
         MATRIX_Free(&xsNew,__func__);
        }
 
     }
 
-    if (hFilterRefLog && !(rc=SPLINE_Vector(KURUCZ_buffers[indexFenoColumn].lambdaF,KURUCZ_buffers[indexFenoColumn].solarF,KURUCZ_buffers[indexFenoColumn].solarF2,n_wavel+2*KURUCZ_buffers[indexFenoColumn].solarFGap,ANALYSE_shift+LimMin,source+LimMin,LimN,pAnalysisOptions->interpol,__func__)))
-      {
-        for (i=LimMin;(i<=LimMax) && (source[i]>(double)0.) && (target[i]>(double)0.);i++)
-          target[i]=log(target[i]/source[i]);
+    if (hFilterRefLog && !(rc=SPLINE_Vector(KURUCZ_buffers[indexFenoColumn].lambdaF,KURUCZ_buffers[indexFenoColumn].solarF,KURUCZ_buffers[indexFenoColumn].solarF2,n_wavel+2*KURUCZ_buffers[indexFenoColumn].solarFGap,ANALYSE_shift+LimMin,source+LimMin,LimN,pAnalysisOptions->interpol,__func__))) {
+      int i;
+      for (i=LimMin;(i<=LimMax) && (source[i]>(double)0.) && (target[i]>(double)0.);i++)
+        target[i]=log(target[i]/source[i]);
 
-        if (i<=LimMax)
-          rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_LOG,analyseIndexRecord);
-      }
+      if (i<=LimMax)
+        rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_LOG,analyseIndexRecord);
+    }
   } else if (!fwhmFlag) {
     rc=SPLINE_Vector(lambda,source,deriv,n_wavel,&ANALYSE_shift[LimMin],&target[LimMin],LimN,pAnalysisOptions->interpol,__func__);
   }
@@ -1275,7 +1220,7 @@ RC ANALYSE_XsConvolution(FENO *pTabFeno,double *newlambda,
 // AnalyseLoadVector : Load a (2-column) vector from a file
 // --------------------------------------------
 
-RC AnalyseLoadVector(const char *function, const char *fileName, double *lambda, double *vector, const int n_wavel, int refFlag, int *pNewSize)
+RC AnalyseLoadVector(const char *fileName, double *lambda, double *vector, const int n_wavel, int refFlag, int *pNewSize)
 {
   // Declarations
 
@@ -1342,92 +1287,6 @@ RC AnalyseLoadVector(const char *function, const char *fileName, double *lambda,
 #endif
 
     // Return
-
-  return rc;
-}
-
-// ----------------------------------------------------------
-// ANALYSE_LinFit : Use svd facilities for linear regressions
-// ----------------------------------------------------------
-
-RC ANALYSE_LinFit(SVD *pSvd, int Npts, int Degree, const double *a, const double *sigma, const double *b, double *x)
-{
-  // Declarations
-
-  double *Norm,*bSig,mean;
-  INDEX i,j;
-  RC rc;
-
-#if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionBegin(__func__,DEBUG_FCTTYPE_UTIL);
-#endif
-
-  // Initializations
-
-  Norm=bSig=NULL;
-  bSig=NULL;
-  rc=ERROR_ID_NO;
-
-  // Buffers allocation
-
-  if (Degree==0)
-   {
-    for (mean=(double)0.,i=1;i<=Npts;i++)
-     mean+=b[i];
-
-    x[1]=mean/Npts;
-   }
-  else if (((Norm=(double *)MEMORY_AllocDVector(__func__,"Norm",1,Degree+1))==NULL) ||
-           ((bSig=(double *)MEMORY_AllocDVector(__func__,"bSig",1,Npts))==NULL))
-   rc=ERROR_ID_ALLOC;
-  else
-   {
-    // Fill svd matrix
-
-    for (i=1;i<=Degree+1;i++)
-     for (j=1;j<=Npts;j++)
-      pSvd->A[i][j]=(double)pow(a[j],(double)(i-1));
-
-    // Solution of the system weighted by errors
-
-    for (j=1;j<=Npts;j++)
-     bSig[j]=b[j];
-
-    if (sigma!=NULL)
-     for (j=1;j<=Npts;j++)
-      {
-       for (i=1;i<=Degree+1;i++)
-        pSvd->A[i][j]/=sigma[j];
-       bSig[j]/=sigma[j];
-      }
-
-    // Normalize columns in svd matrix
-
-    for (i=1;i<=Degree+1;i++)
-     if ((rc=VECTOR_NormalizeVector(pSvd->A[i],Npts,&Norm[i],__func__))!=ERROR_ID_NO)
-      goto EndANALYSE_LinFit;
-
-    // SVD decomposition and backsubstitution
-
-    if (((rc=SVD_Dcmp(pSvd->A,Npts,Degree+1,pSvd->W,pSvd->V,pSvd->SigmaSqr,NULL))==ERROR_ID_NO) &&
-        ((rc=SVD_Bksb(pSvd->A,pSvd->W,pSvd->V,Npts,Degree+1,bSig,x))==ERROR_ID_NO))
-
-     for (i=1;i<=Degree+1;i++)
-      x[i]/=Norm[i];
-   }
-
-  // Return
-
- EndANALYSE_LinFit :
-
-  if (Norm!=NULL)
-   MEMORY_ReleaseDVector(__func__,"Norm",Norm,1);
-  if (bSig!=NULL)
-   MEMORY_ReleaseDVector(__func__,"bSig",bSig,1);
-
-#if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionStop(__func__,rc);
-#endif
 
   return rc;
 }
@@ -1545,7 +1404,7 @@ RC AnalyseFwhmCorrectionK(const double *Spectre, const double *Sref,double *Spec
 // AnalyseSvdGlobalAlloc : Global allocations
 // ------------------------------------------
 
-RC AnalyseSvdGlobalAlloc(ENGINE_CONTEXT *pEngineContext)
+RC AnalyseSvdGlobalAlloc(void)
 {
 #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin(__func__, DEBUG_FCTTYPE_MEM);
@@ -1611,7 +1470,7 @@ RC AnalyseSvdGlobalAlloc(ENGINE_CONTEXT *pEngineContext)
 //                   determination and concentrations computation
 // --------------------------------------------------------------------------
 
-RC ANALYSE_SvdInit(SVD *pSvd, const int n_wavel)
+RC ANALYSE_SvdInit(FENO* pFeno, struct fit_properties *fit, const int n_wavel)
 {
   // Declarations
 
@@ -1622,57 +1481,42 @@ RC ANALYSE_SvdInit(SVD *pSvd, const int n_wavel)
   RC rc=ERROR_ID_NO;
 
 #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionBegin("ANALYSE_SvdInit",DEBUG_FCTTYPE_APPL);
+  DEBUG_FunctionBegin(__func__,DEBUG_FCTTYPE_APPL);
 #endif
 
   // Initializations
 
   memcpy(ANALYSE_splineX,Lambda,sizeof(double)*n_wavel);
 
-  OrthoSet=Feno->OrthoSet;
-  NOrtho=Feno->NOrtho;
-
-  A=pSvd->A;
-  U=pSvd->U;
-  V=pSvd->V;
-  W=pSvd->W;
-  P=pSvd->P;
-
-  SigmaSqr=pSvd->SigmaSqr;
-  covar=pSvd->covar;
-
-  DimL=pSvd->DimL;
-  DimC=pSvd->DimC;
-  DimP=pSvd->DimP;
-  NF=pSvd->NF;
-  NP=pSvd->NP;
+  OrthoSet=pFeno->OrthoSet;
+  NOrtho=pFeno->NOrtho;
 
   temp=(double)0.;
 
-  if (!Feno->hidden && (ANALYSE_plFilter->type!=PRJCT_FILTER_TYPE_NONE))
+  if (!pFeno->hidden && (ANALYSE_plFilter->type!=PRJCT_FILTER_TYPE_NONE))
     temp+=ANALYSE_plFilter->filterEffWidth;
 
   //    for high-pass filters, don't account for the filter width in the calculation of the number of freedom
   //    if ((ANALYSE_phFilter->type!=PRJCT_FILTER_TYPE_NONE) && (ANALYSE_phFilter->type!=PRJCT_FILTER_TYPE_ODDEVEN))
   //     temp+=ANALYSE_phFilter->filterEffWidth;
 
-  ANALYSE_nFree=floor(DimL/((temp>(double)1.e-6)?temp:(double)1.)+0.5)-pSvd->nFit;
+  ANALYSE_nFree=floor(fit->DimL/((temp>(double)1.e-6)?temp:(double)1.)+0.5)-fit->nFit;
 
   if (ANALYSE_nFree<=(double)0.)
     rc=ERROR_SetLast("SvdInit",ERROR_TYPE_FATAL,ERROR_ID_NFREE);
   else {
-    global_doas_spectrum = pSvd->specrange;
+    global_doas_spectrum = fit->specrange;
 
-    SvdPDeb=spectrum_start(pSvd->specrange);
-    SvdPFin=spectrum_end(pSvd->specrange);
+    SvdPDeb=spectrum_start(fit->specrange);
+    SvdPFin=spectrum_end(fit->specrange);
 
     lambda0 = center_pixel_wavelength(SvdPDeb, SvdPFin);
 
-    Dim=0;
+    int Dim=0;
 
-    if (!Feno->hidden && (ANALYSE_plFilter->type!=PRJCT_FILTER_TYPE_NONE) && (ANALYSE_plFilter->type!=PRJCT_FILTER_TYPE_ODDEVEN))
+    if (!pFeno->hidden && (ANALYSE_plFilter->type!=PRJCT_FILTER_TYPE_NONE) && (ANALYSE_plFilter->type!=PRJCT_FILTER_TYPE_ODDEVEN))
       Dim+=(int)((ANALYSE_plFilter->filterSize)*sqrt(ANALYSE_plFilter->filterNTimes));
-    if (((!Feno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((Feno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
+    if (((!pFeno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((pFeno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
         (ANALYSE_phFilter->type!=PRJCT_FILTER_TYPE_NONE) && (ANALYSE_phFilter->type!=PRJCT_FILTER_TYPE_ODDEVEN))
       Dim+=(int)((ANALYSE_phFilter->filterSize)*sqrt(ANALYSE_phFilter->filterNTimes));
 
@@ -1688,7 +1532,7 @@ RC ANALYSE_SvdInit(SVD *pSvd, const int n_wavel)
     norm1=norm2=(double)0.;
 
     doas_iterator my_iterator;
-    for( int i = iterator_start(&my_iterator, pSvd->specrange); i != ITERATOR_FINISHED; i=iterator_next(&my_iterator)) {
+    for( int i = iterator_start(&my_iterator, fit->specrange); i != ITERATOR_FINISHED; i=iterator_next(&my_iterator)) {
       deltaX=(double)(ANALYSE_splineX[i]-lambda0)*(ANALYSE_splineX[i]-lambda0);
 
       norm1+=deltaX;
@@ -1698,7 +1542,7 @@ RC ANALYSE_SvdInit(SVD *pSvd, const int n_wavel)
     for (j=LimMin,StretchFact1=StretchFact2=(double)0.;j<=LimMax;j++) {
       deltaX=(ANALYSE_splineX[j]-lambda0);
 
-      deltaX=ANALYSE_splineX[j]-lambda0-Feno->Stretch*deltaX-Feno->Stretch2*deltaX*deltaX;
+      deltaX=ANALYSE_splineX[j]-lambda0-pFeno->Stretch*deltaX-pFeno->Stretch2*deltaX*deltaX;
       deltaX*=deltaX;
 
       StretchFact1+=deltaX;
@@ -1708,19 +1552,19 @@ RC ANALYSE_SvdInit(SVD *pSvd, const int n_wavel)
     if ((norm1<=(double)0.) || (norm2<=(double)0.) ||
         (StretchFact1<=(double)0.) || (StretchFact2<=(double)0.)) {
 
-      rc=ERROR_SetLast("SvdInit",ERROR_TYPE_WARNING,ERROR_ID_SQRT_ARG);
+      rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_SQRT_ARG);
     } else {
       StretchFact1=(double)1./sqrt(StretchFact1);
       StretchFact2=(double)1./sqrt(StretchFact2);
 
-      for (i=0,norm1=(double)sqrt(norm1),norm2=(double)sqrt(norm2);i<Feno->NTabCross;i++) {
-        pTabCross=&Feno->TabCross[i];
+      for (i=0,norm1=sqrt(norm1),norm2=sqrt(norm2);i<pFeno->NTabCross;i++) {
+        pTabCross=&pFeno->TabCross[i];
 
         // Normalization of non linear parameters
 
-        if ((i==Feno->indexOffsetOrder1) || (i==Feno->indexFwhmOrder1))
+        if ((i==pFeno->indexOffsetOrder1) || (i==pFeno->indexFwhmOrder1))
           pTabCross->Fact=norm1;
-        else if ((i==Feno->indexOffsetOrder2) || (i==Feno->indexFwhmOrder2))
+        else if ((i==pFeno->indexOffsetOrder2) || (i==pFeno->indexFwhmOrder2))
           pTabCross->Fact=norm2;
 
         pTabCross->InitStretch/=StretchFact1;
@@ -1729,7 +1573,7 @@ RC ANALYSE_SvdInit(SVD *pSvd, const int n_wavel)
         // Fill, 'Fit' vectors with data on parameters to fit
 
         // ---------------------------------------------------------------------------
-        if ((Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD) && (pTabCross->FitConc!=ITEM_NONE)) {
+        if ((pFeno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD) && (pTabCross->FitConc!=ITEM_NONE)) {
           //
           // The best would be to use Fact (calculated in ANALYSE_Function when Decomp=1) but this implies that
           // FitMinp and FitMaxp are in parameters of ANALYSE_Function (called by curfit)
@@ -1740,11 +1584,11 @@ RC ANALYSE_SvdInit(SVD *pSvd, const int n_wavel)
           if ((fabs(pTabCross->InitConc)>EPSILON) || (fabs(pTabCross->MinConc)>EPSILON) || (fabs(pTabCross->MaxConc)>EPSILON)) {
             norm=(double)0.;
 
-            for( int i = iterator_start(&my_iterator, pSvd->specrange); i != ITERATOR_FINISHED; i=iterator_next(&my_iterator))
+            for( int i = iterator_start(&my_iterator, fit->specrange); i != ITERATOR_FINISHED; i=iterator_next(&my_iterator))
               norm+=pTabCross->vector[i]*pTabCross->vector[i];
 
-            if (norm<=(double)0.)
-              rc=ERROR_SetLast("SvdInit",ERROR_TYPE_FATAL,ERROR_ID_SQRT_ARG);
+            if (norm<=0.)
+              rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_SQRT_ARG);
             else {
               norm=sqrt(norm);
 
@@ -1801,7 +1645,7 @@ RC ANALYSE_SvdInit(SVD *pSvd, const int n_wavel)
         // ---------------------------------------------------------------------------
       }
 
-      for (i=0;i<NF;i++) {
+      for (i=0;i<fit->NF;i++) {
         if ((FitMinp[i]!=(double)0.) && (FitMinp[i]==FitMaxp[i]))
           FitMinp[i]=-FitMaxp[i];
         if (FitMinp[i]>FitMaxp[i]) {
@@ -1810,14 +1654,13 @@ RC ANALYSE_SvdInit(SVD *pSvd, const int n_wavel)
           FitMaxp[i]=swap;
         }
       }
-      FAST=!NP;
     }
   }
 
   // Return
 
 #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionStop("ANALYSE_SvdInit",rc);
+  DEBUG_FunctionStop(__func__,rc);
 #endif
 
   return rc;
@@ -1874,6 +1717,7 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,int refFlag,void *respo
       indexPage=(pEngineContext->satelliteFlag)?plotPageRef:WrkFeno+plotPageAnalysis;
 
       Feno=&RefTabFeno[WrkFeno];
+      Feno->fit_properties.linfit = NULL; // don't keep reference to original TabFeno linear_system.
       Feno->Shift=Feno->Stretch=Feno->Stretch2=(double)0.;
       pResults=&Feno->TabCrossResults[Feno->indexSpectrum];
       NDET[indexFenoColumn]=Feno->NDET;
@@ -1916,7 +1760,7 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,int refFlag,void *respo
 
         // Initialize global variables
 
-        if (((rc=ANALYSE_SvdInit(&Feno->svd, Feno->NDET))!=ERROR_ID_NO) ||
+        if (((rc=ANALYSE_SvdInit(Feno, &Feno->fit_properties, Feno->NDET))!=ERROR_ID_NO) ||
             ((rc=ANALYSE_CurFitMethod(0,                           // not for OMI for the moment
                                       Spectre,                     // etalon reference spectrum
                                       NULL,                        // error on raw spectrum
@@ -1925,7 +1769,8 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,int refFlag,void *respo
                                       NULL,
                                       &Square,                      // returned stretch order 2
                                       NULL,                        // number of iterations in Curfit
-                                      (double)1.,(double)1.))>=THREAD_EVENT_STOP))
+                                      1.,1.,
+                                      &Feno->fit_properties))>=THREAD_EVENT_STOP))
           {
             rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_REF_ALIGNMENT,Feno->windowName);
             goto EndAlignReference;
@@ -2000,6 +1845,7 @@ RC ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,int refFlag,void *respo
 
         TabFeno[indexFenoColumn][WrkFeno].Decomp=1;
        }
+      LINEAR_free(Feno->fit_properties.linfit);
      }
    }
 
@@ -2061,7 +1907,7 @@ RC AnalyseSaveResiduals(char *fileName,ENGINE_CONTEXT *pEngineContext, const int
 
     int curPixel = 0;
     doas_iterator my_iterator;
-    doas_interval *nextinterval = iterator_start_interval(&my_iterator, Feno->svd.specrange);
+    doas_interval *nextinterval = iterator_start_interval(&my_iterator, Feno->fit_properties.specrange);
     while (curPixel < n_wavel) {
      int stop = (nextinterval != NULL)
        ? interval_start(nextinterval)
@@ -2096,11 +1942,11 @@ RC AnalyseSaveResiduals(char *fileName,ENGINE_CONTEXT *pEngineContext, const int
 // --------------------------------------------------------------------------------------------------------
 
 RC ANALYSE_Function( double * const spectrum_orig, double * const reference, double *SigmaY, double *Yfit, int Npts,
-                     double *fitParamsC, double *fitParamsF,INDEX indexFenoColumn)
+                     double *fitParamsC, double *fitParamsF,INDEX indexFenoColumn, struct fit_properties *fitprops)
 {
   // Declarations
 
-  double *XTrav,*YTrav,*newXsTrav,*spec_nolog,*spectrum_interpolated,*reference_shifted,offset,deltaX,tau;
+  double *XTrav,*YTrav,*newXsTrav,*spec_nolog,*spectrum_interpolated,*reference_shifted, deltaX;
   CROSS_REFERENCE *TabCross,*pTabCross;
   int NewDimC,offsetOrder;
   INDEX indexSvdA,indexSvdP,polyOrder,polyFlag;
@@ -2121,7 +1967,7 @@ RC ANALYSE_Function( double * const spectrum_orig, double * const reference, dou
     slitParam[i]=(TabCross[Feno->indexFwhmParam[i]].FitParam!=ITEM_NONE)?fitParamsF[TabCross[Feno->indexFwhmParam[i]].FitParam]:TabCross[Feno->indexFwhmParam[i]].InitParam;
 
   polyFlag=0;
-  NewDimC=DimC;
+  NewDimC=fitprops->DimC;
 
   lambda0 = center_pixel_wavelength(SvdPDeb, SvdPFin);
 
@@ -2139,7 +1985,7 @@ RC ANALYSE_Function( double * const spectrum_orig, double * const reference, dou
 
   // Don't take fixed concentrations into account for singular value decomposition
 
-  for (int i=0;i<Feno->NTabCross && (NewDimC==DimC);i++)
+  for (int i=0;i<Feno->NTabCross && (NewDimC==fitprops->DimC);i++)
    if ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) && (TabCross[i].FitConc==0) &&
        (TabCross[i].DeltaConc==(double)0.) && TabCross[i].IndSvdA && (TabCross[i].IndSvdA<=NewDimC))
 
@@ -2156,8 +2002,7 @@ RC ANALYSE_Function( double * const spectrum_orig, double * const reference, dou
 
    rc=ERROR_ID_ALLOC;
 
-  else
-   {
+  else {
     memcpy(newXsTrav,ANALYSE_zeros,sizeof(double)*n_wavel);
 
    // ========
@@ -2217,8 +2062,7 @@ RC ANALYSE_Function( double * const spectrum_orig, double * const reference, dou
    // Spectrum correction with offset
    // -------------------------------
 
-   if (Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVDMARQUARDT)
-    {
+   if (Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVDMARQUARDT) {
      offsetOrder=-1;
 
      if ((Feno->indexOffsetConst!=ITEM_NONE) && ((TabCross[Feno->indexOffsetConst].FitParam!=ITEM_NONE) || (TabCross[Feno->indexOffsetConst].InitParam!=(double)0.)))
@@ -2228,24 +2072,30 @@ RC ANALYSE_Function( double * const spectrum_orig, double * const reference, dou
      if ((Feno->indexOffsetOrder2!=ITEM_NONE) && ((TabCross[Feno->indexOffsetOrder2].FitParam!=ITEM_NONE) || (TabCross[Feno->indexOffsetOrder2].InitParam!=(double)0.)))
       offsetOrder=2;
 
-     if (offsetOrder>=0)
-      {
-       for (int i=LimMin;i<=LimMax;i++)
-        {
+     if (offsetOrder>=0) {
+       for (int i=LimMin;i<=LimMax;i++) {
          deltaX=(double)(ANALYSE_splineX[i]-lambda0);
 
-         offset=(TabCross[Feno->indexOffsetConst].FitParam!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexOffsetConst].FitParam]:(double)TabCross[Feno->indexOffsetConst].InitParam;
+         double offset=(TabCross[Feno->indexOffsetConst].FitParam!=ITEM_NONE)
+           ? fitParamsF[TabCross[Feno->indexOffsetConst].FitParam]
+           : TabCross[Feno->indexOffsetConst].InitParam;
 
-         if (offsetOrder>=1)
-          offset+=((TabCross[Feno->indexOffsetOrder1].FitParam!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexOffsetOrder1].FitParam]/TabCross[Feno->indexOffsetOrder1].Fact:(double)TabCross[Feno->indexOffsetOrder1].InitParam)*deltaX;
-         if (offsetOrder>=2)
-          offset+=((TabCross[Feno->indexOffsetOrder2].FitParam!=ITEM_NONE)?(double)fitParamsF[TabCross[Feno->indexOffsetOrder2].FitParam]/TabCross[Feno->indexOffsetOrder2].Fact:(double)TabCross[Feno->indexOffsetOrder2].InitParam)*deltaX*deltaX;
-
-         spectrum_interpolated[i]-=(double)offset*Feno->xmean;
-        }
-      }
-    }
-
+         if (offsetOrder>=1) {
+           const double val = (TabCross[Feno->indexOffsetOrder1].FitParam!=ITEM_NONE)
+             ? fitParamsF[TabCross[Feno->indexOffsetOrder1].FitParam]/TabCross[Feno->indexOffsetOrder1].Fact
+             : TabCross[Feno->indexOffsetOrder1].InitParam;
+           offset+=val*deltaX;
+         }
+         if (offsetOrder>=2) {
+           const double val = (TabCross[Feno->indexOffsetOrder2].FitParam!=ITEM_NONE)
+             ? fitParamsF[TabCross[Feno->indexOffsetOrder2].FitParam]/TabCross[Feno->indexOffsetOrder2].Fact
+             : TabCross[Feno->indexOffsetOrder2].InitParam;
+           offset+=val*deltaX*deltaX;
+         }
+         spectrum_interpolated[i] -= offset*Feno->xmean;
+       }
+     }
+   }
 
    // ------------------------------------------
    // Backup of spectrum before taking logarithm
@@ -2280,53 +2130,47 @@ RC ANALYSE_Function( double * const spectrum_orig, double * const reference, dou
     // Build svd matrix
     // ----------------
 
-    if (Feno->Decomp)
-     {
+    if (Feno->Decomp) {
       for (int i=0;i<Feno->NTabCross;i++)
 
        if ((indexSvdA=TabCross[i].IndSvdA)>0)
         {
          pTabCross=&TabCross[i];
-         pTabCross->Fact=(double)1.;
+         pTabCross->Fact=1.;
 
          // Fill SVD matrix with predefined components
 
          int numpixels = spectrum_length(global_doas_spectrum);
 
-         if (WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_PREDEFINED)
-          {
+         if (WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_PREDEFINED) {
            doas_iterator my_iterator;
            if (i==Feno->indexOffsetConst)
             for (int k=1; k<=numpixels; k++)
-             A[indexSvdA][k]=(double)1.;
+              fitprops->A[indexSvdA][k]=(double)1.;
            else if (i==Feno->indexOffsetOrder1) {
-            for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
-             A[indexSvdA][k]=(double)(ANALYSE_splineX[l]-lambda0);
+             for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
+               fitprops->A[indexSvdA][k]=(double)(ANALYSE_splineX[l]-lambda0);
            }
-           else if (i==Feno->indexOffsetOrder2)
-            {
-            for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
-             A[indexSvdA][k]=(double)(ANALYSE_splineX[l]-lambda0)*(ANALYSE_splineX[l]-lambda0);
-            }
-           else if ((i==Feno->indexCommonResidual) || (i==Feno->indexUsamp1) || (i==Feno->indexUsamp2))
-            {
+           else if (i==Feno->indexOffsetOrder2) {
+             for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
+               fitprops->A[indexSvdA][k]=(double)(ANALYSE_splineX[l]-lambda0)*(ANALYSE_splineX[l]-lambda0);
+           }
+           else if ((i==Feno->indexCommonResidual) || (i==Feno->indexUsamp1) || (i==Feno->indexUsamp2)) {
              for( int k=1, l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
-              A[indexSvdA][k]=(Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) ?
-                -pTabCross->vector[l] : pTabCross->vector[l];
-            }
-           else if (i==Feno->indexResol)
-            {
-              double resolX,resolDelta,resolCoeff;
+               fitprops->A[indexSvdA][k]=(Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) ?
+                 -pTabCross->vector[l] : pTabCross->vector[l];
+           }
+           else if (i==Feno->indexResol) {
 
-              resolDelta=0.05;                                                   // small increment to calculate the derivative
-              resolCoeff=Feno->resolFwhm/resolDelta;
-              resolX=resolDelta*sqrt((double)1.+2.*resolCoeff);
+             double resolDelta=0.05;                                                   // small increment to calculate the derivative
+             double resolCoeff=Feno->resolFwhm/resolDelta;
+             double resolX=resolDelta*sqrt((double)1.+2.*resolCoeff);
 
-              for( int k=1, l=max(iterator_start(&my_iterator, global_doas_spectrum),1); (l != ITERATOR_FINISHED) && !rc; k++,l=iterator_next(&my_iterator))
-                if (!(rc=XSCONV_TypeGauss(ANALYSE_splineX,reference,SplineRef,ANALYSE_splineX[l],ANALYSE_splineX[l]-ANALYSE_splineX[l-1],&pTabCross->vector[l],resolX,(double)0.,SLIT_TYPE_GAUSS, n_wavel)))
-                  A[indexSvdA][k]=pTabCross->vector[l]=(reference[l]!=0)?resolCoeff*(pTabCross->vector[l]/reference[l]-1):(double)0.;
-            }
-          }
+             for( int k=1, l=max(iterator_start(&my_iterator, global_doas_spectrum),1); (l != ITERATOR_FINISHED) && !rc; k++,l=iterator_next(&my_iterator))
+               if (!(rc=XSCONV_TypeGauss(ANALYSE_splineX,reference,SplineRef,ANALYSE_splineX[l],ANALYSE_splineX[l]-ANALYSE_splineX[l-1],&pTabCross->vector[l],resolX,(double)0.,SLIT_TYPE_GAUSS, n_wavel)))
+                 fitprops->A[indexSvdA][k]=pTabCross->vector[l]=(reference[l]!=0)?resolCoeff*(pTabCross->vector[l]/reference[l]-1):(double)0.;
+           }
+         }
 
          // Fill SVD matrix with polynomial components
 
@@ -2346,18 +2190,18 @@ RC ANALYSE_Function( double * const spectrum_orig, double * const reference, dou
 
            if (polyFlag && polyOrder == 0 ) {
              for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
-               A[indexSvdA][k]=pTabCross->vector[l];
+               fitprops->A[indexSvdA][k]=pTabCross->vector[l];
            }
            else if (polyOrder > 0) {
              // in order to have geophysical values of the polynomial in output,
              for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
-               A[indexSvdA][k]=pTabCross->vector[l]=A[indexSvdA-1][k]*(ANALYSE_splineX[l]-lambda0);
+               fitprops->A[indexSvdA][k]=pTabCross->vector[l]=fitprops->A[indexSvdA-1][k]*(ANALYSE_splineX[l]-lambda0);
            }
            else if (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) { // SVD method, polyOrder == 0, polyFlag == 0 -> linear offset, order 0
              switch (Feno->linear_offset_mode) {
              case LINEAR_OFFSET_RAD: // normalized w.r.t. the spectrum
                for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator)) {
-                 A[indexSvdA][k]= pTabCross->vector[l] = (fabs(spec_nolog[k-1])> 1.e-6)
+                 fitprops->A[indexSvdA][k]= pTabCross->vector[l] = (fabs(spec_nolog[k-1])> 1.e-6)
                    ? -Feno->xmean/spec_nolog[k-1]
                    : 0.;
                }
@@ -2371,7 +2215,7 @@ RC ANALYSE_Function( double * const spectrum_orig, double * const reference, dou
                // user-chosen ref1, ref2, or the satellite irradiance. Otherwise, use current reference
                const double * const offset_ref = Feno->useEtalon ? Feno->SrefEtalon : reference;
                for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator)) {
-                 A[indexSvdA][k]=pTabCross->vector[l]= (fabs(offset_ref[l])> 1.e-6)
+                 fitprops->A[indexSvdA][k]=pTabCross->vector[l]= (fabs(offset_ref[l])> 1.e-6)
                    ? Feno->xmean/offset_ref[l]
                    : 0.;
                }
@@ -2382,10 +2226,10 @@ RC ANALYSE_Function( double * const spectrum_orig, double * const reference, dou
                assert(false);
                break;
              }
-           } else { // linear offset, Marquadt+SVD method -> normalized w.r.t. the reference
+           } else { // linear offset, Marquardt+SVD method -> normalized w.r.t. the reference
 
              for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
-               A[indexSvdA][k]=pTabCross->vector[l]=(fabs(reference[l])>(double)1.e-6)?(double)Feno->xmean/reference[l] :(double)0.;
+               fitprops->A[indexSvdA][k]=pTabCross->vector[l]=(fabs(reference[l])>(double)1.e-6)?(double)Feno->xmean/reference[l] :(double)0.;
            }
          }
 
@@ -2432,118 +2276,85 @@ RC ANALYSE_Function( double * const spectrum_orig, double * const reference, dou
             {
              doas_iterator my_iterator;
              for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
-              A[indexSvdA][k]=newXsTrav[l];
+              fitprops->A[indexSvdA][k]=newXsTrav[l];
             }
           }
         }
 
-      // weighting by instrumental errors:
-      if ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) && (SigmaY!=NULL)) {
-       for (indexSvdA=0;indexSvdA<=DimC;indexSvdA++)
-        for( int k=1; k<=DimL; k++) {
-         A[indexSvdA][k]/=SigmaY[k-1];
-        }
+      Orthogonalization(fitprops->A,fitprops->DimL);
+
+      // ----------------------------------------------------
+      // In optical density fitting mode, allocate linear fitting environment for cross sections:
+      // ----------------------------------------------------
+      if (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) {
+        // clean up old linear fit environment:
+        LINEAR_free(fitprops->linfit);
+        fitprops->linfit = LINEAR_alloc(Npts,NewDimC,DECOMP_QR);
       }
-
-      // ---------------------------------
-      // Orthogonalization of columns of A
-      // ---------------------------------
-
-      for (int i=0;i<Feno->NTabCross;i++)
-
-       if ((indexSvdA=TabCross[i].IndSvdA)>0)
-        {
-         pTabCross=&TabCross[i];
-
-         if ((WorkSpace[pTabCross->Comp].type!=WRK_SYMBOL_PREDEFINED) ||
-             (// (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT) &&
-              (i==Feno->indexResol) ||
-              (i==Feno->indexUsamp1) ||
-              (i==Feno->indexUsamp2)))
-
-          // normalize vectors of A before orthogonalization
-
-          if ((rc=VECTOR_NormalizeVector(A[indexSvdA],Npts,&pTabCross->Fact,WorkSpace[pTabCross->Comp].symbolName))!=ERROR_ID_NO)
-           goto EndFunction;
-
-        }
-
-      Orthogonalization();
 
       // ----------------------------------------------------
       // Cross sections correction with non linear parameters
       // ----------------------------------------------------
 
-      for (int i=0;i<Feno->NTabCross;i++)
-       {
+      for (int i=0;i<Feno->NTabCross;i++) {
         pTabCross=&TabCross[i];
 
-        if ((indexSvdA=pTabCross->IndSvdA)>0)
-         {
+        if ((indexSvdA=pTabCross->IndSvdA)>0) {
           // ----------------------------------------------------
           // Cross sections correction with non linear parameters
           // ----------------------------------------------------
 
           if ((WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CROSS) &&
               ((pTabCross->FitScale!=ITEM_NONE) || (pTabCross->InitScale!=(double)0.) ||
-               (pTabCross->FitScale2!=ITEM_NONE) || (pTabCross->InitScale2!=(double)0.)))
-           {
+               (pTabCross->FitScale2!=ITEM_NONE) || (pTabCross->InitScale2!=(double)0.))) {
             doas_iterator my_iterator;
-            for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
-             {
-              offset=(double)1.;
-              deltaX=(double)(ANALYSE_splineX[l]-lambda0);
+            for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator)) {
+              double offset= 1.;
+              const double deltaX = ANALYSE_splineX[l]-lambda0;
 
               offset+=((pTabCross->FitScale!=ITEM_NONE)?(double)fitParamsF[pTabCross->FitScale]:(double)pTabCross->InitScale)*deltaX;
               offset+=((pTabCross->FitScale2!=ITEM_NONE)?(double)fitParamsF[pTabCross->FitScale2]:(double)pTabCross->InitScale2)*deltaX*deltaX;
 
-              A[indexSvdA][k]*=offset*pTabCross->Fact;
-             }
-
-            if ((rc=VECTOR_NormalizeVector(A[indexSvdA],Npts,&pTabCross->Fact,"Function 2 "))!=ERROR_ID_NO)
-             goto EndFunction;
-           }
-
-          // -------------------------------------
-          // Make a copy of matrix A into matrix U
-          // -------------------------------------
-
-          memcpy((char *)(U[indexSvdA]+1),(char *)(A[indexSvdA]+1),sizeof(double)*Npts);
-
-          for (int l=1;l<=DimL;l++) {
-           U[indexSvdA][l]*= (SigmaY == NULL) ?
-             pTabCross->Fact : pTabCross->Fact*SigmaY[l-1];   // Multiply columns of U by normalization factor, multiply rows by error
+              fitprops->A[indexSvdA][k]*=offset*pTabCross->Fact;
+            }
           }
 
-         }
-       }
+          if (indexSvdA <=  NewDimC) {
+            switch (Feno->analysisMethod) {
+            case PRJCT_ANLYS_METHOD_SVD:
+              // ----------------------------------------------------
+              // Copy cross sections for which we fit the concentration to linear fit system
+              // ----------------------------------------------------
+              LINEAR_set_column(fitprops->linfit, indexSvdA, fitprops->A[indexSvdA]);
+              break;
+            case PRJCT_ANLYS_METHOD_SVDMARQUARDT:
+              // Calculate norm
+              pTabCross->Fact = sqrt(VECTOR_Norm(fitprops->A[indexSvdA],Npts));
+              break;
+            default:
+              assert(false); // bug, analysisMethod should be either PRJCT_ANLYS_METHOD_SVD or ...SVDMARQUARDT
+              break;
+            }
+          }
+        }
+      }
 
       // -----------------
       // SVD Decomposition
       // -----------------
 
-#if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_SVD_) && __DEBUG_DOAS_SVD_
-      if (((analyseDebugMask&DEBUG_FCTTYPE_MATH)!=0) && analyseDebugVar)        // SVD is classified as a math function
-       {
-       	DEBUG_Print("+++ SVD decomposition (%s window)\n",Feno->windowName);
+      if (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) {
+        LINEAR_set_weight(fitprops->linfit, SigmaY);
+        rc = LINEAR_decompose(fitprops->linfit,fitprops->SigmaSqr,fitprops->covar);
+        if (rc != ERROR_ID_NO)
+          goto EndFunction;
+      }
 
-        for (j=0;j<Feno->NTabCross;j++)
-         if (TabCross[j].IndSvdA)
-          DEBUG_Print("+++ %-2d %s\n",TabCross[j].IndSvdA,WorkSpace[TabCross[j].Comp].symbolName);
-
-        DEBUG_PrintVar("Before SVD_Dcmp",U,1,DimL,0,DimC,NULL);
-        DEBUG_PrintVar("Before SVD_Dcmb",A,1,DimL,0,DimC,NULL);
-       }
-#endif
-
-      if ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) &&
-          ((rc=SVD_Dcmp(A,Npts,NewDimC /* don't take fixed concentrations into account */ ,W,V,SigmaSqr,covar))!=ERROR_ID_NO))
-       goto EndFunction;
-
-      if (FAST && (SigmaY==NULL) && ( (Feno->linear_offset_mode != LINEAR_OFFSET_RAD) || (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT))) {
+        // We only need to recalculate the svd decomposition if the matrix can be chagned by non-linear fit parameters (NP), weighting by spectrum errors (SigmaY), or linear offset:
+      if (!Feno->fit_properties.NP && (SigmaY==NULL) && ( (Feno->linear_offset_mode != LINEAR_OFFSET_RAD) || (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT))) {
         Feno->Decomp=0;
       }
-     }
+    }
 
     // =========
     // REFERENCE
@@ -2632,8 +2443,7 @@ RC ANALYSE_Function( double * const spectrum_orig, double * const reference, dou
     // OPTICAL THICKNESS FITTING (SVD)
     //
 
-    if (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD)
-     {
+    if (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) {
       // ---------------------
       // SVD back substitution
       // ---------------------
@@ -2641,118 +2451,93 @@ RC ANALYSE_Function( double * const spectrum_orig, double * const reference, dou
       // N.B. : YTrav -> reference spectrum, shifted and stretched
       //        XTrav -> raw spectrum, shifted and stretched
 
-      for(int k=1; k<=spectrum_length(global_doas_spectrum); k++)
-       {
+      for(int k=1; k<=spectrum_length(global_doas_spectrum); k++) {
         b[k]=YTrav[k-1]-XTrav[k-1];
 
-        for (int l=NewDimC+1;l<=DimC;l++)
-          b[k]-=U[l][k]*fitParamsC[l];
+        for (int l=NewDimC+1;l<=fitprops->DimC;l++)
+          b[k]-=fitprops->A[l][k]*fitParamsC[l];
 
         if (SigmaY!=NULL)
-         b[k]/=SigmaY[k-1];
-       }
+          b[k]/=SigmaY[k-1];
+      }
 
-#if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_SVD_) && __DEBUG_DOAS_SVD_
-      if (((analyseDebugMask&DEBUG_FCTTYPE_MATH)!=0) && analyseDebugVar)        // SVD is classified as a math function
-       DEBUG_PrintVar("Before SVD_Bksb",XTrav,0,DimL-1,YTrav,0,DimL-1,b,1,DimL,NULL);
-      DEBUG_PrintVar("Before SVD_Bksb",U,1,DimL,0,DimC,NULL);
-      DEBUG_PrintVar("Before SVD_Bksb",fitParamsC,0,DimC,NULL);
-#endif
-
-      if ((rc=SVD_Bksb(A,W,V,Npts,NewDimC /* don't take fixed concentrations into account */, b, fitParamsC ))!=ERROR_ID_NO)  // Solve system A*fitParamsF=b
-       goto EndFunction;
-
-#if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_SVD_) && __DEBUG_DOAS_SVD_
-      if (((analyseDebugMask&DEBUG_FCTTYPE_MATH)!=0) && analyseDebugVar)        // SVD is classified as a math function
-       DEBUG_PrintVar("After SVD_Bksb",fitParamsC,0,DimC,NULL);
-#endif
+      rc = LINEAR_solve(fitprops->linfit, b, fitParamsC);
+      if (rc != ERROR_ID_NO)
+        goto EndFunction;
 
       // ------------------------------------------------
       // Yfit computation with the solution of the system
       // ------------------------------------------------
 
-      for (int l=0;l<Feno->NTabCross;l++)
-       {
+      for (int l=0;l<Feno->NTabCross;l++) {
         int svdIndex = TabCross[l].IndSvdA;
         double weight = (svdIndex <= NewDimC)
           ? fitParamsC[svdIndex]/TabCross[l].Fact
           : fitParamsC[svdIndex];
         if (svdIndex > 0)
-         for (int k=1;k<=DimL;k++) {
-          XTrav[k-1]+= U[svdIndex][k]*weight;
+          for (int k=1;k<=fitprops->DimL;k++) {
+            XTrav[k-1]+= fitprops->A[svdIndex][k]*weight;
          }
-       }
-      for (int k=1;k<=DimL;k++) {
-       Yfit[k-1]=YTrav[k-1]-XTrav[k-1]; // NB : logarithm test on YTrav has been made in the previous loop
       }
-     }
+      for (int k=1;k<=fitprops->DimL;k++) {
+        Yfit[k-1]=YTrav[k-1]-XTrav[k-1]; // NB : logarithm test on YTrav has been made in the previous loop
+      }
 
-    //
-    // INTENSITY FITTING (Marquardt-Levenberg + SVD)
-    //
+    } else if (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT) {
 
-    else if (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT)
-     {
-      // ---------------
-      // Fill SVD matrix
-      // ---------------
+      // ------------------------------------------------------------
+      // INTENSITY FITTING (Marquardt-Levenberg + SVD)
+      // ------------------------------------------------------------
 
-      for (int k=1,i=iterator_start(&my_iterator, global_doas_spectrum); i != ITERATOR_FINISHED; k++,i=iterator_next(&my_iterator))
-       {
-        tau = (double)0.;
-        for (int l=0;l<Feno->NTabCross;l++)
-         {
+      for (int k=1,i=iterator_start(&my_iterator, global_doas_spectrum); i != ITERATOR_FINISHED; k++,i=iterator_next(&my_iterator)) {
+        double tau = 0.;
+        for (int l=0;l<Feno->NTabCross;l++) {
           pTabCross=&TabCross[l];
 
-          if (((indexSvdA=pTabCross->IndSvdA)>0) && (WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CROSS))
-           tau+=(pTabCross->FitConc>ITEM_NONE)?(double)fitParamsF[pTabCross->FitConc]*A[pTabCross->IndSvdA][k]:  // Conc non linear fitting
-             fitParamsC[pTabCross->IndSvdA]*U[pTabCross->IndSvdA][k];
-         }
+          if (pTabCross->IndSvdA > 0 && WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CROSS) {
+            const double conc = (pTabCross->FitConc>ITEM_NONE)
+              ? fitParamsF[pTabCross->FitConc] // Conc non linear fitting
+              : fitParamsC[pTabCross->IndSvdA];
+            tau+= conc * fitprops->A[pTabCross->IndSvdA][k] / pTabCross->Fact; // divide by norm for numerical stability
+          }
+        }
 
-        if (-tau>(double)700.)
-         {
-          rc=ERROR_SetLast("Function",ERROR_TYPE_WARNING,ERROR_ID_OVERFLOW);
+        if (-tau>700.) {
+          rc=ERROR_SetLast(__func__, ERROR_TYPE_WARNING, ERROR_ID_OVERFLOW);
           goto EndFunction;
-         }
-        else if (YTrav[k-1]==(double)0.)
-         {
-          rc=ERROR_SetLast("Function",ERROR_TYPE_WARNING,ERROR_ID_DIVISION_BY_0);
+        } else if (YTrav[k-1] == 0.) {
+          rc=ERROR_SetLast(__func__, ERROR_TYPE_WARNING, ERROR_ID_DIVISION_BY_0);
           goto EndFunction;
-         }
+        }
 
         ANALYSE_t[i]=exp(-tau); // exp(-tau)
         ANALYSE_tc[i]=XTrav[k-1]/YTrav[k-1];  // I/I0
-       }
+        b[k] = ANALYSE_tc[i];
+      }
 
-      // ---------------------------------------
-      // SVD decomposition and back substitution
-      // ---------------------------------------
-
-      for (int l=0;l<Feno->NTabCross;l++)
-       {
+      for (int l=0;l<Feno->NTabCross;l++) {
         pTabCross=&TabCross[l];
 
-        if (((indexSvdA=pTabCross->IndSvdA)>0) && ((indexSvdP=pTabCross->IndSvdP)>0))
-         {
-          for( int k=1,i=iterator_start(&my_iterator, global_doas_spectrum); i != ITERATOR_FINISHED; k++,i=iterator_next(&my_iterator))
-           {
-            // Polynomial
-
-            if ((WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CONTINUOUS) && (WorkSpace[pTabCross->Comp].symbolName[0]!='o')) // Polynomial
-             P[indexSvdP][k]=ANALYSE_t[i]*A[indexSvdA][k];
-
-            // Linear offset normalized w.r.t. the reference spectrum and other parameters (Ring ...)
-
-            else
-             P[indexSvdP][k]=A[indexSvdA][k];
-           }
-         }
-       }
-
-      if (((rc=SVD_Dcmp(P,Npts,DimP,W,V,SigmaSqr,covar))!=ERROR_ID_NO) ||
-          ((rc=SVD_Bksb(P,W,V,Npts,DimP,&ANALYSE_tc[spectrum_start(global_doas_spectrum)]-1,b))!=ERROR_ID_NO))      // Solve system P*b=b
-
-       goto EndFunction;
+        if (((indexSvdA=pTabCross->IndSvdA)>0) && ((indexSvdP=pTabCross->IndSvdP)>0)) {
+          for( int k=1,i=iterator_start(&my_iterator, global_doas_spectrum); i != ITERATOR_FINISHED; k++,i=iterator_next(&my_iterator)) {
+            if (WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CONTINUOUS && WorkSpace[pTabCross->Comp].symbolName[0]!='o') {
+              // Polynomial
+              fitprops->P[indexSvdP][k]=ANALYSE_t[i]*fitprops->A[indexSvdA][k]; ///pTabCross->Fact;
+            } else {
+              // Linear offset normalized w.r.t. the reference spectrum and other parameters (Ring ...)
+              fitprops->P[indexSvdP][k]=fitprops->A[indexSvdA][k]; ///pTabCross->Fact;
+            }
+          }
+        }
+      }
+      LINEAR_free(fitprops->linfit);
+      fitprops->linfit = LINEAR_from_matrix(fitprops->P, Npts,fitprops->DimP,DECOMP_QR);
+      rc = LINEAR_decompose(fitprops->linfit, fitprops->SigmaSqr, fitprops->covar);
+      double xP[fitprops->DimP];
+      double *fitParamsP=xP-1; // linear fitting functions assume index starts at 1.
+      if (rc == ERROR_ID_NO) rc = LINEAR_solve(fitprops->linfit, b, fitParamsP);
+      if (rc != ERROR_ID_NO)
+        goto EndFunction;
 
       // ------------------------------------------------
       // Yfit computation with the solution of the system
@@ -2760,18 +2545,18 @@ RC ANALYSE_Function( double * const spectrum_orig, double * const reference, dou
 
       for (int i=0;i<Feno->NTabCross;i++)
        if (((indexSvdA=TabCross[i].IndSvdA)>0) && ((indexSvdP=TabCross[i].IndSvdP)>0))
-        fitParamsC[indexSvdA]=b[indexSvdP];
+        fitParamsC[indexSvdA]=fitParamsP[indexSvdP];
 
-      for (int k=1,i=iterator_start(&my_iterator, global_doas_spectrum); i != ITERATOR_FINISHED; k++,i=iterator_next(&my_iterator))
-       {
-        tau=offset=(double)0.;
+      for (int k=1,i=iterator_start(&my_iterator, global_doas_spectrum); i != ITERATOR_FINISHED; k++,i=iterator_next(&my_iterator)) {
+        double tau = 0.;
+        double offset = 0.;
         for (int l=0;l<Feno->NTabCross;l++)
          if (((indexSvdA=TabCross[l].IndSvdA)>0) && ((indexSvdP=TabCross[l].IndSvdP)>0))
           {
            if ((WorkSpace[TabCross[l].Comp].type==WRK_SYMBOL_CONTINUOUS) && (WorkSpace[TabCross[l].Comp].symbolName[0]!='o'))      // Polynomial
-            tau+=b[indexSvdP]*A[indexSvdA][k];
+            tau+=fitParamsP[indexSvdP]*fitprops->A[indexSvdA][k];
            else                                                                // Offset and other parameters (ring...)
-            offset+=b[indexSvdP]*A[indexSvdA][k];
+            offset+=fitParamsP[indexSvdP]*fitprops->A[indexSvdA][k];
           }
 
         ANALYSE_tc[i]-=offset;            // I/I0 - offset/I0
@@ -2779,13 +2564,8 @@ RC ANALYSE_Function( double * const spectrum_orig, double * const reference, dou
 
         Yfit[k-1]=ANALYSE_t[i]-ANALYSE_tc[i];
        }
-
-#if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_SVD_) && __DEBUG_DOAS_SVD_
-      if (((analyseDebugMask&DEBUG_FCTTYPE_MATH)!=0) && analyseDebugVar)        // SVD is classified as a math function
-       DEBUG_PrintVar("After the fit",ANALYSE_t,0,n_wavel-1,ANALYSE_tc,0,n_wavel-1,NULL);
-#endif
-     }
-   }
+    }
+  }
 
   // Release allocated buffers
 
@@ -2837,7 +2617,8 @@ RC ANALYSE_CurFitMethod(INDEX indexFenoColumn,  // for OMI
                         double *Chisqr,           // chi square
                         int *pNiter,           // number of iterations
                         double speNormFact,
-                        double refNormFact)
+                        double refNormFact,
+                        struct fit_properties *fit)
 {
   // Declarations
 
@@ -2880,13 +2661,13 @@ RC ANALYSE_CurFitMethod(INDEX indexFenoColumn,  // for OMI
   /*  ==================  */
 
   if (
-      ((Yfit=(double *)MEMORY_AllocDVector(__func__,"YFit",0,DimL-1))==NULL) ||
-      ((fitParamsC=(double *)MEMORY_AllocDVector(__func__,"fitParamsC",0,DimC))==NULL) ||
-      ((NF!=0) && (((fitParamsF=(double *)MEMORY_AllocDVector(__func__,"fitParamsF",0,NF-1))==NULL) ||
-                   ((Deltap=(double *)MEMORY_AllocDVector(__func__,"Deltap",0,NF-1))==NULL) ||
-                   ((Sigmaa=(double *)MEMORY_AllocDVector(__func__,"Sigmaa",0,NF-1))==NULL))) ||
-      ((Y0=(double *)MEMORY_AllocDVector(__func__,"Y0",0,DimL-1))==NULL) ||
-      (useErrors && ((SigmaY=(double *)MEMORY_AllocDVector(__func__,"SigmaY",0,DimL-1))==NULL)) ||
+      ((Yfit=(double *)MEMORY_AllocDVector(__func__,"YFit",0,fit->DimL-1))==NULL) ||
+      ((fitParamsC=(double *)MEMORY_AllocDVector(__func__,"fitParamsC",0,fit->DimC))==NULL) ||
+      ((fit->NF!=0) && (((fitParamsF=(double *)MEMORY_AllocDVector(__func__,"fitParamsF",0,fit->NF-1))==NULL) ||
+                   ((Deltap=(double *)MEMORY_AllocDVector(__func__,"Deltap",0,fit->NF-1))==NULL) ||
+                   ((Sigmaa=(double *)MEMORY_AllocDVector(__func__,"Sigmaa",0,fit->NF-1))==NULL))) ||
+      ((Y0=(double *)MEMORY_AllocDVector(__func__,"Y0",0,fit->DimL-1))==NULL) ||
+      (useErrors && ((SigmaY=(double *)MEMORY_AllocDVector(__func__,"SigmaY",0,fit->DimL-1))==NULL)) ||
       ((SpecTrav=(double *)MEMORY_AllocDVector(__func__,"SpecTrav",0,n_wavel-1))==NULL) ||
       ((RefTrav=(double *)MEMORY_AllocDVector(__func__,"RefTrav",0,n_wavel-1))==NULL))
 
@@ -2898,14 +2679,14 @@ RC ANALYSE_CurFitMethod(INDEX indexFenoColumn,  // for OMI
 
     memcpy(SpecTrav,Spectre,sizeof(double)*n_wavel);
     if (SigmaY!=NULL)
-     memcpy(SigmaY,ANALYSE_zeros,sizeof(double)*DimL);
+     memcpy(SigmaY,ANALYSE_zeros,sizeof(double)*fit->DimL);
     memcpy(RefTrav,Sref,sizeof(double)*n_wavel);
 
-    memcpy(Yfit,ANALYSE_zeros,sizeof(double)*DimL);
-    memcpy(Y0,ANALYSE_zeros,sizeof(double)*DimL);
+    memcpy(Yfit,ANALYSE_zeros,sizeof(double)*fit->DimL);
+    memcpy(Y0,ANALYSE_zeros,sizeof(double)*fit->DimL);
 
-    if (NF)
-     memcpy(Sigmaa,ANALYSE_ones,sizeof(double)*(NF-1));
+    if (fit->NF)
+     memcpy(Sigmaa,ANALYSE_ones,sizeof(double)*(fit->NF-1));
 
     // ----------------------------------------------
     // Fwhm adjustment between spectrum and reference
@@ -2984,7 +2765,7 @@ RC ANALYSE_CurFitMethod(INDEX indexFenoColumn,  // for OMI
     for( int i=iterator_start(&my_iterator, global_doas_spectrum); i != ITERATOR_FINISHED;i=iterator_next(&my_iterator))
      Feno->ymean+=(double)RefTrav[i];
 
-    Feno->ymean/=DimL;
+    Feno->ymean/=fit->DimL;
 
     // ---------------------------------
     // Calculation of second derivatives
@@ -3023,9 +2804,7 @@ RC ANALYSE_CurFitMethod(INDEX indexFenoColumn,  // for OMI
                     && !found_previous ;j++) {
               if (TabFeno[indexFenoColumn][indexFeno2].TabCross[j].Comp==TabCross[i].Comp)
                {
-                double scalingFactor;
-
-                scalingFactor=(double)1.;
+                double scalingFactor = 1.;
 
                 if (!strcasecmp(WorkSpace[TabCross[i].Comp].symbolName,"bro") &&
                     (ANALYSIS_broAmf.matrix!=NULL) &&
@@ -3066,11 +2845,11 @@ RC ANALYSE_CurFitMethod(INDEX indexFenoColumn,  // for OMI
        goto EndCurFitMethod;
      }
 
-    if ((NF==0) && ((rc=ANALYSE_Function(SpecTrav,RefTrav,SigmaY,Yfit,DimL,fitParamsC,fitParamsF,indexFenoColumn))<THREAD_EVENT_STOP))
-     *Chisqr=(double)Fchisq(pAnalysisOptions->fitWeighting,(int)ANALYSE_nFree,Y0,Yfit,SigmaY,DimL);
-    else if (NF)
+    if ((fit->NF==0) && ((rc=ANALYSE_Function(SpecTrav,RefTrav,SigmaY,Yfit,fit->DimL,fitParamsC,fitParamsF,indexFenoColumn, fit))<THREAD_EVENT_STOP))
+     *Chisqr=(double)Fchisq(pAnalysisOptions->fitWeighting,(int)ANALYSE_nFree,Y0,Yfit,SigmaY,fit->DimL);
+    else if (fit->NF)
      {
-      for (int i=0; i<NF; i++ ) { fitParamsF[i] = Fitp[i]; Deltap[i] = FitDeltap[i]; }
+      for (int i=0; i<fit->NF; i++ ) { fitParamsF[i] = Fitp[i]; Deltap[i] = FitDeltap[i]; }
 
       /*  ==============  */
       /*  Loop on Chisqr  */
@@ -3081,85 +2860,92 @@ RC ANALYSE_CurFitMethod(INDEX indexFenoColumn,  // for OMI
 
       niter=0;
 
-      do
-       {
+      do {
         OldChisqr = *Chisqr;
 
-        if ((rc=Curfit(pAnalysisOptions->fitWeighting,(int)ANALYSE_nFree,ANALYSE_splineX,SpecTrav,RefTrav,n_wavel,Y0,SigmaY,DimL,
-                       fitParamsC,fitParamsF,Deltap,Sigmaa,FitMinp,FitMaxp,NF,Yfit,&Lamda,Chisqr,pNiter,indexFenoColumn))>=THREAD_EVENT_STOP)
+        if ((rc=Curfit(pAnalysisOptions->fitWeighting,(int)ANALYSE_nFree,SpecTrav,RefTrav,Y0,SigmaY,fit->DimL,
+                       fitParamsC,fitParamsF,Deltap,Sigmaa,FitMinp,FitMaxp,fit->NF,Yfit,&Lamda,Chisqr,pNiter,indexFenoColumn,fit))>=THREAD_EVENT_STOP)
          break;
 
-        for (int i=0; i<NF; i++ ) Deltap[i] *= 0.4;
+        for (int i=0; i<fit->NF; i++ ) Deltap[i] *= 0.4;
         niter++;
-       }
-      while ( ( *Chisqr != 0. ) && ( fabs(*Chisqr-OldChisqr)/(*Chisqr) > pAnalysisOptions->convergence ) && (Feno->hidden || !pAnalysisOptions->maxIterations || (niter<pAnalysisOptions->maxIterations)) );
+      } while ( *Chisqr != 0.
+                && fabs(*Chisqr-OldChisqr)/(*Chisqr) > pAnalysisOptions->convergence
+                && (Feno->hidden || !pAnalysisOptions->maxIterations || niter<pAnalysisOptions->maxIterations) );
 
       if (pNiter!=NULL)
-       *pNiter=niter;
+        *pNiter=niter;
      }
 
-    if (rc<THREAD_EVENT_STOP)
-     {
+    if (rc<THREAD_EVENT_STOP) {
       /*  ====================  */
       /*  Residual Computation  */
       /*  ====================  */
-      for( int k=0,i=iterator_start(&my_iterator, global_doas_spectrum); i != ITERATOR_FINISHED; k++,i=iterator_next(&my_iterator))
-       {
+      for( int k=0,i=iterator_start(&my_iterator, global_doas_spectrum); i != ITERATOR_FINISHED; k++,i=iterator_next(&my_iterator)) {
         ANALYSE_absolu[i]  =  (Yfit[k]-Y0[k]);
         if (Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD)
          ANALYSE_t[i]=(ANALYSE_tc[i]!=(double)0.)?(double)1.+ANALYSE_absolu[i]/ANALYSE_tc[i]:(double)0.;
-       }
+      }
       if (residuals != NULL)
-       memcpy(residuals,ANALYSE_absolu,n_wavel * sizeof(double));
+        memcpy(residuals,ANALYSE_absolu,n_wavel * sizeof(*residuals));
 
       scalingFactor=(pAnalysisOptions->fitWeighting==PRJCT_ANLYS_FIT_WEIGHTING_NONE)?(*Chisqr):(double)1.;
 
-      for (int i=0;i<Feno->NTabCross;i++)
-       {
+      for (int i=0;i<Feno->NTabCross;i++) {
         pResults=&Feno->TabCrossResults[i];
         pTabCross=&TabCross[i];
+
+        // in Intensity fitting mode, fitted concentrations are scaled by the cross section normalization factor:
+        if (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT) {
+          if (pTabCross->IndSvdA > 0
+              && WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CROSS
+              && pTabCross->FitConc > ITEM_NONE) {
+            fitParamsF[pTabCross->FitConc] /= pTabCross->Fact;
+            Sigmaa[pTabCross->FitConc] /= pTabCross->Fact;
+          }
+        }
 
         /*  ==================================  */
         /*  Concentrations Scaling for Display  */
         /*  ==================================  */
 
-        if (pTabCross->IndSvdA) // Cross section, polynomial, linear offset, undersampling
-         {
+        if (pTabCross->IndSvdA) { // Cross section, polynomial, linear offset, undersampling
           // Fitting using SVD -> in SVD+Marquardt, polynomial is also fitted linearly !
 
-          if (((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) && (pTabCross->FitParam==ITEM_NONE)) || pTabCross->IndSvdP)
-           {
-            pResults->SlntCol=x[pTabCross->IndSvdA]=(pTabCross->FitConc!=0)?fitParamsC[pTabCross->IndSvdA]/pTabCross->Fact:fitParamsC[TabCross[i].IndSvdA];
-            pResults->SlntErr=Sigma[pTabCross->IndSvdA]=(pTabCross->FitConc!=0)?(double)sqrt(SigmaSqr[pTabCross->IndSvdA]*scalingFactor)/pTabCross->Fact:(double)0.;
+          if ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD && pTabCross->FitParam==ITEM_NONE) || pTabCross->IndSvdP) {
+            pResults->SlntCol=x[pTabCross->IndSvdA] = fitParamsC[pTabCross->IndSvdA];
+            pResults->SlntErr=Sigma[pTabCross->IndSvdA]= (pTabCross->FitConc!=0)
+              ? sqrt(fit->SigmaSqr[pTabCross->IndSvdA]*scalingFactor)
+              : 0.;
 
-            if (WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CONTINUOUS)
-             {
-              if (!Feno->hidden)
-               {
-                // Intensity fitting but polynomial is fitted linearly
+            if (WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CONTINUOUS
+                && !Feno->hidden) {
+              // Intensity fitting but polynomial is fitted linearly
 
-                if ((pTabCross->IndSvdP) && (fabs(refNormFact)>EPSILON))                      // polynomial : the output differs from the display in order
-                 pResults->SlntCol*=(double)speNormFact/refNormFact;                          //  to make the values geophysical
+              if ((pTabCross->IndSvdP) && (fabs(refNormFact)>EPSILON)) {                    // polynomial : the output differs from the display in order
+                pResults->SlntCol*= speNormFact/refNormFact;                          //  to make the values geophysical
                                                                                               // the sign is inverted because it is better to compare with the
                 // SVD                                                                        // log(spe/irrad) instead of log(irrad/spe)
                 // to build the polynomial :
-                else if ((fabs(speNormFact)>EPSILON) && (refNormFact/speNormFact>EPSILON))    // poly=x0+x1*(w-w0)+x2*(w-w0).*(w-w0)...;
-                 {                                                                            // in comparison to a polyfit, polyval in Matlab :
-                  pResults->SlntCol=-pResults->SlntCol;                                       //     >> p=polyfit(spectra(:,1),log(irrad(i,2)./spe(i,2)),2);
+              } else if ( fabs(speNormFact)>EPSILON && refNormFact/speNormFact>EPSILON) {    // poly=x0+x1*(w-w0)+x2*(w-w0).*(w-w0)...;
+                // in comparison to a polyfit, polyval in Matlab :
+                pResults->SlntCol = -pResults->SlntCol;                                       //     >> p=polyfit(spectra(:,1),log(irrad(i,2)./spe(i,2)),2);
                                                                                               //     >> newp=polyval(p,spectra(:,1));
-                  if (!strcasecmp(WorkSpace[pTabCross->Comp].symbolName,"x0"))                // offset, shift can influence the polynomial
-                   pResults->SlntCol-=(double)log(refNormFact/speNormFact);                   // it is also recommended for a better comparison with Matlab
-                 }                                                                            // to orthogonalize all cross sections (O4, BrO, HCHO...)
-               }
-             }
-           }
-          else  // cross sections in SVD+Marquardt method or Raman in SVD method
-           {
-            pResults->SlntCol=x[pTabCross->IndSvdA] = (pTabCross->FitConc!=ITEM_NONE)?fitParamsF[pTabCross->FitConc] / pTabCross->Fact:fitParamsC[TabCross[i].IndSvdA];
-            pResults->SlntErr=Sigma[pTabCross->IndSvdA] = (pTabCross->FitConc!=ITEM_NONE)?(double) Sigmaa[pTabCross->FitConc] / pTabCross->Fact:(double)0.;
+                if (!strcasecmp(WorkSpace[pTabCross->Comp].symbolName,"x0"))                // offset, shift can influence the polynomial
+                  pResults->SlntCol -= log(refNormFact/speNormFact);                   // it is also recommended for a better comparison with Matlab
+              }                                                                            // to orthogonalize all cross sections (O4, BrO, HCHO...)
+            }
+          } else {
+            // cross sections in SVD+Marquardt method or Raman in SVD method
+            pResults->SlntCol=x[pTabCross->IndSvdA] = (pTabCross->FitConc!=ITEM_NONE)
+              ? fitParamsF[pTabCross->FitConc]
+              : fitParamsC[TabCross[i].IndSvdA];
+            pResults->SlntErr=Sigma[pTabCross->IndSvdA] = (pTabCross->FitConc!=ITEM_NONE)
+              ? Sigmaa[pTabCross->FitConc]
+              : 0.;
 
             if ((WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CONTINUOUS) && (fabs(refNormFact)>EPSILON))
-             pResults->SlntCol*=(double)speNormFact/refNormFact;
+             pResults->SlntCol*= speNormFact/refNormFact;
            }
          }
 
@@ -3294,7 +3080,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   memcpy(ANALYSE_t,ANALYSE_zeros,sizeof(double)*n_wavel);
   memcpy(ANALYSE_tc,ANALYSE_zeros,sizeof(double)*n_wavel);
 
-  speNormFact=(double)1.;
+  speNormFact=1.;
   ZM=pRecord->Zm;
   TDET=pRecord->TDet;
 
@@ -3461,7 +3247,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           // Make a backup of spectral window limits + gaps
 
-          old_range = spectrum_copy(Feno->svd.specrange);
+          old_range = spectrum_copy(Feno->fit_properties.specrange);
 
           if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI) &&
               pInstrumental->omi.pixelQFRejectionFlag &&
@@ -3474,23 +3260,23 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
             int end = spectrum_end(old_range);
             for (int j= start; j<= end; j++)
              if ( ((pixelQF[j]&pInstrumental->omi.pixelQFMask)!=0) &&
-                  (spectrum_num_windows(Feno->svd.specrange)<=pInstrumental->omi.pixelQFMaxGaps))
+                  (spectrum_num_windows(Feno->fit_properties.specrange)<=pInstrumental->omi.pixelQFMaxGaps))
               {
-               spectrum_remove_pixel(Feno->svd.specrange,j);
+               spectrum_remove_pixel(Feno->fit_properties.specrange,j);
                Feno->omiRejPixelsQF[j]=1;
               }
 
-            if ((spectrum_num_windows(Feno->svd.specrange) > pInstrumental->omi.pixelQFMaxGaps) ||
+            if ((spectrum_num_windows(Feno->fit_properties.specrange) > pInstrumental->omi.pixelQFMaxGaps) ||
                 ((rc=reinit_analysis(Feno, n_wavel))!=ERROR_ID_NO))
              {
-              spectrum_destroy(Feno->svd.specrange);
-              Feno->svd.specrange = old_range;
+              spectrum_destroy(Feno->fit_properties.specrange);
+              Feno->fit_properties.specrange = old_range;
 
               rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_OMI_PIXELQF);
               goto EndAnalysis;
              }
            }
-          else if ((rc=ANALYSE_SvdInit(&Feno->svd, n_wavel))!=ERROR_ID_NO)
+          else if ((rc=ANALYSE_SvdInit(Feno,&Feno->fit_properties, n_wavel))!=ERROR_ID_NO)
             goto EndAnalysis;
 
           // Global variables initializations
@@ -3541,7 +3327,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
               if (!Feno->useKurucz &&
                   (((rc=KURUCZ_ApplyCalibration(Feno,Feno->LambdaK,indexFenoColumn))!=ERROR_ID_NO) ||
-                   ((rc=ANALYSE_SvdInit(&Feno->svd, n_wavel))!=ERROR_ID_NO)))
+                   ((rc=ANALYSE_SvdInit(Feno, &Feno->fit_properties, n_wavel))!=ERROR_ID_NO)))
 
                 goto EndAnalysis;
 
@@ -3553,7 +3339,6 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                   goto EndAnalysis;
                }
             }
-
           }
 
           // Reference spectrum // TD: remove?
@@ -3579,9 +3364,9 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
             double *curves[2][2] = {{Feno->LambdaK, spectre_plot},
                                     {Feno->LambdaK, Sref}};
             if (!Feno->longPathFlag)
-             plot_curves(indexPage, curves, 2, Spectrum, forceAutoScale, "Spectrum and reference", responseHandle, Feno->svd.specrange);
+             plot_curves(indexPage, curves, 2, Spectrum, forceAutoScale, "Spectrum and reference", responseHandle, Feno->fit_properties.specrange);
             else
-             plot_curves(indexPage, curves, 1, Spectrum, forceAutoScale, "Spectrum", responseHandle, Feno->svd.specrange);
+             plot_curves(indexPage, curves, 1, Spectrum, forceAutoScale, "Spectrum", responseHandle, Feno->fit_properties.specrange);
 
             free(spectre_plot);
             if (rc)
@@ -3613,7 +3398,8 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                                     &Feno->chiSquare, // returned stretch order 2
                                     &Niter, // number of iterations in Curfit
                                     speNormFact,
-                                    Feno->refNormFact);
+                                    Feno->refNormFact,
+                                    &Feno->fit_properties);
 
             if (rc == THREAD_EVENT_STOP || ERROR_Fatal()) {
               goto EndAnalysis;
@@ -3621,22 +3407,17 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
               Feno->rc=rc;
             }
 
-            rms_residual = root_mean_square(residuals, Feno->svd.specrange);
+            rms_residual = root_mean_square(residuals, Feno->fit_properties.specrange);
           }
           while(!Feno->hidden // no spike removal for calibration
-                && remove_spikes(residuals, rms_residual * pAnalysisOptions->spike_tolerance, Feno->svd.specrange, Feno->spikes) // repeat as long as spikes are found
+                && remove_spikes(residuals, rms_residual * pAnalysisOptions->spike_tolerance, Feno->fit_properties.specrange, Feno->spikes) // repeat as long as spikes are found
                 && (++num_repeats < MAX_REPEAT_CURFIT)
                 && !(rc=reinit_analysis(Feno, n_wavel))); // SVD matrix must be initialized again when pixels are removed.
-
-#if defined(__DEBUG_) && __DEBUG_
-          DEBUG_Stop("Test");
-          analyseDebugMask=0;
-#endif
 
           pRecord->BestShift+=(double)Feno->TabCrossResults[Feno->indexSpectrum].Shift;
           Feno->nIter=Niter;
 
-          Feno->RMS = root_mean_square(ANALYSE_absolu, Feno->svd.specrange);
+          Feno->RMS = root_mean_square(ANALYSE_absolu, Feno->fit_properties.specrange);
 
           // Display residual spectrum
 
@@ -3649,7 +3430,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
             sprintf(graphTitle,"%s (%.2le)",(Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD)?"Normalized Residual":"Residual",Feno->RMS);
 
             double *curves[1][2] = {{Feno->LambdaK,ANALYSE_absolu}};
-            plot_curves(indexPage,curves,1,Residual,0,graphTitle, responseHandle, Feno->svd.specrange);
+            plot_curves(indexPage,curves,1,Residual,0,graphTitle, responseHandle, Feno->fit_properties.specrange);
            }
 
           if (Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD)
@@ -3664,7 +3445,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
           if  (Feno->displayResidue && (Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD))
            {
             double * curves[1][2] = {{Feno->LambdaK,ANALYSE_absolu}};
-            plot_curves(indexPage,curves,1,Residual,allowFixedScale,"OD Residual", responseHandle, Feno->svd.specrange);
+            plot_curves(indexPage,curves,1,Residual,allowFixedScale,"OD Residual", responseHandle, Feno->fit_properties.specrange);
            }
 
           // Store fits
@@ -3688,101 +3469,92 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                ((TabCross[Feno->indexOffsetConst].FitParam!=ITEM_NONE) ||
                 (TabCross[Feno->indexOffsetOrder1].FitParam!=ITEM_NONE) ||
                 (TabCross[Feno->indexOffsetOrder2].FitParam!=ITEM_NONE) ||
-                (TabCross[Feno->indexOffsetConst].InitParam!=(double)0.) ||
-                (TabCross[Feno->indexOffsetOrder1].InitParam!=(double)0.) ||
-                (TabCross[Feno->indexOffsetOrder2].InitParam!=(double)0.)))
-           {
+                (TabCross[Feno->indexOffsetConst].InitParam!=0.) ||
+                (TabCross[Feno->indexOffsetOrder1].InitParam!=0.) ||
+                (TabCross[Feno->indexOffsetOrder2].InitParam!=0.))) {
              lambda0=center_pixel_wavelength(SvdPDeb, SvdPFin);
 
             doas_iterator my_iterator;
-            for (int l=iterator_start(&my_iterator, Feno->svd.specrange); l != ITERATOR_FINISHED; l=iterator_next(&my_iterator)) // log(I+offset)=log(I)+log(1+offset/I)
-             {
-              newVal=(double)1.-Feno->xmean*(Results[Feno->indexOffsetConst].Param+
-                                             Results[Feno->indexOffsetOrder1].Param*(ANALYSE_splineX[l]-lambda0)+
-                                             Results[Feno->indexOffsetOrder2].Param*(ANALYSE_splineX[l]-lambda0)*(ANALYSE_splineX[l]-lambda0))/Spectre[l];
+            for (int l=iterator_start(&my_iterator, Feno->fit_properties.specrange); l != ITERATOR_FINISHED; l=iterator_next(&my_iterator)) {
+              // log(I+offset)=log(I)+log(1+offset/I)
+              newVal = 1.-Feno->xmean*(Results[Feno->indexOffsetConst].Param+
+                                       Results[Feno->indexOffsetOrder1].Param*(ANALYSE_splineX[l]-lambda0)+
+                                       Results[Feno->indexOffsetOrder2].Param*(ANALYSE_splineX[l]-lambda0)*(ANALYSE_splineX[l]-lambda0))/Spectre[l];
 
-              ANALYSE_absolu[l]+=((newVal>(double)0.)?log(newVal):(double)0.)-ANALYSE_secX[l];
-              ANALYSE_secX[l]=((newVal>(double)0.)?log(newVal):(double)0.);
-             }
+              ANALYSE_absolu[l]+=(newVal > 0. ? log(newVal) : 0. )-ANALYSE_secX[l];
+              ANALYSE_secX[l]=newVal > 0. ? log(newVal) : 0.;
+            }
 
             double *curves[2][2] = {{Feno->LambdaK, ANALYSE_absolu},
                                     {Feno->LambdaK, ANALYSE_secX}};
-            plot_curves(indexPage,curves,2,Residual,allowFixedScale,"Offset", responseHandle, Feno->svd.specrange);
-           }
+            plot_curves(indexPage,curves,2,Residual,allowFixedScale,"Offset", responseHandle, Feno->fit_properties.specrange);
+          }
 
           // Display fits
 
-          for (int i=0;i<Feno->NTabCross;i++)
+          for (int i=0;i<Feno->NTabCross;i++) {
+            if (TabCross[i].IndSvdA) {
+              if (((WorkSpace[TabCross[i].Comp].type==WRK_SYMBOL_CROSS) ||
+                   (WorkSpace[TabCross[i].Comp].type==WRK_SYMBOL_PREDEFINED)) &&
+                  Feno->displayFits && TabCross[i].display) {
 
-           if (TabCross[i].IndSvdA)
-            {
-             if (((WorkSpace[TabCross[i].Comp].type==WRK_SYMBOL_CROSS) ||
-                  (WorkSpace[TabCross[i].Comp].type==WRK_SYMBOL_PREDEFINED)) &&
-                 Feno->displayFits && TabCross[i].display)
-              {
-               doas_iterator my_iterator;
-               for (int k=1,l=iterator_start(&my_iterator, Feno->svd.specrange); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
-                {
-                 newVal=x[TabCross[i].IndSvdA]*U[TabCross[i].IndSvdA][k];
-
-                   ANALYSE_absolu[l]+=newVal-ANALYSE_secX[l];
-                   ANALYSE_secX[l]=newVal;
+                doas_iterator my_iterator;
+                for (int k=1,l=iterator_start(&my_iterator, Feno->fit_properties.specrange); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator)) {
+                  newVal=x[TabCross[i].IndSvdA]*Feno->fit_properties.A[TabCross[i].IndSvdA][k];
+                  ANALYSE_absolu[l]+=newVal-ANALYSE_secX[l];
+                  ANALYSE_secX[l]=newVal;
                 }
-               sprintf(graphTitle,"%s (%.2le)",WorkSpace[TabCross[i].Comp].symbolName,Results[i].SlntCol);
 
-               double *curves[2][2] = {{Feno->LambdaK, ANALYSE_absolu},
-                                       {Feno->LambdaK, ANALYSE_secX}};
-               plot_curves(indexPage,curves,2,Residual,allowFixedScale,graphTitle, responseHandle, Feno->svd.specrange);
-              }
-             else if ((WorkSpace[TabCross[i].Comp].type==WRK_SYMBOL_CONTINUOUS) && Feno->displayTrend)
-              {
-               doas_iterator my_iterator;
-               if (((char)tolower(WorkSpace[TabCross[i].Comp].symbolName[0])=='x') ||
-                   ((char)tolower(WorkSpace[TabCross[i].Comp].symbolName[2])=='x'))
-                {
-                 for (int k=1,l=iterator_start(&my_iterator, Feno->svd.specrange); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
-                  Trend[l]+=x[TabCross[i].IndSvdA]*U[TabCross[i].IndSvdA][k];
-                }
-               else if (!strncmp( WorkSpace[TabCross[i].Comp].symbolName, "offl", 4) )
-                {
-                 for (int k=1,l=iterator_start(&my_iterator, Feno->svd.specrange); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
-                  offset[l]+=x[TabCross[i].IndSvdA]*U[TabCross[i].IndSvdA][k];
+                sprintf(graphTitle,"%s (%.2le)",WorkSpace[TabCross[i].Comp].symbolName,Results[i].SlntCol);
+                double *curves[2][2] = {{Feno->LambdaK, ANALYSE_absolu},
+                                        {Feno->LambdaK, ANALYSE_secX}};
+                plot_curves(indexPage,curves,2,Residual,allowFixedScale,graphTitle, responseHandle, Feno->fit_properties.specrange);
 
-                 for (int l=iterator_start(&my_iterator, Feno->svd.specrange); l != ITERATOR_FINISHED; l=iterator_next(&my_iterator))
-                   if (fabs(offset[l])>maxOffset)
-                    maxOffset=fabs(offset[l]);
+              } else if ((WorkSpace[TabCross[i].Comp].type==WRK_SYMBOL_CONTINUOUS) && Feno->displayTrend) {
+
+                doas_iterator my_iterator;
+                if ((tolower(WorkSpace[TabCross[i].Comp].symbolName[0])=='x') ||
+                    (tolower(WorkSpace[TabCross[i].Comp].symbolName[2])=='x')) { // polynomial
+                  for (int k=1,l=iterator_start(&my_iterator, Feno->fit_properties.specrange); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
+                    Trend[l]+=x[TabCross[i].IndSvdA]*Feno->fit_properties.A[TabCross[i].IndSvdA][k];
+                } else if (!strncmp( WorkSpace[TabCross[i].Comp].symbolName, "offl", 4) ) { // linear offset
+                  for (int k=1,l=iterator_start(&my_iterator, Feno->fit_properties.specrange); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
+                    offset[l]+=x[TabCross[i].IndSvdA]*Feno->fit_properties.A[TabCross[i].IndSvdA][k];
+
+                  for (int l=iterator_start(&my_iterator, Feno->fit_properties.specrange); l != ITERATOR_FINISHED; l=iterator_next(&my_iterator))
+                    if (fabs(offset[l])>maxOffset)
+                      maxOffset=fabs(offset[l]);
                 }
               }
             }
+          }
 
           // Display Trend
 
-          if (Feno->displayTrend)
-           {
+          if (Feno->displayTrend) {
             doas_iterator my_iterator;
-            for (int l=iterator_start(&my_iterator, Feno->svd.specrange); l != ITERATOR_FINISHED; l=iterator_next(&my_iterator))
+            for (int l=iterator_start(&my_iterator, Feno->fit_properties.specrange); l != ITERATOR_FINISHED; l=iterator_next(&my_iterator))
              ANALYSE_absolu[l]+=Trend[l]-ANALYSE_secX[l];
 
             double *curves[2][2] = {{Feno->LambdaK,ANALYSE_absolu},
                                     {Feno->LambdaK,Trend}};
-            plot_curves(indexPage,curves,2,Residual,allowFixedScale,"Polynomial", responseHandle, Feno->svd.specrange);
+            plot_curves(indexPage,curves,2,Residual,allowFixedScale,"Polynomial", responseHandle, Feno->fit_properties.specrange);
 
-            if (maxOffset>(double)0.)
-             {
+            if (maxOffset > 0.) {
               doas_iterator my_iterator;
               if (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT)
-               for (int l=iterator_start(&my_iterator, Feno->svd.specrange); l != ITERATOR_FINISHED; l=iterator_next(&my_iterator))
+               for (int l=iterator_start(&my_iterator, Feno->fit_properties.specrange); l != ITERATOR_FINISHED; l=iterator_next(&my_iterator))
                 offset[l]=-offset[l];           // inverse the sign in order to have the same display as in SVD method
 
 
-              for (int l=iterator_start(&my_iterator, Feno->svd.specrange); l != ITERATOR_FINISHED; l=iterator_next(&my_iterator))
+              for (int l=iterator_start(&my_iterator, Feno->fit_properties.specrange); l != ITERATOR_FINISHED; l=iterator_next(&my_iterator))
                ANALYSE_absolu[l]+=offset[l]-Trend[l];
 
               double *curves[2][2] = {{Feno->LambdaK, ANALYSE_absolu},
                                       {Feno->LambdaK, offset}};
-              plot_curves(indexPage, curves, 2, Residual, allowFixedScale, "Linear offset",responseHandle, Feno->svd.specrange);
-             }
-           }  // end displayTrend
+              plot_curves(indexPage, curves, 2, Residual, allowFixedScale, "Linear offset",responseHandle, Feno->fit_properties.specrange);
+            }
+          }  // end displayTrend
 
          SKIP_PLOTS:
 
@@ -3847,12 +3619,12 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           // Recover spectral window limits and gaps eventually modified after spike removal
 
-          if (!spectrum_isequal(old_range,Feno->svd.specrange))
+          if (!spectrum_isequal(old_range,Feno->fit_properties.specrange))
            {
-            //AnalyseCopyFenetre(Feno->svd.Fenetre,&Feno->svd.Z,oldFenetre,oldZ);
-            spectrum_destroy(Feno->svd.specrange);
-            Feno->svd.specrange = old_range;
-            Feno->svd.DimL = spectrum_length(Feno->svd.specrange);
+            //AnalyseCopyFenetre(Feno->fit_properties.Fenetre,&Feno->fit_properties.Z,oldFenetre,oldZ);
+            spectrum_destroy(Feno->fit_properties.specrange);
+            Feno->fit_properties.specrange = old_range;
+            Feno->fit_properties.DimL = spectrum_length(Feno->fit_properties.specrange);
             Feno->Decomp = 1;
            }
           else
@@ -3989,7 +3761,7 @@ void ANALYSE_ResetData(void)
 
       // SVD matrices
 
-      SVD_Free(__func__,&pTabFeno->svd);
+      FIT_PROPERTIES_free(__func__,&pTabFeno->fit_properties);
 
       // spike array
       if(pTabFeno->spikes != NULL)
@@ -4104,7 +3876,7 @@ void ANALYSE_ResetData(void)
         pTabCross->MaxParam=
           pTabCross->MaxShift=(double)99.;
         // -------------------------------------------
-        pTabCross->Fact=(double)1.;
+        pTabCross->Fact=1.;
        }
      }
    }
@@ -4265,7 +4037,7 @@ RC ANALYSE_LoadSlit(const PRJCT_SLIT *pSlit,int kuruczFlag)
   return rc;
 }
 
-RC ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol, const double *lambda, const int n_wavel, const char *callingFunction)
+RC ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol, const double *lambda, const int n_wavel)
 {
   // Declarations
 
@@ -4353,7 +4125,7 @@ RC is_same_file(const char *file1, const char *file2, bool *result) {
 // PURPOSE       Load data from the molecules pages
 // -----------------------------------------------------------------------------
 
-RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *crossSectionList,int nCross,int hidden, const double *lambda,INDEX indexFenoColumn)
+RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *crossSectionList,int nCross, const double *lambda,INDEX indexFenoColumn)
 {
   // Declarations
 
@@ -4509,12 +4281,12 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
         pEngineCross->filterFlag=pCross->requireFilter;
 
         if ((pEngineCross->crossAction==ANLYS_CROSS_ACTION_NOTHING) && (pTabFeno->gomeRefFlag || pEngineContext->refFlag))
-          rc=ANALYSE_CheckLambda(pWrkSymbol,lambda,n_wavel,__func__);
+          rc=ANALYSE_CheckLambda(pWrkSymbol,lambda,n_wavel);
 
         if (rc==ERROR_ID_NO)
          {
           pEngineCross->Comp=indexSymbol;
-          pEngineCross->IndSvdA=++pTabFeno->svd.DimC;
+          pEngineCross->IndSvdA=++pTabFeno->fit_properties.DimC;
           pTabFeno->xsToConvolute+=((pEngineCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE) ||
                                     (pEngineCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_I0) ||
                                     (pEngineCross->crossAction==ANLYS_CROSS_ACTION_CONVOLUTE_RING))?1:0;
@@ -4545,9 +4317,9 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
               }
 
             if (pTabFeno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD)     // In the intensity fitting method, FitConc is an index
-             pEngineCross->FitConc=pTabFeno->svd.NF++;                   // in the non linear parameters vectors
+             pEngineCross->FitConc=pTabFeno->fit_properties.NF++;                   // in the non linear parameters vectors
 
-            pTabFeno->svd.nFit++;
+            pTabFeno->fit_properties.nFit++;
            }
           else if (pTabFeno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD)
            pEngineCross->FitConc=ITEM_NONE;                              // so if the parameter hasn't to be fitted, index is ITEM_NONE
@@ -4715,7 +4487,7 @@ RC ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,int nLinear,INDEX in
            pTabCross->IndOrthog=ITEM_NONE;
 
           pTabCross->Comp=indexSymbol;
-          pTabCross->IndSvdA=++pTabFeno->svd.DimC;
+          pTabCross->IndSvdA=++pTabFeno->fit_properties.DimC;
           pTabCross->crossAction=ANLYS_CROSS_ACTION_NOTHING;
 
           pTabFeno->NTabCross++;
@@ -4732,9 +4504,9 @@ RC ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,int nLinear,INDEX in
             }
 
           if (pTabFeno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT)        // Marquardt-Levenberg + SVD
-           pTabCross->IndSvdP=++(pTabFeno->svd.DimP);
+           pTabCross->IndSvdP=++(pTabFeno->fit_properties.DimP);
 
-          pTabFeno->svd.nFit++;
+          pTabFeno->fit_properties.nFit++;
 
           // Results
 
@@ -4773,7 +4545,7 @@ RC ANALYSE_LoadShiftStretch(const ANALYSIS_SHIFT_STRETCH *shiftStretchList,int n
   // Initializations
 
   pTabFeno=&TabFeno[indexFenoColumn][NFeno];
-  indexShift=indexStretch=indexStretch2=indexScale=indexScale2=oldNF=pTabFeno->svd.NF;
+  indexShift=indexStretch=indexStretch2=indexScale=indexScale2=oldNF=pTabFeno->fit_properties.NF;
   rc=ERROR_ID_NO;
 
   for (indexItem=0;(indexItem<nShiftStretch) && !rc;indexItem++)
@@ -4858,7 +4630,7 @@ RC ANALYSE_LoadShiftStretch(const ANALYSIS_SHIFT_STRETCH *shiftStretchList,int n
 
           if (pList->shFit!=0)
            indexShift=pTabCross->FitShift=(!indexSymbolInList)?                 // flag set when shift is to be fit
-             pTabFeno->svd.NF++:indexShift;
+             pTabFeno->fit_properties.NF++:indexShift;
 
           pTabCross->DeltaShift=(pTabCross->FitShift!=ITEM_NONE)?
             pList->shDelta:(double)0.;                                           // delta value for shift
@@ -4875,11 +4647,11 @@ RC ANALYSE_LoadShiftStretch(const ANALYSIS_SHIFT_STRETCH *shiftStretchList,int n
 
           if (pTabCross->TypeStretch!=ANLYS_STRETCH_TYPE_NONE)
            indexStretch=pTabCross->FitStretch=(!indexSymbolInList)?          // flag set when stretch is to be fit
-             pTabFeno->svd.NF++:indexStretch;
+             pTabFeno->fit_properties.NF++:indexStretch;
 
           if (pTabCross->TypeStretch==ANLYS_STRETCH_TYPE_SECOND_ORDER)
            indexStretch2=pTabCross->FitStretch2=(!indexSymbolInList)?        // flag set when stretch is to be fit
-             pTabFeno->svd.NF++:indexStretch2;
+             pTabFeno->fit_properties.NF++:indexStretch2;
 
           pTabCross->DeltaStretch=(pTabCross->FitStretch!=ITEM_NONE)?        // delta value for stretch order 1
             pList->stDelta:(double)0.;
@@ -4894,11 +4666,11 @@ RC ANALYSE_LoadShiftStretch(const ANALYSIS_SHIFT_STRETCH *shiftStretchList,int n
 
           if (pTabCross->TypeScale!=ANLYS_STRETCH_TYPE_NONE)
            indexScale=pTabCross->FitScale=(!indexSymbolInList)?                 // flag set when scale is to be fit
-             pTabFeno->svd.NF++:indexScale;
+             pTabFeno->fit_properties.NF++:indexScale;
 
           if (pTabCross->TypeScale==ANLYS_STRETCH_TYPE_SECOND_ORDER)
            indexScale2=pTabCross->FitScale2=(!indexSymbolInList)?               // flag set when scale is to be fit
-             pTabFeno->svd.NF++:indexScale2;
+             pTabFeno->fit_properties.NF++:indexScale2;
 
           pTabCross->DeltaScale=(pTabCross->FitScale!=ITEM_NONE)?               // delta value for scale order 1
             pList->scDelta:(double)0.;
@@ -4908,15 +4680,15 @@ RC ANALYSE_LoadShiftStretch(const ANALYSIS_SHIFT_STRETCH *shiftStretchList,int n
           if (pTabCross->IndSvdA)
            {
             if (pTabCross->FitShift!=ITEM_NONE)
-             pTabFeno->svd.NP++;
+             pTabFeno->fit_properties.NP++;
             if (pTabCross->FitStretch!=ITEM_NONE)
-             pTabFeno->svd.NP++;
+             pTabFeno->fit_properties.NP++;
             if (pTabCross->FitStretch2!=ITEM_NONE)
-             pTabFeno->svd.NP++;
+             pTabFeno->fit_properties.NP++;
             if (pTabCross->FitScale!=ITEM_NONE)
-             pTabFeno->svd.NP++;
+             pTabFeno->fit_properties.NP++;
             if (pTabCross->FitScale2!=ITEM_NONE)
-             pTabFeno->svd.NP++;
+             pTabFeno->fit_properties.NP++;
            }
 
           pResults->StoreShift=((!indexSymbolInList) && (pList->shStore==1))?(char)1:(char)0;                  // flag set if shift is to be written into output file
@@ -4930,7 +4702,7 @@ RC ANALYSE_LoadShiftStretch(const ANALYSIS_SHIFT_STRETCH *shiftStretchList,int n
 
   // Return
 
-  pTabFeno->svd.nFit+=(pTabFeno->svd.NF-oldNF);
+  pTabFeno->fit_properties.nFit+=(pTabFeno->fit_properties.NF-oldNF);
 
   return rc;
 }
@@ -5092,14 +4864,14 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
                 (((pTabCross->FitParam=((pListItem->fitFlag)?1:0))!=ITEM_NONE) ||
                  (pTabCross->InitParam!=(double)0.)))
              {
-              pTabCross->IndSvdA=++pTabFeno->svd.DimC;
-              pTabCross->IndSvdP=++pTabFeno->svd.DimP;
+              pTabCross->IndSvdA=++pTabFeno->fit_properties.DimC;
+              pTabCross->IndSvdP=++pTabFeno->fit_properties.DimP;
              }
             else
-             pTabCross->FitParam=(pListItem->fitFlag)?pTabFeno->svd.NF++:ITEM_NONE;
+             pTabCross->FitParam=(pListItem->fitFlag)?pTabFeno->fit_properties.NF++:ITEM_NONE;
 
             if (pTabCross->FitParam!=ITEM_NONE)  // Increase the number of parameters to fit
-             pTabFeno->svd.nFit++;               //    -> this information is useful to calculate the number of degrees of freedom
+             pTabFeno->fit_properties.nFit++;               //    -> this information is useful to calculate the number of degrees of freedom
 
             pTabCross->MinParam=pListItem->minValue;
             pTabCross->MaxParam=pListItem->maxValue;
@@ -5138,7 +4910,7 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
                 }
                 if ( (rc=MATRIX_Load(pListItem->crossFileName,&pWrkSymbol->xs,0,0,0.,0.,0,0,__func__) )
                      || ( (pTabFeno->gomeRefFlag || pEngineContext->refFlag) &&
-                          (rc=ANALYSE_CheckLambda(pWrkSymbol,lambda, n_wavel,__func__) ) ) )   // grid of the reference spectrum
+                          (rc=ANALYSE_CheckLambda(pWrkSymbol,lambda, n_wavel) ) ) )   // grid of the reference spectrum
                   goto EndLoadPredefined;
                }
               else if ((pTabFeno->indexUsamp1==pTabFeno->NTabCross) || (pTabFeno->indexUsamp2==pTabFeno->NTabCross))
@@ -5157,7 +4929,7 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
                   memcpy(pTabCross->vector,ANALYSE_zeros,sizeof(double)*n_wavel);
 
                 if (((pTabFeno->analysisMethod!=PRJCT_ANLYS_METHOD_SVDMARQUARDT) || (pTabCross->FitParam==ITEM_NONE)))
-                  pTabCross->IndSvdA=++pTabFeno->svd.DimC;
+                  pTabCross->IndSvdA=++pTabFeno->fit_properties.DimC;
 
                 pTabCross->crossAction=ANLYS_CROSS_ACTION_NOTHING; // For raman interpolation ((pTabFeno->indexRing1==pTabFeno->NTabCross)) ? ANLYS_CROSS_ACTION_intERPOLATE : ANLYS_CROSS_ACTION_NOTHING;
                 pTabCross->display=(char)pTabFeno->displayPredefined;
@@ -5184,7 +4956,7 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
                    }
 
                   if (pTabCross->FitParam!=ITEM_NONE)
-                   pTabFeno->svd.NF--;
+                   pTabFeno->fit_properties.NF--;
 
                   pTabCross->FitParam=ITEM_NONE;
                   pTabCross->InitParam=(double)0.;
@@ -5250,7 +5022,7 @@ RC ANALYSE_LoadGaps(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_GAP *gapList,
   // Initializations
 
   pTabFeno=&TabFeno[indexFenoColumn][NFeno];
-  LFenetre=pTabFeno->svd.LFenetre;    // gaps in wavelength units
+  LFenetre=pTabFeno->fit_properties.LFenetre;    // gaps in wavelength units
   rc=ERROR_ID_NO;
   Z=0;
 
@@ -5305,20 +5077,20 @@ RC ANALYSE_LoadGaps(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_GAP *gapList,
 
     if (pTabFeno->gomeRefFlag || pEngineContext->refFlag)
      {
-      if(pTabFeno->svd.specrange != NULL)
-       spectrum_destroy(pTabFeno->svd.specrange);
-      pTabFeno->svd.specrange = spectrum_new();
+      if(pTabFeno->fit_properties.specrange != NULL)
+       spectrum_destroy(pTabFeno->fit_properties.specrange);
+      pTabFeno->fit_properties.specrange = spectrum_new();
 
       for (indexWindow=0;indexWindow<Z;indexWindow++)
        {
         int start = FNPixel(lambda,LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
         int end = FNPixel(lambda,LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
-        spectrum_append(pTabFeno->svd.specrange, start, end);
+        spectrum_append(pTabFeno->fit_properties.specrange, start, end);
        }
-      pTabFeno->svd.DimL= spectrum_length(pTabFeno->svd.specrange);
+      pTabFeno->fit_properties.DimL= spectrum_length(pTabFeno->fit_properties.specrange);
      }
 
-    pTabFeno->svd.Z=Z;
+    pTabFeno->fit_properties.Z=Z;
    }
 
   // Return
@@ -5530,7 +5302,7 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
         }
         break;
       default:
-        rc=AnalyseLoadVector("ANALYSE_LoadRef (SrefEtalon) ",pTabFeno->ref1,lambdaRefEtalon,SrefEtalon,n_wavel,1,NULL);
+        rc=AnalyseLoadVector(pTabFeno->ref1,lambdaRefEtalon,SrefEtalon,n_wavel,1,NULL);
         break;
       }
       if (!rc &&
@@ -5558,7 +5330,7 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
          (((ptr=strrchr(pTabFeno->ref2,'.'))!=NULL) &&
           (strlen(ptr)==4) && !strcasecmp(ptr,".ref"))) &&
 
-        !(rc=AnalyseLoadVector("ANALYSE_LoadRef (Sref) ",pTabFeno->ref2,lambdaRef,Sref,n_wavel,1,NULL)) &&
+        !(rc=AnalyseLoadVector(pTabFeno->ref2,lambdaRef,Sref,n_wavel,1,NULL)) &&
         !(rc=THRD_SpectrumCorrection(pEngineContext,Sref,n_wavel)) &&
         !(rc=VECTOR_NormalizeVector(Sref-1,n_wavel,&pTabFeno->refNormFact,"ANALYSE_LoadRef (Sref) ")))
      {
@@ -5678,7 +5450,7 @@ RC ANALYSE_SetInit(ENGINE_CONTEXT *pEngineContext)
    rc=ERROR_SetLast("ANALYSE_LoadData",ERROR_TYPE_FATAL,ERROR_ID_FWHM_INCOMPATIBLE_OPTIONS);
   else if (!(rc=FILTER_LoadFilter(&pEngineContext->project.lfilter)) &&   // low pass filtering
            !(rc=FILTER_LoadFilter(&pEngineContext->project.hfilter)) &&   // high pass filtering
-           !(rc=AnalyseSvdGlobalAlloc(pEngineContext)))
+           !(rc=AnalyseSvdGlobalAlloc()))
    {
     if (((ANALYSE_zeros=(double *)MEMORY_AllocDVector("ANALYSE_LoadData ","ANALYSE_zeros",0,max_ndet-1))==NULL) ||
         ((ANALYSE_ones=(double *)MEMORY_AllocDVector("ANALYSE_LoadData ","ANALYSE_ones",0,max_ndet-1))==NULL))
@@ -6163,9 +5935,9 @@ RC ANALYSE_UsampLocalAlloc(int gomeFlag)
 
      if (!pTabFeno->hidden && pTabFeno->useUsamp && (pTabFeno->gomeRefFlag==gomeFlag))
       {
-       ANALYSE_usampBuffers.lambdaRange[0][indexFeno]=FNPixel(ANALYSE_usampBuffers.hrSolar.matrix[0],(double)pTabFeno->svd.LFenetre[0][0]-7.,ANALYSE_usampBuffers.hrSolar.nl,PIXEL_AFTER);
+       ANALYSE_usampBuffers.lambdaRange[0][indexFeno]=FNPixel(ANALYSE_usampBuffers.hrSolar.matrix[0],(double)pTabFeno->fit_properties.LFenetre[0][0]-7.,ANALYSE_usampBuffers.hrSolar.nl,PIXEL_AFTER);
 
-       endPixel=FNPixel(ANALYSE_usampBuffers.hrSolar.matrix[0],(double)pTabFeno->svd.LFenetre[pTabFeno->svd.Z-1][1]+7.,ANALYSE_usampBuffers.hrSolar.nl,PIXEL_BEFORE);
+       endPixel=FNPixel(ANALYSE_usampBuffers.hrSolar.matrix[0],(double)pTabFeno->fit_properties.LFenetre[pTabFeno->fit_properties.Z-1][1]+7.,ANALYSE_usampBuffers.hrSolar.nl,PIXEL_BEFORE);
        ANALYSE_usampBuffers.lambdaRange[1][indexFeno]=endPixel-ANALYSE_usampBuffers.lambdaRange[0][indexFeno]+1;
       }
     }

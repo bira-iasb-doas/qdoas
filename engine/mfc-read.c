@@ -82,7 +82,6 @@
 #include "vector.h"
 #include "zenithal.h"
 #include "winthrd.h"
-#include "svd.h"
 #include "stdfunc.h"
 
 // ================
@@ -1495,7 +1494,7 @@ RC MFC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
            if ((((pWrkSymbol->type==WRK_SYMBOL_CROSS) && (pTabCross->crossAction==ANLYS_CROSS_ACTION_NOTHING)) ||
                 ((pWrkSymbol->type==WRK_SYMBOL_PREDEFINED) &&
                  (indexTabCross==pTabFeno->indexCommonResidual))) &&
-               ((rc=ANALYSE_CheckLambda(pWrkSymbol,pTabFeno->LambdaRef,pTabFeno->NDET,"MFC_LoadAnalysis "))!=ERROR_ID_NO))
+               ((rc=ANALYSE_CheckLambda(pWrkSymbol,pTabFeno->LambdaRef,pTabFeno->NDET))!=ERROR_ID_NO))
 
             goto EndMFC_LoadAnalysis;
           }
@@ -1503,10 +1502,10 @@ RC MFC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
          // Gaps : rebuild subwindows on new wavelength scale
 
          doas_spectrum *new_range = spectrum_new();
-         for (indexWindow = 0, DimL=0; indexWindow < pTabFeno->svd.Z; indexWindow++)
+         for (indexWindow = 0, DimL=0; indexWindow < pTabFeno->fit_properties.Z; indexWindow++)
           {
-           int pixel_start = FNPixel(pTabFeno->LambdaRef,pTabFeno->svd.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
-           int pixel_end = FNPixel(pTabFeno->LambdaRef,pTabFeno->svd.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
+           int pixel_start = FNPixel(pTabFeno->LambdaRef,pTabFeno->fit_properties.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
+           int pixel_end = FNPixel(pTabFeno->LambdaRef,pTabFeno->fit_properties.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
 
            spectrum_append(new_range, pixel_start, pixel_end);
 
@@ -1514,11 +1513,11 @@ RC MFC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
           }
 
          // Buffers allocation
-         SVD_Free("MFC_LoadAnalysis",&pTabFeno->svd);
-         pTabFeno->svd.DimL=DimL;
-         SVD_LocalAlloc("MFC_LoadAnalysis",&pTabFeno->svd);
+         FIT_PROPERTIES_free("MFC_LoadAnalysis",&pTabFeno->fit_properties);
+         pTabFeno->fit_properties.DimL=DimL;
+         FIT_PROPERTIES_alloc("MFC_LoadAnalysis",&pTabFeno->fit_properties);
          // new spectral windows
-         pTabFeno->svd.specrange = new_range;
+         pTabFeno->fit_properties.specrange = new_range;
 
          pTabFeno->Decomp=1;
 

@@ -608,13 +608,13 @@ void OUTPUT_ResetData(void)
        AMF_SYMBOL *pAmf=&OUTPUT_AmfSpace[indexSymbol];
 
       if (pAmf->Phi!=NULL)
-       MEMORY_ReleaseDMatrix("OUTPUT_ResetData ","Phi",pAmf->Phi,1,pAmf->PhiColumns,0);
+       MEMORY_ReleaseDMatrix(__func__,"Phi",pAmf->Phi,1,0);
       if (pAmf->deriv2!=NULL)
-       MEMORY_ReleaseDMatrix("OUTPUT_ResetData ","deriv2",pAmf->deriv2,2,pAmf->PhiColumns,1);
+       MEMORY_ReleaseDMatrix(__func__,"deriv2",pAmf->deriv2,2,1);
       if (pAmf->xs!=NULL)
-       MEMORY_ReleaseDMatrix("OUTPUT_ResetData ","xs",pAmf->xs,0,pAmf->xsColumns-1,0);
+       MEMORY_ReleaseDMatrix(__func__,"xs",pAmf->xs,0,0);
       if (pAmf->xsDeriv2!=NULL)
-       MEMORY_ReleaseDMatrix("OUTPUT_ResetData ","xsDeriv2",pAmf->xsDeriv2,1,pAmf->xsColumns-1,1);
+       MEMORY_ReleaseDMatrix(__func__,"xsDeriv2",pAmf->xsDeriv2,1,1);
      }
 
     memset(OUTPUT_AmfSpace,0,sizeof(AMF_SYMBOL)*MAX_SYMB);
@@ -634,7 +634,7 @@ void OUTPUT_ResetData(void)
   output_num_fields = calib_num_fields = 0;
 
   if (outputRecords!=NULL)
-   MEMORY_ReleaseBuffer("OUTPUT_ResetData","outputRecords",outputRecords);
+   MEMORY_ReleaseBuffer(__func__,"outputRecords",outputRecords);
 
   outputRecords=NULL;
 

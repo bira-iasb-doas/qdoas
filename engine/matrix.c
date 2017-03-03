@@ -113,8 +113,8 @@ RC MATRIX_Allocate(MATRIX_OBJECT *pMatrix,int nl,int nc,int basel,int basec,int 
 
   // Allocate bufferS for the matrix and the second derivatives
 
-  if (((pMatrix->matrix=(double **)MEMORY_AllocDMatrix(functionName,"matrix",basel,nl+basel-1,basec,nc+basec-1))==NULL) ||
-       (allocateDeriv2 && ((pMatrix->deriv2=(double **)MEMORY_AllocDMatrix(functionName,"deriv2",basel,nl+basel-1,basec+1,nc+basec-1))==NULL)))
+  if (((pMatrix->matrix=MEMORY_AllocDMatrix(functionName,"matrix",basel,nl+basel-1,basec,nc+basec-1))==NULL) ||
+       (allocateDeriv2 && ((pMatrix->deriv2=MEMORY_AllocDMatrix(functionName,"deriv2",basel,nl+basel-1,basec+1,nc+basec-1))==NULL)))
 
    rc=ERROR_ID_ALLOC;
 
@@ -162,9 +162,9 @@ void MATRIX_Free(MATRIX_OBJECT *pMatrix, const char *callingFunction)
   // Release the allocated buffers
 
   if (pMatrix->matrix!=NULL)
-   MEMORY_ReleaseDMatrix(functionName,"matrix",pMatrix->matrix,pMatrix->basec,pMatrix->nc+pMatrix->basec-1,pMatrix->basel);
+   MEMORY_ReleaseDMatrix(functionName,"matrix",pMatrix->matrix,pMatrix->basec,pMatrix->basel);
   if (pMatrix->deriv2!=NULL)
-   MEMORY_ReleaseDMatrix(functionName,"deriv2",pMatrix->deriv2,pMatrix->basec+1,pMatrix->nc+pMatrix->basec-1,pMatrix->basel);
+   MEMORY_ReleaseDMatrix(functionName,"deriv2",pMatrix->deriv2,pMatrix->basec+1,pMatrix->basel);
 
   // Reset pointers and indexes
 

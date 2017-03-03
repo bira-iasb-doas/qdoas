@@ -3,10 +3,10 @@
 
 #include "doas.h"
 #include "engine_context.h"
-#include "svd.h"
+#include "fit_properties.h"
 
 struct _KuruczFeno {
-  SVD            *svdFeno;                              // svd environments associated to list of little windows
+  struct fit_properties * subwindow_fits; // fit properties for calibration subwindows
   double         *Grid;
   FFT            *fft;                                  // fourier transform of high resolution kurucz spectrum
   CROSS_RESULTS **results;
@@ -22,15 +22,14 @@ struct _Kurucz {
   KURUCZ_FENO *KuruczFeno;
   MATRIX_OBJECT hrSolar;                        // high resolution kurucz spectrum for convolution
   MATRIX_OBJECT slitFunction;                   // user-defined slit function (file option)
-  SVD     svdFwhm;                              // svd matrix used for computing coefficients of polynomial fitting fwhm
-  double *solar,                                // convoluted kurucz spectrum
+  double *solar,                                // convolved kurucz spectrum
          *lambdaF,
          *solarF,                               // filtered solar spectrum (high pass filtering)
          *solarF2,                              // second derivatives for the previous vector
          *offset,
          *fwhmVector[MAX_KURUCZ_FWHM_PARAM],    // wavelength dependence of fwhm
          *fwhmDeriv2[MAX_KURUCZ_FWHM_PARAM],    // wavelength dependence of fwhm
-         *VPix,*VSig,*Pcalib,                   // polynomial coefficients computation
+         *VSig,*Pcalib,                   // polynomial coefficients computation
          *lambdaMin,*lambdaMax,
          *pixMid,*VLambda,*VShift,              // display
          **dispAbsolu,**dispSecX,               // copy of vectors to display for overlapping subwindows

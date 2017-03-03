@@ -74,9 +74,9 @@
 
 #include "filter.h"
 #include "engine_context.h"
+#include "linear_system.h"
 
 #include "doas.h"
-#include "svd.h"
 #include "vector.h"
 #include "spline.h"
 
@@ -463,63 +463,6 @@ RC FilterNeqRipple (PRJCT_FILTER *pFilter,double *Beta, double *Delta,double *dB
  }
 
 // -----------------------------------------------------------------------------
-// FUNCTION      FilterPinv
-// -----------------------------------------------------------------------------
-// PURPOSE       PseudoInverse function
-//
-//	              X = PINV(A) produces a matrix X of the same dimensions
-//	              as A' so that A*X*A = A, X*A*X = X and AX and XA
-//	              are Hermitian. The computation is based on SVD(A) and any
-//	              singular values less than a tolerance are treated as zero.
-//	              The default tolerance is MAX(SIZE(A)) * NORM(A) * EPS.
-//	              This tolerance may be overridden with X = PINV(A,tol).c
-//
-// INPUT/OUTPUT  pSvd     pointers to SVD buffers
-//
-// RETURN        return code of the SVD decomposition function
-//
-// Copyright (c) 1984-93 by The MathWorks, Inc.
-// -----------------------------------------------------------------------------
-
-RC FilterPinv(SVD *pSvd)
- {
-  // Declarations
-
-  double tolerance;
-  INDEX i,j,k,r;
-  RC rc;
-
-  // Matrix decomposition
-
-  if ((rc=SVD_Dcmp(pSvd->A,pSvd->DimL,pSvd->DimC,pSvd->W,pSvd->V,pSvd->SigmaSqr,NULL))==ERROR_ID_NO)
-   {
-   	// default tolerance
-
-    tolerance=(double)max(pSvd->DimL,pSvd->DimC)*pSvd->W[1]*EPS;
-
-    // singular values less than tolerance are treated as zero
-
-    for (r=1;(r<=pSvd->DimC)&&(pSvd->W[r]>tolerance);r++);
-
-    // Back substitution
-
-    for (j=1;j<=pSvd->DimC;j++)
-     for (i=1;i<=pSvd->DimL;i++)
-      pSvd->U[j][i]=(double)0.;
-
-    if (r>1)
-     for (j=1;j<r;j++)
-      for (i=1;i<=pSvd->DimL;i++)
-       for (k=1;k<r;k++)
-        pSvd->U[j][i]+=pSvd->V[k][j]*pSvd->A[k][i]/pSvd->W[k];
-   }
-
-  // Return
-
-  return rc;
- }
-
-// -----------------------------------------------------------------------------
 // FUNCTION      FilterSavitskyGolay
 // -----------------------------------------------------------------------------
 // PURPOSE       build a Savitsky-Golay filter function
@@ -532,52 +475,47 @@ RC FilterPinv(SVD *pSvd)
 // RETURN        ERROR_ID_ALLOC if buffer allocation failed, 0 on success
 // -----------------------------------------------------------------------------
 
-RC FilterSavitskyGolay(PRJCT_FILTER *pFilter,int filterWidth,int filterOrder)
- {
-  // Declarations
-
-  INDEX i,j;
-  SVD svd;
-  int lc;
-  RC rc;
-
-  // Initializations
-
-  memset(&svd,0,sizeof(SVD));
-  lc=(filterWidth-1)/2;
-  svd.DimL=filterWidth;
-  svd.DimC=filterOrder+1;
-
+RC FilterSavitskyGolay(PRJCT_FILTER *pFilter,int filterWidth,int filterOrder) {
+  int rc=ERROR_ID_NO;
+  int lc=(filterWidth-1)/2;
   pFilter->filterSize=lc+1;
+  // linear system of "filterwidth" equations and "1+filterOrder" unknowns:
+  double **poly_matrix = MEMORY_AllocDMatrix(__func__, "pinv", 1, filterWidth, 1, filterOrder+1);
+  // allocate matrix for pseudo-inverse:
+  double **pinv = MEMORY_AllocDMatrix(__func__, "pinv", 1, filterOrder+1, 1, filterWidth);
+  pFilter->filterFunction=MEMORY_AllocDVector(__func__,"pFilter->filterFunction",1,pFilter->filterSize);
 
-  // Allocate buffer for filter
+  struct linear_system *filter_system = NULL; // allocated later on
 
-  if ((pFilter->filterFunction=(double *)MEMORY_AllocDVector("FilterSavitskyGolay ","pFilter->filterFunction",1,pFilter->filterSize))==NULL)
-   rc=ERROR_ID_ALLOC;
+  if (poly_matrix == NULL || pinv == NULL || pFilter->filterFunction == NULL) { 
+    rc = ERROR_ID_ALLOC;
+    goto cleanup;
+  }
+  
+  // Build the matrix of polynomial components:
+  for (int j=0;j<=filterOrder;j++)
+    for (int i=-lc;i<=lc;i++)
+      poly_matrix[j+1][i+lc+1]=(j!=0)?pow((double)i,(double)j):(double)1.;
 
-  // Allocate buffers for SVD
+  filter_system = LINEAR_from_matrix(poly_matrix, filterWidth, filterOrder+1, DECOMP_SVD);
+  if (filter_system == NULL) {
+    rc = ERROR_ID_ALLOC;
+    goto cleanup;
+  }
+  rc=LINEAR_decompose(filter_system, NULL, NULL);
+  if (rc)
+    goto cleanup;
 
-  else if (!(rc=SVD_LocalAlloc("FilterSavitskyGolay",&svd)))
-   {
-   	// Build the filter function
+  LINEAR_pinv(filter_system, pinv);
 
-    for (j=0;j<=filterOrder;j++)
-     for (i=-lc;i<=lc;i++)
-      svd.A[j+1][i+lc+1]=(j!=0)?pow((double)i,(double)j):(double)1.;
+  for (int i=1; i<=pFilter->filterSize; ++i){
+    pFilter->filterFunction[i] = pinv[lc+i][1];
+  }
 
-    if (!(rc=FilterPinv(&svd)))
-     memcpy(pFilter->filterFunction+1,&svd.U[1][lc+1],sizeof(double)*pFilter->filterSize);
-
-    // NB : no normalization is needed for the line shape because sum of items in pFilter->filterFunction is already
-    //      equal to 1 after FilterPinv
-   }
-
-  // Release allocated buffers
-
-  SVD_Free("FilterSavitskyGolay",&svd);
-
-  // Return
-
+ cleanup:
+  LINEAR_free(filter_system);
+  MEMORY_ReleaseDMatrix(__func__, "poly_matrix", poly_matrix, 1, 1);
+  MEMORY_ReleaseDMatrix(__func__, "pinv", pinv, 1, 1);
   return rc;
  }
 

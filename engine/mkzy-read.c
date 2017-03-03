@@ -63,7 +63,6 @@
 #include "doas.h"
 #include "engine_context.h"
 #include "analyse.h"
-#include "svd.h"
 #include "stdfunc.h"
 #include "vector.h"
 #include "zenithal.h"
@@ -834,7 +833,7 @@ RC MKZY_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
             if ((((pWrkSymbol->type==WRK_SYMBOL_CROSS) && (pTabCross->crossAction==ANLYS_CROSS_ACTION_NOTHING)) ||
                  ((pWrkSymbol->type==WRK_SYMBOL_PREDEFINED) &&
                   (indexTabCross==pTabFeno->indexCommonResidual))) &&
-                ((rc=ANALYSE_CheckLambda(pWrkSymbol,pTabFeno->LambdaRef,pTabFeno->NDET,"MKZY_LoadAnalysis "))!=ERROR_ID_NO))
+                ((rc=ANALYSE_CheckLambda(pWrkSymbol,pTabFeno->LambdaRef,pTabFeno->NDET))!=ERROR_ID_NO))
 
              goto EndMKZY_LoadAnalysis;
            }
@@ -842,10 +841,10 @@ RC MKZY_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
           // Gaps : rebuild subwindows on new wavelength scale
 
           doas_spectrum *new_range = spectrum_new();
-          for (indexWindow = 0, DimL=0; indexWindow < pTabFeno->svd.Z; indexWindow++)
+          for (indexWindow = 0, DimL=0; indexWindow < pTabFeno->fit_properties.Z; indexWindow++)
            {
-            int pixel_start = FNPixel(pTabFeno->LambdaRef,pTabFeno->svd.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
-            int pixel_end = FNPixel(pTabFeno->LambdaRef,pTabFeno->svd.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
+            int pixel_start = FNPixel(pTabFeno->LambdaRef,pTabFeno->fit_properties.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
+            int pixel_end = FNPixel(pTabFeno->LambdaRef,pTabFeno->fit_properties.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
 
             spectrum_append(new_range, pixel_start, pixel_end);
 
@@ -853,11 +852,11 @@ RC MKZY_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
            }
 
           // Buffers allocation
-          SVD_Free("MKZY_LoadAnalysis",&pTabFeno->svd);
-          pTabFeno->svd.DimL=DimL;
-          SVD_LocalAlloc("MKZY_LoadAnalysis",&pTabFeno->svd);
+          FIT_PROPERTIES_free(__func__,&pTabFeno->fit_properties);
+          pTabFeno->fit_properties.DimL=DimL;
+          FIT_PROPERTIES_alloc(__func__,&pTabFeno->fit_properties);
           // new spectral windows
-          pTabFeno->svd.specrange = new_range;
+          pTabFeno->fit_properties.specrange = new_range;
 
           pTabFeno->Decomp=1;
 

@@ -13,26 +13,32 @@ QMAKE_CFLAGS += -g -std=gnu99 -Wall -Wextra -pedantic \
 QMAKE_LFLAGS += -g
 QMAKE_LFLAGS_RELEASE=
 
-# QMAKE_CXXFLAGS += -std=c++0x
-
-QDOAS_VERSION=2.112.1
+QDOAS_VERSION=3.0
 
 win64 {
   QDOAS_VERSION = "$${QDOAS_VERSION}_x86_64"
 }
 
-DEFINES += QDOAS_VERSION="\"\\\"$${QDOAS_VERSION}\\\"\"" QDOAS_DATE="\"\\\"7 June 2016\\\"\""
+DEFINES += QDOAS_VERSION="\"\\\"$${QDOAS_VERSION}\\\"\"" QDOAS_DATE="\"\\\"March 2016\\\"\""
 
 LIBS += -L../mediator -lmediator -L../engine -lengine -L../common -lcommon
 DEPENDPATH += ../common ../engine ../mediator
 INCLUDEPATH += ../common ../engine ../mediator
+
+LIBS += -lgsl -lgslcblas
 
 #----------------------------------------------
 # Platform dependency ...
 #----------------------------------------------
 
 unix {
-  INSTALL_PREFIX = /home/username
+  INCLUDEPATH += $$(HOME)/include
+  QMAKE_LIBDIR += $$(HOME)/lib
+  QMAKE_RPATHDIR += $$(HOME)/lib
+
+  isEmpty(INSTALL_PREFIX) {
+    INSTALL_PREFIX = $$(HOME)
+  }
 
   INCLUDEPATH += $$INSTALL_PREFIX/include
   INCLUDEPATH += $$INSTALL_PREFIX/include/hdf4
@@ -41,7 +47,6 @@ unix {
 }
 
 bira {
-  QMAKE_CXX = g++-4.7
   INSTALL_PREFIX = /bira-iasb/projects/DOAS/Programmes/QDOAS
   QMAKE_CFLAGS_RELEASE -= -g
   QMAKE_CXXFLAGS_RELEASE -= -g
@@ -126,22 +131,17 @@ caro {
   CODE_GENERATION = release # Override because debug is broken
 }
 
-thomas {
+ubuntu {
 
   CONFIG += qwt
 
-  QMAKE_CXX = ccache g++
-  QMAKE_CC = ccache gcc
-
-  INCLUDEPATH += /home/thomasd/include
+  INCLUDEPATH += /usr/include/qwt
   INCLUDEPATH += /usr/include/hdf
   INCLUDEPATH += /usr/include/hdf5/serial
   INCLUDEPATH += /usr/include/hdf-eos5
   INCLUDEPATH += /usr/include/x86_64-linux-gnu/hdf
 
   QMAKE_LIBDIR += /usr/lib/x86_64-linux-gnu/hdf5/serial/
-  QMAKE_LIBDIR += /home/thomasd/lib
-  QMAKE_RPATHDIR += /home/thomasd/lib
 }
 
 asan { # use 'CONFIG+=asan' to build with adress sanitizer support

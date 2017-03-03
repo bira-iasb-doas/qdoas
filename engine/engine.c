@@ -57,7 +57,6 @@
 #include "winsymb.h"
 #include "winfiles.h"
 #include "resource.h"
-#include "svd.h"
 #include "analyse.h"
 #include "vector.h"
 #include "winthrd.h"
@@ -71,6 +70,7 @@
 #include "omi_read.h"
 #include "gdp_bin_read.h"
 #include "apex_read.h"
+#include "mfc-read.h"
 #include "spectrum_files.h"
 
 #include "coda.h"
@@ -1739,25 +1739,25 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
              memcpy(pTabFeno->LambdaRef,ENGINE_contextRef.buffers.lambda,sizeof(double)*pTabFeno->NDET);
 
              doas_spectrum *new_range = spectrum_new();
-             for (indexWindow = 0, newDimL=0; indexWindow < pTabFeno->svd.Z; indexWindow++)
+             for (indexWindow = 0, newDimL=0; indexWindow < pTabFeno->fit_properties.Z; indexWindow++)
               {
-               int pixel_start = FNPixel(ENGINE_contextRef.buffers.lambda,pTabFeno->svd.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
-               int pixel_end = FNPixel(ENGINE_contextRef.buffers.lambda,pTabFeno->svd.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
+               int pixel_start = FNPixel(ENGINE_contextRef.buffers.lambda,pTabFeno->fit_properties.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
+               int pixel_end = FNPixel(ENGINE_contextRef.buffers.lambda,pTabFeno->fit_properties.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
                spectrum_append(new_range, pixel_start, pixel_end);
 
                newDimL += pixel_end - pixel_start +1;
               }
 
-             if (newDimL != pTabFeno->svd.DimL)
+             if (newDimL != pTabFeno->fit_properties.DimL)
               { // reallocate complete SVD structure.
-               SVD_Free("EngineNewRef",&pTabFeno->svd);
-               pTabFeno->svd.DimL=newDimL;
-               SVD_LocalAlloc("EngineNewRef",&pTabFeno->svd);
+               FIT_PROPERTIES_free("EngineNewRef",&pTabFeno->fit_properties);
+               pTabFeno->fit_properties.DimL=newDimL;
+               FIT_PROPERTIES_alloc("EngineNewRef",&pTabFeno->fit_properties);
               }
-             else if(pTabFeno->svd.specrange != NULL) // only update specrange
-              spectrum_destroy(pTabFeno->svd.specrange);
+             else if(pTabFeno->fit_properties.specrange != NULL) // only update specrange
+              spectrum_destroy(pTabFeno->fit_properties.specrange);
 
-             pTabFeno->svd.specrange = new_range;
+             pTabFeno->fit_properties.specrange = new_range;
 
              if (pTabFeno->useKurucz)
               {
@@ -1814,8 +1814,8 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
          int SvdPDeb,SvdPFin;
          int indexLine;
 
-         SvdPDeb=spectrum_start(pTabFeno->svd.specrange);
-         SvdPFin=spectrum_end(pTabFeno->svd.specrange);
+         SvdPDeb=spectrum_start(pTabFeno->fit_properties.specrange);
+         SvdPFin=spectrum_end(pTabFeno->fit_properties.specrange);
          pDay=&ENGINE_contextRef.recordInfo.present_datetime.thedate;
          pTime=&ENGINE_contextRef.recordInfo.present_datetime.thetime;
 

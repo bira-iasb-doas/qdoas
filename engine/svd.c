@@ -136,13 +136,17 @@ static double at, bt, ct, maxarg1, maxarg2;
 //               sequentially with different b's.
 // -----------------------------------------------------------------------------
 
-RC SVD_Bksb(double **u,double *w,double **v,int m,int n,double *b,double *x)
- {
+RC SVD_Bksb(const struct svd *svd, int m, int n, const double *b, double *x) {
+
   // Declarations
 
   int i, j;
   double s, *tmp;
   RC rc;
+
+  double **u = svd->U;
+  const double * const w = svd->W;
+  double **v = svd->V;
 
   // Debugging
 
@@ -213,11 +217,17 @@ RC SVD_Bksb(double **u,double *w,double **v,int m,int n,double *b,double *x)
 // -----------------------------------------------------------------------------
 // FUNCTION      SVD_Dcmp
 // -----------------------------------------------------------------------------
-// PURPOSE       given a matrix a[1..m][1..n], this routine calculates its singular
+// PURPOSE       given a matrix a[1..n][1..m], this routine calculates its singular
 //               value decomposition A=U.W.V'.
 //
 // INPUT         a     : the matrix to decompose;
 //               m, n  : dimensions of the previous matrix;
+//
+//               the first index counts the columns of a matrix, second
+//               index the rows, i.e.:
+//
+//               A = U*W*V' <=>
+//               A[j][i] = sum(k) U[k][i] * W[k] * V[k][j]               
 //
 // OUTPUT        the matrix U replaces a on output;
 //               the diagonal matrix of singular values is output as a vector w[1..n];
@@ -231,35 +241,35 @@ RC SVD_Bksb(double **u,double *w,double **v,int m,int n,double *b,double *x)
 //               ERROR_ID_NO otherwise;
 // -----------------------------------------------------------------------------
 
-RC SVD_Dcmp ( double **a, int m, int n, double *w, double **v, double *SigmaSqr, double **covar)
- {
-  // Declarations
+RC SVD_Dcmp (struct svd *svd, int m, int n, double *SigmaSqr, double **covar) {
+  double **a = svd->U;
+  double *w = svd->W;
+  double **v = svd->V;
 
   int flag, i, its, j, jj, k, l, nm;
   double c, f, g, h, s, x, y, z, anorm, scale, *rv1, *wti;
-  RC rc;
 
   // Debugging
 
   #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_SVD_) && __DEBUG_DOAS_SVD_
-  DEBUG_FunctionBegin("SVD_Dcmp",DEBUG_FCTTYPE_MATH);
+  DEBUG_FunctionBegin(__func__,DEBUG_FCTTYPE_MATH);
   DEBUG_PrintVar("Matrix A before the SVD decomposition",a,1,m,1,n,NULL);
   #endif
 
   // Initializations
 
   rv1=NULL;
-  rc=ERROR_ID_NO;
+  RC rc=ERROR_ID_NO;
   l=nm=0;
 
   // Check for parameters
 
   if ( m < n )
-   rc=ERROR_SetLast("SVD_Dcmp",ERROR_TYPE_WARNING,ERROR_ID_SVD_ARG,m,n);
+   rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_SVD_ARG,m,n);
 
   // Temporary buffer allocation
 
-  else if ((rv1=(double *)MEMORY_AllocDVector("SVD_Dcmp","rv1",1,n))==NULL)
+  else if ((rv1=(double *)MEMORY_AllocDVector(__func__,"rv1",1,n))==NULL)
    rc=ERROR_ID_ALLOC;
 
   else
@@ -455,7 +465,7 @@ RC SVD_Dcmp ( double **a, int m, int n, double *w, double **v, double *SigmaSqr,
 
                 if ( its == SVD_MAX_ITERATIONS )
                  {
-                  rc=ERROR_SetLast("SVD_Dcmp",ERROR_TYPE_WARNING,ERROR_ID_CONVERGENCE,SVD_MAX_ITERATIONS);
+                  rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_CONVERGENCE,SVD_MAX_ITERATIONS);
                   goto EndSVD_Dcmp;
                  }
 
@@ -534,15 +544,15 @@ RC SVD_Dcmp ( double **a, int m, int n, double *w, double **v, double *SigmaSqr,
     for ( i=1; i<=n; i++ )
           wti[i] = ( fabs(w[i]) > (double) 1.e-12 ) ? (double) 1. / ( w[i] * w[i] ) : (double) 0.;
 
-    for ( j=1, SigmaSqr[0]=0.; j<=n; j++ )
-        {
-          SigmaSqr[j] = (double) 0.;
-          for ( k=1; k<=n; k++ )
-           SigmaSqr[j] += v[k][j] * v[k][j] * wti[k];
-        }
-
+    if (SigmaSqr!=NULL) {
+      for ( j=1, SigmaSqr[0]=0.; j<=n; j++ ) {
+        SigmaSqr[j] = 0.;
+        for ( k=1; k<=n; k++ )
+          SigmaSqr[j] += v[k][j] * v[k][j] * wti[k];
+      }
+    }
+    
     // Covariance calculation
-
     if (covar!=NULL)
      {
       for (i=1;i<=n;i++)
@@ -573,142 +583,10 @@ RC SVD_Dcmp ( double **a, int m, int n, double *w, double **v, double *SigmaSqr,
                   SigmaSqr,1,n,   // SigmaSqr (1:n)
                   covar,1,n,1,n,  // Covar    (1:n,1:n)
                   NULL);
-  DEBUG_FunctionStop("SVD_Dcmp",rc);
+  DEBUG_FunctionStop(__func__,rc);
   #endif
 
   // Return
-
-  return rc;
- }
-
- extern int engineRef;
-
-// ----------------------------------------------------------------------
-// SVD_Free : Release allocated buffers used for SVD decomposition
-// ----------------------------------------------------------------------
-
-void SVD_Free(const char *callingFunctionShort,SVD *pSvd)
- {
-  // Declaration
-
-  char functionNameShort[MAX_STR_SHORT_LEN+1];
-
-  #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionBegin("SVD_Free",DEBUG_FCTTYPE_MEM);
-  #endif
-
-  // Initialization
-
-  memset(functionNameShort,0,MAX_STR_SHORT_LEN+1);
-
-  // Build complete function name
-
-  if (strlen(callingFunctionShort)<=MAX_STR_SHORT_LEN-strlen("SVD_Free via  "))
-   sprintf(functionNameShort,"SVD_Free via %s ",callingFunctionShort);
-  else
-   sprintf(functionNameShort,"SVD_Free ");
-
-  // Release allocated buffers
-
-  if (pSvd->A!=NULL)
-   MEMORY_ReleaseDMatrix(functionNameShort,"A",pSvd->A,0,pSvd->DimC,1);
-  if (pSvd->U!=NULL)
-   MEMORY_ReleaseDMatrix(functionNameShort,"U",pSvd->U,0,pSvd->DimC,1);
-  if (pSvd->P!=NULL)
-   MEMORY_ReleaseDMatrix(functionNameShort,"P",pSvd->P,0,pSvd->DimP,1);
-  if (pSvd->V!=NULL)
-   MEMORY_ReleaseDMatrix(functionNameShort,"V",pSvd->V,1,pSvd->DimC,1);
-  if (pSvd->W!=NULL)
-   MEMORY_ReleaseDVector(functionNameShort,"W",pSvd->W,1);
-  if (pSvd->SigmaSqr!=NULL)
-   MEMORY_ReleaseDVector(functionNameShort,"SigmaSqr",pSvd->SigmaSqr,0);
-  if (pSvd->covar!=NULL)
-   MEMORY_ReleaseDMatrix(functionNameShort,"covar",pSvd->covar,1,pSvd->DimC,1);
-  if (pSvd->specrange !=NULL)
-   spectrum_destroy(pSvd->specrange);
-
-  pSvd->A=pSvd->U=pSvd->P=pSvd->V=pSvd->covar=NULL;
-  pSvd->W=pSvd->SigmaSqr=NULL;
-  pSvd->specrange=NULL;
-
-  #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionStop("SVD_Free",0);
-  #endif
- }
-
-// --------------------------------------------------------------------
-// SVD_LocalAlloc : Allocate SVD matrices for the current window
-// --------------------------------------------------------------------
-
-
-RC SVD_LocalAlloc(const char *callingFunctionShort,SVD *pSvd)
- {
-  // Declarations
-
-  char functionNameShort[MAX_STR_SHORT_LEN+1];
-  INDEX i,j;
-  RC rc;
-
-  #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionBegin("SVD_LocalAlloc",DEBUG_FCTTYPE_MEM);
-  #endif
-
-  // Initializations
-
-  memset(functionNameShort,0,MAX_STR_SHORT_LEN+1);
-  rc=ERROR_ID_NO;
-
-  // Build complete function name
-
-  if (strlen(callingFunctionShort)<=MAX_STR_SHORT_LEN-strlen("SVD_LocalAlloc via  "))
-   sprintf(functionNameShort,"SVD_LocalAlloc via %s ",callingFunctionShort);
-  else
-   sprintf(functionNameShort,"SVD_LocalAlloc ");
-
-  // Allocation
-
-  if (pSvd->DimC && pSvd->DimL)
-   {
-    if (((pSvd->A=(double **)MEMORY_AllocDMatrix("SVD_LocalAlloc","A",1,pSvd->DimL,0,pSvd->DimC))==NULL) ||
-        ((pSvd->U=(double **)MEMORY_AllocDMatrix("SVD_LocalAlloc","U",1,pSvd->DimL,0,pSvd->DimC))==NULL) ||
-        ((pSvd->V=(double **)MEMORY_AllocDMatrix("SVD_LocalAlloc","V",1,pSvd->DimC,1,pSvd->DimC))==NULL) ||
-        ((pSvd->covar=(double **)MEMORY_AllocDMatrix("SVD_LocalAlloc","covar",1,pSvd->DimC,1,pSvd->DimC))==NULL) ||
-        ((pSvd->W=(double *)MEMORY_AllocDVector("SVD_LocalAlloc","W",1,pSvd->DimC))==NULL) ||
-        ((pSvd->SigmaSqr=(double *)MEMORY_AllocDVector("SVD_LocalAlloc","SigmaSqr",0,pSvd->DimC))==NULL) ||
-        ((pSvd->DimP>0) && ((pSvd->P=(double **)MEMORY_AllocDMatrix("SVD_LocalAlloc","P",1,pSvd->DimL,0,pSvd->DimP))==NULL)))
-
-     rc=ERROR_ID_ALLOC;
-
-    else
-
-    // Initializations
-
-     {
-      for (i=1;i<=pSvd->DimC;i++)
-       {
-        for (j=1;j<=pSvd->DimC;j++)
-         pSvd->V[i][j]=pSvd->covar[i][j]=(double)0.;
-        pSvd->W[i]=pSvd->SigmaSqr[i]=(double)0.;
-       }
-
-      for (i=1;i<=pSvd->DimL;i++)
-       pSvd->A[0][i]=pSvd->U[0][i]=(double)0.;
-
-      if (pSvd->P!=NULL)
-       for (i=1;i<=pSvd->DimL;i++)
-        pSvd->P[0][i]=(double)0.;
-
-      pSvd->SigmaSqr[0]=(double)0.;
-     }
-   }
-  else
-   rc=ERROR_SetLast(functionNameShort,ERROR_TYPE_FATAL,ERROR_ID_ALLOC,"DimC or DimL is zero !");
-
-  // Return
-
-  #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionStop("SVD_LocalAlloc",rc);
-  #endif
 
   return rc;
  }

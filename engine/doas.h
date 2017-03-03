@@ -100,7 +100,7 @@ typedef struct _engineContext ENGINE_CONTEXT;
 // ----------------
 extern int NWorkSpace;
 extern int NDET[MAX_SWATHSIZE];
-extern int           DimC,DimL,DimP,Z,NFeno,SvdPDeb,SvdPFin;
+extern int NFeno,SvdPDeb,SvdPFin;
 extern WRK_SYMBOL   *WorkSpace;
 
 extern PRJCT_ANLYS  *pAnalysisOptions;             // analysis options

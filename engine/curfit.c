@@ -72,11 +72,11 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "curfit.h"
-
 #include "doas.h"
 #include "winthrd.h"
 #include "analyse.h"
+
+#include "curfit.h"
 
 #define CURFIT_MAX_ITER 100
 
@@ -409,8 +409,8 @@ char *CurfitError(char *string,INDEX indexError,double *p,double *deltap)
 //               ERROR_ID_NO if successful
 // -----------------------------------------------------------------------------
 
-RC CurfitNumDeriv(double *X, double *specX, double *srefX, int n_wavel, double *Y, double *sigmaY, int nY,
-                  double *P, double *A, double *deltaA,int indexA,double **deriv,INDEX indexFenoColumn)
+RC CurfitNumDeriv(double *specX, double *srefX, double *sigmaY, int nY,
+                  double *P, double *A, double *deltaA,int indexA,double **deriv,INDEX indexFenoColumn, struct fit_properties *fitprops)
  {
   // Declarations
 
@@ -420,7 +420,7 @@ RC CurfitNumDeriv(double *X, double *specX, double *srefX, int n_wavel, double *
   RC       rc;                                                                  // return code
 
   #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionBegin("CurfitNumDeriv",DEBUG_FCTTYPE_APPL);
+  DEBUG_FunctionBegin(__func__,DEBUG_FCTTYPE_APPL);
   #endif
 
   // Initializations
@@ -430,8 +430,8 @@ RC CurfitNumDeriv(double *X, double *specX, double *srefX, int n_wavel, double *
 
   // Buffers allocation
 
-  if (((Yfit1=MEMORY_AllocDVector("CurfitNumDeriv","Yfit1",0,nY-1))==NULL) ||
-      ((Yfit2=MEMORY_AllocDVector("CurfitNumDeriv","Yfit2",0,nY-1))==NULL))
+  if (((Yfit1=MEMORY_AllocDVector(__func__,"Yfit1",0,nY-1))==NULL) ||
+      ((Yfit2=MEMORY_AllocDVector(__func__,"Yfit2",0,nY-1))==NULL))
 
    rc=ERROR_ID_ALLOC;
 
@@ -450,19 +450,19 @@ RC CurfitNumDeriv(double *X, double *specX, double *srefX, int n_wavel, double *
     // Evaluate function for Aj+Dj
 
     A[indexA]=(double)Aj+Dj;
-    if ((rc=ANALYSE_Function(specX,srefX,sigmaY,Yfit2,nY,P,A,indexFenoColumn))>=THREAD_EVENT_STOP)
+    if ((rc=ANALYSE_Function(specX,srefX,sigmaY,Yfit2,nY,P,A,indexFenoColumn,fitprops))>=THREAD_EVENT_STOP)
      goto EndNumDeriv;
 
     // Evaluate function for Aj-Dj
 
     A[indexA]=(double)Aj-Dj;
-    if ((rc=ANALYSE_Function(specX,srefX,sigmaY,Yfit1,nY,P,A,indexFenoColumn))>=THREAD_EVENT_STOP)
+    if ((rc=ANALYSE_Function(specX,srefX,sigmaY,Yfit1,nY,P,A,indexFenoColumn,fitprops))>=THREAD_EVENT_STOP)
      goto EndNumDeriv;
 
      // Calculate the partial derivative of the function for the non linear parameter
 
     if (Dj==0.)
-    	rc=ERROR_SetLast("CurfitNumDeriv",ERROR_TYPE_WARNING,ERROR_ID_DIVISION_BY_0,"delta");
+    	rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_DIVISION_BY_0,"delta");
     else
      for (i=0;i<nY;i++)
       deriv[indexA][i]=(Yfit2[i]-Yfit1[i])/(2.*Dj);
@@ -475,12 +475,12 @@ RC CurfitNumDeriv(double *X, double *specX, double *srefX, int n_wavel, double *
   // Release allocated buffers
 
   if (Yfit1!=NULL)
-   MEMORY_ReleaseDVector("CurfitNumDeriv","Yfit1",Yfit1,0);
+   MEMORY_ReleaseDVector(__func__,"Yfit1",Yfit1,0);
   if (Yfit2!=NULL)
-   MEMORY_ReleaseDVector("CurfitNumDeriv","Yfit2",Yfit2,0);
+   MEMORY_ReleaseDVector(__func__,"Yfit2",Yfit2,0);
 
   #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionStop("CurfitNumDeriv",rc);
+  DEBUG_FunctionStop(__func__,rc);
   #endif
 
   // Return
@@ -495,15 +495,13 @@ RC CurfitNumDeriv(double *X, double *specX, double *srefX, int n_wavel, double *
 //               If possible, derivatives are calculated analytically in order to avoid two evaluations
 //               of the fitting function.
 //
-// INPUT         X       - wavelengths or pixels according to the selected shift unit
+// INPUT
 //               specX   - the spectrum to evaluate
 //               srefX   - the control spectrum (also called reference spectrum)
-//               n_wavel - the size of previous vectors (depending on the size of the detector)
 //
 //                   !!! use whole vectors (0..NDET-1) in order to avoid side
 //                   !!! effects if the shift is fitted in ANALYSE_Function
 //
-//               Y       - the data to fit (vector of zeros to fit the residual)
 //               sigmaY  - standard deviations for Y data points
 //               Yfit    - vector of calculated values of Y
 //               nY      - number of data points in Y
@@ -519,8 +517,8 @@ RC CurfitNumDeriv(double *X, double *specX, double *srefX, int n_wavel, double *
 //               ERROR_ID_NO if successful
 // -----------------------------------------------------------------------------
 
-RC CurfitDerivFunc(double *X, double *specX, double *srefX, int n_wavel, double *Y, double *sigmaY, double *Yfit,int nY,
-                   double *P, double *A, double *deltaA,double **deriv,INDEX indexFenoColumn)
+RC CurfitDerivFunc(double *specX, double *srefX, double *sigmaY,int nY,
+                   double *P, double *A, double *deltaA,double **deriv,INDEX indexFenoColumn,struct fit_properties *fitprops)
  {
   // Declarations
 
@@ -547,7 +545,7 @@ RC CurfitDerivFunc(double *X, double *specX, double *srefX, int n_wavel, double 
     //    predefined parameters as offset, undersampling, raman, common residual are fitted linearly
 
     if (((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT) &&
-         (TabCross[i].FitConc!=ITEM_NONE) && ((rc=CurfitNumDeriv(X,specX,srefX,n_wavel,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitConc,deriv,indexFenoColumn))>=THREAD_EVENT_STOP)) ||
+         (TabCross[i].FitConc!=ITEM_NONE) && ((rc=CurfitNumDeriv(specX,srefX,sigmaY,nY,P,A,deltaA,TabCross[i].FitConc,deriv,indexFenoColumn,fitprops))>=THREAD_EVENT_STOP)) ||
 
     // SVD : concentrations of molecules fitted linearly
     //       second derivatives of non linear parameters (predefined parameters, shift, stretch)
@@ -562,15 +560,15 @@ RC CurfitDerivFunc(double *X, double *specX, double *srefX, int n_wavel, double 
          (i!=Feno->indexUsamp2) &&
          (i!=Feno->indexResol)) ||
          (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD)) &&
-        ((rc=CurfitNumDeriv(X,specX,srefX,n_wavel,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitParam,deriv,indexFenoColumn))>=THREAD_EVENT_STOP)) ||
+         ((rc=CurfitNumDeriv(specX,srefX,sigmaY,nY,P,A,deltaA,TabCross[i].FitParam,deriv,indexFenoColumn,fitprops))>=THREAD_EVENT_STOP)) ||
 
     //    derivatives of the fitting function in shift, stretch and scaling are always numeric undependantly on the method of analysis
 
-        ((TabCross[i].FitShift!=ITEM_NONE) && ((rc=CurfitNumDeriv(X,specX,srefX,n_wavel,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitShift,deriv,indexFenoColumn))>=THREAD_EVENT_STOP)) ||
-        ((TabCross[i].FitStretch!=ITEM_NONE) && ((rc=CurfitNumDeriv(X,specX,srefX,n_wavel,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitStretch,deriv,indexFenoColumn))>=THREAD_EVENT_STOP)) ||
-        ((TabCross[i].FitStretch2!=ITEM_NONE) && ((rc=CurfitNumDeriv(X,specX,srefX,n_wavel,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitStretch2,deriv,indexFenoColumn))>=THREAD_EVENT_STOP)) ||
-        ((TabCross[i].FitScale!=ITEM_NONE) && ((rc=CurfitNumDeriv(X,specX,srefX,n_wavel,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitScale,deriv,indexFenoColumn))>=THREAD_EVENT_STOP)) ||
-        ((TabCross[i].FitScale2!=ITEM_NONE) && ((rc=CurfitNumDeriv(X,specX,srefX,n_wavel,Y,sigmaY,nY,P,A,deltaA,TabCross[i].FitScale2,deriv,indexFenoColumn))>=THREAD_EVENT_STOP)))
+        ((TabCross[i].FitShift!=ITEM_NONE) && ((rc=CurfitNumDeriv(specX,srefX,sigmaY,nY,P,A,deltaA,TabCross[i].FitShift,deriv,indexFenoColumn,fitprops))>=THREAD_EVENT_STOP)) ||
+        ((TabCross[i].FitStretch!=ITEM_NONE) && ((rc=CurfitNumDeriv(specX,srefX,sigmaY,nY,P,A,deltaA,TabCross[i].FitStretch,deriv,indexFenoColumn,fitprops))>=THREAD_EVENT_STOP)) ||
+        ((TabCross[i].FitStretch2!=ITEM_NONE) && ((rc=CurfitNumDeriv(specX,srefX,sigmaY,nY,P,A,deltaA,TabCross[i].FitStretch2,deriv,indexFenoColumn,fitprops))>=THREAD_EVENT_STOP)) ||
+        ((TabCross[i].FitScale!=ITEM_NONE) && ((rc=CurfitNumDeriv(specX,srefX,sigmaY,nY,P,A,deltaA,TabCross[i].FitScale,deriv,indexFenoColumn,fitprops))>=THREAD_EVENT_STOP)) ||
+        ((TabCross[i].FitScale2!=ITEM_NONE) && ((rc=CurfitNumDeriv(specX,srefX,sigmaY,nY,P,A,deltaA,TabCross[i].FitScale2,deriv,indexFenoColumn,fitprops))>=THREAD_EVENT_STOP)))
 
      goto EndCurfitDerivFunc;
 
@@ -600,10 +598,8 @@ RC CurfitDerivFunc(double *X, double *specX, double *srefX, int n_wavel, double 
 //
 //               nFree   - the number of degrees of freedom
 //
-//               X       - wavelengths or pixels according to the selected shift unit
 //               specX   - the spectrum to evaluate
 //               srefX   - the control spectrum (also called reference spectrum)
-//               n_wavel - the size of previous vectors (depending on the size of the detector)
 //
 //                   !!! use whole vectors (0..NDET-1) in order to avoid side
 //                   !!! effects if the shift is fitted in ANALYSE_Function
@@ -638,10 +634,8 @@ RC CurfitDerivFunc(double *X, double *specX, double *srefX, int n_wavel, double 
 
 RC Curfit(int     mode,                                                         // I   method of weighting least-squares fit
           int     nFree,                                                        // I   the number of degrees of freedom
-          double *X,                                                            // I   data points for independent variable
           double *specX,                                                        // I   the spectrum to evaluate
           double *srefX,                                                        // I   the control spectrum (also called reference spectrum)
-          int     n_wavel,                                                           // I   the size of previous vectors (depending on the size of the detector)
           double *Y,                                                            // I   the data to fit (vector of zeros to fit the residual)
           double *sigmaY,                                                       // I   standard deviations for Y data points
           int     nY,                                                           // I   number of data points in Y
@@ -656,7 +650,8 @@ RC Curfit(int     mode,                                                         
           double *pLambda,                                                      // O   proportion of gradient search included
           double *pChisqr,                                                      // O   reduced Chi square for fit (output)
           int    *pNiter,                                                       // O   number of iterations
-          INDEX	  indexFenoColumn)
+          INDEX	  indexFenoColumn,
+          struct fit_properties *fitprops)
  {
   // Declarations
 
@@ -678,7 +673,7 @@ RC Curfit(int     mode,                                                         
   RC       rc;                                                                  // return code
 
   #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionBegin("Curfit",DEBUG_FCTTYPE_APPL);
+  DEBUG_FunctionBegin(__func__,DEBUG_FCTTYPE_APPL);
   #endif
 
   // Initializations
@@ -693,12 +688,12 @@ RC Curfit(int     mode,                                                         
 
   // Allocate needed vectors and matrices
 
-  if (((weight=(double *)MEMORY_AllocDVector("Curfit","weight",0,nY-1))==NULL) ||
-      ((B=(double *)MEMORY_AllocDVector("Curfit","B",0,nA-1))==NULL) ||
-      ((beta=(double *)MEMORY_AllocDVector("Curfit","beta",0,nA-1))==NULL) ||
-      ((alpha=(double **)MEMORY_AllocDMatrix("Curfit","alpha",0,nA-1,0,nA-1))==NULL) ||
-      ((array=(double **)MEMORY_AllocDMatrix("Curfit","array",0,nA-1,0,nA-1))==NULL) ||
-      ((deriv=(double **)MEMORY_AllocDMatrix("Curfit","deriv",0,nY-1,0,nA-1))==NULL))
+  if (((weight=(double *)MEMORY_AllocDVector(__func__,"weight",0,nY-1))==NULL) ||
+      ((B=(double *)MEMORY_AllocDVector(__func__,"B",0,nA-1))==NULL) ||
+      ((beta=(double *)MEMORY_AllocDVector(__func__,"beta",0,nA-1))==NULL) ||
+      ((alpha=(double **)MEMORY_AllocDMatrix(__func__,"alpha",0,nA-1,0,nA-1))==NULL) ||
+      ((array=(double **)MEMORY_AllocDMatrix(__func__,"array",0,nA-1,0,nA-1))==NULL) ||
+      ((deriv=(double **)MEMORY_AllocDMatrix(__func__,"deriv",0,nY-1,0,nA-1))==NULL))
 
    rc=ERROR_ID_ALLOC;
 
@@ -737,8 +732,8 @@ RC Curfit(int     mode,                                                         
        alpha[j][k]=0.;
      }
 
-    if (((rc=CurfitDerivFunc(X,specX,srefX,n_wavel,Y,sigmaY,Yfit,nY,P,A,deltaA,deriv,indexFenoColumn))>=THREAD_EVENT_STOP) ||
-        ((rc=ANALYSE_Function(specX,srefX,sigmaY,Yfit,nY,P,A,indexFenoColumn))>=THREAD_EVENT_STOP))
+    if (((rc=CurfitDerivFunc(specX,srefX,sigmaY,nY,P,A,deltaA,deriv,indexFenoColumn,fitprops))>=THREAD_EVENT_STOP) ||
+        ((rc=ANALYSE_Function(specX,srefX,sigmaY,Yfit,nY,P,A,indexFenoColumn,fitprops))>=THREAD_EVENT_STOP))
 
      goto EndCurfit;
 
@@ -785,7 +780,7 @@ RC Curfit(int     mode,                                                         
 
       if (((rc=CurfitMatinv(array,nA,&det))>=THREAD_EVENT_STOP) || (det==(double)0.))
        {
-       	rc=ERROR_SetLast("Curfit",ERROR_TYPE_WARNING,ERROR_ID_MATINV);
+       	rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_MATINV);
         goto EndCurfit;
        }
 
@@ -806,7 +801,7 @@ RC Curfit(int     mode,                                                         
 
       // If the Chi square increased,increase pLambda and try again
 
-      if ((rc=ANALYSE_Function(specX,srefX,sigmaY,Yfit,nY,P,B,indexFenoColumn))>=THREAD_EVENT_STOP) goto EndCurfit;
+      if ((rc=ANALYSE_Function(specX,srefX,sigmaY,Yfit,nY,P,B,indexFenoColumn,fitprops))>=THREAD_EVENT_STOP) goto EndCurfit;
 
       chisqr=(double)Fchisq(mode,nFree,Y,Yfit,sigmaY,nY);
       if (chisq1<chisqr)
@@ -815,7 +810,7 @@ RC Curfit(int     mode,                                                         
 
       if (niter> CURFIT_MAX_ITER)
        {
-       	rc=ERROR_SetLast("Curfit",ERROR_TYPE_WARNING,ERROR_ID_CONVERGENCE, CURFIT_MAX_ITER);
+       	rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_CONVERGENCE, CURFIT_MAX_ITER);
         goto EndCurfit;
        }
      }
@@ -843,7 +838,7 @@ RC Curfit(int     mode,                                                         
 
     if (outOfRange)
      {
-      if ((rc=ANALYSE_Function(specX,srefX,sigmaY,Yfit,nY,P,B,indexFenoColumn))>=THREAD_EVENT_STOP)
+       if ((rc=ANALYSE_Function(specX,srefX,sigmaY,Yfit,nY,P,B,indexFenoColumn,fitprops))>=THREAD_EVENT_STOP)
        goto EndCurfit;
       chisqr=(double)Fchisq(mode,nFree,Y,Yfit,sigmaY,nY);
      }
@@ -870,13 +865,13 @@ RC Curfit(int     mode,                                                         
 
   // Release the allocated vectors and matrices
 
-  MEMORY_ReleaseDVector("Curfit","weight",weight,0);
-  MEMORY_ReleaseDVector("Curfit","B",B,0);
-  MEMORY_ReleaseDVector("Curfit","beta",beta,0);
+  MEMORY_ReleaseDVector(__func__,"weight",weight,0);
+  MEMORY_ReleaseDVector(__func__,"B",B,0);
+  MEMORY_ReleaseDVector(__func__,"beta",beta,0);
 
-  MEMORY_ReleaseDMatrix("Curfit","deriv",deriv,0,nA-1,0);
-  MEMORY_ReleaseDMatrix("Curfit","alpha",alpha,0,nA-1,0);
-  MEMORY_ReleaseDMatrix("Curfit","array",array,0,nA-1,0);
+  MEMORY_ReleaseDMatrix(__func__,"deriv",deriv,0,0);
+  MEMORY_ReleaseDMatrix(__func__,"alpha",alpha,0,0);
+  MEMORY_ReleaseDMatrix(__func__,"array",array,0,0);
 
   // Return
 
@@ -886,7 +881,7 @@ RC Curfit(int     mode,                                                         
    *pChisqr=chisqr;
 
   #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionStop("Curfit",rc);
+  DEBUG_FunctionStop(__func__,rc);
   #endif
 
   return rc;

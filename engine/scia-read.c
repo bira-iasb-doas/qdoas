@@ -104,7 +104,6 @@
 #include "output.h"
 #include "stdfunc.h"
 #include "spline.h"
-#include "svd.h"
 #include "vector.h"
 #include "zenithal.h"
 #include "winthrd.h"
@@ -2193,7 +2192,7 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                     ((pWrkSymbol->type==WRK_SYMBOL_PREDEFINED) &&
                     ((indexTabCross==pTabFeno->indexCommonResidual) ||
                    (((indexTabCross==pTabFeno->indexUsamp1) || (indexTabCross==pTabFeno->indexUsamp2)) && (pUsamp->method==PRJCT_USAMP_FILE))))) &&
-                    ((rc=ANALYSE_CheckLambda(pWrkSymbol,pTabFeno->LambdaRef,pTabFeno->NDET,"SCIA_LoadAnalysis "))!=ERROR_ID_NO))
+                    ((rc=ANALYSE_CheckLambda(pWrkSymbol,pTabFeno->LambdaRef,pTabFeno->NDET))!=ERROR_ID_NO))
 
                 goto EndSCIA_LoadAnalysis;
               }
@@ -2201,10 +2200,10 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
              // Gaps : rebuild subwindows on new wavelength scale
 
              doas_spectrum *new_range = spectrum_new();
-             for (indexWindow = 0, DimL=0; indexWindow < pTabFeno->svd.Z; indexWindow++)
+             for (indexWindow = 0, DimL=0; indexWindow < pTabFeno->fit_properties.Z; indexWindow++)
               {
-               int pixel_start = FNPixel(pTabFeno->LambdaRef,pTabFeno->svd.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
-               int pixel_end = FNPixel(pTabFeno->LambdaRef,pTabFeno->svd.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
+               int pixel_start = FNPixel(pTabFeno->LambdaRef,pTabFeno->fit_properties.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
+               int pixel_end = FNPixel(pTabFeno->LambdaRef,pTabFeno->fit_properties.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
 
                spectrum_append(new_range, pixel_start, pixel_end);
 
@@ -2212,11 +2211,11 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
               }
 
              // Buffers allocation
-             SVD_Free("SCIA_LoadAnalysis",&pTabFeno->svd);
-             pTabFeno->svd.DimL=DimL;
-             SVD_LocalAlloc("SCIA_LoadAnalysis",&pTabFeno->svd);
+             FIT_PROPERTIES_free("SCIA_LoadAnalysis",&pTabFeno->fit_properties);
+             pTabFeno->fit_properties.DimL=DimL;
+             FIT_PROPERTIES_alloc("SCIA_LoadAnalysis",&pTabFeno->fit_properties);
              // new spectral windows
-             pTabFeno->svd.specrange = new_range;
+             pTabFeno->fit_properties.specrange = new_range;
 
              pTabFeno->Decomp=1;
 

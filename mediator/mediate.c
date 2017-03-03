@@ -1719,7 +1719,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
 
          // TODO: ANALYSE_LoadRef can change NDET[] -> should n_wavel be updated here?
          if (!(rc=ANALYSE_LoadRef(pEngineContext,indexFenoColumn)) &&   // eventually, modify LambdaRef for continuous functions
-             !(rc=ANALYSE_LoadCross(pEngineContext,pAnalysisWindows->crossSectionList.crossSection,pAnalysisWindows->crossSectionList.nCrossSection,pTabFeno->hidden,pTabFeno->LambdaRef,indexFenoColumn)) &&
+             !(rc=ANALYSE_LoadCross(pEngineContext,pAnalysisWindows->crossSectionList.crossSection,pAnalysisWindows->crossSectionList.nCrossSection,pTabFeno->LambdaRef,indexFenoColumn)) &&
              !(rc=mediateRequestSetAnalysisLinear(&pAnalysisWindows->linear,indexFenoColumn)) &&
 
              // Caro : int the future, replace structures anlyswin_nonlinear and calibration_sfp with the following one more flexible
@@ -1733,7 +1733,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
              (pTabFeno->hidden ||
               (!(rc=ANALYSE_LoadGaps(pEngineContext,pAnalysisWindows->gapList.gap,pAnalysisWindows->gapList.nGap,pTabFeno->LambdaRef,pAnalysisWindows->fitMinWavelength,pAnalysisWindows->fitMaxWavelength,indexFenoColumn)) &&
 
-               (!pTabFeno->gomeRefFlag || !(rc=SVD_LocalAlloc(__func__,&pTabFeno->svd)))
+               (!pTabFeno->gomeRefFlag || !(rc=FIT_PROPERTIES_alloc(__func__,&pTabFeno->fit_properties)))
                ))) {
 
            if (pTabFeno->hidden==1) {

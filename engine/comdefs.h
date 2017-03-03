@@ -447,7 +447,7 @@ void     MEMORY_ReleaseBuffer(const char *callingFunctionName, const char *buffe
 double  *MEMORY_AllocDVector(const char *callingFunctionName, const char *bufferName,int nl,int nh);
 void     MEMORY_ReleaseDVector(const char *callingFunctionName, const char *bufferName,double *v,int nl);
 double **MEMORY_AllocDMatrix(const char *callingFunctionName, const char *bufferName,int nrl,int nrh,int ncl,int nch);
-void     MEMORY_ReleaseDMatrix(const char *callingFunctionName, const char *bufferName,double **m,int ncl,int nch,int nrl);
+void     MEMORY_ReleaseDMatrix(const char *callingFunctionName, const char *bufferName,double **m,int ncl,int nrl);
 
 RC       MEMORY_Alloc(void);
 RC       MEMORY_End(void);

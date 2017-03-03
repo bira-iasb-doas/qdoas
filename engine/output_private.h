@@ -528,9 +528,9 @@ static inline void get_shift(struct output_field *this_field, double *shift, con
 
 static inline void get_center_wavelength(struct output_field *this_field, double *lambda, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
   CROSS_RESULTS *pTabCrossResults = this_field->get_cross_results(this_field, indexFenoColumn, index_calib);
-  SVD *svd  = &this_field->get_tabfeno(this_field, indexFenoColumn)->svd;
+  struct fit_properties *fit  = &this_field->get_tabfeno(this_field, indexFenoColumn)->fit_properties;
   *lambda  =pTabCrossResults
-    ? center_pixel_wavelength(spectrum_start(svd->specrange), spectrum_end(svd->specrange))
+    ? center_pixel_wavelength(spectrum_start(fit->specrange), spectrum_end(fit->specrange))
     : QDOAS_FILL_DOUBLE;
 }
 
@@ -671,7 +671,7 @@ static inline void get_corr(struct output_field *this_field, double *corr, const
   FENO *pTabFeno = this_field->get_tabfeno(this_field, indexFenoColumn);
   if (pTabFeno && pTabFeno->TabCross[this_field->index_cross].Fact != (double) 0.) {
     CROSS_REFERENCE *TabCross = pTabFeno->TabCross;
-    *corr = pTabFeno->svd.covar[TabCross[this_field->index_cross2].IndSvdA][TabCross[this_field->index_cross].IndSvdA]*pTabFeno->chiSquare/
+    *corr = pTabFeno->fit_properties.covar[TabCross[this_field->index_cross2].IndSvdA][TabCross[this_field->index_cross].IndSvdA]*pTabFeno->chiSquare/
       (TabCross[this_field->index_cross].Fact*TabCross[this_field->index_cross2].Fact);
   } else
     *corr = QDOAS_FILL_DOUBLE;
@@ -681,7 +681,7 @@ static inline void get_covar(struct output_field *this_field, double *covar, con
   FENO *pTabFeno = this_field->get_tabfeno(this_field, indexFenoColumn);
   if (pTabFeno && pTabFeno->TabCross[this_field->index_cross].Fact != (double) 0.) {
     CROSS_REFERENCE *TabCross = pTabFeno->TabCross;
-    *covar = pTabFeno->svd.covar[TabCross[this_field->index_cross2].IndSvdA][TabCross[this_field->index_cross].IndSvdA]*pTabFeno->chiSquare/
+    *covar = pTabFeno->fit_properties.covar[TabCross[this_field->index_cross2].IndSvdA][TabCross[this_field->index_cross].IndSvdA]*pTabFeno->chiSquare/
       (TabCross[this_field->index_cross].Fact*TabCross[this_field->index_cross2].Fact
        * pTabFeno->TabCrossResults[this_field->index_cross].SlntErr *  pTabFeno->TabCrossResults[this_field->index_cross2].SlntErr);
   }
@@ -723,10 +723,10 @@ static inline void get_n_iter_calib(struct output_field *this_field, int *n_iter
 }
 
 static inline void get_num_bands(struct output_field *this_field, int *num_bands, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
-  SVD *svd = (index_calib == ITEM_NONE)
-    ? &this_field->get_tabfeno(this_field, indexFenoColumn)->svd
-    : &KURUCZ_buffers[indexFenoColumn].KuruczFeno[this_field->index_feno].svdFeno[index_calib];
-  *num_bands = svd ? svd->DimL : QDOAS_FILL_INT;
+  struct fit_properties *fit = (index_calib == ITEM_NONE)
+    ? &this_field->get_tabfeno(this_field, indexFenoColumn)->fit_properties
+    : &KURUCZ_buffers[indexFenoColumn].KuruczFeno[this_field->index_feno].subwindow_fits[index_calib];
+  *num_bands = fit ? fit->DimL : QDOAS_FILL_INT;
 }
 
 static inline void get_processing_error_flag(struct output_field *this_field, int *error_flag, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib __attribute__ ((unused))) {

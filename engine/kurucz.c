@@ -68,7 +68,6 @@
 #include "xsconv.h"
 #include "vector.h"
 #include "winthrd.h"
-#include "svd.h"
 
 // ================
 // GLOBAL VARIABLES
@@ -988,11 +987,8 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
   char            string[MAX_ITEM_TEXT_LEN];
   CROSS_REFERENCE *TabCross,*pTabCross;
   CROSS_RESULTS   *pResults,*Results;                                           // pointer to results associated to a symbol
-  SVD             *svdFeno;                                                     // svd environments associated to list of little windows
-  double          *VPix,*VSig,*Pcalib,                                          // polynomial coefficients computation
-     slitParam[NSFP],
+  double slitParam[NSFP],
     *shiftPoly,
-    *pixMid,*VLambda,*VShift,
     *dispAbsolu,*dispSecX,
     **fwhm,**fwhmSigma,                                            // substitution vectors
     *solar,                                                       // solar spectrum
@@ -1051,14 +1047,13 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
   Results=Feno->TabCrossResults;
   pResults=&Feno->TabCrossResults[(Feno->indexSpectrum!=ITEM_NONE)?Feno->indexSpectrum:Feno->indexReference];
 
-  VPix       = (double *)pKurucz->VPix;
-  VSig       = (double *)pKurucz->VSig;
-  Pcalib     = (double *)pKurucz->Pcalib;
-  pixMid     = (double *)pKurucz->pixMid;
-  VLambda    = (double *)pKurucz->VLambda;
-  VShift     = (double *)pKurucz->VShift;
+  double *VSig = pKurucz->VSig;
+  double *Pcalib = pKurucz->Pcalib; // polynomial coefficients computation
+  double *pixMid = pKurucz->pixMid;
+  double *VLambda = pKurucz->VLambda;
+  double *VShift = pKurucz->VShift;
 
-  svdFeno    = pKurucz->KuruczFeno[indexFeno].svdFeno;
+  struct fit_properties *subwindow_fit    = pKurucz->KuruczFeno[indexFeno].subwindow_fits;
 
   Nb_Win     = pKurucz->Nb_Win;
   fwhm       = pKurucz->fwhm;
@@ -1175,9 +1170,6 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
     for (int i=0;i<n_wavel;i++)
      dispAbsolu[i]=dispSecX[i]=(double)0.;
 
-    // memcpy(dispAbsolu,ANALYSE_zeros,sizeof(double)*n_wavel);
-    // memcpy(dispSecX,ANALYSE_zeros,sizeof(double)*n_wavel);
-
     if (pKuruczOptions->fwhmFit)
       pKURUCZ_fft=&pKurucz->KuruczFeno[indexFeno].fft[indexWindow];
 
@@ -1187,7 +1179,7 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
     DEBUG_Start(ENGINE_dbgFile,"Kurucz",DEBUG_FCTTYPE_MATH|DEBUG_FCTTYPE_APPL,5,DEBUG_DVAR_YES,0); // !debugResetFlag++);
 #endif
 
-    if (((rc=ANALYSE_SvdInit(&svdFeno[indexWindow], n_wavel))!=ERROR_ID_NO) ||
+    if (((rc=ANALYSE_SvdInit(&TabFeno[indexFenoColumn][pKurucz->indexKurucz], &subwindow_fit[indexWindow], n_wavel))!=ERROR_ID_NO) ||
 
         // Analysis method
 
@@ -1199,7 +1191,8 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
                                   NULL,
                                   &Square,                                     // returned stretch order 2
                                   &NIter[indexWindow],
-                                  (double)1.,(double)1.))>0))
+                                  1.,1.,
+                                  &subwindow_fit[indexWindow]))>0))
       break;
 
 #if defined(__DEBUG_) && __DEBUG_
@@ -1208,8 +1201,8 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
 
     // Fill A SVD system
 
-    pixMid[indexWindow+1]=(double)( spectrum_start(svdFeno[indexWindow].specrange)
-                                    + spectrum_end(svdFeno[indexWindow].specrange) )*0.5;
+    pixMid[indexWindow+1]=(double)( spectrum_start(subwindow_fit[indexWindow].specrange)
+                                    + spectrum_end(subwindow_fit[indexWindow].specrange) )*0.5;
 
     VSig[indexWindow+1]=pResults->SigmaShift;
 
@@ -1218,7 +1211,10 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
     calib_stretch2[indexWindow] = pResults->Stretch2;
 
     VShift[indexWindow+1]=pResults->Shift;                          // In order to be in accordance with the preshift, we keep the sign now.  Before (Feno->indexSpectrum!=ITEM_NONE)?(double)-pResults->Shift:(double)pResults->Shift;
-    VPix[indexWindow+1]=pixMid[indexWindow+1];
+
+    // TODO:
+    //
+    //  - VLambda is used to fit FWHM as function of Lambda, but could be done as function of pixel, too?
     VLambda[indexWindow+1]=(fabs(pixMid[indexWindow+1]-floor(pixMid[indexWindow+1]))<(double)0.1)?
       (double)oldLambda[(INDEX)pixMid[indexWindow+1]]-shiftSign*VShift[indexWindow+1]:
       (double)0.5*(oldLambda[(INDEX)floor(pixMid[indexWindow+1])]+oldLambda[(INDEX)floor(pixMid[indexWindow+1]+1.)])-shiftSign*VShift[indexWindow+1];
@@ -1285,7 +1281,7 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
 
           if (pTabCross->IndSvdA && (WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CROSS) && pTabCross->display) {
             for (i=SvdPDeb,k=1;i<=SvdPFin;i++,k++)
-              pKurucz->crossFits.matrix[indexCrossFit][i]=x[pTabCross->IndSvdA]*U[pTabCross->IndSvdA][k];
+              pKurucz->crossFits.matrix[indexCrossFit][i]=x[pTabCross->IndSvdA]*subwindow_fit[indexWindow].A[pTabCross->IndSvdA][k];
 
             indexCrossFit++;
           }
@@ -1305,16 +1301,15 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
   if (rc)
     goto EndKuruczSpectrum;
 
-  SvdPDeb=spectrum_start(svdFeno[0].specrange);
-  SvdPFin=spectrum_end(svdFeno[Nb_Win-1].specrange);
+  SvdPDeb=spectrum_start(subwindow_fit[0].specrange);
+  SvdPFin=spectrum_end(subwindow_fit[Nb_Win-1].specrange);
 
   // New wavelength scale (corrected calibration)
   // NB : we fit a polynomial in Lambda+shift point but it's possible to fit a polynomial in shift points by replacing
   //      VLambda by VShift in the following instruction
 
-  if ((rc=ANALYSE_LinFit(&Feno->svd,Nb_Win,pKurucz->shiftDegree,VPix,NULL,VShift,Pcalib))!=ERROR_ID_NO)
+  if ((rc=LINEAR_fit_poly(Nb_Win, pKurucz->shiftDegree, pixMid, NULL, VShift, Pcalib))!=ERROR_ID_NO)
     goto EndKuruczSpectrum;
-
 
   if (pKuruczOptions->fwhmFit) {
     for (indexParam=0;indexParam<maxParam;indexParam++)
@@ -1322,7 +1317,7 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
         memcpy(coeff[indexParam],ANALYSE_zeros,sizeof(double)*(pKurucz->fwhmDegree+1));
         memcpy(fwhmVector[indexParam],ANALYSE_zeros,sizeof(double)*n_wavel);
 
-        if ((rc=ANALYSE_LinFit(&pKurucz->svdFwhm,Nb_Win,pKurucz->fwhmDegree,VLambda,NULL,fwhm[indexParam]-1,coeff[indexParam]-1))!=ERROR_ID_NO)
+        if ((rc=LINEAR_fit_poly(Nb_Win, pKurucz->fwhmDegree,VLambda,NULL,fwhm[indexParam]-1,coeff[indexParam]-1))!=ERROR_ID_NO)
           goto EndKuruczSpectrum;
       }
 
@@ -1373,8 +1368,8 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
       {
        for (indexWindow=0;indexWindow<Nb_Win;indexWindow++)
         {
-         pixMin=spectrum_start(svdFeno[indexWindow].specrange);
-         pixMax=spectrum_end(svdFeno[indexWindow].specrange);
+         pixMin=spectrum_start(subwindow_fit[indexWindow].specrange);
+         pixMax=spectrum_end(subwindow_fit[indexWindow].specrange);
 
          mediateAllocateAndSetNumberedPlotData(&spectrumData[(indexWindow<<1)],"Spectrum",&Lambda[pixMin],&spectrum[pixMin],pixMax-pixMin+1,(indexWindow%2)?DashLine:Line,0);
          mediateAllocateAndSetNumberedPlotData(&spectrumData[(indexWindow<<1)+1],"Adjusted Kurucz",&Lambda[pixMin],&pKurucz->dispSecX[indexWindow][pixMin],pixMax-pixMin+1,(indexWindow%2)?DashLine:Line,1);
@@ -1407,8 +1402,8 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
        {
         for (indexWindow=0;indexWindow<Nb_Win;indexWindow++)
          {
-         	pixMin=spectrum_start(svdFeno[indexWindow].specrange);
-          pixMax=spectrum_end(svdFeno[indexWindow].specrange);
+         	pixMin=spectrum_start(subwindow_fit[indexWindow].specrange);
+          pixMax=spectrum_end(subwindow_fit[indexWindow].specrange);
 
           mediateAllocateAndSetNumberedPlotData(&spectrumData[indexWindow],"Residual",&Lambda[pixMin],&pKurucz->dispAbsolu[indexWindow][pixMin],pixMax-pixMin+1,(indexWindow%2)?DashLine:Line,0);
          }
@@ -1460,8 +1455,8 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
          {
           for (indexWindow=0;indexWindow<Nb_Win;indexWindow++)
            {
-           	pixMin=spectrum_start(svdFeno[indexWindow].specrange);
-            pixMax=spectrum_end(svdFeno[indexWindow].specrange);
+           	pixMin=spectrum_start(subwindow_fit[indexWindow].specrange);
+            pixMax=spectrum_end(subwindow_fit[indexWindow].specrange);
 
             for (j=pixMin;j<=pixMax;j++)
              {
@@ -1484,7 +1479,7 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
       }
     }
 
-    // Display fits
+    // Display subwindow_fits
 
     if (pKurucz->crossFits.matrix!=NULL) {
       for (indexTabCross=indexCrossFit=0;(indexTabCross<Feno->NTabCross) && (indexCrossFit<pKurucz->crossFits.nc);indexTabCross++) {
@@ -1515,8 +1510,8 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
            {
             for (indexWindow=0;indexWindow<Nb_Win;indexWindow++)
              {
-             	pixMin=spectrum_start(svdFeno[indexWindow].specrange);
-              pixMax=spectrum_end(svdFeno[indexWindow].specrange);
+             	pixMin=spectrum_start(subwindow_fit[indexWindow].specrange);
+              pixMax=spectrum_end(subwindow_fit[indexWindow].specrange);
 
               for (j=pixMin;j<=pixMax;j++)
                {
@@ -1665,26 +1660,26 @@ RC KURUCZ_ApplyCalibration(FENO *pTabFeno,double *newLambda,INDEX indexFenoColum
   // Rebuild gaps
 
   doas_spectrum *new_range = spectrum_new();
-  for (indexWindow = 0; indexWindow < pTabFeno->svd.Z; indexWindow++) {
-    int pixel_start = FNPixel(newLambda,pTabFeno->svd.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
-    int pixel_end = FNPixel(newLambda,pTabFeno->svd.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
+  for (indexWindow = 0; indexWindow < pTabFeno->fit_properties.Z; indexWindow++) {
+    int pixel_start = FNPixel(newLambda,pTabFeno->fit_properties.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
+    int pixel_end = FNPixel(newLambda,pTabFeno->fit_properties.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
 
     spectrum_append(new_range, pixel_start, pixel_end);
 
     newDimL += pixel_end - pixel_start +1;
   }
 
-  if (newDimL != pTabFeno->svd.DimL) {
-    // reallocate complete SVD structure.
-    SVD_Free("KURUCZ_ApplyCalibration ",&pTabFeno->svd);
-    pTabFeno->svd.DimL=newDimL;
-    SVD_LocalAlloc("KURUCZ_ApplyCalibration ",&pTabFeno->svd);
-  } else if(pTabFeno->svd.specrange != NULL) {
+  if (newDimL != pTabFeno->fit_properties.DimL) {
+    // reallocate complete FIT_PROPERTIES structure.
+    FIT_PROPERTIES_free("KURUCZ_ApplyCalibration ",&pTabFeno->fit_properties);
+    pTabFeno->fit_properties.DimL=newDimL;
+    FIT_PROPERTIES_alloc("KURUCZ_ApplyCalibration ",&pTabFeno->fit_properties);
+  } else if(pTabFeno->fit_properties.specrange != NULL) {
     // only update specrange
-    spectrum_destroy(pTabFeno->svd.specrange);
+    spectrum_destroy(pTabFeno->fit_properties.specrange);
   }
 
-  pTabFeno->svd.specrange = new_range;
+  pTabFeno->fit_properties.specrange = new_range;
 
   // Force decomposition
 
@@ -1998,7 +1993,6 @@ void KURUCZ_Init(int gomeFlag,INDEX indexFenoColumn) {
   int nbWin;
   KURUCZ *pKurucz;
   FENO *pTabFeno;
-  SVD *pSvd;
 
   // Initialization
 
@@ -2012,18 +2006,18 @@ void KURUCZ_Init(int gomeFlag,INDEX indexFenoColumn) {
     pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
 
     if ((pTabFeno->gomeRefFlag==gomeFlag) &&
-        (pKurucz->KuruczFeno[indexFeno].svdFeno!=NULL)) {
+        (pKurucz->KuruczFeno[indexFeno].subwindow_fits!=NULL)) {
 
       for (indexWindow=0;indexWindow<nbWin;indexWindow++) {
-        pSvd=&pKurucz->KuruczFeno[indexFeno].svdFeno[indexWindow];
+        struct fit_properties *subwindow_fit=&pKurucz->KuruczFeno[indexFeno].subwindow_fits[indexWindow];
 
         int pixel_start=FNPixel(pTabFeno->LambdaRef,pKurucz->lambdaMin[indexWindow],pTabFeno->NDET,PIXEL_AFTER);
         int pixel_end=FNPixel(pTabFeno->LambdaRef,pKurucz->lambdaMax[indexWindow],pTabFeno->NDET,PIXEL_BEFORE);
 
-        pSvd->specrange = spectrum_new();
-        spectrum_append(pSvd->specrange, pixel_start, pixel_end);
+        subwindow_fit->specrange = spectrum_new();
+        spectrum_append(subwindow_fit->specrange, pixel_start, pixel_end);
 
-        pSvd->DimL=pixel_end - pixel_start + 1;
+        subwindow_fit->DimL=pixel_end - pixel_start + 1;
       }
     }
   }
@@ -2050,8 +2044,6 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
 
   int hFilterFlag;
   CROSS_REFERENCE *pTabCross;                                                   // cross sections list
-  FENO            *pKuruczFeno,                                                 // analysis window with Kurucz description
-                  *pTabFeno;
 
   char   slitFile[MAX_ITEM_TEXT_LEN];
   int    Nb_Win,shiftDegree,                                                    // substitution variables
@@ -2060,7 +2052,6 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
   double Lambda_min,Lambda_max,                                                 // extrema in nm of a little window
          Win_size;                                                              // size of a little window in nm
   double step;
-  SVD   *pSvd,*pSvdFwhm;                                                        // pointers to svd environments
   KURUCZ *pKurucz;
   RC rc;
 
@@ -2071,7 +2062,7 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
   memset(&pKurucz->hrSolar,0,sizeof(MATRIX_OBJECT));
   memset(&pKurucz->slitFunction,0,sizeof(MATRIX_OBJECT));
 
-  pKuruczFeno=&TabFeno[indexFenoColumn][indexKurucz];
+  FENO *pKuruczFeno=&TabFeno[indexFenoColumn][indexKurucz]; // analysis window with Kurucz description
 
   step=(double)0.;
 
@@ -2123,7 +2114,6 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
       ((pKurucz->pixMid=(double *)MEMORY_AllocDVector(__func__,"pixMid",1,Nb_Win))==NULL) ||         // pixels at the middle of little windows
       ((pKurucz->VShift=(double *)MEMORY_AllocDVector(__func__,"VShift",1,Nb_Win))==NULL) ||         // shift applied on pixels
       ((pKurucz->VSig=(double *)MEMORY_AllocDVector(__func__,"VSig",1,Nb_Win))==NULL) ||             // error on shift applied on pixels
-      ((pKurucz->VPix=(double *)MEMORY_AllocDVector(__func__,"VPix",1,Nb_Win))==NULL) ||             // pixels with shift correction
       ((pKurucz->lambdaMin=(double *)MEMORY_AllocDVector(__func__,"lambdaMin",0,Nb_Win-1))==NULL) ||         // limits of the windows
       ((pKurucz->lambdaMax=(double *)MEMORY_AllocDVector(__func__,"lambdaMax",0,Nb_Win-1))==NULL) ||         // limits of the windows
       ((pKurucz->NIter=(int *)MEMORY_AllocBuffer(__func__,"NIter",Nb_Win,sizeof(int),0,MEMORY_TYPE_INT))==NULL) ||
@@ -2240,10 +2230,9 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
 
     // Allocate one svd environment for each little window
 
-   for (indexFeno=0;indexFeno<NFeno;indexFeno++)
-    {
+    for (indexFeno=0;indexFeno<NFeno;indexFeno++) {
      memset(&pKurucz->KuruczFeno[indexFeno],0,sizeof(KURUCZ_FENO));
-     pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
+     FENO *pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
 
      if ((pTabFeno->hidden==1) ||
         ((THRD_id!=THREAD_TYPE_KURUCZ) && !pTabFeno->hidden && pTabFeno->useKurucz)) {
@@ -2251,7 +2240,7 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
 
        if ((pKurucz->KuruczFeno[indexFeno].Grid=(double *)MEMORY_AllocDVector(__func__,"Grid",0,Nb_Win-1))==NULL)
         rc=ERROR_ID_ALLOC;
-       else if ((pKurucz->KuruczFeno[indexFeno].svdFeno=(SVD *)MEMORY_AllocBuffer(__func__,"svdFeno",Nb_Win,sizeof(SVD),0,MEMORY_TYPE_STRUCT))==NULL)                           // svd environments
+       else if ((pKurucz->KuruczFeno[indexFeno].subwindow_fits=MEMORY_AllocBuffer(__func__,"subwindow_fit",Nb_Win,sizeof(*pKurucz->KuruczFeno[indexFeno].subwindow_fits),0,MEMORY_TYPE_STRUCT))==NULL)                           // svd environments
         rc=ERROR_ID_ALLOC;
        else if (pKuruczOptions->fwhmFit && ((pKurucz->KuruczFeno[indexFeno].fft=(FFT *)MEMORY_AllocBuffer(__func__,"fft",Nb_Win,sizeof(FFT),0,MEMORY_TYPE_STRUCT))==NULL))                           // svd environments
         rc=ERROR_ID_ALLOC;
@@ -2270,20 +2259,19 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
         goto EndKuruczAlloc;
        else
         {
-         if (pKurucz->KuruczFeno[indexFeno].svdFeno!=NULL)
-          memset(pKurucz->KuruczFeno[indexFeno].svdFeno,0,Nb_Win*sizeof(SVD));
+         if (pKurucz->KuruczFeno[indexFeno].subwindow_fits!=NULL)
+          memset(pKurucz->KuruczFeno[indexFeno].subwindow_fits,0,Nb_Win*sizeof(*pKurucz->KuruczFeno[0].subwindow_fits));
          if (pKurucz->KuruczFeno[indexFeno].fft!=NULL)
           memset(pKurucz->KuruczFeno[indexFeno].fft,0,Nb_Win*sizeof(FFT));
          if (pKurucz->KuruczFeno[indexFeno].results!=NULL)
           memset(pKurucz->KuruczFeno[indexFeno].results,0,Nb_Win*sizeof(CROSS_RESULTS *));
         }
 
-       for (indexWindow=0;indexWindow<Nb_Win;indexWindow++)
-        {
-         pSvd=&pKurucz->KuruczFeno[indexFeno].svdFeno[indexWindow];
-         memcpy(pSvd,&pKuruczFeno->svd,sizeof(SVD));
-         pSvd->Z=1;
-         pSvd->DimL=DimLMax;
+       for (indexWindow=0;indexWindow<Nb_Win;indexWindow++) {
+         struct fit_properties *subwindow_fit=&pKurucz->KuruczFeno[indexFeno].subwindow_fits[indexWindow];
+         memcpy(subwindow_fit,&pKuruczFeno->fit_properties,sizeof(*subwindow_fit));
+         subwindow_fit->Z=1;
+         subwindow_fit->DimL=DimLMax;
 
          pKurucz->KuruczFeno[indexFeno].Grid[indexWindow]=pKurucz->lambdaMax[indexWindow];
 
@@ -2292,7 +2280,7 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
            rc=ERROR_ID_ALLOC;
            goto EndKuruczAlloc;
           }
-         else if ((rc=SVD_LocalAlloc("KURUCZ_Alloc (1)",pSvd))!=ERROR_ID_NO)
+         else if ((rc=FIT_PROPERTIES_alloc("KURUCZ_Alloc (1)",subwindow_fit))!=ERROR_ID_NO)
           goto EndKuruczAlloc;
          else if (pKuruczOptions->fwhmFit)
           {
@@ -2337,21 +2325,9 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
       }
     }
 
-    // Allocate svd environment for Kurucz analysis window
-
-    pSvd=&pKuruczFeno->svd;
-
-    pSvd->DimL=Nb_Win;
-
-    pSvd->DimC=shiftDegree+1;
-
-    if ((rc=SVD_LocalAlloc("KURUCZ_Alloc (2)",pSvd))!=ERROR_ID_NO)
-     goto EndKuruczAlloc;
-
     // Allocate buffers for cross sections fits
 
-    if (pKurucz->displayFit)
-     {
+    if (pKurucz->displayFit) {
       for (indexTabCross=0,NTabCross=0;indexTabCross<pKuruczFeno->NTabCross;indexTabCross++)
        {
         pTabCross=&pKuruczFeno->TabCross[indexTabCross];
@@ -2363,18 +2339,12 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
 
       if (NTabCross && ((rc=MATRIX_Allocate(&pKurucz->crossFits,n_wavel,NTabCross,0,0,0,__func__))!=0))
        goto EndKuruczAlloc;
-     }
+    }
+
 
     // Allocate buffers for coefficients of polynomials fitting fwhm
 
-    if (pKuruczOptions->fwhmFit)
-     {
-      pSvdFwhm=&pKurucz->svdFwhm;
-      pSvdFwhm->DimL=Nb_Win;
-      pSvdFwhm->DimC=pKurucz->fwhmDegree+1;
-
-      if ((rc=SVD_LocalAlloc("KURUCZ_Alloc (3)",pSvdFwhm))!=ERROR_ID_NO)
-       goto EndKuruczAlloc;
+    if (pKuruczOptions->fwhmFit) {
 
       for (indexParam=0;(indexParam<MAX_KURUCZ_FWHM_PARAM) && !rc;indexParam++)
        {
@@ -2392,7 +2362,7 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
 
           for (indexFeno=0;(indexFeno<NFeno) && !rc;indexFeno++)
            {
-            pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
+            FENO *pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
 
             if ((pKuruczFeno->indexFwhmParam[indexParam]!=ITEM_NONE) &&
                  !pTabFeno->hidden && pTabFeno->useKurucz &&
@@ -2467,8 +2437,6 @@ void KURUCZ_Free(void)
      MEMORY_ReleaseDVector("KURUCZ_Free ","VShift",pKurucz->VShift,1);
     if (pKurucz->VSig!=NULL)
      MEMORY_ReleaseDVector("KURUCZ_Free ","VSig",pKurucz->VSig,1);
-    if (pKurucz->VPix!=NULL)
-     MEMORY_ReleaseDVector("KURUCZ_Free ","VPix",pKurucz->VPix,1);
     if (pKurucz->pixMid!=NULL)
      MEMORY_ReleaseDVector("KURUCZ_Free ","pixMid",pKurucz->pixMid,1);
     if (pKurucz->lambdaMin!=NULL)
@@ -2492,7 +2460,6 @@ void KURUCZ_Free(void)
        MEMORY_ReleaseDVector("KURUCZ_Free ","fwhmDeriv2",pKurucz->fwhmDeriv2[indexParam],0);
      }
 
-    SVD_Free("KURUCZ_Free (3)",&pKurucz->svdFwhm);
     MATRIX_Free(&pKurucz->crossFits,"KURUCZ_Free");
 
     for (indexWindow=0;indexWindow<pKurucz->Nb_Win;indexWindow++)
@@ -2517,17 +2484,16 @@ void KURUCZ_Free(void)
         // Grid
 
         if (pKFeno->Grid!=NULL)
-         MEMORY_ReleaseDVector("KURUCZ_Free ","Grid",pKFeno->Grid,0);
+         MEMORY_ReleaseDVector(__func__,"Grid",pKFeno->Grid,0);
 
-        // svdFeno
+        // fit
 
-        if (pKFeno->svdFeno!=NULL)
-         {
+        if (pKFeno->subwindow_fits!=NULL) {
           for (indexWindow=0;indexWindow<pKurucz->Nb_Win;indexWindow++)
-           SVD_Free("KURUCZ_Free (1)",&pKFeno->svdFeno[indexWindow]);
+            FIT_PROPERTIES_free("KURUCZ_Free (1)",&pKFeno->subwindow_fits[indexWindow]);
 
-          MEMORY_ReleaseBuffer("KURUCZ_Free ","svdFeno",pKFeno->svdFeno);
-         }
+          MEMORY_ReleaseBuffer(__func__,"subwindow_fits",pKFeno->subwindow_fits);
+        }
 
         // fft
 

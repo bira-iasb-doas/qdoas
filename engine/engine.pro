@@ -4,8 +4,12 @@ include( ../config.pri )
 
 CONFIG += staticlib $$CODE_GENERATION
 
+QMAKE_CXXFLAGS += -std=c++0x
+
 SOURCES += *.c *.cpp
 HEADERS += *.h
+
+DEFINES += HAVE_INLINE
 
 DEPENDPATH += ../mediator
 INCLUDEPATH += ../mediator ../common
@@ -20,8 +24,6 @@ mxe {
 
 caro {
   INCLUDEPATH  += ../engine $$QWT_INC_PATH $$CODA_INC_PATH $$HDFEOS_INC_PATH $$HDF_INC_PATH $$NETCDF_INC_PATH
-
-  QMAKE_CXXFLAGS += -std=c++0x
 
   contains( QWT_LINKAGE, qwtstatic ) {
     LIBS        += -L$$QWT_LIB_PATH -l$$QWT_LIB

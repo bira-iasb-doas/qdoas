@@ -90,7 +90,6 @@
 #include "gdp_bin_read.h"
 
 #include "engine_context.h"
-#include "svd.h"
 #include "kurucz.h"
 #include "stdfunc.h"
 #include "mediate.h"
@@ -1616,7 +1615,7 @@ RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp,void *respon
                     ((pWrkSymbol->type==WRK_SYMBOL_PREDEFINED) &&
                     ((indexTabCross==pTabFeno->indexCommonResidual) ||
                    (((indexTabCross==pTabFeno->indexUsamp1) || (indexTabCross==pTabFeno->indexUsamp2)) && (pUsamp->method==PRJCT_USAMP_FILE))))) &&
-                    ((rc=ANALYSE_CheckLambda(pWrkSymbol,pTabFeno->LambdaRef,pTabFeno->NDET,"GDP_BIN_LoadAnalysis "))!=ERROR_ID_NO))
+                    ((rc=ANALYSE_CheckLambda(pWrkSymbol,pTabFeno->LambdaRef,pTabFeno->NDET))!=ERROR_ID_NO))
 
                 goto EndGOME_LoadAnalysis;
               }
@@ -1624,10 +1623,10 @@ RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp,void *respon
              // Gaps : rebuild subwindows on new wavelength scale
 
              doas_spectrum *new_range = spectrum_new();
-             for (indexWindow = 0, DimL=0; indexWindow < pTabFeno->svd.Z; indexWindow++)
+             for (indexWindow = 0, DimL=0; indexWindow < pTabFeno->fit_properties.Z; indexWindow++)
               {
-               int pixel_start = FNPixel(pTabFeno->LambdaRef,pTabFeno->svd.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
-               int pixel_end = FNPixel(pTabFeno->LambdaRef,pTabFeno->svd.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
+               int pixel_start = FNPixel(pTabFeno->LambdaRef,pTabFeno->fit_properties.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
+               int pixel_end = FNPixel(pTabFeno->LambdaRef,pTabFeno->fit_properties.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
 
                spectrum_append(new_range, pixel_start, pixel_end);
 
@@ -1635,11 +1634,11 @@ RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp,void *respon
               }
 
              // Buffers allocation
-             SVD_Free("GDP_BIN_LoadAnalysis",&pTabFeno->svd);
-             pTabFeno->svd.DimL=DimL;
-             SVD_LocalAlloc("GDP_BIN_LoadAnalysis",&pTabFeno->svd);
+             FIT_PROPERTIES_free("GDP_BIN_LoadAnalysis",&pTabFeno->fit_properties);
+             pTabFeno->fit_properties.DimL=DimL;
+             FIT_PROPERTIES_alloc("GDP_BIN_LoadAnalysis",&pTabFeno->fit_properties);
              // new spectral windows
-             pTabFeno->svd.specrange = new_range;
+             pTabFeno->fit_properties.specrange = new_range;
 
              if (((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef,0))!=ERROR_ID_NO) ||
                  ((!pKuruczOptions->fwhmFit || !pTabFeno->useKurucz) && pTabFeno->xsToConvolute &&

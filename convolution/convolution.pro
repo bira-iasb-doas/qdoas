@@ -27,7 +27,7 @@ contains ( HELP_SYSTEM, assistant ) {
 
 INCLUDEPATH  += $$QWT_INC_PATH
 unix {
-  LIBS += -L$$INSTALL_PREFIX -lqwt
+  LIBS += -lqwt
 }
 
 linux_package {

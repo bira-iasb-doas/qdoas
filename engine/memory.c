@@ -369,59 +369,50 @@ void MEMORY_ReleaseDVector(const char *callingFunctionName, const char *bufferNa
 //               ncl                  : lower index in use for columns;
 //               nch                  : higher index in use for columns;
 //
+//               here "row" index is the second index, "column" index the first, i.e. the matrix is
+//
+//               m[i][j], i=ncl..nch, j=nrl..nrh
+//
 // RETURN        pointer to the allocated buffer;
 //
 // NB            matrix allocated with this function should be released with
 //               MEMORY_ReleaseDMatrix.
 // -----------------------------------------------------------------------------
 
-double **MEMORY_AllocDMatrix(const char *callingFunctionName, const char *bufferName,int nrl,int nrh,int ncl,int nch)
- {
-  // Declarations
-
-  double **m;                                     // pointer to the allocated matrix
-  int i;                                          // browse columns in the matrix
-
-  // Register the function in debugging mode
-
+double **MEMORY_AllocDMatrix(const char *callingFunctionName, const char *bufferName,int nrl,int nrh,int ncl,int nch) {
   #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("MEMORY_AllocDMatrix",DEBUG_FCTTYPE_MEM);
   #endif
 
-  // Initialization
-
-  m=NULL;
+  if ((nch-ncl+1<=0) || (nrh-nrl+1<=0)) {
+    ERROR_SetLast(callingFunctionName,ERROR_TYPE_FATAL,ERROR_ID_ALLOCMATRIX,bufferName,nrl,nrh,ncl,nch);
+    return NULL;
+  }
 
   // Allocate a buffer for which each item will be a pointer to a column in the matrix
+  double **m=MEMORY_AllocBuffer(callingFunctionName,bufferName,nch-ncl+1,sizeof(double *),ncl,MEMORY_TYPE_PTR);
+  if (m==NULL)
+    return m;
+  m -= ncl;
 
-  if ((nch-ncl+1<=0) || (nrh-nrl+1<=0))
-   ERROR_SetLast(callingFunctionName,ERROR_TYPE_FATAL,ERROR_ID_ALLOCMATRIX,bufferName,nrl,nrh,ncl,nch);
-  else if ((m=(double **)MEMORY_AllocBuffer(callingFunctionName,bufferName,nch-ncl+1,sizeof(double *),ncl,MEMORY_TYPE_PTR))!=NULL)
-   {
-    // Buffer initialization
+  const int n_cols = nch-ncl+1;
+  const int n_rows = nrh-nrl+1;
 
-    memset(m,0,(nch-ncl+1)*sizeof(double *));
-    m-=ncl;
+  // Buffer initialization
+  double *buffer = malloc(sizeof(m[0][0])*n_cols*n_rows);
+  if (buffer == NULL) {
+    MEMORY_ReleaseDMatrix(callingFunctionName,bufferName,m,ncl,nrl);
+    return NULL;
+  }
 
-    // Allocate buffers for columns
-
-    for (i=ncl;i<=nch;i++)
-
-     if ((m[i]=(double *)MEMORY_AllocDVector(callingFunctionName,bufferName,nrl,nrh))==NULL)
-      {
-       MEMORY_ReleaseDMatrix(callingFunctionName,bufferName,m,ncl,i,nrl);
-       m=NULL;
-       break;
-      }
-   }
-
-  // Unregister the function in debugging mode
+  // Set pointers for columns:
+  for (int i=0; i<n_cols; ++i) {
+    m[ncl+i] = &buffer[i*n_rows]-nrl;
+  }
 
   #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionStop("MEMORY_AllocDMatrix",(RC)m);
   #endif
-
-  // Return
 
   return(m);
  }
@@ -438,30 +429,22 @@ double **MEMORY_AllocDMatrix(const char *callingFunctionName, const char *buffer
 //               nrl                  : lower index in use for rows;
 // -----------------------------------------------------------------------------
 
-void MEMORY_ReleaseDMatrix(const char *callingFunctionName,const char *bufferName,double **m,int ncl,int nch,int nrl)
+void MEMORY_ReleaseDMatrix(const char *callingFunctionName,const char *bufferName,double **m,int ncl,int nrl)
  {
-  // Declaration
-
-  int i;                                          // Browse columns in the matrix
-
   // Register the function in debugging mode
 
   #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("MEMORY_ReleaseDMatrix",DEBUG_FCTTYPE_MEM);
   #endif
 
-  if (m!=NULL)
-   {
-    // Release column vectors
-
-    for (i=ncl;i<=nch;i++)
-     if (m[i]!=NULL)
-      MEMORY_ReleaseDVector(callingFunctionName,bufferName,m[i],nrl);
+  if (m!=NULL) {
+    // Release buffer
+    free(&m[ncl][nrl]);
 
     // Release buffer with pointers to columns
 
     MEMORY_ReleaseBuffer(callingFunctionName,bufferName,m+ncl);
-   }
+  }
 
   // Unregister the function in debugging mode
 
