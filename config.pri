@@ -110,7 +110,6 @@ caro {
   QWT_LIB_PATH    = C:/Qwt-6.1.0/lib
   QWT_LIB         = qwt
   QWT_LIB_VERSION =
-  CODA_INC_PATH   = D:/My_Applications/QDOAS/winlibs/coda/include
   CODA_LIB_PATH   = D:/My_Applications/QDOAS/winlibs/coda/lib
   CODA_LIB        = coda
 
@@ -118,15 +117,22 @@ caro {
 
   DEFINES += QT_NODLL
 
-  HDFEOS_INC_PATH  = D:/My_Applications/QDOAS/winlibs/hdfeos/include D:/My_Applications/QDOAS/winlibs/hdfeos5/include
+  INCLUDEPATH += C:/Qwt-6.1.0/src
+  INCLUDEPATH += D:/My_Applications/QDOAS/winlibs/hdfeos/include
+  INCLUDEPATH += D:/My_Applications/QDOAS/winlibs/hdfeos5/include
+  INCLUDEPATH += D:/My_Applications/QDOAS/winlibs/hdf/include
+  INCLUDEPATH += D:/My_Applications/QDOAS/winlibs/hdf5/include
+  INCLUDEPATH += D:/My_Applications/QDOAS/winlibs/netCDF/include
+  INCLUDEPATH += D:/My_Applications/QDOAS/winlibs
+  INCLUDEPATH += D:/My_Applications/QDOAS/winlibs/coda/include
+
   HDFEOS_LIB_PATH  = D:/My_Applications/QDOAS/winlibs/hdfeos/lib
   HDFEOS5_LIB_PATH = D:/My_Applications/QDOAS/winlibs/hdfeos5/lib
-  HDF_INC_PATH     = D:/My_Applications/QDOAS/winlibs/hdf/include D:/My_Applications/QDOAS/winlibs/hdf5/include
   HDF_LIB_PATH     = D:/My_Applications/QDOAS/winlibs/hdf/lib
   MFHDF_LIB_PATH   = D:/My_Applications/QDOAS/winlibs/hdf/lib
   HDF5_LIB_PATH    = D:/My_Applications/QDOAS/winlibs/hdf5/lib
-  NETCDF_INC_PATH  = D:/My_Applications/QDOAS/winlibs/netCDF/include
   NETCDF_LIB_PATH  = D:/My_Applications/QDOAS/winlibs/netcdf/lib
+  GSL_LIB_PATH  = D:/My_Applications/QDOAS/winlibs/gsl/lib
 
   CODE_GENERATION = release # Override because debug is broken
 }
