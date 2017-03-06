@@ -62,6 +62,7 @@
 
 #include <math.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include "spline.h"
 #include "doas.h"
@@ -182,6 +183,17 @@ RC SPLINE_Deriv2(const double *X, const double *Y,double *Y2,int n,const char *c
   return rc;
 }
 
+
+/*! \brief return n such that 2^(n-1) < x <= 2^n
+
+   The ceil of the binary log of x is given by the position of the
+   first non-zero bit in the binary representation of x.*/
+unsigned int log2_ceil (unsigned long x) {
+        if (x <= 1) return 0;
+        // number of bits in x, minus the number of leading zeroes: 
+        return (8*sizeof(x))-__builtin_clzl(x-1);
+}
+
 // -----------------------------------------------------------------------------
 // FUNCTION      SPLINE_Vector
 // -----------------------------------------------------------------------------
@@ -207,39 +219,52 @@ RC SPLINE_Deriv2(const double *X, const double *Y,double *Y2,int n,const char *c
 
 RC SPLINE_Vector(const double *xa, const double *ya, const double *y2a,int na, const double *xb,double *yb,int nb,int type,const char *callingFunction)
 {
+  // input vector must contain at least 2 elements for interpolation to work.
+  assert(na > 1);
+
   RC rc=ERROR_ID_NO;
 
-  const double *xlo=xa;
   // Browse new absissae
-  for (int indexb=0;indexb<nb;indexb++) {
-    double x=xb[indexb];
+  for (int i=0; i<nb; ++i) {
+    const double x=xb[i];
 
     // new absissae is out of boundaries
     if (x<=xa[0]) {
-      yb[indexb]=ya[0];
+      yb[i]=ya[0];
       continue;
     } else if (x>=xa[na-1]) {
-      yb[indexb]=ya[na-1];
+      yb[i]=ya[na-1];
       continue;
     }
 
-    // search for xlo such that *xlo < x <= xlo[1],
-    //
-    // because we often interpolate many successive xa in a row, we
-    // keep the 'xlo' value from the previous iteration and start
-    // from there.  This makes linear search faster than binary
-    // search (we usually only have to search a few steps)
-    
-    if (*xlo >= x) {
-      // if this x is smaller than the one from the previous
-      // iteration, reset xlo to the start of the array xa
-      xlo=xa;
+    // binary search for xlo such that *xlo < x <= xlo[1],
+    const double *xlo=xa;
+
+    // if na is a power of 2 we need exactly log_2(na) steps to find
+    // xlo.  if na is not a power of 2, the number of steps is log_2
+    // of the next power of 2.
+    const unsigned int num_steps = log2_ceil(na);
+
+    // special case for the first step, in case na is not a power of 2:
+
+    // 1. find the largest power of 2 which is smaller than 'na'
+    size_t size = (1ul << (num_steps - 1) );
+
+    // 2. reduce the search to a search in a sequence of length 'size'
+    double start = xa[na - size];
+    if (start < x) // if mid < x, look in the sequence (start, start+size[
+      xlo += na-size;
+    // else: look in (xa, xa+size[
+
+    // 3. we now search in a sequence of 'size' elements, where 'size'
+    // is a power of 2.  'size' is halved in each iteration.
+    for (unsigned j=num_steps-1; j != 0; --j) {
+      size/=2;
+      double mid = xlo[size];
+      if (mid < x)
+        xlo += size;
     }
-    for (int i=0; i<na-1; ++i) {
-      if(xlo[1] >= x)
-        break;
-      ++xlo;
-    }
+
     int k = xlo-xa;
     double xhi=xlo[1];
     double h=xhi-*xlo;
@@ -250,9 +275,9 @@ RC SPLINE_Vector(const double *xa, const double *ya, const double *y2a,int na, c
       
     // interpolation
        
-    yb[indexb] = a*ya[k]+b*ya[k+1]; // assume type == SPLINE_LINEAR or SPLINE_CUBIC
+    yb[i] = a*ya[k]+b*ya[k+1]; // assume type == SPLINE_LINEAR or SPLINE_CUBIC
     if (type==SPLINE_CUBIC)
-      yb[indexb] += ((a*a*a-a)*y2a[k]+(b*b*b-b)*y2a[k+1])*(h*h)/6.;
+      yb[i] += ((a*a*a-a)*y2a[k]+(b*b*b-b)*y2a[k+1])*(h*h)/6.;
   }
 
   return rc;
