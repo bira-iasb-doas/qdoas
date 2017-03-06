@@ -583,6 +583,7 @@ static RC CurfitDerivFunc(const double *specX, double *srefX, double *sigmaY,int
 // -----------------------------------------------------------------------------
 
 RC Curfit(int     mode,                                                         // I   method of weighting least-squares fit
+          int niter,                                                            // current number of iterations
           int     nFree,                                                        // I   the number of degrees of freedom
           double *specX,                                                        // I   the spectrum to evaluate
           double *srefX,                                                        // I   the control spectrum (also called reference spectrum)
@@ -599,7 +600,6 @@ RC Curfit(int     mode,                                                         
           double *Yfit,                                                         // O   vector of calculated values of Y
           double *pLambda,                                                      // O   proportion of gradient search included
           double *pChisqr,                                                      // O   reduced Chi square for fit (output)
-          int    *pNiter,                                                       // O   number of iterations
           INDEX	  indexFenoColumn,
           struct fit_properties *fitprops)
  {
@@ -609,7 +609,7 @@ RC Curfit(int     mode,                                                         
 
   int      i,j,k,                                                               // indexes for loops and arrays
            outOfRange,                                                          // flag set if a parameter is out of the defined range
-           niter,                                                               // the number of iterations
+
            mode2use;                                                            // the weighting mode
 
   double  *weight,                                                              // weights defined according to the weighting mode
@@ -620,7 +620,8 @@ RC Curfit(int     mode,                                                         
          **array,                                                               // matrix alpha with diagonal terms controlled by a factor lambda and non-diagonal term normalized
           *beta;                                                                // the derivative of the chi square w.r.t. each non linear parameter to fit
   double   det;                                                                 // determinant of a matrix
-  RC       rc;                                                                  // return code
+
+  RC rc = ERROR_ID_NO;
 
   #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin(__func__,DEBUG_FCTTYPE_APPL);
@@ -634,7 +635,6 @@ RC Curfit(int     mode,                                                         
   alpha=array=deriv=NULL;
 
   chisqr=(double)0.;
-  niter=0;
 
   // Allocate needed vectors and matrices
 
@@ -682,10 +682,14 @@ RC Curfit(int     mode,                                                         
        alpha[j][k]=0.;
      }
 
-    if ( (rc=ANALYSE_Function(specX,srefX,sigmaY,Yfit,nY,P,A,indexFenoColumn,fitprops))>=THREAD_EVENT_STOP ||
-         (rc=CurfitDerivFunc(specX,srefX,sigmaY,nY, Yfit, P,A,deltaA,deriv,indexFenoColumn,fitprops))>=THREAD_EVENT_STOP )
+    if (niter == 0) // Only for the first iteration: initial evaluation of fit function.
+      rc=ANALYSE_Function(specX,srefX,sigmaY,Yfit,nY,P,A,indexFenoColumn,fitprops);
+    if (rc >= THREAD_EVENT_STOP)
+      goto EndCurfit;
 
-     goto EndCurfit;
+    rc=CurfitDerivFunc(specX,srefX,sigmaY,nY, Yfit, P,A,deltaA,deriv,indexFenoColumn,fitprops);
+    if (rc>=THREAD_EVENT_STOP )
+      goto EndCurfit;
 
     for (i=0;i<nY;i++)
       {
@@ -825,8 +829,6 @@ RC Curfit(int     mode,                                                         
 
   // Return
 
-  if (pNiter!=NULL)
-   *pNiter=niter;
   if (pChisqr!=NULL)
    *pChisqr=chisqr;
 

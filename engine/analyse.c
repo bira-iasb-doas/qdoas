@@ -2863,8 +2863,8 @@ RC ANALYSE_CurFitMethod(INDEX indexFenoColumn,  // for OMI
       do {
         OldChisqr = *Chisqr;
 
-        if ((rc=Curfit(pAnalysisOptions->fitWeighting,(int)ANALYSE_nFree,SpecTrav,RefTrav,Y0,SigmaY,fit->DimL,
-                       fitParamsC,fitParamsF,Deltap,Sigmaa,FitMinp,FitMaxp,fit->NF,Yfit,&Lamda,Chisqr,pNiter,indexFenoColumn,fit))>=THREAD_EVENT_STOP)
+        if ((rc=Curfit(pAnalysisOptions->fitWeighting, niter, ANALYSE_nFree,SpecTrav,RefTrav,Y0,SigmaY,fit->DimL,
+                       fitParamsC,fitParamsF,Deltap,Sigmaa,FitMinp,FitMaxp,fit->NF,Yfit,&Lamda,Chisqr,indexFenoColumn,fit))>=THREAD_EVENT_STOP)
          break;
 
         for (int i=0; i<fit->NF; i++ ) Deltap[i] *= 0.4;
