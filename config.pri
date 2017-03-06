@@ -47,6 +47,8 @@ unix {
 }
 
 bira {
+  LIBS -= -lgslcblas
+  LIBS += -latlas
   INSTALL_PREFIX = /bira-iasb/projects/DOAS/Programmes/QDOAS
   QMAKE_CFLAGS_RELEASE -= -g
   QMAKE_CXXFLAGS_RELEASE -= -g
@@ -154,6 +156,11 @@ asan { # use 'CONFIG+=asan' to build with adress sanitizer support
   QMAKE_CXXFLAGS += -fsanitize=address -fno-omit-frame-pointer
   QMAKE_CFLAGS += -fsanitize=address -fno-omit-frame-pointer
   QMAKE_LFLAGS += -fsanitize=address
+}
+
+ccache {
+  QMAKE_CXX = ccache g++
+  QMAKE_CC = ccache gcc
 }
 
 # Notes for installation on hpc:
