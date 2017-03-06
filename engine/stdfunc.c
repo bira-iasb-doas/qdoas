@@ -38,12 +38,6 @@
 //
 //  FUNCTIONS
 //
-//  ==============
-//  MATH FUNCTIONS
-//  ==============
-//
-//  STD_Pow10 - calculate a power of 10;
-//
 //  =======
 //  STRINGS
 //  =======
@@ -95,39 +89,6 @@
 #include "doas.h"
 
 #define MAX_FORMAT_LEN    15                                                    // maximum number of characters for a string describing the format of a token
-
-// ==============
-// MATH FUNCTIONS
-// ==============
-
-// -----------------------------------------------------------------------------
-// FUNCTION      STD_Pow10
-// -----------------------------------------------------------------------------
-// PURPOSE       Calculate a power of 10
-//
-// INPUT         p, the power
-//
-// RETURN        10^p
-// -----------------------------------------------------------------------------
-
-double STD_Pow10(int p)
- {
- 	// Declarations
-
- 	double powValue;                                                              // the calculated power of 10
- 	double factor;                                                                // multiplicative factor
- 	int i;                                                                        // browse powers of 10
-
- 	// Calculate the power of 10
-
- 	factor=(p>=0)?(double)10.:(double)0.1;
- 	for (i=1,powValue=(double)1.;i<=abs(p);i++)
- 	 powValue*=(double)factor;
-
- 	// Return
-
- 	return powValue;
- }
 
 // =======
 // STRINGS

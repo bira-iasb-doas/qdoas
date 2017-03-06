@@ -1215,10 +1215,32 @@ static void omi_calculate_wavelengths(float32 wavelength_coeff[], int16 refcol, 
   }
 }
 
+static const double pows[] = {
+  1.,
+  10.0,
+  100.0,
+  1000.0,
+  10000.0,
+  100000.0,
+  1000000.0,
+  10000000.0,
+  100000000.0,
+  1000000000.0,
+  10000000000.0,
+  100000000000.0,
+  1000000000000.0,
+  10000000000000.0,
+  100000000000000.0,
+  1000000000000000.0,
+  10000000000000000.0,
+  100000000000000000.0};
+
 static void omi_make_double(int16 mantissa[], int8 exponent[], int32 n_wavel, double* result) {
   int i;
   for (i=0; i<n_wavel; i++) {
-    result[i] = (double)mantissa[i] * STD_Pow10((int)exponent[i]);
+    if (exponent[i] > sizeof(pows)/sizeof(pows[0]))
+      result[i] = 1;
+    result[i] = (double)mantissa[i] * pows[exponent[i]];
   }
 }
 

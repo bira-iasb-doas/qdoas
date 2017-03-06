@@ -12,7 +12,6 @@
 extern "C" {
 #endif
 
-double      STD_Pow10(int p);
 char      *STD_StrTrim(char *str);
 int         STD_Sscanf(char *line,char *formatString,...);
 long        STD_FileLength(FILE *fp);
