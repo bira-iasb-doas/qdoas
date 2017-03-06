@@ -272,9 +272,10 @@ RC SVD_Dcmp (struct svd *svd, int m, int n, double *SigmaSqr, double **covar) {
                for ( k=i; k<=m; k++ ) scale += fabs( a[i][k] );
                if ( scale != (double) 0. )
                   {
+                    const double divscale = 1/scale;
                     for ( k=i; k<=m; k++ )
                         {
-                          a[i][k] /= scale;
+                          a[i][k] *= divscale;
                           s       += a[i][k] * a[i][k];
                         }
 
@@ -305,9 +306,10 @@ RC SVD_Dcmp (struct svd *svd, int m, int n, double *SigmaSqr, double **covar) {
 
                if ( scale != (double) 0.0 )
                   {
+                    const double divscale = 1/scale;
                     for ( k=l; k<=n; k++ )
                         {
-                          a[k][i] /= scale;
+                          a[k][i] *= divscale;
                           s       += a[k][i] * a[k][i];
                         }
 
@@ -393,7 +395,7 @@ RC SVD_Dcmp (struct svd *svd, int m, int n, double *SigmaSqr, double **covar) {
 
     for ( k=n;k>=1; k-- )               /*  BEGIN loop over singular values  */
         {
-          for ( its=1; its<=SVD_MAX_ITERATIONS; its++ )   /*  BEGIN loop over allowed iteraø  */
+          for ( its=1; its<=SVD_MAX_ITERATIONS; its++ )   /*  BEGIN loop over allowed iterations */
               {
                 flag = 1;
 

@@ -194,35 +194,26 @@ unsigned int log2_ceil (unsigned long x) {
         return (8*sizeof(x))-__builtin_clzl(x-1);
 }
 
-// -----------------------------------------------------------------------------
-// FUNCTION      SPLINE_Vector
-// -----------------------------------------------------------------------------
-// PURPOSE       function for linear and cubic interpolation
-//
-// INPUT         xa,ya             original vectors defining the tabulated function ya=f(xa);
-//               y2a               needed for cubic spline only; second derivatives of the function
-//               na                size of original vectors
-//               xb                new absissae
-//               nb                the size of xb;
-//               type              interpolation type (SPLINE_LINEAR,SPLINE_CUBIC)
-//               callingFunction   the name of the calling function for error
-//                                 message if any;
-//
-// OUTPUT        yb                the function evaluated in new absissae xb.
-//
-// RETURN        ERROR_ID_SPLINE if non increasing absissae are provided;
-//               ERROR_ID_NO for success.
-//
-// REMARK        the original function interpolates only on one new absissae;
-//               this function applies on vector of new absissae.
-// -----------------------------------------------------------------------------
-
-RC SPLINE_Vector(const double *xa, const double *ya, const double *y2a,int na, const double *xb,double *yb,int nb,int type,const char *callingFunction)
-{
+/*! \brief linear or cubic spline interpolation
+  \param[in] xa,ya x and y values of the tabulated function
+  xa=f(ya). The xa must be monotonously increasing.
+  \param[in] na size of input vectors xa,ya (expects na >=2)
+  \param[in] xb x values for which we want to calculate the interpolated y values
+  \param[out] yb output y values
+  \param[in] nb number of points for which we want to interpolate.
+  \param[in] type SPLINE_LINEAR or SPLINE_CUBIC
+  \retval ERROR_ID_NO
+*/
+RC SPLINE_Vector(const double *restrict xa, const double *restrict ya, const double *restrict y2a,int na, const double *restrict xb, double *restrict yb,int nb,int type, const char *caller) {
   // input vector must contain at least 2 elements for interpolation to work.
   assert(na > 1);
 
   RC rc=ERROR_ID_NO;
+
+  // if na is a power of 2 we need exactly log_2(na) steps to find
+  // xlo.  if na is not a power of 2, the number of steps is log_2
+  // of the next power of 2.
+  const unsigned int num_steps = log2_ceil(na);
 
   // Browse new absissae
   for (int i=0; i<nb; ++i) {
@@ -239,11 +230,6 @@ RC SPLINE_Vector(const double *xa, const double *ya, const double *y2a,int na, c
 
     // binary search for xlo such that *xlo < x <= xlo[1],
     const double *xlo=xa;
-
-    // if na is a power of 2 we need exactly log_2(na) steps to find
-    // xlo.  if na is not a power of 2, the number of steps is log_2
-    // of the next power of 2.
-    const unsigned int num_steps = log2_ceil(na);
 
     // special case for the first step, in case na is not a power of 2:
 
