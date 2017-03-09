@@ -144,9 +144,10 @@ static void define_variable(NetCDFGroup &group, const struct output_field& thefi
   }
   getDims(thefield, dimids, chunksizes);
 
-  int varid = group.defVar(varname, dimids, getNCType(thefield.memory_type));
-  group.defVarChunking(varname, NC_CHUNKED, chunksizes.data());
-  group.defVarDeflate(varname);
+  const int varid = group.defVar(varname, dimids, getNCType(thefield.memory_type));
+  group.defVarChunking(varid, NC_CHUNKED, chunksizes.data());
+  group.defVarDeflate(varid);
+  group.defVarFletcher32(varid, NC_FLETCHER32);
   
   switch (thefield.memory_type) {
   case OUTPUT_STRING:

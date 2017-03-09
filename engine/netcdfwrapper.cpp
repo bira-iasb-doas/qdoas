@@ -251,6 +251,16 @@ void NetCDFGroup::defVarDeflate(int varid, int shuffle, int deflate, int deflate
   }
 }
 
+void NetCDFGroup::defVarFletcher32(const string& name, int fletcher32) {
+  defVarFletcher32(varID(name), fletcher32);
+}
+
+void NetCDFGroup::defVarFletcher32(int varid, int fletcher32) {
+  if (nc_def_var_fletcher32(groupid, varid, fletcher32) != NC_NOERR) {
+    throw std::runtime_error("Error setting Fletcher32 filter for " + varName(varid) + " in group '" + name + "'");
+  }
+}
+
 void NetCDFGroup::defVarDeflate(const string& name, int shuffle, int deflate, int deflate_level) {
   defVarDeflate(varID(name), shuffle, deflate, deflate_level);
 }

@@ -39,6 +39,8 @@ public:
   void defVarChunking(const std::string& name, int storage, size_t *chunksizes);
   void defVarDeflate(int varid, int shuffle=1, int deflate=1, int deflate_level=7);
   void defVarDeflate(const std::string& name, int shuffle=1, int deflate=1, int deflate_level=7);
+  void defVarFletcher32(int varid, int fletcher32=NC_FLETCHER32);
+  void defVarFletcher32(const std::string& name, int fletcher32=NC_FLETCHER32);
   std::string getAttText(const std::string& attrname, int varid=NC_GLOBAL);
 
   bool hasAttr(const std::string& name, int varid=NC_GLOBAL) const;
