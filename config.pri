@@ -163,6 +163,11 @@ ccache {
   QMAKE_CC = ccache gcc
 }
 
+openblas {
+  LIBS -= -lgslcblas
+  LIBS += -lopenblas
+}
+
 # Notes for installation on hpc:
 #
 # hdf-eos5:
