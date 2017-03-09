@@ -2532,6 +2532,12 @@ RC ANALYSE_Function( const double * const spectrum_orig, const double * const re
       }
       LINEAR_free(fitprops->linfit);
       fitprops->linfit = LINEAR_from_matrix(fitprops->P, Npts,fitprops->DimP,DECOMP_QR);
+      if (SigmaY != NULL) {
+        LINEAR_set_weight(fitprops->linfit, SigmaY);
+        for (int i=0; i<fitprops->DimP; ++i) {
+          b[1+i] /= SigmaY[i];
+        }
+      }
       rc = LINEAR_decompose(fitprops->linfit, fitprops->SigmaSqr, fitprops->covar);
       double xP[fitprops->DimP];
       double *fitParamsP=xP-1; // linear fitting functions assume index starts at 1.
