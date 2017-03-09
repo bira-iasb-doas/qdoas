@@ -367,9 +367,9 @@ bool CProjectAnalysisSubHandler::start(const QXmlAttributes &atts)
 
   str = atts.value("method");
   if (str == "ODF")
-    m_analysis->methodType = PRJCT_ANLYS_METHOD_SVD;
+    m_analysis->methodType = OPTICAL_DENSITY_FIT;
   else if (str == "ML+SVD")
-    m_analysis->methodType = PRJCT_ANLYS_METHOD_SVDMARQUARDT;
+    m_analysis->methodType = INTENSITY_FIT;
   else
     return postErrorMessage("Invalid analysis method");
 
@@ -461,9 +461,9 @@ bool CProjectCalibrationSubHandler::start(const QXmlAttributes &atts)
 
   str = atts.value("method");
   if (str == "ODF")
-    m_calibration->methodType = PRJCT_ANLYS_METHOD_SVD;
+    m_calibration->methodType = OPTICAL_DENSITY_FIT;
   else if (str == "ML+SVD")
-    m_calibration->methodType = PRJCT_ANLYS_METHOD_SVDMARQUARDT;
+    m_calibration->methodType = INTENSITY_FIT;
   else
     return postErrorMessage("Invalid analysis method");
 

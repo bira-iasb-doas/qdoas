@@ -1234,7 +1234,7 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
     // Store fit for display
 
     if (displayFlag) {
-      if (pKurucz->method==PRJCT_ANLYS_METHOD_SVD)
+      if (pKurucz->method==OPTICAL_DENSITY_FIT)
        {
         for (i=SvdPDeb;i<=SvdPFin;i++)
          {
@@ -2069,7 +2069,7 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
   FILES_RebuildFileName(slitFile,pKuruczOptions->slfFile,1);
 
   if ((hFilterFlag=((ANALYSE_phFilter->filterFunction!=NULL) &&                 // high pass filtering
-                    (pKuruczFeno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) &&    // implemented only in DOAS fitting
+                    (pKuruczFeno->analysisMethod==OPTICAL_DENSITY_FIT) &&    // implemented only in DOAS fitting
                     (pKuruczFeno->analysisType==ANALYSIS_TYPE_FWHM_KURUCZ) &&   // for calibration with slit function fitting
                    ((pKuruczFeno->indexSol==ITEM_NONE) ||                       // doesn't fit the Sol non linear parameter
                     (pKuruczFeno->TabCross[pKuruczFeno->indexSol].FitParam==ITEM_NONE)))?1:0)==1)

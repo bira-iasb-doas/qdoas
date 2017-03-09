@@ -47,9 +47,9 @@ CWProjectTabAnalysis::CWProjectTabAnalysis(const mediate_project_analysis_t *pro
   mainLayout->addWidget(new QLabel("Analysis Method", this), row , 1);
   m_methodCombo = new QComboBox(this);
   m_methodCombo->addItem("Optical density fitting",
-			 QVariant(PRJCT_ANLYS_METHOD_SVD));
+			 QVariant(OPTICAL_DENSITY_FIT));
   m_methodCombo->addItem("Intensity fitting (Marquardt-Levenberg+SVD)",
-			 QVariant(PRJCT_ANLYS_METHOD_SVDMARQUARDT));
+			 QVariant(INTENSITY_FIT));
   mainLayout->addWidget(m_methodCombo, row, 2);
   ++row;
 

@@ -239,8 +239,8 @@ enum _prjctSpectraModes {
 // ----------------
 
 enum prjctAnlysMethod {
-  PRJCT_ANLYS_METHOD_SVD,                              // Optical thickness fitting (SVD)
-  PRJCT_ANLYS_METHOD_SVDMARQUARDT,                     // Intensity fitting (Marquardt-Levenberg+SVD)
+  OPTICAL_DENSITY_FIT,                              // Optical thickness fitting (SVD)
+  INTENSITY_FIT,                     // Intensity fitting (Marquardt-Levenberg+SVD)
   PRJCT_ANLYS_METHOD_MAX
 };
 

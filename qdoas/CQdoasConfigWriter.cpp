@@ -202,10 +202,10 @@ void CQdoasConfigWriter::writePropertiesAnalysis(FILE *fp, const mediate_project
 {
   fprintf(fp, "    <analysis method=");
   switch (d->methodType) {
-  case PRJCT_ANLYS_METHOD_SVD:
+  case OPTICAL_DENSITY_FIT:
     fprintf(fp, "\"ODF\"");
     break;
-  case PRJCT_ANLYS_METHOD_SVDMARQUARDT:
+  case INTENSITY_FIT:
     fprintf(fp, "\"ML+SVD\"");
     break;
   default:
@@ -249,10 +249,10 @@ void CQdoasConfigWriter::writePropertiesCalibration(FILE *fp, const mediate_proj
 {
   fprintf(fp, "    <calibration ref=\"%s\" method=", d->solarRefFile);
   switch (d->methodType) {
-  case PRJCT_ANLYS_METHOD_SVD:
+  case OPTICAL_DENSITY_FIT:
     fprintf(fp, "\"ODF\"");
     break;
-  case PRJCT_ANLYS_METHOD_SVDMARQUARDT:
+  case INTENSITY_FIT:
     fprintf(fp, "\"ML+SVD\"");
     break;
   default:

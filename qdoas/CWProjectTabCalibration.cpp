@@ -60,8 +60,8 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
   // methodType
   topLayout->addWidget((methodLabel=new QLabel("Analysis Method", this)), 1, 0);
   m_methodCombo = new QComboBox(this);
-  m_methodCombo->addItem("Optical Density Fitting", QVariant(PRJCT_ANLYS_METHOD_SVD));
-  m_methodCombo->addItem("Intensity fitting (Marquardt-Levenberg+SVD)", QVariant(PRJCT_ANLYS_METHOD_SVDMARQUARDT));
+  m_methodCombo->addItem("Optical Density Fitting", QVariant(OPTICAL_DENSITY_FIT));
+  m_methodCombo->addItem("Intensity fitting (Marquardt-Levenberg+SVD)", QVariant(INTENSITY_FIT));
   topLayout->addWidget(m_methodCombo, 1, 1, 1, 3); // spans 3 columns
 
   // line shape

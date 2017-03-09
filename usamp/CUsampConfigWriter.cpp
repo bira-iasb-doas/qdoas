@@ -64,10 +64,10 @@ QString CUsampConfigWriter::write(const QString &fileName)
 
   fprintf(fp, "  <general type=");
   switch (d->methodType) {
-  case PRJCT_ANLYS_METHOD_SVD:
+  case OPTICAL_DENSITY_FIT:
     fprintf(fp, "\"ODF\"");
     break;
-  case PRJCT_ANLYS_METHOD_SVDMARQUARDT:
+  case INTENSITY_FIT:
     fprintf(fp, "\"ML+SVD\"");
     break;
   default:

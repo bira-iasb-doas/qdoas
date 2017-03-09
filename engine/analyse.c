@@ -1573,7 +1573,7 @@ RC ANALYSE_SvdInit(FENO* pFeno, struct fit_properties *fit, const int n_wavel)
         // Fill, 'Fit' vectors with data on parameters to fit
 
         // ---------------------------------------------------------------------------
-        if ((pFeno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD) && (pTabCross->FitConc!=ITEM_NONE)) {
+        if ((pFeno->analysisMethod!=OPTICAL_DENSITY_FIT) && (pTabCross->FitConc!=ITEM_NONE)) {
           //
           // The best would be to use Fact (calculated in ANALYSE_Function when Decomp=1) but this implies that
           // FitMinp and FitMaxp are in parameters of ANALYSE_Function (called by curfit)
@@ -1986,7 +1986,7 @@ RC ANALYSE_Function( const double * const spectrum_orig, const double * const re
   // Don't take fixed concentrations into account for singular value decomposition
 
   for (int i=0;i<Feno->NTabCross && (NewDimC==fitprops->DimC);i++)
-   if ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) && (TabCross[i].FitConc==0) &&
+   if ((Feno->analysisMethod==OPTICAL_DENSITY_FIT) && (TabCross[i].FitConc==0) &&
        (TabCross[i].DeltaConc==(double)0.) && TabCross[i].IndSvdA && (TabCross[i].IndSvdA<=NewDimC))
 
     NewDimC=TabCross[i].IndSvdA-1;
@@ -2062,7 +2062,7 @@ RC ANALYSE_Function( const double * const spectrum_orig, const double * const re
    // Spectrum correction with offset
    // -------------------------------
 
-   if (Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVDMARQUARDT) {
+   if (Feno->analysisMethod!=INTENSITY_FIT) {
      offsetOrder=-1;
 
      if ((Feno->indexOffsetConst!=ITEM_NONE) && ((TabCross[Feno->indexOffsetConst].FitParam!=ITEM_NONE) || (TabCross[Feno->indexOffsetConst].InitParam!=(double)0.)))
@@ -2107,7 +2107,7 @@ RC ANALYSE_Function( const double * const spectrum_orig, const double * const re
    // High-pass filtering on spectrum
    // -------------------------------
 
-   if ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) && !hFilterSpecLog &&  // logarithms are not calculated and filtered before entering this function
+   if ((Feno->analysisMethod==OPTICAL_DENSITY_FIT) && !hFilterSpecLog &&  // logarithms are not calculated and filtered before entering this function
        (((rc=VECTOR_Log(&spectrum_interpolated[LimMin],&spectrum_interpolated[LimMin],LimN,"ANALYSE_Function (Spec) "))!=0) ||
         ((ANALYSE_phFilter->filterFunction!=NULL) &&
          ((!Feno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((Feno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
@@ -2157,7 +2157,7 @@ RC ANALYSE_Function( const double * const spectrum_orig, const double * const re
            }
            else if ((i==Feno->indexCommonResidual) || (i==Feno->indexUsamp1) || (i==Feno->indexUsamp2)) {
              for( int k=1, l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
-               fitprops->A[indexSvdA][k]=(Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) ?
+               fitprops->A[indexSvdA][k]=(Feno->analysisMethod==OPTICAL_DENSITY_FIT) ?
                  -pTabCross->vector[l] : pTabCross->vector[l];
            }
            else if (i==Feno->indexResol) {
@@ -2197,7 +2197,7 @@ RC ANALYSE_Function( const double * const spectrum_orig, const double * const re
              for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
                fitprops->A[indexSvdA][k]=pTabCross->vector[l]=fitprops->A[indexSvdA-1][k]*(ANALYSE_splineX[l]-lambda0);
            }
-           else if (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) { // SVD method, polyOrder == 0, polyFlag == 0 -> linear offset, order 0
+           else if (Feno->analysisMethod==OPTICAL_DENSITY_FIT) { // SVD method, polyOrder == 0, polyFlag == 0 -> linear offset, order 0
              switch (Feno->linear_offset_mode) {
              case LINEAR_OFFSET_RAD: // normalized w.r.t. the spectrum
                for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator)) {
@@ -2286,7 +2286,7 @@ RC ANALYSE_Function( const double * const spectrum_orig, const double * const re
       // ----------------------------------------------------
       // In optical density fitting mode, allocate linear fitting environment for cross sections:
       // ----------------------------------------------------
-      if (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) {
+      if (Feno->analysisMethod==OPTICAL_DENSITY_FIT) {
         // clean up old linear fit environment:
         LINEAR_free(fitprops->linfit);
         fitprops->linfit = LINEAR_alloc(Npts,NewDimC,DECOMP_QR);
@@ -2321,18 +2321,18 @@ RC ANALYSE_Function( const double * const spectrum_orig, const double * const re
 
           if (indexSvdA <=  NewDimC) {
             switch (Feno->analysisMethod) {
-            case PRJCT_ANLYS_METHOD_SVD:
+            case OPTICAL_DENSITY_FIT:
               // ----------------------------------------------------
               // Copy cross sections for which we fit the concentration to linear fit system
               // ----------------------------------------------------
               LINEAR_set_column(fitprops->linfit, indexSvdA, fitprops->A[indexSvdA]);
               break;
-            case PRJCT_ANLYS_METHOD_SVDMARQUARDT:
+            case INTENSITY_FIT:
               // Calculate norm
               pTabCross->Fact = sqrt(VECTOR_Norm(fitprops->A[indexSvdA],Npts));
               break;
             default:
-              assert(false); // bug, analysisMethod should be either PRJCT_ANLYS_METHOD_SVD or ...SVDMARQUARDT
+              assert(false); // bug, analysisMethod should be either OPTICAL_DENSITY_FIT or ...SVDMARQUARDT
               break;
             }
           }
@@ -2343,7 +2343,7 @@ RC ANALYSE_Function( const double * const spectrum_orig, const double * const re
       // SVD Decomposition
       // -----------------
 
-      if (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) {
+      if (Feno->analysisMethod==OPTICAL_DENSITY_FIT) {
         LINEAR_set_weight(fitprops->linfit, SigmaY);
         rc = LINEAR_decompose(fitprops->linfit,fitprops->SigmaSqr,fitprops->covar);
         if (rc != ERROR_ID_NO)
@@ -2351,7 +2351,7 @@ RC ANALYSE_Function( const double * const spectrum_orig, const double * const re
       }
 
         // We only need to recalculate the svd decomposition if the matrix can be chagned by non-linear fit parameters (NP), weighting by spectrum errors (SigmaY), or linear offset:
-      if (!Feno->fit_properties.NP && (SigmaY==NULL) && ( (Feno->linear_offset_mode != LINEAR_OFFSET_RAD) || (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT))) {
+      if (!Feno->fit_properties.NP && (SigmaY==NULL) && ( (Feno->linear_offset_mode != LINEAR_OFFSET_RAD) || (Feno->analysisMethod==INTENSITY_FIT))) {
         Feno->Decomp=0;
       }
     }
@@ -2410,7 +2410,7 @@ RC ANALYSE_Function( const double * const spectrum_orig, const double * const re
     // Reference correction with non linear parameters
     // ----------------------------------------------
 
-    if ((Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVDMARQUARDT) &&
+    if ((Feno->analysisMethod!=INTENSITY_FIT) &&
         (Feno->indexSol!=ITEM_NONE) &&
         ((TabCross[Feno->indexSol].FitParam!=ITEM_NONE) ||
          ((TabCross[Feno->indexSol].InitParam!=(double)0.)&&(TabCross[Feno->indexSol].InitParam!=(double)1.))))
@@ -2424,7 +2424,7 @@ RC ANALYSE_Function( const double * const spectrum_orig, const double * const re
 
     // logarithms are not calculated and filtered before entering this function
 
-    if ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) && !hFilterRefLog &&  // logarithms are not calculated and filtered before entering this function
+    if ((Feno->analysisMethod==OPTICAL_DENSITY_FIT) && !hFilterRefLog &&  // logarithms are not calculated and filtered before entering this function
         (((rc=VECTOR_Log(&reference_shifted[LimMin],&reference_shifted[LimMin],LimN,"ANALYSE_Function (Ref) "))!=0) ||
          ((ANALYSE_phFilter->filterFunction!=NULL) &&
           ((!Feno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((Feno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
@@ -2443,7 +2443,7 @@ RC ANALYSE_Function( const double * const spectrum_orig, const double * const re
     // OPTICAL THICKNESS FITTING (SVD)
     //
 
-    if (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) {
+    if (Feno->analysisMethod==OPTICAL_DENSITY_FIT) {
       // ---------------------
       // SVD back substitution
       // ---------------------
@@ -2483,10 +2483,10 @@ RC ANALYSE_Function( const double * const spectrum_orig, const double * const re
         Yfit[k-1]=YTrav[k-1]-XTrav[k-1]; // NB : logarithm test on YTrav has been made in the previous loop
       }
 
-    } else if (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT) {
+    } else if (Feno->analysisMethod==INTENSITY_FIT) {
 
       // ------------------------------------------------------------
-      // INTENSITY FITTING (Marquardt-Levenberg + SVD)
+      // INTENSITY FITTING
       // ------------------------------------------------------------
 
       for (int k=1,i=iterator_start(&my_iterator, global_doas_spectrum); i != ITERATOR_FINISHED; k++,i=iterator_next(&my_iterator)) {
@@ -2655,7 +2655,7 @@ RC ANALYSE_CurFitMethod(INDEX indexFenoColumn,  // for OMI
   // Initializations
 
   TabCross=Feno->TabCross;                               // symbol cross reference
-  useErrors=((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) && (pAnalysisOptions->fitWeighting!=PRJCT_ANLYS_FIT_WEIGHTING_NONE) && (SigmaSpec!=NULL) && (Feno->SrefSigma!=NULL))?1:0;
+  useErrors=((Feno->analysisMethod==OPTICAL_DENSITY_FIT) && (pAnalysisOptions->fitWeighting!=PRJCT_ANLYS_FIT_WEIGHTING_NONE) && (SigmaSpec!=NULL) && (Feno->SrefSigma!=NULL))?1:0;
 
   fitParamsC=fitParamsF=Deltap=Sigmaa=Y0=SpecTrav=RefTrav=SigmaY=NULL;          // pointers
   hFilterSpecLog=0;
@@ -2731,7 +2731,7 @@ RC ANALYSE_CurFitMethod(INDEX indexFenoColumn,  // for OMI
     if ((ANALYSE_phFilter->filterFunction!=NULL) &&           // high pass filtering is requested
         ((!Feno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((Feno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
         (Feno->analysisType!=ANALYSIS_TYPE_FWHM_NLFIT) &&     // doesn't fit the resolution (FWHM) between the reference and the spectrum as a non linear parameter
-        (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) &&     // only implemented in optical density fitting
+        (Feno->analysisMethod==OPTICAL_DENSITY_FIT) &&     // only implemented in optical density fitting
 
                                                               // if offset is applied on spectrum, filter spectrum and reference at each iteration in Function
                                                               // otherwise, filter logarithms
@@ -2755,7 +2755,7 @@ RC ANALYSE_CurFitMethod(INDEX indexFenoColumn,  // for OMI
 
         (Feno->analysisType!=ANALYSIS_TYPE_FWHM_NLFIT) &&     // doesn't fit the resolution (FWHM) between the reference and the spectrum as a non linear parameter
         (Feno->analysisType!=ANALYSIS_TYPE_FWHM_KURUCZ) &&
-        (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) &&       // only implemented in optical density fitting
+        (Feno->analysisMethod==OPTICAL_DENSITY_FIT) &&       // only implemented in optical density fitting
         ((Feno->indexSol==ITEM_NONE) || (TabCross[Feno->indexSol].FitParam==ITEM_NONE)))
      {
       hFilterRefLog=1;
@@ -2799,8 +2799,8 @@ RC ANALYSE_CurFitMethod(INDEX indexFenoColumn,  // for OMI
 
         if ((WorkSpace[TabCross[i].Comp].type==WRK_SYMBOL_CROSS) && (indexFeno<NFeno) &&
             (TabCross[i].FitFromPrevious==1) && (TabCross[i].InitConc==(double)0.) &&
-            (((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) && (TabCross[i].FitConc==0)) ||
-             ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT) && (TabCross[i].FitConc==ITEM_NONE))))
+            (((Feno->analysisMethod==OPTICAL_DENSITY_FIT) && (TabCross[i].FitConc==0)) ||
+             ((Feno->analysisMethod==INTENSITY_FIT) && (TabCross[i].FitConc==ITEM_NONE))))
          {
           bool found_previous = false;
           for (int indexFeno2=indexFeno-1;indexFeno2>=0 && !found_previous; indexFeno2--) {
@@ -2889,7 +2889,7 @@ RC ANALYSE_CurFitMethod(INDEX indexFenoColumn,  // for OMI
       /*  ====================  */
       for( int k=0,i=iterator_start(&my_iterator, global_doas_spectrum); i != ITERATOR_FINISHED; k++,i=iterator_next(&my_iterator)) {
         ANALYSE_absolu[i]  =  (Yfit[k]-Y0[k]);
-        if (Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD)
+        if (Feno->analysisMethod!=OPTICAL_DENSITY_FIT)
          ANALYSE_t[i]=(ANALYSE_tc[i]!=(double)0.)?(double)1.+ANALYSE_absolu[i]/ANALYSE_tc[i]:(double)0.;
       }
       if (residuals != NULL)
@@ -2902,7 +2902,7 @@ RC ANALYSE_CurFitMethod(INDEX indexFenoColumn,  // for OMI
         pTabCross=&TabCross[i];
 
         // in Intensity fitting mode, fitted concentrations are scaled by the cross section normalization factor:
-        if (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT) {
+        if (Feno->analysisMethod==INTENSITY_FIT) {
           if (pTabCross->IndSvdA > 0
               && WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CROSS
               && pTabCross->FitConc > ITEM_NONE) {
@@ -2918,7 +2918,7 @@ RC ANALYSE_CurFitMethod(INDEX indexFenoColumn,  // for OMI
         if (pTabCross->IndSvdA) { // Cross section, polynomial, linear offset, undersampling
           // Fitting using SVD -> in SVD+Marquardt, polynomial is also fitted linearly !
 
-          if ((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD && pTabCross->FitParam==ITEM_NONE) || pTabCross->IndSvdP) {
+          if ((Feno->analysisMethod==OPTICAL_DENSITY_FIT && pTabCross->FitParam==ITEM_NONE) || pTabCross->IndSvdP) {
             pResults->SlntCol=x[pTabCross->IndSvdA] = fitParamsC[pTabCross->IndSvdA];
             pResults->SlntErr=Sigma[pTabCross->IndSvdA]= (pTabCross->FitConc!=0)
               ? sqrt(fit->SigmaSqr[pTabCross->IndSvdA]*scalingFactor)
@@ -3212,7 +3212,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           if (Feno->amfFlag ||
               ((Feno->useKurucz==ANLYS_KURUCZ_REF_AND_SPEC) && Feno->xsToConvolute) ||
-              ( (Feno->linear_offset_mode == LINEAR_OFFSET_RAD) && (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD)))   // fit a linear offset using the inverse of the spectrum
+              ( (Feno->linear_offset_mode == LINEAR_OFFSET_RAD) && (Feno->analysisMethod==OPTICAL_DENSITY_FIT)))   // fit a linear offset using the inverse of the spectrum
 
            Feno->Decomp=1;
 
@@ -3429,17 +3429,17 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           if  (Feno->displayResidue)
            {
-            if (Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD)
+            if (Feno->analysisMethod!=OPTICAL_DENSITY_FIT)
              for (j=SvdPDeb;j<=SvdPFin;j++)
               ANALYSE_absolu[j]=(ANALYSE_tc[j]!=(double)0.)?ANALYSE_absolu[j]/ANALYSE_tc[j]:(double)0.;
 
-            sprintf(graphTitle,"%s (%.2le)",(Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD)?"Normalized Residual":"Residual",Feno->RMS);
+            sprintf(graphTitle,"%s (%.2le)",(Feno->analysisMethod!=OPTICAL_DENSITY_FIT)?"Normalized Residual":"Residual",Feno->RMS);
 
             double *curves[1][2] = {{Feno->LambdaK,ANALYSE_absolu}};
             plot_curves(indexPage,curves,1,Residual,0,graphTitle, responseHandle, Feno->fit_properties.specrange);
            }
 
-          if (Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD)
+          if (Feno->analysisMethod!=OPTICAL_DENSITY_FIT)
            for (j=SvdPDeb;j<=SvdPFin;j++)
             ANALYSE_absolu[j]=(ANALYSE_t[j]>(double)0.)?log(ANALYSE_t[j]):(double)0.;
 
@@ -3448,7 +3448,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
            goto EndAnalysis;
 
-          if  (Feno->displayResidue && (Feno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD))
+          if  (Feno->displayResidue && (Feno->analysisMethod!=OPTICAL_DENSITY_FIT))
            {
             double * curves[1][2] = {{Feno->LambdaK,ANALYSE_absolu}};
             plot_curves(indexPage,curves,1,Residual,allowFixedScale,"OD Residual", responseHandle, Feno->fit_properties.specrange);
@@ -3548,7 +3548,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
             if (maxOffset > 0.) {
               doas_iterator my_iterator;
-              if (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT)
+              if (Feno->analysisMethod==INTENSITY_FIT)
                for (int l=iterator_start(&my_iterator, Feno->fit_properties.specrange); l != ITERATOR_FINISHED; l=iterator_next(&my_iterator))
                 offset[l]=-offset[l];           // inverse the sign in order to have the same display as in SVD method
 
@@ -4322,12 +4322,12 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
                pEngineCross->IndSvdA=indexSvd;
               }
 
-            if (pTabFeno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD)     // In the intensity fitting method, FitConc is an index
+            if (pTabFeno->analysisMethod!=OPTICAL_DENSITY_FIT)     // In the intensity fitting method, FitConc is an index
              pEngineCross->FitConc=pTabFeno->fit_properties.NF++;                   // in the non linear parameters vectors
 
             pTabFeno->fit_properties.nFit++;
            }
-          else if (pTabFeno->analysisMethod!=PRJCT_ANLYS_METHOD_SVD)
+          else if (pTabFeno->analysisMethod!=OPTICAL_DENSITY_FIT)
            pEngineCross->FitConc=ITEM_NONE;                              // so if the parameter hasn't to be fitted, index is ITEM_NONE
 
           pTabFeno->NTabCross++;
@@ -4509,7 +4509,7 @@ RC ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,int nLinear,INDEX in
              pTabCross->IndSvdA=indexSvd;
             }
 
-          if (pTabFeno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT)        // Marquardt-Levenberg + SVD
+          if (pTabFeno->analysisMethod==INTENSITY_FIT)        // Marquardt-Levenberg + SVD
            pTabCross->IndSvdP=++(pTabFeno->fit_properties.DimP);
 
           pTabFeno->fit_properties.nFit++;
@@ -4746,7 +4746,7 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
 
     if (pListItem->fitFlag || !strcasecmp(pListItem->symbolName,"SFP 2") || !strcasecmp(pListItem->symbolName,"SFP 3") || (!strcasecmp(pListItem->symbolName,"SFP 1") && (pKuruczOptions->fwhmType==SLIT_TYPE_FILE)) || (pListItem->initialValue!=(double)0.))
      {
-      if ((pTabFeno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) || strnicmp(pListItem->symbolName,"offset",6))
+      if ((pTabFeno->analysisMethod==OPTICAL_DENSITY_FIT) || strnicmp(pListItem->symbolName,"offset",6))
        {
         symbol=pListItem->symbolName;
         symbolLength=strlen(symbol);
@@ -4859,7 +4859,7 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
             // DOAS -> the parameters are fitted non linearly (except undersampling, see further NF--)
             // Marquardt-Levenberg method -> the parameters are fitted linearly
 
-            if ((pTabFeno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT) &&
+            if ((pTabFeno->analysisMethod==INTENSITY_FIT) &&
                 ((pTabFeno->indexOffsetConst==pTabFeno->NTabCross) ||
                  (pTabFeno->indexOffsetOrder1==pTabFeno->NTabCross) ||
                  (pTabFeno->indexOffsetOrder2==pTabFeno->NTabCross) ||
@@ -4934,7 +4934,7 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
                 else
                   memcpy(pTabCross->vector,ANALYSE_zeros,sizeof(double)*n_wavel);
 
-                if (((pTabFeno->analysisMethod!=PRJCT_ANLYS_METHOD_SVDMARQUARDT) || (pTabCross->FitParam==ITEM_NONE)))
+                if (((pTabFeno->analysisMethod!=INTENSITY_FIT) || (pTabCross->FitParam==ITEM_NONE)))
                   pTabCross->IndSvdA=++pTabFeno->fit_properties.DimC;
 
                 pTabCross->crossAction=ANLYS_CROSS_ACTION_NOTHING; // For raman interpolation ((pTabFeno->indexRing1==pTabFeno->NTabCross)) ? ANLYS_CROSS_ACTION_intERPOLATE : ANLYS_CROSS_ACTION_NOTHING;
@@ -4942,7 +4942,7 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
 
                 // DOAS fitting : only the Raman spectrum is fitted non linearly, other parameters are considered as cross sections
 
-                if (pTabFeno->analysisMethod==PRJCT_ANLYS_METHOD_SVD) // && (pTabFeno->indexRing1!=pTabFeno->NTabCross))
+                if (pTabFeno->analysisMethod==OPTICAL_DENSITY_FIT) // && (pTabFeno->indexRing1!=pTabFeno->NTabCross))
                  {
                   pTabCross->InitConc=pTabCross->InitParam;
                   pTabCross->DeltaConc=pTabCross->DeltaParam;
@@ -4970,7 +4970,7 @@ RC ANALYSE_LoadNonLinear(ENGINE_CONTEXT *pEngineContext,ANALYSE_NON_LINEAR_PARAM
                 else
                  {
                   pTabCross->InitConc=(double)0.;
-                  pTabCross->FitConc=(pTabFeno->analysisMethod==PRJCT_ANLYS_METHOD_SVD)?0:ITEM_NONE;
+                  pTabCross->FitConc=(pTabFeno->analysisMethod==OPTICAL_DENSITY_FIT)?0:ITEM_NONE;
                   pTabCross->DeltaConc=(double)0.;
                  }
                }

@@ -145,7 +145,7 @@ RC USAMP_BuildCrossSections(double *phase1,                                     
        else if (!(rc=SPLINE_Vector(kuruczLambda,kuruczConvolved,kuruczConvolvedDeriv2,nKurucz,&gomeLambda2[i],&over,1,SPLINE_CUBIC,"USAMP_BuildCrossSections ")) &&
                 !(rc=SPLINE_Vector(gomeLambda,kuruczInterpolated,kuruczInterpolatedDeriv2,nGome,&gomeLambda2[i],&under,1,SPLINE_CUBIC,"USAMP_BuildCrossSections ")))
 
-        phase1[i]=(analysisMethod==PRJCT_ANLYS_METHOD_SVD)?log(over/under):over-under;
+        phase1[i]=(analysisMethod==OPTICAL_DENSITY_FIT)?log(over/under):over-under;
       }
 
     // Phase 2 : calculate solar spectrum at GOME+phase positions
@@ -161,7 +161,7 @@ RC USAMP_BuildCrossSections(double *phase1,                                     
        if (gomeLambda2[i]<(double)1.e-3)
         phase2[i]=(double)0.;
        else if (!(rc=SPLINE_Vector(&gomeLambda2[indexMin],&resample[indexMin],&d2res[indexMin],(indexMax-indexMin+1),&gomeLambda[i],&under,1,SPLINE_CUBIC,"USAMP_BuildCrossSections ")))
-        phase2[i]=(analysisMethod==PRJCT_ANLYS_METHOD_SVD)?log(over/under):over-under;
+        phase2[i]=(analysisMethod==OPTICAL_DENSITY_FIT)?log(over/under):over-under;
       }
    }
 

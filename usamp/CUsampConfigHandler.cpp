@@ -73,10 +73,10 @@ bool CUsampGeneralSubHandler::start(const QXmlAttributes &atts)
 
   str = atts.value("type");
   if (str == "ODF") {
-    m_d->methodType = PRJCT_ANLYS_METHOD_SVD;
+    m_d->methodType = OPTICAL_DENSITY_FIT;
   }
   else if (str == "ML+SVD") {
-    m_d->methodType = PRJCT_ANLYS_METHOD_SVDMARQUARDT;
+    m_d->methodType = INTENSITY_FIT;
   }
   else
     return postErrorMessage("Invalid analysis method");

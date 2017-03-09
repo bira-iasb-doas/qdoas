@@ -91,8 +91,8 @@ CWUsampTabGeneral::CWUsampTabGeneral(const mediate_usamp_t *properties, QWidget 
   QGridLayout *analysisLayout = new QGridLayout(analysisGroup);
   analysisLayout->addWidget(new QLabel("Anylsis Method", analysisGroup), 0, 0);
   m_analysisCombo = new QComboBox(analysisGroup);
-  m_analysisCombo->addItem("Optical density fitting", QVariant(PRJCT_ANLYS_METHOD_SVD));
-  m_analysisCombo->addItem("Intensity fitting (Marquardt-Levenberg)", QVariant(PRJCT_ANLYS_METHOD_SVDMARQUARDT));
+  m_analysisCombo->addItem("Optical density fitting", QVariant(OPTICAL_DENSITY_FIT));
+  m_analysisCombo->addItem("Intensity fitting (Marquardt-Levenberg)", QVariant(INTENSITY_FIT));
   analysisLayout->addWidget(m_analysisCombo, 0, 1);
 
   analysisLayout->addWidget(new QLabel("Shift (nm)", this), 1, 0);

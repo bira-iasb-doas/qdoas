@@ -503,7 +503,7 @@ static RC CurfitDerivFunc(const double *specX, double *srefX, double *sigmaY,int
     //    concentrations of the molecules in the case of SVD+Marquardt analysis method
     //    predefined parameters as offset, undersampling, raman, common residual are fitted linearly
 
-    if (((Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVDMARQUARDT) &&
+    if (((Feno->analysisMethod==INTENSITY_FIT) &&
          (TabCross[i].FitConc!=ITEM_NONE) && ((rc=CurfitNumDeriv(specX,srefX,sigmaY,nY, Yfit, P,A,deltaA,TabCross[i].FitConc,deriv,indexFenoColumn,fitprops))>=THREAD_EVENT_STOP)) ||
 
     // SVD : concentrations of molecules fitted linearly
@@ -518,7 +518,7 @@ static RC CurfitDerivFunc(const double *specX, double *srefX, double *sigmaY,int
          (i!=Feno->indexUsamp1) &&
          (i!=Feno->indexUsamp2) &&
          (i!=Feno->indexResol)) ||
-         (Feno->analysisMethod==PRJCT_ANLYS_METHOD_SVD)) &&
+         (Feno->analysisMethod==OPTICAL_DENSITY_FIT)) &&
          ((rc=CurfitNumDeriv(specX,srefX,sigmaY,nY, Yfit, P,A,deltaA,TabCross[i].FitParam,deriv,indexFenoColumn,fitprops))>=THREAD_EVENT_STOP)) ||
 
     //    derivatives of the fitting function in shift, stretch and scaling are always numeric undependantly on the method of analysis
