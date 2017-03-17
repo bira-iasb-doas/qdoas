@@ -411,11 +411,11 @@ RC MKZY_ReadRecord(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp)
 
     MKZY_ParseDate(recordInfo.date,&today);
 
-    MKZY_ParseTime(recordInfo.starttime,&pRecord->startTime);
-    MKZY_ParseTime(recordInfo.stoptime,&pRecord->endTime);
+    MKZY_ParseTime(recordInfo.starttime,&pRecord->startDateTime.thetime);
+    MKZY_ParseTime(recordInfo.stoptime,&pRecord->endDateTime.thetime);
 
-    Tm1=(double)ZEN_NbSec(&today,&pRecord->startTime,0);
-    Tm2=(double)ZEN_NbSec(&today,&pRecord->endTime,0);
+    Tm1=(double)ZEN_NbSec(&today,&pRecord->startDateTime.thetime,0);
+    Tm2=(double)ZEN_NbSec(&today,&pRecord->endDateTime.thetime,0);
 
     Tm1=(Tm1+Tm2)*0.5;
 
@@ -423,10 +423,13 @@ RC MKZY_ReadRecord(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp)
     pRecord->present_datetime.thedate.da_mon   = (char) ZEN_FNCaljmon (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
     pRecord->present_datetime.thedate.da_day   = (char) ZEN_FNCaljday (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
 
+    memcpy(&pRecord->startDateTime.thedate,&pRecord->present_datetime.thedate,sizeof(struct date));
+    memcpy(&pRecord->endDateTime.thedate,&pRecord->present_datetime.thedate,sizeof(struct date));
+
     // Data on the current spectrum
 
-    nsec1=pRecord->startTime.ti_hour*3600+pRecord->startTime.ti_min*60+pRecord->startTime.ti_sec;
-    nsec2=pRecord->endTime.ti_hour*3600+pRecord->endTime.ti_min*60+pRecord->endTime.ti_sec;
+    nsec1=pRecord->startDateTime.thetime.ti_hour*3600+pRecord->startDateTime.thetime.ti_min*60+pRecord->startDateTime.thetime.ti_sec;
+    nsec2=pRecord->endDateTime.thetime.ti_hour*3600+pRecord->endDateTime.thetime.ti_min*60+pRecord->endDateTime.thetime.ti_sec;
 
     if (nsec2<nsec1)
      nsec2+=86400;

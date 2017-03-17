@@ -686,8 +686,8 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
            if (header.Tm<EPSILON)
             pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
 
-           memcpy(&pRecord->startTime,&header.startTime,sizeof(struct time));
-           memcpy(&pRecord->endTime,&header.endTime,sizeof(struct time));
+           memcpy(&pRecord->startDateTime.thetime,&header.startTime,sizeof(struct time));
+           memcpy(&pRecord->endDateTime.thetime,&header.endTime,sizeof(struct time));
 
            pRecord->ccd.indexImage=CCD_SearchForImage((int)header.startTime.ti_hour*3600+header.startTime.ti_min*60+header.startTime.ti_sec,(int)header.endTime.ti_hour*3600+header.endTime.ti_min*60+header.endTime.ti_sec);
 

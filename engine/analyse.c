@@ -3251,6 +3251,8 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
             LambdaSpec = Feno->LambdaK;
           }
 
+
+
           // Make a backup of spectral window limits + gaps
 
           old_range = spectrum_copy(Feno->fit_properties.specrange);
@@ -5311,12 +5313,14 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
         rc=AnalyseLoadVector(pTabFeno->ref1,lambdaRefEtalon,SrefEtalon,n_wavel,1,NULL);
         break;
       }
+
       if (!rc &&
           !(rc=THRD_SpectrumCorrection(pEngineContext,SrefEtalon,n_wavel)) &&
           !(rc=VECTOR_NormalizeVector(SrefEtalon-1,n_wavel_ref,&pTabFeno->refNormFact,"ANALYSE_LoadRef (SrefEtalon) "))) {
         pTabFeno->NDET = n_wavel_ref;
         pTabFeno->displayRef=pTabFeno->useEtalon=pTabFeno->gomeRefFlag=1;
         strcpy(pTabFeno->refFile,pTabFeno->ref1);
+
       }
     }
 

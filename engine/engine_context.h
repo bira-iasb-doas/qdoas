@@ -522,10 +522,9 @@ typedef struct _engineRecordInfo
 
                                                                                 // MFC format
 
-  struct date startDate;
-  struct date endDate;
-  struct time startTime;                                                        // starting time
-  struct time endTime;                                                          // ending time
+  struct datetime startDateTime;
+  struct datetime endDateTime;
+
   float wavelength1;                                                            // first wavelength
   float dispersion[3];                                                          // dispersion parameters
 

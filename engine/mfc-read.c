@@ -667,18 +667,18 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
         else if (today.da_year<1930)
          today.da_year+= 100;
 
-        pRecord->startTime.ti_hour=(unsigned char)hour;
-        pRecord->startTime.ti_min=(unsigned char)min;
-        pRecord->startTime.ti_sec=(unsigned char)sec;
+        pRecord->startDateTime.thetime.ti_hour=(unsigned char)hour;
+        pRecord->startDateTime.thetime.ti_min=(unsigned char)min;
+        pRecord->startDateTime.thetime.ti_sec=(unsigned char)sec;
 
         sscanf(&MFC_header.dateAndTime[18],"%d:%d:%d",&hour,&min,&sec);
 
-        pRecord->endTime.ti_hour=(unsigned char)hour;
-        pRecord->endTime.ti_min=(unsigned char)min;
-        pRecord->endTime.ti_sec=(unsigned char)sec;
+        pRecord->endDateTime.thetime.ti_hour=(unsigned char)hour;
+        pRecord->endDateTime.thetime.ti_min=(unsigned char)min;
+        pRecord->endDateTime.thetime.ti_sec=(unsigned char)sec;
 
-        Tm1=(double)ZEN_NbSec(&today,&pRecord->startTime,0);
-        Tm2=(double)ZEN_NbSec(&today,&pRecord->endTime,0);
+        Tm1=(double)ZEN_NbSec(&today,&pRecord->startDateTime.thetime,0);
+        Tm2=(double)ZEN_NbSec(&today,&pRecord->endDateTime.thetime,0);
 
         Tm1=(Tm1+Tm2)*0.5;
 
@@ -686,10 +686,13 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
         pRecord->present_datetime.thedate.da_mon   = (char) ZEN_FNCaljmon (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
         pRecord->present_datetime.thedate.da_day   = (char) ZEN_FNCaljday (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
 
+        memcpy(&pRecord->startDateTime.thedate,&pRecord->present_datetime.thedate,sizeof(struct date));
+        memcpy(&pRecord->endDateTime.thedate,&pRecord->present_datetime.thedate,sizeof(struct date));
+
         // Data on the current spectrum
 
-        nsec1=pRecord->startTime.ti_hour*3600+pRecord->startTime.ti_min*60+pRecord->startTime.ti_sec;
-        nsec2=pRecord->endTime.ti_hour*3600+pRecord->endTime.ti_min*60+pRecord->endTime.ti_sec;
+        nsec1=pRecord->startDateTime.thetime.ti_hour*3600+pRecord->startDateTime.thetime.ti_min*60+pRecord->startDateTime.thetime.ti_sec;
+        nsec2=pRecord->endDateTime.thetime.ti_hour*3600+pRecord->endDateTime.thetime.ti_min*60+pRecord->endDateTime.thetime.ti_sec;
 
         if (nsec2<nsec1)
          nsec2+=86400;
@@ -886,18 +889,18 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,char *fileName,
     else if (today.da_year<1930)
      today.da_year+= 100;
 
-    pRecord->startTime.ti_hour=(unsigned char)hour;
-    pRecord->startTime.ti_min=(unsigned char)min;
-    pRecord->startTime.ti_sec=(unsigned char)sec;
+    pRecord->startDateTime.thetime.ti_hour=(unsigned char)hour;
+    pRecord->startDateTime.thetime.ti_min=(unsigned char)min;
+    pRecord->startDateTime.thetime.ti_sec=(unsigned char)sec;
 
     fscanf(fp,"%d:%d:%d\n",&hour,&min,&sec);
 
-    pRecord->endTime.ti_hour=(unsigned char)hour;
-    pRecord->endTime.ti_min=(unsigned char)min;
-    pRecord->endTime.ti_sec=(unsigned char)sec;
+    pRecord->endDateTime.thetime.ti_hour=(unsigned char)hour;
+    pRecord->endDateTime.thetime.ti_min=(unsigned char)min;
+    pRecord->endDateTime.thetime.ti_sec=(unsigned char)sec;
 
-    Tm1=(double)ZEN_NbSec(&today,&pRecord->startTime,0);
-    Tm2=(double)ZEN_NbSec(&today,&pRecord->endTime,0);
+    Tm1=(double)ZEN_NbSec(&today,&pRecord->startDateTime.thetime,0);
+    Tm2=(double)ZEN_NbSec(&today,&pRecord->endDateTime.thetime,0);
 
     Tm1=(Tm1+Tm2)*0.5;
 
@@ -905,10 +908,13 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,char *fileName,
     pRecord->present_datetime.thedate.da_mon  = ZEN_FNCaljmon (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
     pRecord->present_datetime.thedate.da_day  = ZEN_FNCaljday (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
 
+    memcpy(&pRecord->startDateTime.thedate,&pRecord->present_datetime.thedate,sizeof(struct date));
+    memcpy(&pRecord->endDateTime.thedate,&pRecord->present_datetime.thedate,sizeof(struct date));
+
     // Data on the current spectrum
 
-    nsec1=pRecord->startTime.ti_hour*3600+pRecord->startTime.ti_min*60+pRecord->startTime.ti_sec;
-    nsec2=pRecord->endTime.ti_hour*3600+pRecord->endTime.ti_min*60+pRecord->endTime.ti_sec;
+    nsec1=pRecord->startDateTime.thetime.ti_hour*3600+pRecord->startDateTime.thetime.ti_min*60+pRecord->startDateTime.thetime.ti_sec;
+    nsec2=pRecord->endDateTime.thetime.ti_hour*3600+pRecord->endDateTime.thetime.ti_min*60+pRecord->endDateTime.thetime.ti_sec;
 
     if (nsec2<nsec1)
      nsec2+=86400;
@@ -1330,14 +1336,14 @@ RC MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
 
     // Calculate the date and time at half of the measurement
 
-    memcpy(&pRecordInfo->startTime,&header.startTime,sizeof(struct time));
-    memcpy(&pRecordInfo->endTime,&header.endTime,sizeof(struct time));
+    memcpy(&pRecordInfo->startDateTime.thetime,&header.startTime,sizeof(struct time));
+    memcpy(&pRecordInfo->endDateTime.thetime,&header.endTime,sizeof(struct time));
 
     measurement_date.da_year = header.measurementDate.da_year;
     measurement_date.da_mon = header.measurementDate.da_mon;
     measurement_date.da_day = header.measurementDate.da_day;
-    Tm1=(double)ZEN_NbSec(&measurement_date,&pRecordInfo->startTime,0);
-    Tm2=(double)ZEN_NbSec(&measurement_date,&pRecordInfo->endTime,0);
+    Tm1=(double)ZEN_NbSec(&measurement_date,&pRecordInfo->startDateTime.thetime,0);
+    Tm2=(double)ZEN_NbSec(&measurement_date,&pRecordInfo->endDateTime.thetime,0);
 
     Tm1=(Tm1+Tm2)*0.5;
 
@@ -1345,10 +1351,13 @@ RC MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
     pRecordInfo->present_datetime.thedate.da_mon  = ZEN_FNCaljmon (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
     pRecordInfo->present_datetime.thedate.da_day  = ZEN_FNCaljday (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
 
+    memcpy(&pRecordInfo->startDateTime.thedate,&pRecordInfo->present_datetime.thedate,sizeof(struct date));
+    memcpy(&pRecordInfo->endDateTime.thedate,&pRecordInfo->present_datetime.thedate,sizeof(struct date));
+
     // Data on the current spectrum
 
-    nsec1=pRecordInfo->startTime.ti_hour*3600+pRecordInfo->startTime.ti_min*60+pRecordInfo->startTime.ti_sec;
-    nsec2=pRecordInfo->endTime.ti_hour*3600+pRecordInfo->endTime.ti_min*60+pRecordInfo->endTime.ti_sec;
+    nsec1=pRecordInfo->startDateTime.thetime.ti_hour*3600+pRecordInfo->startDateTime.thetime.ti_min*60+pRecordInfo->startDateTime.thetime.ti_sec;
+    nsec2=pRecordInfo->endDateTime.thetime.ti_hour*3600+pRecordInfo->endDateTime.thetime.ti_min*60+pRecordInfo->endDateTime.thetime.ti_sec;
 
     if (nsec2<nsec1)
      nsec2+=86400;

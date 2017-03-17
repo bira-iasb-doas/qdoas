@@ -61,11 +61,11 @@ static inline void get_year(struct output_field *this_field __attribute__ ((unus
 }
 
 static inline void get_start_time(struct output_field *this_field __attribute__ ((unused)), struct time *time, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  *time = pEngineContext->recordInfo.startTime;
+  *time = pEngineContext->recordInfo.startDateTime.thetime;
 }
 
 static inline void get_end_time(struct output_field *this_field __attribute__ ((unused)), struct time *time, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  *time = pEngineContext->recordInfo.endTime;
+  *time = pEngineContext->recordInfo.endDateTime.thetime;
 }
 
 static inline void get_julian(struct output_field *this_field __attribute__ ((unused)), unsigned short *julian, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {

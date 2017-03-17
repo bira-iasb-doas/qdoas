@@ -353,16 +353,10 @@ RC ReliUofT(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
    {
     memcpy(&pRecord->present_datetime.thedate,&pUofT->meanDate,sizeof(SHORT_DATE));
     memcpy(&pRecord->present_datetime.thetime,&pUofT->meanTime,sizeof(struct time));
-    memcpy(&pRecord->startTime,&pUofT->startTime,sizeof(struct time));
-    memcpy(&pRecord->endTime,&pUofT->endTime,sizeof(struct time));
-
-    pRecord->startDate.da_year = pUofT->startDate.da_year;
-    pRecord->startDate.da_mon = pUofT->startDate.da_mon;
-    pRecord->startDate.da_day = pUofT->startDate.da_day;
-    
-    pRecord->endDate.da_year = pUofT->endDate.da_year;
-    pRecord->endDate.da_mon = pUofT->endDate.da_mon;
-    pRecord->endDate.da_day = pUofT->endDate.da_day;
+    memcpy(&pRecord->startDateTime.thetime,&pUofT->startTime,sizeof(struct time));
+    memcpy(&pRecord->endDateTime.thetime,&pUofT->endTime,sizeof(struct time));
+    memcpy(&pRecord->startDateTime.thedate,&pUofT->startDate,sizeof(struct date));
+    memcpy(&pRecord->endDateTime.thedate,&pUofT->endDate,sizeof(struct date));
 
     // Get information on the current record
 

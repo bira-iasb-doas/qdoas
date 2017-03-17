@@ -127,23 +127,26 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Date and Time","%02d/%02d/%d %02d:%02d:%02d.%06d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec,pRecord->present_datetime.microseconds);
   else if (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_BIRA_AIRBORNE) || (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_BIRA_MOBILE)) && pRecord->present_datetime.millis)
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Date and Time","%02d/%02d/%d %02d:%02d:%02d.%03d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec,pRecord->present_datetime.millis);
+  else if (pRecord->present_datetime.millis>0)
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Date and Time","%02d/%02d/%d %02d:%02d:%02d.%03d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec,pRecord->present_datetime.millis);
   else
     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Date and Time","%02d/%02d/%d %02d:%02d:%02d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
 
 
-  pDay=&pRecord->startDate;
+  pDay=&pRecord->startDateTime.thedate;
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_STARTDATE])
     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Start date","%02d/%02d/%d",pDay->da_day,pDay->da_mon,pDay->da_year);
-  pDay=&pRecord->endDate;
+  pDay=&pRecord->endDateTime.thedate;
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_ENDDATE])
     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"End date","%02d/%02d/%d",pDay->da_day,pDay->da_mon,pDay->da_year);
 
-  pTime=&pRecord->startTime;
+
+  pTime=&pRecord->startDateTime.thetime;
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_STARTTIME])
-    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Start time","%02d:%02d:%02d",pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
-  pTime=&pRecord->endTime;
+    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Start time","%02d:%02d:%02d.%03d",pTime->ti_hour,pTime->ti_min,pTime->ti_sec,pRecord->startDateTime.millis);
+  pTime=&pRecord->endDateTime.thetime;
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_ENDTIME])
-    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"End time","%02d:%02d:%02d",pTime->ti_hour,pTime->ti_min,pTime->ti_sec);
+    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"End time","%02d:%02d:%02d.%03d",pTime->ti_hour,pTime->ti_min,pTime->ti_sec,pRecord->endDateTime.millis);
 
   if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_BIRA_AIRBORNE) || (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_BIRA_MOBILE))
    {

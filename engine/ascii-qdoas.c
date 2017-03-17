@@ -125,7 +125,7 @@ char *ascFieldsNames[PRJCT_RESULTS_MAX]=
   (char *)"Day Number",                                                         // PRJCT_RESULTS_JULIAN,
   (char *)"Fractional Day",                                                     // PRJCT_RESULTS_JDFRAC,
   (char *)"Fractional Time",                                                    // PRJCT_RESULTS_TIFRAC,
-  (char *)"Scans",                                                              // PRJCT_RESULTS_SCANS,
+  (char *)"Number of scans",                                                    // PRJCT_RESULTS_SCANS,
   (char *)"Rejected",                                                           // PRJCT_RESULTS_NREJ,
   (char *)"Exposure Time",                                                      // PRJCT_RESULTS_TINT,
   (char *)"Solar Zenith Angle ",                                                // PRJCT_RESULTS_SZA,
@@ -386,7 +386,7 @@ RC ASCII_QDOAS_Goto(FILE *specFp,int recordNo)
    {
     while (!rc && !feof(specFp) && asciiLastOffset<indexRecord)
      {
-      for (spectraSize=0;!rc && !feof(specFp) && fgets(fileLine,STRING_LENGTH,specFp) && (spectraSize<asciiSpectraSize);)
+      for (spectraSize=0;!rc && (spectraSize<asciiSpectraSize) && !feof(specFp) && fgets(fileLine,STRING_LENGTH,specFp);)
        if (ASCII_QDOAS_GetLineType(fileLine,&indexField)==ASC_LINE_TYPE_SPECTRA)
         spectraSize++;
 
@@ -599,8 +599,9 @@ RC ASCII_QDOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int
   char *ptr;
   int useDate,useTime;
   int measurementType;
+  int millis;
   RC rc;                                                                        // return code
-  int n_wavel;
+  int n_wavel,n_args;
 
   // Initializations
 
@@ -623,7 +624,7 @@ RC ASCII_QDOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int
     for (i=0;i<n_wavel;i++)
      spectrum[i]=(double)0.;
 
-    for (spectraSize=0;!rc && !feof(specFp) && fgets(fileLine,STRING_LENGTH,specFp) && (spectraSize<asciiSpectraSize);)
+    for (spectraSize=0;!rc && (spectraSize<asciiSpectraSize) && !feof(specFp) && fgets(fileLine,STRING_LENGTH,specFp);)
      {
       if ((lineType=ASCII_QDOAS_GetLineType(fileLine,&indexField))==ASC_LINE_TYPE_FIELD)
        {
@@ -650,11 +651,12 @@ RC ASCII_QDOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int
        // ----------------------------------------------------------------------
           case PRJCT_RESULTS_TIME :
 
-           if (sscanf(keyValue,"%d:%d:%d",&hour,&minute,&sec)==3)
+           if ((n_args=sscanf(keyValue,"%d:%d:%d.%d",&hour,&minute,&sec,&millis))>=3)
             {
              pRecordInfo->present_datetime.thetime.ti_hour=(char)hour;
              pRecordInfo->present_datetime.thetime.ti_min=(char)minute;
              pRecordInfo->present_datetime.thetime.ti_sec=(char)sec;
+             pRecordInfo->present_datetime.millis=(n_args==4)?millis:0;
 
              useTime=1;
             }
@@ -733,11 +735,15 @@ RC ASCII_QDOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int
        // ----------------------------------------------------------------------
           case PRJCT_RESULTS_STARTTIME :
 
-           if (sscanf(keyValue,"%d:%d:%d",&hour,&minute,&sec)==3)
+           if ((n_args=sscanf(keyValue,"%d:%d:%d.%d",&hour,&minute,&sec,&millis))>=3)
             {
-             pRecordInfo->startTime.ti_hour=(char)hour;
-             pRecordInfo->startTime.ti_min=(char)minute;
-             pRecordInfo->startTime.ti_sec=(char)sec;
+             pRecordInfo->startDateTime.thetime.ti_hour=(char)hour;
+             pRecordInfo->startDateTime.thetime.ti_min=(char)minute;
+             pRecordInfo->startDateTime.thetime.ti_sec=(char)sec;
+
+             memcpy(&pRecordInfo->startDateTime.thedate,&pRecordInfo->present_datetime.thedate,sizeof(struct date));
+             pRecordInfo->startDateTime.millis=(n_args==4)?millis:0;
+
             }
            else
             ERROR_SetLast(__func__,(rc=ERROR_TYPE_WARNING),ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
@@ -746,11 +752,14 @@ RC ASCII_QDOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int
        // ----------------------------------------------------------------------
           case PRJCT_RESULTS_ENDTIME :
 
-           if (sscanf(keyValue,"%d:%d:%d",&hour,&minute,&sec)==3)
+           if ((n_args=sscanf(keyValue,"%d:%d:%d.%d",&hour,&minute,&sec,&millis))>=3)
             {
-             pRecordInfo->endTime.ti_hour=(char)hour;
-             pRecordInfo->endTime.ti_min=(char)minute;
-             pRecordInfo->endTime.ti_sec=(char)sec;
+             pRecordInfo->endDateTime.thetime.ti_hour=(char)hour;
+             pRecordInfo->endDateTime.thetime.ti_min=(char)minute;
+             pRecordInfo->endDateTime.thetime.ti_sec=(char)sec;
+
+             memcpy(&pRecordInfo->endDateTime.thedate,&pRecordInfo->present_datetime.thedate,sizeof(struct date));
+             pRecordInfo->endDateTime.millis=(n_args==4)?millis:0;
             }
            else
             ERROR_SetLast(__func__,(rc=ERROR_TYPE_WARNING),ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
@@ -765,6 +774,8 @@ RC ASCII_QDOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int
             pRecordInfo->asc.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_DIRECTSUN;
            else if (strstr(keyValue,"alm")!=NULL)
             pRecordInfo->asc.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_ALMUCANTAR;
+           else if (strstr(keyValue,"hor")!=NULL)
+            pRecordInfo->asc.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_HORIZON;
            else
             pRecordInfo->asc.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH;
           break;
@@ -799,7 +810,7 @@ RC ASCII_QDOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int
          //  pRecordInfo->TotalExpTime = (double)pRecordInfo->NSomme*pRecordInfo->Tint;
          if (useTime)
           {
-           pRecordInfo->TimeDec = (double)pRecordInfo->present_datetime.thetime.ti_hour+pRecordInfo->present_datetime.thetime.ti_min/60.;
+           pRecordInfo->TimeDec = (double)pRecordInfo->present_datetime.thetime.ti_hour+pRecordInfo->present_datetime.thetime.ti_min/60.+pRecordInfo->present_datetime.thetime.ti_sec/3600.+pRecordInfo->present_datetime.millis/3600000.;
            pRecordInfo->localTimeDec=fmod(pRecordInfo->TimeDec+24.+THRD_localShift,(double)24.);
           }
         }
