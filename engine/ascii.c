@@ -73,10 +73,15 @@
 // ===================
 
 // format strings for fscanf
-#define NEXT_DOUBLE "%lf%*[^0-9.\n-]"
-#define NEXT_FLOAT "%f%*[^0-9.\n-]"
-#define NEXT_DATE "%d/%d/%d%*[^\n0-9.-]"
-#define COMMENT_LINE " %1[*;#]%*[^\n]"
+// #define NEXT_DOUBLE "%lf%*[^0-9.\n-]"
+// #define NEXT_FLOAT "%f%*[^0-9.\n-]"
+// #define NEXT_DATE "%d/%d/%d%*[^\n0-9.-]"
+// #define COMMENT_LINE " %1[*;#]%*[^\n]"
+
+#define NEXT_DOUBLE "%lf%*[^0-9.\n\r-]"
+#define NEXT_FLOAT "%f%*[^0-9.\n\r-]"
+#define NEXT_DATE "%d/%d/%d%*[^\n\r0-9.-]"
+#define COMMENT_LINE " %1[*;#]%*[^\n\r]"
 
 #define MAX_ASC_FIELDS 29
 
@@ -102,7 +107,7 @@ MATRIX_OBJECT asciiMatrix;
 // Helper function to check if the next character in a file is '\n' or EOF
 static inline bool line_ends(FILE *fp) {
   int next = fgetc(fp);
-  if (next == '\n' || next == EOF) {
+  if (next == '\n' || next == '\r' || next == EOF) {
     return true;
   } else {
     ungetc(next, fp);
@@ -155,7 +160,7 @@ RC AsciiSkip(ENGINE_CONTEXT *pEngineContext,FILE *specFp,int nSkip)
     char c[2];
     int n_scan = 0;
     while (recordCount<nSkip
-           && (n_scan = fscanf(specFp, " %1[^*;#\n]%*[^\n]", c) ) != EOF ) {
+           && (n_scan = fscanf(specFp, " %1[^*;#\n\r]%*[^\n\r]", c) ) != EOF ) {
       if (n_scan == 1) {
         // no * or ; at start -> line is (part of) a record
         if (pInstr->ascii.format==PRJCT_INSTR_ASCII_FORMAT_LINE) {
@@ -230,10 +235,10 @@ RC ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
     char c[2];
     int n_scan = 0;
-    while ( (n_scan = fscanf(specFp, " %1[^*;#\n]", c) ) != EOF) {
+    while ( (n_scan = fscanf(specFp, " %1[^*;#\n\r]", c) ) != EOF) {
       if (n_scan == 0) {
         // commment, ignore and scan ahead until end of line
-        fscanf(specFp, "%*[^\n]");
+        fscanf(specFp, "%*[^\n\r]");
         continue;
       }
       // no * or ; at start -> line is (part of) a record
@@ -241,7 +246,7 @@ RC ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
       if (pInstr->ascii.format==PRJCT_INSTR_ASCII_FORMAT_LINE) {
         // Each line of the file is a spectrum record
         pEngineContext->recordNumber++;
-        fscanf(specFp, "%*[^\n]");
+        fscanf(specFp, "%*[^\n\r]");
       } else {
         // Spectra records are saved in successive columns
 
@@ -261,7 +266,7 @@ RC ASCII_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
             rc=MATRIX_Allocate(&asciiMatrix,NDET[0]+startCount,nc,0,0,0,__func__);
         } else {
           // scan ahead until end of line
-          fscanf(specFp, "%*[^\n]");
+          fscanf(specFp, "%*[^\n\r]");
         }
         ++itemCount;
 
