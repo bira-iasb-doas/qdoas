@@ -1198,7 +1198,7 @@ RC XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLam
       slitLambda[0]=slitTmp.matrix[0];
       slitVector[0]=slitTmp.matrix[1];
       slitDeriv2[0]=slitTmp.deriv2[1];
-      slitNDET[0]=slitTmp.nl-1;
+      slitNDET[0]=slitTmp.nl;
 
       memcpy(slitTmp.matrix[0],(double *)slitMatrix[0].matrix[0]+1,sizeof(double)*(slitMatrix[0].nl-1));
      }
@@ -1218,6 +1218,7 @@ RC XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLam
    {
     for (i=1,stepF=(double)0.;i<slitNDET[0];i++)
      stepF+=(slitLambda[0][i]-slitLambda[0][i-1]);
+
     stepF/=(slitNDET[0]-1);
    }
   else if ((slitType==SLIT_TYPE_APOD) ||(slitType==SLIT_TYPE_APODNBS))
