@@ -148,6 +148,11 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_ENDTIME])
     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"End time","%02d:%02d:%02d.%03d",pTime->ti_hour,pTime->ti_min,pTime->ti_sec,pRecord->endDateTime.millis);
 
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_TOTALEXPTIME])
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Total Experiment Time (sec)","%.6f",pRecord->TotalExpTime);
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_TOTALACQTIME])
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Total Acquisition Time (sec)","%.6f",pRecord->TotalAcqTime);
+
   if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_BIRA_AIRBORNE) || (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_BIRA_MOBILE))
    {
     pdateTime=&pRecord->uavBira.startTime;

@@ -337,7 +337,8 @@ RC ReliUofT(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
   UOFT_DATA *pUofT;                                                             // pointer to the uoft part of the record
   RC      rc;                                                                   // return code
-  double  tmLocal;                                                              // local time
+  double  tmLocal;
+  int hourDiff;                                                             // local time
 
   // Initializations
 
@@ -367,7 +368,16 @@ RC ReliUofT(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
     pRecord->TDet=(double)pUofT->meanCCDT;                                      // detector temperature
 
     pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
-    pRecord->TotalExpTime=(double)0.;
+    pRecord->TotalAcqTime=(double)pRecord->NSomme*pRecord->Tint;
+
+    hourDiff=(pRecord->endDateTime.thetime.ti_hour>=pRecord->startDateTime.thetime.ti_hour)?
+          pRecord->endDateTime.thetime.ti_hour-pRecord->startDateTime.thetime.ti_hour:
+          pRecord->endDateTime.thetime.ti_hour+24-pRecord->startDateTime.thetime.ti_hour;
+
+    pRecord->TotalExpTime=(double)hourDiff*3600.+
+                                  (pRecord->endDateTime.thetime.ti_min-pRecord->startDateTime.thetime.ti_min)*60.+
+                                  (pRecord->endDateTime.thetime.ti_sec-pRecord->startDateTime.thetime.ti_sec);
+
     pRecord->TimeDec=(double)pRecord->present_datetime.thetime.ti_hour+pRecord->present_datetime.thetime.ti_min/60.+pRecord->present_datetime.thetime.ti_sec/3600.;
 
     pRecord->elevationViewAngle=pUofT->viewElev;

@@ -774,6 +774,14 @@ static inline void get_altitude_end (struct output_field *this_field __attribute
   *altitude = pEngineContext->recordInfo.uavBira.altitudeEnd;
 }
 
+static inline void get_total_exp_time (struct output_field *this_field __attribute__ ((unused)), double *total_exp_time, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  *total_exp_time = pEngineContext->recordInfo.TotalExpTime;
+}
+
+static inline void get_total_acq_time (struct output_field *this_field __attribute__ ((unused)), double *total_acq_time, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  *total_acq_time = pEngineContext->recordInfo.TotalAcqTime;
+}
+
 static inline void get_lambda(struct output_field *this_field __attribute__ ((unused)), double *lambda, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
   const int n_wavel = NDET[indexFenoColumn];
   memcpy(lambda,pEngineContext->buffers.lambda,sizeof(double)*n_wavel);

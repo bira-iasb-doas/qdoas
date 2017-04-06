@@ -338,7 +338,7 @@ RC ReliPDA_EGG_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,i
       // Available data on the current spectrum
 
       pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
-      pRecord->TotalExpTime=(double)0.;
+      pRecord->TotalExpTime=pRecord->TotalAcqTime=(double)pRecord->NSomme*pRecord->Tint;
       pRecord->TimeDec=(double)pRecord->present_datetime.thetime.ti_hour+pRecord->present_datetime.thetime.ti_min/60.+pRecord->present_datetime.thetime.ti_sec/3600.;
 
       tmLocal=pRecord->Tm+THRD_localShift*3600.;
@@ -764,7 +764,7 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
         memcpy(&pRecord->present_datetime.thetime, &header.now, sizeof(struct time));
 
         pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
-        pRecord->TotalExpTime=(double)0.;
+        pRecord->TotalExpTime=pRecord->TotalAcqTime=(double)0.;
         pRecord->TimeDec=(double)header.now.ti_hour+header.now.ti_min/60.+header.now.ti_sec/3600.;
 
         tmLocal=pRecord->Tm+THRD_localShift*3600.;
@@ -817,6 +817,7 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
           pRecord->ReguTemp = header.ReguTemp;
 
           pRecord->azimuthViewAngle  = (azimuthFlag)?(float)header.azimuth:(float)-1.;
+          pRecord->TotalAcqTime=pRecord->TotalExpTime=(double)pRecord->Tint*header.ScansNumber;
 
           memcpy(pRecord->Nom,names,20);
 
@@ -829,6 +830,7 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
           if (newFlag)
            {
             k=0;
+            pRecord->TotalExpTime=(double)0.;
 
             while (TabNSomme[k]!=0)
              {
@@ -850,6 +852,8 @@ RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
               k++;
              }
+
+            pRecord->TotalAcqTime=pRecord->TotalExpTime;
            }
           else if (pBuffers->darkCurrent!=NULL)
            {

@@ -457,7 +457,7 @@ RC ReliSAOZ(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
       pRecord->present_datetime.thetime.ti_sec  = (unsigned char)0;
 
       pRecord->TDet = (double) param[0] * 0.08138 - 273.1;
-      pRecord->TotalExpTime = (double) pRecord->NSomme*pRecord->Tint;
+      pRecord->TotalExpTime=pRecord->TotalAcqTime = (double) pRecord->NSomme*pRecord->Tint;
       pRecord->TimeDec=(double)pRecord->present_datetime.thetime.ti_hour+pRecord->present_datetime.thetime.ti_min/60.;
 
       tmLocal=pRecord->Tm+THRD_localShift*3600.;
@@ -559,7 +559,40 @@ typedef struct
   unsigned char            Humid;
   unsigned char            Libre;
  }
-RCHEADER;
+EFM_1024;
+
+typedef struct
+ {
+  char            Exist,TailleHead;
+  short            TailleSpec;
+  short            NumSpec,Code;
+  char            M_An,M_Mois,M_Jour;
+  char            M_Heur,M_Min,M_Sec;
+  short int               Longi,Latid;
+  short            Altit,N_somm;
+  char            iT_int,CrcS;
+  short int               T_det,T_cais;
+  short int               Dizen,Shift;
+/*  BYTE            P_com;
+  BYTE            R_Heur,R_Min,R_Sec;
+  WORD            Param[8];
+  long            GPStim;
+  short int       Tout,Tsond;
+  WORD            Press;
+  BYTE            Humid;
+  BYTE            Libre;*/
+  float tempe[8]; /* u 6 */
+  int num_spec; /* u 1 */
+  double date; /* u 2 number of days since 1899/12/30 */
+  double longitude; /* u 3 */
+  double latitude; /* u 3 */
+  double altitude; /* u 3 */
+  double sza; /* u 4 */
+  double t_int; /* u 5 conf.spectros */
+  int nsomme; /* u 5 conf.spectros */
+  double tdet;
+ }
+EFM_2048;
 
 // -------------------------------------
 // Array of authorized integration times
@@ -637,7 +670,7 @@ RC ReliSAOZEfm(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
   // Declarations
 
   RECORD_INFO *pRecord;                                                         // pointer to the record part of the engine context
-  RCHEADER     header;                                                          // record header
+  EFM_1024     header;                                                          // record header
   double      *spectrum,SMax;                                                   // the current spectrum and its maximum value
   double       tmLocal;                                                         // measurement local time
   struct date  today;                                                           // date of the current measurement
@@ -662,9 +695,9 @@ RC ReliSAOZEfm(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
    {
     // Complete the reading of the record
 
-    fseek(specFp,(int32_t)sizeof(unsigned int)+(recordNo-1)*sizeof(RCHEADER),SEEK_SET);
-    fread(&header,sizeof(RCHEADER),1,specFp);
-    fseek(specFp,(int32_t)sizeof(unsigned int)+(recordNo-1)*sizeof(double)*n_wavel+pEngineContext->recordNumber*sizeof(RCHEADER),SEEK_SET);
+    fseek(specFp,(int32_t)sizeof(unsigned int)+(recordNo-1)*sizeof(EFM_1024),SEEK_SET);
+    fread(&header,sizeof(EFM_1024),1,specFp);
+    fseek(specFp,(int32_t)sizeof(unsigned int)+(recordNo-1)*sizeof(double)*n_wavel+pEngineContext->recordNumber*sizeof(EFM_1024),SEEK_SET);
     fread(spectrum,sizeof(double)*n_wavel,1,specFp);
 
     if ((today.da_year=header.M_An)<30)
@@ -701,7 +734,7 @@ RC ReliSAOZEfm(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
     memcpy(&pRecord->present_datetime.thedate, &today, sizeof(today));
 
     pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
-    pRecord->TotalExpTime=(double)0.;
+    pRecord->TotalExpTime=pRecord->TotalAcqTime=(double)header.N_somm*pRecord->Tint;
     pRecord->TimeDec=(double)header.M_Heur+header.M_Min/60.+header.M_Sec/3600.;
 
     pRecord->longitude=(double)-header.Longi/100.;

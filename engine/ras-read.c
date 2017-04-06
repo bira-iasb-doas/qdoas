@@ -327,7 +327,7 @@ RC ReliRAS(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
      {
       pRecord->rejected-=pRecord->NSomme;
 
-      pRecord->TotalExpTime=(double)0.;
+      pRecord->TotalExpTime=pRecord->TotalAcqTime=(double)pRecord->Tint*pRecord->NSomme;
       pRecord->TimeDec=(double)pRecord->present_datetime.thetime.ti_hour+pRecord->present_datetime.thetime.ti_min/60.+pRecord->present_datetime.thetime.ti_sec/3600.;
       pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
 //      pRecord->Zm=ZEN_FNTdiz(ZEN_FNCrtjul(&pRecord->Tm),&pRecord->longitude,&pRecord->latitude,&pRecord->Azimuth);

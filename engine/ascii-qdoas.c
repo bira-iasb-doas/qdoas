@@ -77,9 +77,9 @@
 // ===================
 
 // format strings for fscanf
-#define NEXT_DOUBLE "%lf%*[^0-9.\n-]"
-#define NEXT_FLOAT "%f%*[^0-9.\n-]"
-#define NEXT_DATE "%d/%d/%d%*[^\n0-9.-]"
+#define NEXT_DOUBLE "%lf%*[^0-9.\r\n-]"
+#define NEXT_FLOAT "%f%*[^0-9.\r\n-]"
+#define NEXT_DATE "%d/%d/%d%*[^\r\n0-9.-]"
 #define COMMENT_LINE "*;#%%\n"
 #define NUMBER_LINE  "0123456789+-"
 
@@ -119,8 +119,8 @@ char *ascFieldsNames[PRJCT_RESULTS_MAX]=
   (char *)"Spec No",                                                            // PRJCT_RESULTS_SPECNO,
   (char *)"Name",                                                               // PRJCT_RESULTS_NAME,
   (char *)"Date & time (DD/MM/YYYY hh:mm:ss)",                                  // PRJCT_RESULTS_DATE_TIME,
-  (char *)"Date (DD/MM/YYYY)",                                                  // PRJCT_RESULTS_DATE,
-  (char *)"UTC time (hh:mm:ss)",                                                // PRJCT_RESULTS_TIME,
+  (char *)"Date",                                                               // PRJCT_RESULTS_DATE,
+  (char *)"UTC time",                                                           // PRJCT_RESULTS_TIME,
   (char *)"Year",                                                               // PRJCT_RESULTS_YEAR,
   (char *)"Day Number",                                                         // PRJCT_RESULTS_JULIAN,
   (char *)"Fractional Day",                                                     // PRJCT_RESULTS_JDFRAC,
@@ -165,10 +165,10 @@ char *ascFieldsNames[PRJCT_RESULTS_MAX]=
   (char *)"SCIAMACHY Quality Flag",                                             // PRJCT_RESULTS_SCIA_QUALITY,
   (char *)"SCIAMACHY State Index",                                              // PRJCT_RESULTS_SCIA_STATE_INDEX,
   (char *)"SCIAMACHY State Id",                                                 // PRJCT_RESULTS_SCIA_STATE_ID,
-  (char *)"Start Date (dd/mm/yyyy)",                                            // PRJCT_RESULTS_STARTDATE,
-  (char *)"End Date (dd/mm/yyyy)",                                              // PRJCT_RESULTS_ENDDATE,
-  (char *)"UTC Start Time (hh:mm:ss)",                                          // PRJCT_RESULTS_STARTTIME,
-  (char *)"UTC End Time (hh:mm:ss)",                                            // PRJCT_RESULTS_ENDTIME,
+  (char *)"Start Date",                                                         // PRJCT_RESULTS_STARTDATE,
+  (char *)"End Date ",                                                          // PRJCT_RESULTS_ENDDATE,
+  (char *)"UTC Start Time",                                                     // PRJCT_RESULTS_STARTTIME,
+  (char *)"UTC End Time",                                                       // PRJCT_RESULTS_ENDTIME,
   (char *)"Scanning Angle",                                                     // PRJCT_RESULTS_SCANNING,
   (char *)"Filter Number",                                                      // PRJCT_RESULTS_FILTERNUMBER,
   (char *)"Measurement Type",                                                   // PRJCT_RESULTS_MEASTYPE,
@@ -233,6 +233,8 @@ char *ascFieldsNames[PRJCT_RESULTS_MAX]=
   (char *)"Longitude End",                                                      // PRJCT_RESULTS_LONGITEND,
   (char *)"Latitude End",                                                       // PRJCT_RESULTS_LATITEND,
   (char *)"Altitude End",                                                       // PRJCT_RESULTS_ALTITEND,
+  (char *)"Total Measurement Time",                                             // PRJCT_RESULTS_TOTALEXPTIME
+  (char *)"Total Acquisition Time",                                             // PRJCT_RESULTS_TOTALACQTIME
   (char *)"lambda",                                                             // PRJCT_RESULTS_LAMBDA,
   (char *)"spectrum"                                                            // PRJCT_RESULTS_SPECTRA,
  };
@@ -331,6 +333,8 @@ int ASCII_QDOAS_GetLineType(char *fileLine,int *pIndexField)
   for (ptr=fileLine;*ptr!='\0';ptr++)
    if (strchr(COMMENT_LINE,*ptr)!=NULL)
     commentFlag=1;
+   else if (*ptr=='\t')
+    *ptr=' ';
    else if (*ptr!=' ')
     break;
 
@@ -778,6 +782,16 @@ RC ASCII_QDOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int
             pRecordInfo->asc.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_HORIZON;
            else
             pRecordInfo->asc.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH;
+          break;
+       // ----------------------------------------------------------------------
+          case PRJCT_RESULTS_TOTALEXPTIME :
+           if (!sscanf(keyValue,"%lf",&pRecordInfo->TotalExpTime))
+            ERROR_SetLast(__func__,(rc=ERROR_TYPE_WARNING),ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
+          break;
+       // ----------------------------------------------------------------------
+          case PRJCT_RESULTS_TOTALACQTIME :
+           if (!sscanf(keyValue,"%lf",&pRecordInfo->TotalAcqTime))
+            ERROR_SetLast(__func__,(rc=ERROR_TYPE_WARNING),ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
           break;
        // ----------------------------------------------------------------------
           default :

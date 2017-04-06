@@ -712,7 +712,8 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
         memcpy(pRecord->Nom,MFC_header.specname,20);
 
         pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
-        pRecord->TotalExpTime=(double)0.;
+        pRecord->TotalExpTime=(double)nsec2-nsec1;
+        pRecord->TotalAcqTime=(double)MFC_header.int_time;
         pRecord->TimeDec=(double)pRecord->present_datetime.thetime.ti_hour+pRecord->present_datetime.thetime.ti_min/60.+pRecord->present_datetime.thetime.ti_sec/3600.;
 
         pRecord->longitude=-MFC_header.longitude;  // !!!
@@ -919,6 +920,8 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,char *fileName,
     if (nsec2<nsec1)
      nsec2+=86400;
 
+    pRecord->TotalExpTime=nsec2-nsec1;
+
     nsec=(nsec1+nsec2)/2;
 
     pRecord->present_datetime.thetime.ti_hour=(unsigned char)(nsec/3600);
@@ -930,7 +933,7 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,char *fileName,
     fscanf(fp,"%f\n",&tmp);
     fscanf(fp,"%f\n",&tmp);
     fscanf(fp,"SCANS %d\n",&pRecord->NSomme);
-    fscanf(fp,"int_TIME %lf\n",&pRecord->TotalExpTime);
+    fscanf(fp,"int_TIME %lf\n",&pRecord->TotalAcqTime);
     fgets(line,MAX_STR_SHORT_LEN,fp);
     fscanf(fp,"LONGITUDE %lf\n",&pRecord->longitude);
     fscanf(fp,"LATITUDE %lf\n",&pRecord->latitude);
@@ -959,8 +962,8 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,char *fileName,
      	 }
      }
 
-    if ((pRecord->Tint<(double)1.e-3) && (pRecord->TotalExpTime>(double)1.e-3))
-     pRecord->Tint=pRecord->TotalExpTime;
+    if ((pRecord->Tint<(double)1.e-3) && (pRecord->TotalAcqTime>(double)1.e-3))
+     pRecord->Tint=pRecord->TotalAcqTime;
 
     pHeaderSpe->int_time=(float)pRecord->Tint;
     pHeaderSpe->noscans=pRecord->NSomme;
@@ -1120,7 +1123,7 @@ typedef struct
   //! \details the exposure time
   float        exposureTime;
   //! \details the total exposure time (= \ref scansNumber x \ref exposureTime)
-  float        totalExpTime;
+  float        totalAcqTime;
   //! \details the name of the observation site
   char         siteName[64];
   //! \details the longitude of the observation site
@@ -1326,7 +1329,7 @@ RC MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
    	pRecordInfo->Tint=header.exposureTime;
    	pRecordInfo->latitude=header.latitude;
    	pRecordInfo->longitude=header.longitude;
-   	pRecordInfo->TotalExpTime=header.totalExpTime;
+   	pRecordInfo->TotalAcqTime=header.totalAcqTime;
     pRecordInfo->elevationViewAngle=header.elevationAngle;
     pRecordInfo->azimuthViewAngle=header.azimuthAngle;
     pRecordInfo->TDet=header.temperature;
@@ -1344,6 +1347,8 @@ RC MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
     measurement_date.da_day = header.measurementDate.da_day;
     Tm1=(double)ZEN_NbSec(&measurement_date,&pRecordInfo->startDateTime.thetime,0);
     Tm2=(double)ZEN_NbSec(&measurement_date,&pRecordInfo->endDateTime.thetime,0);
+
+    pRecordInfo->TotalExpTime=(double)Tm2-Tm1;
 
     Tm1=(Tm1+Tm2)*0.5;
 

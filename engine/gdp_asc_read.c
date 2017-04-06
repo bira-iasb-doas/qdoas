@@ -860,7 +860,7 @@ RC GDP_ASC_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,FILE *s
       pRecord->SkyObs       = 0;
       pRecord->rejected     = 0;
       pRecord->ReguTemp     = 0.;
-      pRecord->TotalExpTime = pRecord->Tint*pRecord->NSomme;
+      pRecord->TotalExpTime = pRecord->TotalAcqTime = pRecord->Tint*pRecord->NSomme;
       pRecord->Tm           =(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
       pRecord->TimeDec      =(double)pRecord->present_datetime.thetime.ti_hour+pRecord->present_datetime.thetime.ti_min/60.;
       pRecord->longitude    = pGome->longit[4];
@@ -965,7 +965,7 @@ RC GDP_ASC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
            // Continuous functions
 
-           if (pWrkSymbol->type==WRK_SYMBOL_CONTINUOUS) 
+           if (pWrkSymbol->type==WRK_SYMBOL_CONTINUOUS)
             {
              invFlag=0;
 
@@ -1079,7 +1079,7 @@ void GDP_ASC_get_orbit_date(int *year, int *month, int *day) {
     putenv(timezone_old);
   } else {
     // no timezone was set, just remove our setting
-    putenv("TZ="); // for MinGW32, we use this instead of unsetenv("TZ") 
+    putenv("TZ="); // for MinGW32, we use this instead of unsetenv("TZ")
   }
 #endif
 

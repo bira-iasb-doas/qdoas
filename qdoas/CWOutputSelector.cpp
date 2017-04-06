@@ -163,6 +163,8 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_LONGITEND,              "Longitude End"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_LATITEND,               "Latitude End"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ALTITEND,               "Altitude End"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_TOTALEXPTIME,               "Total Measurement Time"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_TOTALACQTIME,               "Total Acquisition Time"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_LAMBDA,               "Lambda"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SPECTRA,               "Spectra"));
 
@@ -348,6 +350,10 @@ void getValidFieldFlags(int *validFlags, int instrument,bool exportFlag)
   validFlags[PRJCT_RESULTS_VIEW_AZIMUTH]=satelliteFlag;
   validFlags[PRJCT_RESULTS_LOS_ZA]=satelliteFlag;
   validFlags[PRJCT_RESULTS_LOS_AZIMUTH]=satelliteFlag;
+
+  validFlags[PRJCT_RESULTS_TOTALACQTIME]=
+  validFlags[PRJCT_RESULTS_TOTALEXPTIME]=!satelliteFlag;
+
 
   // set the appropriate flags
 

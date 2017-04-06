@@ -248,6 +248,10 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
     d->selected[d->nSelected] = PRJCT_RESULTS_LATITEND;
   else if (str == "altitude_end")
     d->selected[d->nSelected] = PRJCT_RESULTS_ALTITEND;
+  else if (str == "total_exp_time")
+   d->selected[d->nSelected] = PRJCT_RESULTS_TOTALEXPTIME;
+  else if (str == "total_acq_time")
+   d->selected[d->nSelected] = PRJCT_RESULTS_TOTALACQTIME;
   else if (str == "lambda")
     d->selected[d->nSelected] = PRJCT_RESULTS_LAMBDA;
   else if (str == "spectra")

@@ -465,6 +465,7 @@ typedef struct _engineRecordInfo
   char   SkyObs;                                                                // observation of the sky (obsolete)
   float  ReguTemp;                                                              // temperature regulation
   double TotalExpTime;                                                          // total experiment time
+  double TotalAcqTime;                                                          // total acquisition time
 
   struct datetime present_datetime;                                             // measurement date and time
 

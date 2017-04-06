@@ -1632,6 +1632,8 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     case PRJCT_RESULTS_LONGITEND : config_string = "longitude_end"; break;
     case PRJCT_RESULTS_LATITEND : config_string = "latitude_end"; break;
     case PRJCT_RESULTS_ALTITEND : config_string = "altitude_end"; break;
+    case PRJCT_RESULTS_TOTALEXPTIME : config_string = "total_exp_time";break;
+    case PRJCT_RESULTS_TOTALACQTIME : config_string = "total_acq_time";break;
     case PRJCT_RESULTS_LAMBDA : config_string = "lambda"; break;
     case PRJCT_RESULTS_SPECTRA : config_string = "spectra"; break;
 

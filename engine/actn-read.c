@@ -345,7 +345,7 @@ RC ReliActon_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int
 
       pRecordInfo->Tm=(double)ZEN_NbSec(&pRecordInfo->present_datetime.thedate,&pRecordInfo->present_datetime.thetime,0);
 
-      pRecordInfo->TotalExpTime = (double)pRecordInfo->NSomme*pRecordInfo->Tint;
+      pRecordInfo->TotalExpTime = pRecordInfo->TotalAcqTime = (double)pRecordInfo->NSomme*pRecordInfo->Tint;
       pRecordInfo->TimeDec = (double)pRecordInfo->present_datetime.thetime.ti_hour+pRecordInfo->present_datetime.thetime.ti_min/60.;
 
       // Spectrum read out

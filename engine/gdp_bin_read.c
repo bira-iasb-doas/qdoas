@@ -817,7 +817,7 @@ RC GDP_BIN_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp,INDEX i
 
       pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
       pRecord->localCalDay=ZEN_FNCaljda(&pRecord->Tm);
-      pRecord->TotalExpTime=(double)0.;
+      pRecord->TotalExpTime=pRecord->TotalAcqTime=(double)0.;
       pRecord->TimeDec=(double)pOrbitFile->gdpBinSpectrum.dateAndTime.ti_hour+
                                  pOrbitFile->gdpBinSpectrum.dateAndTime.ti_min/60.+
                                  pOrbitFile->gdpBinSpectrum.dateAndTime.ti_sec/3600.;

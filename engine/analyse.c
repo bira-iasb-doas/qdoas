@@ -3229,7 +3229,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
           Lambda=Feno->LambdaK;
           LambdaSpec=Feno->Lambda;
 
-          // For OMI, Tropomi and GOME-2, interpolate earthshine
+          // For OMI, Tropomi and GOME-2, interpolate earthshine                // FRM4DOAS : check with Michel what to do with ASCII spectra
           // spectrum onto the solar reference wavelength grid
           if (pInstrumental->readOutFormat == PRJCT_INSTR_FORMAT_OMI
               || pInstrumental->readOutFormat == PRJCT_INSTR_FORMAT_TROPOMI

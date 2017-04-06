@@ -723,7 +723,7 @@ RC ReliNOAA(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
     pRecord->Tint=(double)pRecordNoaa->dataRecord.integrationTime;                // integration time
     pRecord->TDet=(double)pRecordNoaa->detectorRecord.detectorTemperature;        // detector temperature
     pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
-    pRecord->TotalExpTime=(double)pRecordNoaa->dataRecord.exposureTime;
+    pRecord->TotalAcqTime=pRecord->TotalExpTime=(double)pRecord->NSomme*pRecord->Tint;
     pRecord->TimeDec=(double)pRecord->present_datetime.thetime.ti_hour+pRecord->present_datetime.thetime.ti_min/60.+pRecord->present_datetime.thetime.ti_sec/3600.;
 
     // The spectrum

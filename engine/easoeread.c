@@ -297,7 +297,6 @@ RC ReliEASOE(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
     memcpy(&pRecord->present_datetime.thetime,&drkRecord.present_time,sizeof(struct time));
 
     pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
-    pRecord->TotalExpTime=(double)0.;
     pRecord->TimeDec=(double)speRecord.present_time.ti_hour+speRecord.present_time.ti_min/60.+speRecord.present_time.ti_sec/3600.;
 
     tmLocal=pRecord->Tm+THRD_localShift*3600.;
@@ -308,6 +307,8 @@ RC ReliEASOE(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
     pRecord->Tint     = (double)0.001*speRecord.t_int;
     pRecord->NSomme   = speRecord.n_somm;
     pRecord->SkyObs   = speRecord.SkyObs;
+
+    pRecord->TotalExpTime=pRecord->TotalAcqTime=(double)pRecord->NSomme*pRecord->Tint;
 
     if (dateFlag && (pRecord->localCalDay!=localDay))
      rc=ERROR_ID_FILE_RECORD;

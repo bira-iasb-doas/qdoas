@@ -441,7 +441,9 @@ RC MKZY_ReadRecord(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp)
     pRecord->present_datetime.thetime.ti_sec=(unsigned char)((nsec%3600)%60);
 
     pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
-    pRecord->TotalExpTime=(double)0.;
+    pRecord->TotalExpTime=(double)nsec2-nsec1;
+
+    pRecord->TotalAcqTime=(double)pRecord->NSomme*pRecord->Tint;
     pRecord->TimeDec=(double)pRecord->present_datetime.thetime.ti_hour+pRecord->present_datetime.thetime.ti_min/60.+pRecord->present_datetime.thetime.ti_sec/3600.;
     pRecord->Zm=ZEN_FNTdiz(ZEN_FNCrtjul(&pRecord->Tm),&longitude,&pRecord->latitude,&pRecord->Azimuth);
 

@@ -175,6 +175,7 @@ RC AIRBORNE_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int lo
   double        *spectrum;                                                      // the current spectrum
   double         tmLocal;                                                       // measurement local time
   double         timeDec;
+  int            nsec1,nsec2;
   RC             rc;                                                            // return code
 
   // Initializations
@@ -237,12 +238,19 @@ RC AIRBORNE_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int lo
  	  pRecord->uavBira.startTime.microseconds=0;
     pRecord->uavBira.endTime.microseconds=0;
 
+    nsec1=pRecord->uavBira.startTime.thetime.ti_hour*3600+pRecord->uavBira.startTime.thetime.ti_min*60+pRecord->uavBira.startTime.thetime.ti_sec;
+    nsec2=pRecord->uavBira.endTime.thetime.ti_hour*3600+pRecord->uavBira.endTime.thetime.ti_min*60+pRecord->uavBira.endTime.thetime.ti_sec;
+
+    if (nsec2<nsec1)
+     nsec2+=86400;
+
  	  // memcpy(&pRecord->uavBira.gpsStartTime,&header.gpsTime,sizeof(struct time));           // to delete -> to confirm by Alexis
  	  // memcpy(&pRecord->uavBira.gpsEndTime,&header.gpsTimeEnd,sizeof(struct time));
 
 	   pRecord->Tm=(double)(ZEN_NbSec(&pRecord->present_datetime.thedate,&header.now,0)+0.001*header.msBegin+ZEN_NbSec(&pRecord->present_datetime.thedate,&header.endMeas,0)+0.001*header.msEnd)*0.5;
     pRecord->Zm=(double)ZEN_FNTdiz(ZEN_FNCrtjul(&pRecord->Tm),&pRecord->longitude,&pRecord->latitude,&pRecord->Azimuth);
-    pRecord->TotalExpTime=(double)header.totalTime;
+    pRecord->TotalAcqTime=(double)header.totalTime;
+    pRecord->TotalExpTime=(double)nsec2-nsec1;
 
     if (header.endMeas.ti_hour || header.endMeas.ti_min || header.endMeas.ti_sec)
      pRecord->TimeDec=(double)(header.now.ti_hour+header.now.ti_min/60.+(header.now.ti_sec+0.001*header.msBegin)/3600.+header.endMeas.ti_hour+header.endMeas.ti_min/60.+(header.endMeas.ti_sec+0.001*header.msEnd)/3600.)*0.5;

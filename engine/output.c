@@ -1092,6 +1092,12 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
      case PRJCT_RESULTS_ALTITEND:
        register_field( (struct output_field) { .basic_fieldname = "Altitude End", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_altitude_end });
        break;
+     case PRJCT_RESULTS_TOTALEXPTIME:
+       register_field( (struct output_field) { .basic_fieldname = "Total Experiment Time (sec)", .memory_type = OUTPUT_DOUBLE, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_total_exp_time});
+       break;
+     case PRJCT_RESULTS_TOTALACQTIME:
+       register_field( (struct output_field) { .basic_fieldname = "Total Acquisition Time (sec)", .memory_type = OUTPUT_DOUBLE, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_total_acq_time});
+       break;
      default:
        break;
      }
@@ -1235,13 +1241,13 @@ static void OutputRegisterFieldsToExport(const ENGINE_CONTEXT *pEngineContext, c
        register_field( (struct output_field) { .basic_fieldname = "Name", .memory_type = OUTPUT_STRING, .resulttype = fieldtype, .format = "%s", .get_data = (func_void)&get_name });
        break;
      case PRJCT_RESULTS_DATE_TIME:  // !!! EXPORT FUNCTION !!!
-       register_field( (struct output_field) { .basic_fieldname = "Date & time (DD/MM/YYYY hh:  // !!! EXPORT FUNCTION !!!mm:  // !!! EXPORT FUNCTION !!!ss)", .memory_type = OUTPUT_DATETIME, .resulttype = fieldtype, .format = format_datetime, .get_data = (func_void)func_datetime });
+       register_field( (struct output_field) { .basic_fieldname = "Date & time (DD/MM/YYYY hh:mm:ss)", .memory_type = OUTPUT_DATETIME, .resulttype = fieldtype, .format = format_datetime, .get_data = (func_void)func_datetime });
        break;
      case PRJCT_RESULTS_DATE:  // !!! EXPORT FUNCTION !!!
        register_field( (struct output_field) { .basic_fieldname = "Date (DD/MM/YYYY)", .memory_type = OUTPUT_DATE, .resulttype = fieldtype, .format = "%02d/%02d/%d", .get_data = (func_void)&get_date });
        break;
      case PRJCT_RESULTS_TIME:  // !!! EXPORT FUNCTION !!!
-       register_field( (struct output_field) { .basic_fieldname = "UTC Time (hh:  // !!! EXPORT FUNCTION !!!mm:  // !!! EXPORT FUNCTION !!!ss)", .memory_type = OUTPUT_TIME, .resulttype = fieldtype, .format = "%02d:  // !!! EXPORT FUNCTION !!!%02d:  // !!! EXPORT FUNCTION !!!%02d", .get_data = (func_void)&get_time });
+       register_field( (struct output_field) { .basic_fieldname = "UTC Time (hh:mm:ss)", .memory_type = OUTPUT_TIME, .resulttype = fieldtype, .format = "%02d:%02d:%02d", .get_data = (func_void)&get_time });
        break;
      case PRJCT_RESULTS_YEAR:  // !!! EXPORT FUNCTION !!!
        register_field( (struct output_field) { .basic_fieldname = "Year", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%-4d", .get_data = (func_void)&get_year });
@@ -1355,10 +1361,10 @@ static void OutputRegisterFieldsToExport(const ENGINE_CONTEXT *pEngineContext, c
        register_field( (struct output_field) { .basic_fieldname = "SCIAMACHY State Id", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%-5d", .get_data = (func_void)&get_scia_state_id });
        break;
      case PRJCT_RESULTS_STARTTIME:  // !!! EXPORT FUNCTION !!!
-       register_field( (struct output_field) { .basic_fieldname = "UTC Start Time", .memory_type = OUTPUT_TIME, .resulttype = fieldtype, .format = "%02d:  // !!! EXPORT FUNCTION !!!%02d:  // !!! EXPORT FUNCTION !!!%02d", .get_data = (func_void)&get_start_time });
+       register_field( (struct output_field) { .basic_fieldname = "UTC Start Time", .memory_type = OUTPUT_TIME, .resulttype = fieldtype, .format = "%02d:%02d:%02d", .get_data = (func_void)&get_start_time });
        break;
      case PRJCT_RESULTS_ENDTIME:  // !!! EXPORT FUNCTION !!!
-       register_field( (struct output_field) { .basic_fieldname = "UTC End Time", .memory_type = OUTPUT_TIME, .resulttype = fieldtype, .format = "%02d:  // !!! EXPORT FUNCTION !!!%02d:  // !!! EXPORT FUNCTION !!!%02d", .get_data = (func_void)&get_end_time });
+       register_field( (struct output_field) { .basic_fieldname = "UTC End Time", .memory_type = OUTPUT_TIME, .resulttype = fieldtype, .format = "%02d:%02d:%02d", .get_data = (func_void)&get_end_time });
        break;
      case PRJCT_RESULTS_SCANNING:  // !!! EXPORT FUNCTION !!!
        register_field( (struct output_field) { .basic_fieldname = "Scanning angle", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)func_scanning_angle });
@@ -1472,10 +1478,10 @@ static void OutputRegisterFieldsToExport(const ENGINE_CONTEXT *pEngineContext, c
        register_field( (struct output_field) { .basic_fieldname = "Precalculated flux", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_precalculated_flux, .data_cols = 4, .column_number_format="(%d)" });
        break;
      case PRJCT_RESULTS_STARTGPSTIME:  // !!! EXPORT FUNCTION !!!
-       register_field( (struct output_field) { .basic_fieldname = "Start Time (hhmmss.ms)", .memory_type = OUTPUT_DATETIME, .resulttype = fieldtype, .format = format_datetime, .get_data = (func_void)&get_gps_start_time });
+       register_field( (struct output_field) { .basic_fieldname = "Start Time (hh:mm:ss.ms)", .memory_type = OUTPUT_DATETIME, .resulttype = fieldtype, .format = format_datetime, .get_data = (func_void)&get_gps_start_time });
        break;
      case PRJCT_RESULTS_ENDGPSTIME:  // !!! EXPORT FUNCTION !!!
-       register_field( (struct output_field) { .basic_fieldname = "Stop Time (hhmmss.ms)", .memory_type = OUTPUT_DATETIME, .resulttype = fieldtype, .format = format_datetime, .get_data = (func_void)&get_gps_end_time });
+       register_field( (struct output_field) { .basic_fieldname = "Stop Time (hh:mm:ss.ms)", .memory_type = OUTPUT_DATETIME, .resulttype = fieldtype, .format = format_datetime, .get_data = (func_void)&get_gps_end_time });
        break;
      case PRJCT_RESULTS_LONGITEND:  // !!! EXPORT FUNCTION !!!
        register_field( (struct output_field) { .basic_fieldname = "Longitude End", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_longitude_end });
@@ -1485,6 +1491,12 @@ static void OutputRegisterFieldsToExport(const ENGINE_CONTEXT *pEngineContext, c
        break;
      case PRJCT_RESULTS_ALTITEND:  // !!! EXPORT FUNCTION !!!
        register_field( (struct output_field) { .basic_fieldname = "Altitude End", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_altitude_end });
+       break;
+     case PRJCT_RESULTS_TOTALEXPTIME:  // !!! EXPORT FUNCTION !!!
+       register_field( (struct output_field) { .basic_fieldname = "Total Experiment Time (sec)", .memory_type = OUTPUT_DOUBLE, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_total_exp_time});
+       break;
+     case PRJCT_RESULTS_TOTALACQTIME:  // !!! EXPORT FUNCTION !!!
+       register_field( (struct output_field) { .basic_fieldname = "Total Acquisition Time (sec)", .memory_type = OUTPUT_DOUBLE, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_total_acq_time});
        break;
      case PRJCT_RESULTS_LAMBDA:  // !!! EXPORT FUNCTION !!!
        register_field( (struct output_field) { .basic_fieldname = "Lambda", .memory_type = OUTPUT_DOUBLE, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_lambda, .data_cols = max_ndet, .column_number_format="(%d)" });

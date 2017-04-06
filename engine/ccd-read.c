@@ -466,6 +466,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 //  double offset;                                                                // offset correction
   double tmLocal;
   INDEX i,j,k;                                                                  // indexes to browse vectors
+  int nsec1,nsec2;
   int measurementType;
   RC rc,rcFread;                                                                // return code
 
@@ -597,7 +598,6 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
            pRecord->SkyObs    = 8;
            pRecord->TDet      = (double)header.currentTemperature;
            pRecord->ReguTemp  = (double)0.;
-           pRecord->TotalExpTime = (double)0.;
 
            pRecord->als.alsFlag=0;
            pRecord->als.scanIndex=-1;
@@ -689,6 +689,15 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
            memcpy(&pRecord->startDateTime.thetime,&header.startTime,sizeof(struct time));
            memcpy(&pRecord->endDateTime.thetime,&header.endTime,sizeof(struct time));
 
+           nsec1=pRecord->startDateTime.thetime.ti_hour*3600+pRecord->startDateTime.thetime.ti_min*60+pRecord->startDateTime.thetime.ti_sec;
+           nsec2=pRecord->endDateTime.thetime.ti_hour*3600+pRecord->endDateTime.thetime.ti_min*60+pRecord->endDateTime.thetime.ti_sec;
+
+           if (nsec2<nsec1)
+            nsec2+=86400;
+
+           pRecord->TotalExpTime=(double)nsec2-nsec1;
+           pRecord->TotalAcqTime = (double)pRecord->NSomme*pRecord->Tint;
+
            pRecord->ccd.indexImage=CCD_SearchForImage((int)header.startTime.ti_hour*3600+header.startTime.ti_min*60+header.startTime.ti_sec,(int)header.endTime.ti_hour*3600+header.endTime.ti_min*60+header.endTime.ti_sec);
 
            pRecord->elevationViewAngle=
@@ -718,9 +727,11 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
              for (i=0;i<n_wavel;i++)
               pBuffers->darkCurrent[i]=(double)0.;
 
+             pRecord->TotalAcqTime=0.;
+
              for (k=0;k<nTint;k++)
               {
-               pRecord->TotalExpTime+=(double)ccdTabNTint[k]*ccdTabTint[k];
+               pRecord->TotalAcqTime+=(double)ccdTabNTint[k]*ccdTabTint[k];
 
                for (j=0;j<MAXTPS;j++)
                 if (ccdTabTint[k]<=predTint[j])
@@ -1050,7 +1061,7 @@ RC ReliCCD(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
       pRecord->TDet      = (double)-40.;
       pRecord->ReguTemp  = (float)DetInfo.ReguTemp;
 
-      pRecord->TotalExpTime=(double)0.;
+      pRecord->TotalExpTime=pRecord->TotalAcqTime=(double)pRecord->NSomme*pRecord->Tint;
       pRecord->TimeDec=(double)DetInfo.Hour.ti_hour+DetInfo.Hour.ti_min/60.;
 
       pRecord->present_datetime.thedate.da_year  = DetInfo.Day.da_year;
@@ -1231,10 +1242,12 @@ RC ReliCCDTrack(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
          {
           // Data on the current spectrum
 
-          pRecord->TotalExpTime=(double)0.;
+          pRecord->TotalAcqTime=(double)0.;
 
           for (i=0;TabNSomme[i]>0;i++)
-           pRecord->TotalExpTime+=(double)TabNSomme[i]*TabTint[i];
+           pRecord->TotalAcqTime+=(double)TabNSomme[i]*TabTint[i];
+
+          pRecord->TotalExpTime=pRecord->TotalAcqTime;
 
           for (i=0;i<(DetInfo.Scans+DetInfo.rejected);i++)
            pBuffers->specMax[i]=(double)ISpecMax[i]*4.;
@@ -1250,7 +1263,6 @@ RC ReliCCDTrack(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
           pRecord->TDet      = (double)-40.;
           pRecord->ReguTemp  = (float)DetInfo.ReguTemp;
 
-          pRecord->TotalExpTime=(double)0.;
           pRecord->TimeDec=(double)DetInfo.Hour.ti_hour+DetInfo.Hour.ti_min/60.;
 
           pRecord->present_datetime.thedate.da_year  = DetInfo.Day.da_year;
