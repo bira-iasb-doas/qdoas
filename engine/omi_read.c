@@ -1238,8 +1238,7 @@ static const double pows[] = {
 static void omi_make_double(int16 mantissa[], int8 exponent[], int32 n_wavel, double* result) {
   int i;
   for (i=0; i<n_wavel; i++) {
-    if (exponent[i] > sizeof(pows)/sizeof(pows[0]) ||
-        exponent[i] < 0) {
+    if (exponent[i] < 0 || exponent[i] >= sizeof(pows)/sizeof(pows[0]) ) {
       result[i] = 1;
     } else {
       result[i] = (double)mantissa[i] * pows[exponent[i]];
