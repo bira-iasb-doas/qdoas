@@ -307,7 +307,7 @@ extern double *x,*Lambda,*LambdaSpec,
 // PROTOTYPES
 // ----------
 
-RC ANALYSE_Function (const double * const X, const double * const Y, const double *SigmaY, double *Yfit, int Npts,
+RC ANALYSE_Function (double *X, double *Y, const double *SigmaY, double *Yfit, int Npts,
                       double *fitParamsC, double *fitParamsF,INDEX indexFenoColumn, struct fit_properties *fitprops);
 RC   ANALYSE_CheckLambda(WRK_SYMBOL *pWrkSymbol, const double *lambda, const int n_wavel);
 RC   ANALYSE_XsInterpolation(FENO *pTabFeno, const double *newLambda,INDEX indexFenoColumn);

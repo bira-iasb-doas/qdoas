@@ -402,7 +402,7 @@ char *CurfitError(char *string,INDEX indexError,double *p,double *deltap)
 //               ERROR_ID_NO if successful
 // -----------------------------------------------------------------------------
 
-static RC CurfitNumDeriv(const double *specX, const double *srefX, const double *sigmaY, int nY, const double *Yfit,
+static RC CurfitNumDeriv(double *specX, double *srefX, const double *sigmaY, int nY, const double *Yfit,
                          double *P, double *A, double *deltaA,int indexA,double **deriv,INDEX indexFenoColumn, struct fit_properties *fitprops)
  {
   // Declarations
@@ -488,7 +488,7 @@ static RC CurfitNumDeriv(const double *specX, const double *srefX, const double 
 //               ERROR_ID_NO if successful
 // -----------------------------------------------------------------------------
 
-static RC CurfitDerivFunc(const double *specX, double *srefX, double *sigmaY,int nY, const double *Yfit,
+static RC CurfitDerivFunc(double *specX, double *srefX, double *sigmaY,int nY, const double *Yfit,
                    double *P, double *A, double *deltaA,double **deriv,INDEX indexFenoColumn,struct fit_properties *fitprops) {
 
   CROSS_REFERENCE *TabCross=Feno->TabCross; // the list of cross sections involved in the fitting

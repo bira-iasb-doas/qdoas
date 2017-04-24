@@ -1941,7 +1941,7 @@ RC AnalyseSaveResiduals(char *fileName,ENGINE_CONTEXT *pEngineContext, const int
 // Function : Cross sections and spectrum alignment using spline fitting functions and new Yfit computation
 // --------------------------------------------------------------------------------------------------------
 
-RC ANALYSE_Function( const double * const spectrum_orig, const double * const reference, const double *SigmaY, double *Yfit, int Npts,
+RC ANALYSE_Function(double *spectrum_orig, double *reference, const double *SigmaY, double *Yfit, int Npts,
                      double *fitParamsC, double *fitParamsF,INDEX indexFenoColumn, struct fit_properties *fitprops)
 {
   // Declarations

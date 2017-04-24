@@ -53,7 +53,10 @@ static size_t nCalibWindows;
  */
 
 RC hdfeos5_open(const ENGINE_CONTEXT *pEngineContext, const char *filename) {
-  strcat(filename, output_file_extensions[HDFEOS5]);
+  const char *ext=output_file_extensions[HDFEOS5];
+  char filename_ext[1 + strlen(filename) + strlen(ext)];
+  strcpy(filename_ext,filename);
+  strcat(filename_ext, ext);
   RC rc = ERROR_ID_NO;
 
   const char *swath_name = pEngineContext->project.asciiResults.swath_name;
@@ -71,21 +74,21 @@ RC hdfeos5_open(const ENGINE_CONTEXT *pEngineContext, const char *filename) {
   }
 
   // test if file exists; if it already exists, size should be 0.
-  rc = hdfeos5_allow_file(filename);
+  rc = hdfeos5_allow_file(filename_ext);
   if (rc == ERROR_ID_NO) {
     // new file, go ahead
-    hid_t result_open = HE5_SWopen(filename, H5F_ACC_TRUNC);
+    hid_t result_open = HE5_SWopen(filename_ext, H5F_ACC_TRUNC);
     if(result_open != FAIL) {
       output_file = result_open;
     } else {
-      rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_OPEN, filename);
+      rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_OPEN, filename_ext);
       goto cleanup;
     }
     hid_t result_create = HE5_SWcreate(output_file, swath_name);
     if (result_create != FAIL) {
       swath_id = result_create;
     } else {
-      rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_SWATH, swath_name, filename);
+      rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_SWATH, swath_name, filename_ext);
       goto cleanup;
     }
     rc = create_dimensions();
