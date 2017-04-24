@@ -4222,8 +4222,9 @@ RC ANALYSE_LoadCross(ENGINE_CONTEXT *pEngineContext, const ANALYSIS_CROSS *cross
       //  - ring convolution: 4 columns
       //  - no convolution:  1 + ANALYSE_swathSize columns
       //    (preconvolved xs for each detector row)
-      if ( (pTabFeno->useKurucz && pEngineContext->project.kurucz.fwhmFit)
-           || pEngineContext->project.slit.slitFunction.slitType != SLIT_TYPE_NONE) {
+      if ( ( (pTabFeno->hidden || pTabFeno->useKurucz) // we are in the calibration procedure, or in an analysis window which relies on Kuruz calibration
+             && pEngineContext->project.kurucz.fwhmFit) // slit function was fit in Kurucz calibration procedure
+           || pEngineContext->project.slit.slitFunction.slitType != SLIT_TYPE_NONE) { // slit function is specified in the project's slit tab
         // the analysis uses convolution (Kurucz-fitted slit function or slit function set in slit tab):
         switch (pCross->crossType) {
         case ANLYS_CROSS_ACTION_CONVOLUTE:
