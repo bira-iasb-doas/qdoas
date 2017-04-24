@@ -296,8 +296,8 @@ static void save_calib_data(struct output_field *output_field, int index_calib) 
   }
 }
 
-static void register_analysis_output(const PRJCT_RESULTS *pResults, int indexFeno, int index_calib, const char *windowName);
-static void register_cross_results(const PRJCT_RESULTS *pResults, const FENO *pTabFeno, int indexFeno, int index_calib, const char *windowName);
+static int register_analysis_output(const PRJCT_RESULTS *pResults, int indexFeno, int index_calib, const char *windowName);
+static int register_cross_results(const PRJCT_RESULTS *pResults, const FENO *pTabFeno, int indexFeno, int index_calib, const char *windowName);
 
 /*! \brief Correct a cross section using wavelength dependent AMF vector
 
@@ -1514,7 +1514,10 @@ static void OutputRegisterFieldsToExport(const ENGINE_CONTEXT *pEngineContext, c
 
 /*! \brief Helper function to initialize a new output_field in the
     \ref output_data_calib array.*/
-static void register_calibration_field(struct output_field newfield) {
+static int register_calibration_field(struct output_field newfield) {
+  if (calib_num_fields == MAX_FIELDS) {
+    return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_BUG, "Maximum number of calibration output fields reached.");
+  }
   struct output_field *calibfield = &output_data_calib[calib_num_fields++];
   *calibfield = newfield; // copy all contents
   if(calibfield->data_cols == 0) // data_cols = 1 as default value -> we only need to set data_cols explicitly if we want a multi-column field
@@ -1530,15 +1533,19 @@ static void register_calibration_field(struct output_field newfield) {
   calibfield->get_cross_results = &get_cross_results_calib;
   calibfield->memory_type = OUTPUT_DOUBLE;
   calibfield->format = FORMAT_DOUBLE;
+
+  return ERROR_ID_NO;
 }
 
 /*! \brief Register selected output fields for the reference spectrum
     calibration.*/
-static void register_calibration(int kurucz_index, int index_row, int index_feno) {
+static int register_calibration(int kurucz_index, int index_row, int index_feno) {
   FENO *pTabFeno=&TabFeno[index_row][kurucz_index];
 
-  register_calibration_field((struct output_field){.basic_fieldname="Wavelength", .resulttype = PRJCT_RESULTS_WAVELENGTH, .index_feno=index_feno, .index_row=index_row, .index_cross=ITEM_NONE, .get_data=(func_void)&get_wavelength_calib });
-  register_calibration_field((struct output_field){.basic_fieldname="RMS", .resulttype = PRJCT_RESULTS_RMS, .index_feno=index_feno, .index_row=index_row, .index_cross=ITEM_NONE, .get_data=(func_void)&get_rms_calib });
+  int rc = register_calibration_field((struct output_field){.basic_fieldname="Wavelength", .resulttype = PRJCT_RESULTS_WAVELENGTH, .index_feno=index_feno, .index_row=index_row, .index_cross=ITEM_NONE, .get_data=(func_void)&get_wavelength_calib });
+  if (rc != ERROR_ID_NO) return rc;
+  rc = register_calibration_field((struct output_field){.basic_fieldname="RMS", .resulttype = PRJCT_RESULTS_RMS, .index_feno=index_feno, .index_row=index_row, .index_cross=ITEM_NONE, .get_data=(func_void)&get_rms_calib });
+  if (rc != ERROR_ID_NO) return rc;
 
   for (int indexTabCross=0;indexTabCross<pTabFeno->NTabCross;indexTabCross++) {
     CROSS_RESULTS *pTabCrossResults = &pTabFeno->TabCrossResults[indexTabCross];
@@ -1585,10 +1592,13 @@ static void register_calibration(int kurucz_index, int index_row, int index_feno
         newfield.index_feno=index_feno;
         newfield.index_row=index_row;
         newfield.index_cross=indexTabCross;
-        register_calibration_field(newfield);
+        rc = register_calibration_field(newfield);
+        if (rc != ERROR_ID_NO) return rc;
       }
     }
   }
+
+  return rc;
 }
 
 /*! \brief Register all output related to analysis (or run
@@ -1600,7 +1610,7 @@ static void register_calibration(int kurucz_index, int index_row, int index_feno
 
   \param [in] pEngineContext   structure including information on project options
 */
-static void OutputRegisterParam(const ENGINE_CONTEXT *pEngineContext)
+static int OutputRegisterParam(const ENGINE_CONTEXT *pEngineContext)
 {
   int indexFenoColumn = 0;
   // if using OMI: increase indexFenoColumn until we find a used track, otherwise: use track 0
@@ -1617,8 +1627,10 @@ static void OutputRegisterParam(const ENGINE_CONTEXT *pEngineContext)
     const FENO *pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
     if(!outputRunCalib && !pTabFeno->hidden) {
       // run analysis: skip calibration settings
-      register_analysis_output(pResults, indexFeno, ITEM_NONE, pTabFeno->windowName);
-      register_cross_results(pResults, pTabFeno, indexFeno, ITEM_NONE, pTabFeno->windowName);
+      int rc = register_analysis_output(pResults, indexFeno, ITEM_NONE, pTabFeno->windowName);
+      if (rc != ERROR_ID_NO) return rc;
+      rc = register_cross_results(pResults, pTabFeno, indexFeno, ITEM_NONE, pTabFeno->windowName);
+      if (rc != ERROR_ID_NO) return rc;
     }
     else if (outputRunCalib && pTabFeno->hidden) {
       // run calibration: use TabFeno with calibration settings, register parameters
@@ -1626,16 +1638,21 @@ static void OutputRegisterParam(const ENGINE_CONTEXT *pEngineContext)
       for (int indexWin=0; indexWin<KURUCZ_buffers[indexFenoColumn].Nb_Win; indexWin++) {
         char window_name[MAX_ITEM_NAME_LEN+1];
         sprintf(window_name,"RunCalib(%d)",indexWin+1);
-        register_analysis_output(pResults, indexFeno, indexWin, window_name);
-        register_cross_results(pResults, pTabFeno, indexFeno, indexWin, window_name);
+        int rc = register_analysis_output(pResults, indexFeno, indexWin, window_name);
+        if (rc != ERROR_ID_NO) return rc;
+        rc = register_cross_results(pResults, pTabFeno, indexFeno, indexWin, window_name);
+        if (rc != ERROR_ID_NO) return rc;
       }
     }
   }
+  return ERROR_ID_NO;
 }
 
 /*! \brief helper function to initialize an output_field containing analysis results. */
-static void register_analysis_field(const struct output_field* fieldcontent, int index_feno, int index_calib, int index_cross, const char *window_name, const char *symbol_name) {
-
+static int register_analysis_field(const struct output_field* fieldcontent, int index_feno, int index_calib, int index_cross, const char *window_name, const char *symbol_name) {
+  if (output_num_fields == MAX_FIELDS) {
+    return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_BUG, "Maximum number of analysis output fields reached.");
+  }
   struct output_field *newfield = &output_data_analysis[output_num_fields++];
   *newfield = *fieldcontent;
   char *full_fieldname = malloc(strlen(newfield->basic_fieldname) + strlen(symbol_name) +1);
@@ -1652,6 +1669,7 @@ static void register_analysis_field(const struct output_field* fieldcontent, int
   newfield->get_cross_results = (outputRunCalib) ? &get_cross_results_calib : &get_cross_results_analysis;
   if (newfield->num_attributes) // if we have attributes, allocate a copy
     newfield->attributes = copy_attributes(newfield->attributes, newfield->num_attributes);
+  return ERROR_ID_NO;
 }
 
 /*! \brief Register output fields related to overall analysis (or run
@@ -1665,7 +1683,7 @@ static void register_analysis_field(const struct output_field* fieldcontent, int
 
   \param [in] windowName name of the analysis window, with suffix "."
 */
-static void register_analysis_output(const PRJCT_RESULTS *pResults, int indexFeno, int index_calib, const char *windowName) {
+static int register_analysis_output(const PRJCT_RESULTS *pResults, int indexFeno, int index_calib, const char *windowName) {
 
   struct outputconfig analysis_infos[] = {
     { (outputRunCalib) ? -1 : PRJCT_RESULTS_REFZM, // no REFZM in "run calibration" mode
@@ -1707,9 +1725,12 @@ static void register_analysis_output(const PRJCT_RESULTS *pResults, int indexFen
     if(output) {
       output->field.get_tabfeno = &get_tabfeno_analysis;
       output->field.resulttype = output->type;
-      register_analysis_field(&output->field, indexFeno, index_calib, ITEM_NONE, windowName, "");
+      int rc = register_analysis_field(&output->field, indexFeno, index_calib, ITEM_NONE, windowName, "");
+      if (rc != ERROR_ID_NO) return rc;
     }
   }
+
+  return ERROR_ID_NO;
 }
 
 /*! \brief Register output fields related to analysis (or run
@@ -1727,7 +1748,7 @@ static void register_analysis_output(const PRJCT_RESULTS *pResults, int indexFen
 
   \param [in] windowName name of the analysis window, with suffix "."
 */
-static void register_cross_results(const PRJCT_RESULTS *pResults, const FENO *pTabFeno, int indexFeno, int index_calib, const char *windowName) {
+static int register_cross_results(const PRJCT_RESULTS *pResults, const FENO *pTabFeno, int indexFeno, int index_calib, const char *windowName) {
   struct analysis_output {
     bool register_field;
     const char *symbol_name;
@@ -1783,7 +1804,8 @@ static void register_cross_results(const PRJCT_RESULTS *pResults, const FENO *pT
 
       for(unsigned int i=0; i<sizeof(symbol_fitparams)/sizeof(symbol_fitparams[0]); i++) {
         if(symbol_fitparams[i].register_field) {
-          register_analysis_field(&symbol_fitparams[i].fieldcontent, indexFeno, index_calib, indexTabCross, windowName, symbol_fitparams[i].symbol_name);
+          int rc = register_analysis_field(&symbol_fitparams[i].fieldcontent, indexFeno, index_calib, indexTabCross, windowName, symbol_fitparams[i].symbol_name);
+          if (rc != ERROR_ID_NO) return rc;
         }
       }
     }
@@ -1810,16 +1832,19 @@ static void register_cross_results(const PRJCT_RESULTS *pResults, const FENO *pT
                 } else if (indexField == PRJCT_RESULTS_CORR) {
                   fieldname = "Corr";
                   get_data = (func_void)&get_corr;
-                } struct output_field newfield = { .resulttype = indexField,
-                                                   .basic_fieldname = fieldname,
-                                                   .format = FORMAT_DOUBLE,
-                                                   .memory_type = OUTPUT_DOUBLE,
-                                                   .get_data = get_data,
-                                                   .index_cross2 = indexTabCross2 };
-                register_analysis_field( &newfield, indexFeno, index_calib, indexTabCross, windowName, symbolName);
+                }
+                struct output_field newfield = { .resulttype = indexField,
+                                                 .basic_fieldname = fieldname,
+                                                 .format = FORMAT_DOUBLE,
+                                                 .memory_type = OUTPUT_DOUBLE,
+                                                 .get_data = get_data,
+                                                 .index_cross2 = indexTabCross2 };
+                int rc = register_analysis_field( &newfield, indexFeno, index_calib, indexTabCross, windowName, symbolName);
+                if (rc != ERROR_ID_NO) return rc;
               }
     }
   }
+  return ERROR_ID_NO;
 }
 
 /*! \brief Set up #output_data_analysis and #output_data_calib to
@@ -1832,7 +1857,6 @@ RC OUTPUT_RegisterData(const ENGINE_CONTEXT *pEngineContext)
 {
   PRJCT_RESULTS *pResults;
   INDEX indexFenoColumn;
-  RC rc;
 
 #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin("OUTPUT_RegisterData",DEBUG_FCTTYPE_FILE);
@@ -1843,7 +1867,6 @@ RC OUTPUT_RegisterData(const ENGINE_CONTEXT *pEngineContext)
   const PROJECT *pProject=&pEngineContext->project;
   pResults=(PRJCT_RESULTS *)&pProject->asciiResults;
   outputCalibFlag=outputRunCalib=0;
-  rc=ERROR_ID_NO;
 
   if (pProject->asciiResults.analysisFlag || pProject->asciiResults.calibFlag)
     {
@@ -1868,7 +1891,8 @@ RC OUTPUT_RegisterData(const ENGINE_CONTEXT *pEngineContext)
                          && KURUCZ_buffers[indexFenoColumn].KuruczFeno != NULL
                          && (TabFeno[indexFenoColumn][indexFeno].useKurucz == ANLYS_KURUCZ_REF_AND_SPEC
                              || TabFeno[indexFenoColumn][indexFeno].useKurucz == ANLYS_KURUCZ_REF ) ) {
-                      register_calibration(indexFenoK, indexFenoColumn, indexFeno);
+                      int rc = register_calibration(indexFenoK, indexFenoColumn, indexFeno);
+                      if (rc) return rc;
                     }
                   }
                 }
@@ -1890,7 +1914,7 @@ RC OUTPUT_RegisterData(const ENGINE_CONTEXT *pEngineContext)
   DEBUG_FunctionStop("OUTPUT_RegisterData",rc);
 #endif
 
-  return rc;
+  return ERROR_ID_NO;
 }
 
 RC OUTPUT_RegisterSpectra(const ENGINE_CONTEXT *pEngineContext)
@@ -2249,7 +2273,7 @@ RC OUTPUT_CheckPath(ENGINE_CONTEXT *pEngineContext,char *path,int format) {
     else
      ptr++;
 
-     if (strrchr(ptr,'.')==NULL)                            // ASCII format should accept any extension
+    if (strrchr(ptr,'.')==NULL)                            // ASCII format should accept any extension
 
     if ((format!=ASCII) || (strrchr(ptr,'.')!=NULL))     // ASCII should accept any extensions (.dat, .txt, ...)
      {

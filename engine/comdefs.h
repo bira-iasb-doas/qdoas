@@ -170,6 +170,7 @@ SHORT_DATE;
 // Standard errors id
 
 #define ERROR_ID_NO                               0                             // no error
+#define ERROR_ID_BUG                             10                             // we hit a bug or limitation in QDOAS (e.g. max number of output fields reached)
 #define ERROR_ID_ALLOC                          100                             // buffer allocation error
 #define ERROR_ID_ALLOCVECTOR                    101                             // double type vector allocation error
 #define ERROR_ID_ALLOCMATRIX                    102                             // double type matrix allocation error

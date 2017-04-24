@@ -64,7 +64,6 @@ extern AMF_SYMBOL *OUTPUT_AmfSpace;
 #define     MAX_FLUXES    20
 #define     MAX_CIC       20
 #define     MAX_RESULTS  500   // 250 measurements the morning; 250 measurements the afternoon.
-#define     MAX_FIELDS   1600
 
 // Fill values, copied from the netCDF default fill values (NC_FILL_BYTE etc in netcdf.h)
 extern const char QDOAS_FILL_BYTE;

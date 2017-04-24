@@ -10,6 +10,8 @@
 #include "kurucz.h"
 #include "analyse.h"
 
+#define MAX_FIELDS 3600 // maximum number of output and calibration fields
+
 /*! \brief The different data types that can be stored in an \ref
     output_field structure.
 

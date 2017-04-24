@@ -97,6 +97,7 @@ ERROR_TABLE errorTable[]=
  	// Standard errors
 
   { ERROR_ID_NO                        , "no error"                                                                                                           },
+  { ERROR_ID_BUG                       , "\"%s\" This is an error or limitation of QDOAS. Please contact the authors at qdoas@aeronomie.be"                   },
   { ERROR_ID_ALLOC                     , "buffer allocation error (%s)"                                                                                       },
   { ERROR_ID_ALLOCVECTOR               , "vector allocation error (%s, %d:%d)"                                                                                },
   { ERROR_ID_ALLOCMATRIX               , "matrix allocation error (%s, %d:%d x %d:%d)"                                                                        },
