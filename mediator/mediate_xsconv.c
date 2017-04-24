@@ -856,7 +856,7 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
           temp,                                                                 // approximate average temperature in °K for scattering
           slitParam[NSFP];                                                      // gaussian full width at half maximum
 
-  MATRIX_OBJECT  xsSolar,xsSolarConv,xsSlit[NSFP],xsRing,*pSlit,*pSlit2,*pSlit3;// solar spectrum and slit function
+  MATRIX_OBJECT  xsSolar,xsSolarConv,xsSlit[NSFP],xsRing,*pSlit,*pSlit2;// solar spectrum and slit function
   int     nsolar,nslit,nslit2,nring,                                            // size of previous vectors
           wveDptFlag,
           slitType;                                                             // type of the slit function
@@ -944,7 +944,6 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
 
     pSlit=&xsSlit[0];
     pSlit2=&xsSlit[1];
-    pSlit3=&xsSlit[3];
 
     solarLambda=xsSolarConv.matrix[0];
     solarVector=xsSolarConv.matrix[1];
@@ -953,10 +952,8 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
 
     wveDptFlag=pEngineContext->slitConv.slitWveDptFlag;
 
-    if (slitType!=SLIT_TYPE_NONE)
-     {
-   	  if ((slitType!=SLIT_TYPE_FILE) || (pSlit->nc==2))
-   	   {
+    if (slitType!=SLIT_TYPE_NONE) {
+      if ((slitType!=SLIT_TYPE_FILE) || (pSlit->nc==2)) {
         slitLambda=pSlit->matrix[0];
         slitVector=pSlit->matrix[1];
         slitDeriv2=pSlit->deriv2[1];

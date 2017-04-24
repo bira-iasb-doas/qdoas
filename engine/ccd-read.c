@@ -295,8 +295,6 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
  {
   // Declarations
 
-  ANALYSIS_REF *pRef;
-
   CCD_DATA header;                                                              // header of a record
   uint32_t   *recordIndexes;                                                       // indexes of records for direct access
   int      ccdX,ccdY,dataSize;                                                  // size of the detector
@@ -311,8 +309,6 @@ RC SetCCD_EEV(ENGINE_CONTEXT *pEngineContext,FILE *specFp,FILE *darkFp)
   #endif
 
   // Initializations
-
-  pRef=&pEngineContext->analysisRef;
 
   recordIndexes=pEngineContext->buffers.recordIndexes;
 

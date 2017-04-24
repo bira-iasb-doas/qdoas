@@ -2119,22 +2119,22 @@ RC ANALYSE_Function(double *spectrum_orig, double *reference, const double *Sigm
    // Transfer to working variable
    // ----------------------------
 
-   for( int k=0,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
-    XTrav[k]=spectrum_interpolated[l];
+   for( int k=0,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator)) {
+     XTrav[k]=spectrum_interpolated[l];
+   }
 
-    // ==============
-    // CROSS SECTIONS
-    // ==============
+   // ==============
+   // CROSS SECTIONS
+   // ==============
 
-    // ----------------
-    // Build svd matrix
-    // ----------------
+   // ----------------
+   // Build svd matrix
+   // ----------------
 
-    if (Feno->Decomp) {
-      for (int i=0;i<Feno->NTabCross;i++)
+   if (Feno->Decomp) {
+     for (int i=0;i<Feno->NTabCross;i++)
 
-       if ((indexSvdA=TabCross[i].IndSvdA)>0)
-        {
+       if ((indexSvdA=TabCross[i].IndSvdA)>0) {
          pTabCross=&TabCross[i];
          pTabCross->Fact=1.;
 
@@ -2145,8 +2145,8 @@ RC ANALYSE_Function(double *spectrum_orig, double *reference, const double *Sigm
          if (WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_PREDEFINED) {
            doas_iterator my_iterator;
            if (i==Feno->indexOffsetConst)
-            for (int k=1; k<=numpixels; k++)
-              fitprops->A[indexSvdA][k]=(double)1.;
+             for (int k=1; k<=numpixels; k++)
+               fitprops->A[indexSvdA][k]=1.;
            else if (i==Feno->indexOffsetOrder1) {
              for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))
                fitprops->A[indexSvdA][k]=(double)(ANALYSE_splineX[l]-lambda0);
@@ -2175,18 +2175,17 @@ RC ANALYSE_Function(double *spectrum_orig, double *reference, const double *Sigm
          // Fill SVD matrix with polynomial components
 
          else if (WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CONTINUOUS) {
-           if ((strlen(WorkSpace[pTabCross->Comp].symbolName)==2) && (WorkSpace[pTabCross->Comp].symbolName[0]=='x'))
-            {
+           if ((strlen(WorkSpace[pTabCross->Comp].symbolName)==2) && (WorkSpace[pTabCross->Comp].symbolName[0]=='x')) {
              polyOrder=WorkSpace[pTabCross->Comp].symbolName[1]-'0';
              polyFlag=1;
-            }
+           }
            else if ((strlen(WorkSpace[pTabCross->Comp].symbolName)==5) &&
                     !strncmp(WorkSpace[pTabCross->Comp].symbolName, "offl", 4)) {
-            polyOrder=WorkSpace[pTabCross->Comp].symbolName[4]-'0';
-            polyFlag=0;
+             polyOrder=WorkSpace[pTabCross->Comp].symbolName[4]-'0';
+             polyFlag=0;
            }
            else
-            polyOrder=ITEM_NONE;
+             polyOrder=ITEM_NONE;
 
            if (polyFlag && polyOrder == 0 ) {
              for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator))

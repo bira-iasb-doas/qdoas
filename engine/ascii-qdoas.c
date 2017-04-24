@@ -591,7 +591,6 @@ RC ASCII_QDOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int
   // Declarations
 
   RECORD_INFO *pRecordInfo;                                                     // pointer to the record part of the engine context
-  PRJCT_INSTRUMENTAL *pInstr;                                                   // pointer to the instrumental part of the pEngineContext structure
   double *spectrum,*lambda,val1,val2,                                           // the spectrum and the wavelength calibration to read
           tmLocal;                                                              // the measurement time in seconds
   int day,mon,year,hour,minute,sec;                                             // decomposition of the measurement date and time
@@ -600,7 +599,6 @@ RC ASCII_QDOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int
   char fileLine[STRING_LENGTH+1];
   char keyName[STRING_LENGTH+1];
   char keyValue[STRING_LENGTH+1];
-  char *ptr;
   int useDate,useTime;
   int measurementType;
   int millis;
@@ -612,7 +610,6 @@ RC ASCII_QDOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int
   pRecordInfo=&pEngineContext->recordInfo;
   spectrum=pEngineContext->buffers.spectrum;
   lambda=pEngineContext->buffers.lambda;
-  pInstr=&pEngineContext->project.instrumental;
   n_wavel=NDET[0];
   useDate=useTime=0;
   rc=ERROR_ID_NO;

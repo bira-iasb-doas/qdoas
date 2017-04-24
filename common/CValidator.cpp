@@ -89,7 +89,6 @@ QValidator::State CDoubleExpFmtValidator::validate(QString &input, int &pos) con
 
   bool havePoint = false;
   bool haveExp = false;
-  bool haveSign = false;
   int lenMantisa = 0;
   int lenExp = 0;
   int expMag = 0;
@@ -99,13 +98,7 @@ QValidator::State CDoubleExpFmtValidator::validate(QString &input, int &pos) con
 
   while (i < len) {
     if (i == 0) {
-      if (input[0] == '+' && m_top > 0.0) {
-	haveSign = true;
-      }
-      else if (input[0] == '-' && m_bottom < 0.0) {
-	haveSign = true;
-      }
-      else if (input[0] == '.') {
+      if (input[0] == '.') {
 	havePoint = true;
       }
       else if (input[0].isDigit()) {
