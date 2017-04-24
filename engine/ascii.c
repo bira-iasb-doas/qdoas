@@ -97,7 +97,7 @@
 
 static INDEX asciiLastRecord=ITEM_NONE;                                         // keep the index of the last record
 static INDEX asciiLastDataSet=ITEM_NONE;
-MATRIX_OBJECT asciiMatrix;
+static MATRIX_OBJECT asciiMatrix;
 
 // ===============
 // FILE PROCESSING
