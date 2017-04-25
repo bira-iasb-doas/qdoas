@@ -127,7 +127,6 @@ int OUTPUT_exportSpectraFlag=0;
 // STATIC DEFINITIONS
 // ===================
 static unsigned int outputNbRecords; /*!< \brief Number of records written to output.*/
-static unsigned int output_data_buffer_length; /*!< \brief Number of rows allocated.*/
 static int NAmfSpace; /*!< \brief Number of elements in buffer OUTPUT_NAmfSpace */
 static OUTPUT_INFO *outputRecords; /*!< \brief Meta data on the records written to output.*/
 static int outputRunCalib, /*!< \brief ==1 in run calibration mode */
@@ -1858,10 +1857,6 @@ RC OUTPUT_RegisterData(const ENGINE_CONTEXT *pEngineContext)
   PRJCT_RESULTS *pResults;
   INDEX indexFenoColumn;
 
-#if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionBegin("OUTPUT_RegisterData",DEBUG_FCTTYPE_FILE);
-#endif
-
   // Initializations
 
   const PROJECT *pProject=&pEngineContext->project;
@@ -1909,10 +1904,6 @@ RC OUTPUT_RegisterData(const ENGINE_CONTEXT *pEngineContext)
       OutputRegisterParam(pEngineContext);
       OutputRegisterFluxes(pEngineContext);                                       // do not depend on swath size
     }
-
-#if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionStop("OUTPUT_RegisterData",rc);
-#endif
 
   return ERROR_ID_NO;
 }
@@ -2601,7 +2592,7 @@ static void output_field_clear(struct output_field *this_field) {
       // through the array and free each char* as well.
 
       char **data = this_field->data;
-      for (size_t i=0; i< output_data_buffer_length*this_field->data_cols; ++i) {
+      for (size_t i=0; i< this_field->data_rows*this_field->data_cols; ++i) {
         free(data[i]);
       }
     }
@@ -2653,35 +2644,37 @@ RC OUTPUT_LocalAlloc(ENGINE_CONTEXT *pEngineContext)
 
   rc=ERROR_ID_NO;
 
-  output_data_buffer_length=pEngineContext->recordNumber;
+  size_t output_data_rows = pEngineContext->recordNumber;
 
   pProject=(PROJECT *)&pEngineContext->project;
   pResults=(PRJCT_RESULTS *)&pProject->asciiResults;
 
   if ((THRD_id==THREAD_TYPE_EXPORT) || pResults->analysisFlag || pResults->calibFlag) {
-    assert(output_data_buffer_length > 0);
+    assert(output_data_rows > 0);
 
     if (outputRecords!=NULL)
       MEMORY_ReleaseBuffer(__func__,"outputRecords",outputRecords);
     outputRecords=NULL;
 
     // Allocate new buffers
-    outputRecords=(OUTPUT_INFO *)MEMORY_AllocBuffer(__func__,"outputRecords",output_data_buffer_length,sizeof(OUTPUT_INFO),0,MEMORY_TYPE_STRUCT);
+    outputRecords=(OUTPUT_INFO *)MEMORY_AllocBuffer(__func__,"outputRecords",output_data_rows,sizeof(OUTPUT_INFO),0,MEMORY_TYPE_STRUCT);
     if (!outputRecords)
       rc = ERROR_ID_ALLOC;
     else
-      memset(outputRecords,0,sizeof(OUTPUT_INFO)*output_data_buffer_length);
+      memset(outputRecords,0,sizeof(OUTPUT_INFO)*output_data_rows);
 
     for (unsigned int i=0; i<output_num_fields; i++) {
       struct output_field *pfield = &output_data_analysis[i];
-      output_field_clear(pfield);
-      pfield->data = calloc(output_data_buffer_length * pfield->data_cols , output_get_size(pfield->memory_type));
+      output_field_clear(pfield); // first clear data, then update "data_rows" value, because data_rows is used to determine number of entries we have to free
+      pfield->data_rows = output_data_rows;
+      pfield->data = calloc(pfield->data_rows * pfield->data_cols , output_get_size(pfield->memory_type));
     }
     for (unsigned int i=0; i<calib_num_fields; i++) {
       struct output_field *calib_field = &output_data_calib[i];
       output_field_clear(calib_field);
       int nb_win = KURUCZ_buffers[calib_field->index_row].Nb_Win;
       // todo: check if nb_win > 0 ? check rcKurucz?
+      calib_field->data_rows = nb_win;
       calib_field->data = initialize_calibration_buffer(nb_win * calib_field->data_cols, calib_field->memory_type);
     }
 

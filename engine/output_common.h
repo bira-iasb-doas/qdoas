@@ -99,6 +99,8 @@ struct output_field {
   /*!< actual datatype contained in the *data buffer */
   void *data;
   /*!< buffer containing the data for output */
+  size_t data_rows;
+  /*!< number of entries which can be stored in the data buffer */
   size_t data_cols;
  /*!< the data can contain multiple columns (i.e. latitude of pixel
    corners) */
