@@ -1337,16 +1337,16 @@ RC EngineBuildRefList(ENGINE_CONTEXT *pEngineContext)
   pEngineContext->analysisRef.zmMinIndex=indexZmMin;
   pEngineContext->analysisRef.zmMaxIndex=indexZmMax;
 
-// TO CHECK WITH MPI PEOPLE     {
-// TO CHECK WITH MPI PEOPLE      FILE *fp;
-// TO CHECK WITH MPI PEOPLE      int i;
-// TO CHECK WITH MPI PEOPLE      fp=fopen("RefList.dat","w+t");
-// TO CHECK WITH MPI PEOPLE      fprintf(fp,"List of references : \n");
-// TO CHECK WITH MPI PEOPLE      for (i=0;i<NRecord;i++)
-// TO CHECK WITH MPI PEOPLE       fprintf(fp,"%d %g %s\n",indexList[i],ZmList[i],&pEngineContext->recordInfo.mfcDoasis.fileNames[(indexList[i]-1)*(DOAS_MAX_PATH_LEN+1)]);
-// TO CHECK WITH MPI PEOPLE
-// TO CHECK WITH MPI PEOPLE      fclose(fp);
-// TO CHECK WITH MPI PEOPLE     }
+   // TO CHECK WITH MPI PEOPLE  {
+   // TO CHECK WITH MPI PEOPLE   FILE *fp;
+   // TO CHECK WITH MPI PEOPLE   int i;
+   // TO CHECK WITH MPI PEOPLE   fp=fopen("RefList.dat","w+t");
+   // TO CHECK WITH MPI PEOPLE   fprintf(fp,"List of references : \n");
+   // TO CHECK WITH MPI PEOPLE   for (i=0;i<NRecord;i++)
+   // TO CHECK WITH MPI PEOPLE    fprintf(fp,"%d %g %s\n",indexList[i],ZmList[i],&pEngineContext->recordInfo.mfcDoasis.fileNames[(indexList[i]-1)*(DOAS_MAX_PATH_LEN+1)]);
+   // TO CHECK WITH MPI PEOPLE
+   // TO CHECK WITH MPI PEOPLE   fclose(fp);
+   // TO CHECK WITH MPI PEOPLE  }
 
 
   // Copy information from the ref context to the main context
@@ -1603,7 +1603,10 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
    // Build a list of reference spectra
 
-   if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_ASCII) && !pEngineContext->project.instrumental.ascii.szaSaveFlag)
+   if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_ASCII) &&
+       (pEngineContext->project.instrumental.ascii.format!=PRJCT_INSTR_ASCII_FORMAT_COLUMN_EXTENDED) &&
+       !pEngineContext->project.instrumental.ascii.szaSaveFlag)
+
     rc=ERROR_SetLast("EngineNewRef",ERROR_TYPE_WARNING,ERROR_ID_FILE_AUTOMATIC);
 
    // ENGINE_refStartDate : useful when records in the file cover two days in local time (due to the time shift).  In this case, compare starting date and time

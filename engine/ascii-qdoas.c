@@ -812,6 +812,11 @@ RC ASCII_QDOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int
 
      if (!rc)
       {
+       // Force zenith for viewing elevation angles higher than 80 deg
+
+       if (pRecordInfo->elevationViewAngle>80.)
+        pRecordInfo->asc.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH;
+
        if (useDate && useTime)
         {
          pRecordInfo->Tm=(double)ZEN_NbSec(&pRecordInfo->present_datetime.thedate,&pRecordInfo->present_datetime.thetime,0);

@@ -458,6 +458,8 @@ void getValidFieldFlags(int *validFlags, int instrument,bool exportFlag)
       validFlags[PRJCT_RESULTS_ALTITEND]=1;
       validFlags[PRJCT_RESULTS_STARTGPSTIME]=1;
       validFlags[PRJCT_RESULTS_ENDGPSTIME]=1;
+      validFlags[PRJCT_RESULTS_VIEW_ELEVATION]=1;
+      validFlags[PRJCT_RESULTS_VIEW_AZIMUTH]=1;
      }
     break;
  // ----------------------------------------------------------------------------
@@ -473,6 +475,8 @@ void getValidFieldFlags(int *validFlags, int instrument,bool exportFlag)
       validFlags[PRJCT_RESULTS_ALTITEND]=1;
       validFlags[PRJCT_RESULTS_STARTGPSTIME]=1;
       validFlags[PRJCT_RESULTS_ENDGPSTIME]=1;
+      validFlags[PRJCT_RESULTS_VIEW_ELEVATION]=1;
+      validFlags[PRJCT_RESULTS_VIEW_AZIMUTH]=1;
      }
     break;
  // ----------------------------------------------------------------------------

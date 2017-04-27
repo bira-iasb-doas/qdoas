@@ -68,7 +68,7 @@
 // CONSTANTS DEFINITION
 // ====================
 
-#define IGNORED_BYTES 92
+#define IGNORED_BYTES 83
 
 // ====================
 // STRUCTURE DEFINITION
@@ -102,11 +102,14 @@ typedef struct _airborneData
   float         longitudeEnd,latitudeEnd,altitudeEnd;
   struct time   gpsTimeEnd;
   float         pitch,roll,heading;                          // airborne
-  short         msBegin,msEnd;
-  unsigned char ignoredBytes[IGNORED_BYTES];
+  short         msBegin,msEnd;                               // airborne
+  float         viewAzim,viewElev;
+  unsigned char useNexstarFlag;
+  char        ignoredBytes[IGNORED_BYTES];
  }
 AIRBORNE_DATA;
 
+#pragma pack(pop)
 
 
 // -----------------------------------------------------------------------------
@@ -229,6 +232,12 @@ RC AIRBORNE_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int lo
  	  pRecord->uavBira.pitch=(float)header.pitch;
  	  pRecord->uavBira.roll=(float)header.roll;
  	  pRecord->uavBira.heading=(float)header.heading;
+
+ 	  if (header.useNexstarFlag)
+ 	   {
+ 	    pRecord->elevationViewAngle=(double)header.viewElev;
+ 	    pRecord->azimuthViewAngle=(double)header.viewAzim;
+ 	   }
 
  	  memcpy(&pRecord->uavBira.startTime.thetime,&header.now,sizeof(struct time));
  	  memcpy(&pRecord->uavBira.endTime.thetime,&header.endMeas,sizeof(struct time));
