@@ -864,7 +864,7 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_MFC :
-      rc=ReliMFC(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pEngineContext->project.instrumental.mfcMaskSpec);
+      rc=ReliMFC(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pEngineContext->project.instrumental.mfc.mfcMaskSpec);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_MFC_STD :

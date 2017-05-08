@@ -47,6 +47,10 @@ void initializeMediateProjectSelection(mediate_project_selection_t *d)
   d->szaMinimum = 0.0;
   d->szaMaximum = 0.0;
 
+  d->elevationMinimum = 0.0;
+  d->elevationMaximum = 0.0;
+  d->elevationTolerance = 0.0;
+
   d->cloudFractionMinimum=0.0;
   d->cloudFractionMaximum=1.0;
 }

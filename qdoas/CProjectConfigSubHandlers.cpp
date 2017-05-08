@@ -45,7 +45,9 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
     return postErrorMessage("Too many output fields");
 
   QString str = atts.value("name");
-  if (str == "specno")
+  if ( str == "filename" )
+    d->selected[d->nSelected] = PRJCT_RESULTS_FILENAME;
+  else if (str == "specno")
     d->selected[d->nSelected] = PRJCT_RESULTS_SPECNO;
   else if (str == "name")
     d->selected[d->nSelected] = PRJCT_RESULTS_NAME;
@@ -305,6 +307,14 @@ bool CProjectSelectionSubHandler::start(const QString &element, const QXmlAttrib
     m_selection->szaMinimum = atts.value("min").toDouble();
     m_selection->szaMaximum = atts.value("max").toDouble();
     m_selection->szaDelta = atts.value("delta").toDouble();
+
+  }
+  if (element == "elevation") {
+
+    // defaults from mediateInitializeProject() are ok if attributes are not present
+    m_selection->elevationMinimum = atts.value("min").toDouble();
+    m_selection->elevationMaximum = atts.value("max").toDouble();
+    m_selection->elevationTolerance = atts.value("tol").toDouble();
 
   }
   else if (element == "record") {

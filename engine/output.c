@@ -1097,6 +1097,9 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
      case PRJCT_RESULTS_TOTALACQTIME:
        register_field( (struct output_field) { .basic_fieldname = "Total Acquisition Time (sec)", .memory_type = OUTPUT_DOUBLE, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_total_acq_time});
        break;
+     case PRJCT_RESULTS_FILENAME:
+       register_field( (struct output_field) { .basic_fieldname = "Filename", .memory_type = OUTPUT_STRING, .resulttype = fieldtype, .format = "%s", .get_data = (func_void)&get_filename });
+     break;
      default:
        break;
      }
@@ -1505,6 +1508,9 @@ static void OutputRegisterFieldsToExport(const ENGINE_CONTEXT *pEngineContext, c
        register_field( (struct output_field) { .basic_fieldname = "Spectrum", .memory_type = OUTPUT_DOUBLE, .resulttype = fieldtype, .format = "%-12.6f", .get_data = (func_void)&get_spectrum, .data_cols = max_ndet, .column_number_format="(%d)" });
        OUTPUT_exportSpectraFlag=1;
        break;
+     case PRJCT_RESULTS_FILENAME: // !!! EXPORT FUNCTION !!!
+       register_field( (struct output_field) { .basic_fieldname = "Filename", .memory_type = OUTPUT_STRING, .resulttype = fieldtype, .format = "%s", .get_data = (func_void)&get_filename });
+     break;
      default:  // !!! EXPORT FUNCTION !!!
        break;
      }

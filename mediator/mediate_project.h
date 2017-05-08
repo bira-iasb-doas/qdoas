@@ -127,6 +127,11 @@ extern "C" {
     int recordNumberMinimum;
     int recordNumberMaximum;
 
+    /* Viewing elevation angle range of interest */
+    double elevationMinimum;
+    double elevationMaximum;
+    double elevationTolerance;
+
     // Cloud fraction
 
     double cloudFractionMinimum;

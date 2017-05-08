@@ -892,6 +892,7 @@ static enum fieldtype get_fieldtype(enum _prjctResults output_field) {
   case PRJCT_RESULTS_ALTITEND :
   case PRJCT_RESULTS_TOTALEXPTIME :
   case PRJCT_RESULTS_TOTALACQTIME :
+  case PRJCT_RESULTS_FILENAME :
     result = GEO;
     break;
     // all other fields are Data fields:

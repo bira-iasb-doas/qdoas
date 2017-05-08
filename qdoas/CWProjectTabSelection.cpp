@@ -105,6 +105,38 @@ CWProjectTabSelection::CWProjectTabSelection(const mediate_project_selection_t *
 
   topLayout->addWidget(recordGroup);
 
+  // Elevation group
+  QGroupBox *elevationGroup = new QGroupBox("Viewing Elevation angles", this);
+  QGridLayout *elevationGroupLayout = new QGridLayout;
+
+  pixels = fm.width("00000000");
+  elevationGroupLayout->addWidget(new QLabel("Min", this), 0, 0);
+  m_elevationMinEdit = new QLineEdit(this);
+  m_elevationMinEdit->setFixedWidth(pixels);
+  m_elevationMinEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 3, m_elevationMinEdit));
+  elevationGroupLayout->addWidget(m_elevationMinEdit, 0, 1);
+  elevationGroupLayout->addWidget(new QLabel("Max", this), 1, 0);
+  m_elevationMaxEdit = new QLineEdit(this);
+  m_elevationMaxEdit->setFixedWidth(pixels);
+  m_elevationMaxEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 3, m_elevationMaxEdit));
+  elevationGroupLayout->addWidget(m_elevationMaxEdit, 1, 1);
+  elevationGroupLayout->addWidget(new QLabel("Tol", this), 2, 0);
+  m_elevationTolEdit = new QLineEdit(this);
+  m_elevationTolEdit->setFixedWidth(pixels);
+  m_elevationTolEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 3, m_elevationTolEdit));
+  elevationGroupLayout->addWidget(m_elevationTolEdit, 2, 1);
+  elevationGroupLayout->setColumnStretch(2, 1);
+  elevationGroup->setLayout(elevationGroupLayout);
+
+  m_elevationMinEdit->validator()->fixup(tmpStr.setNum(properties->elevationMinimum));
+  m_elevationMinEdit->setText(tmpStr);
+  m_elevationMaxEdit->validator()->fixup(tmpStr.setNum(properties->elevationMaximum));
+  m_elevationMaxEdit->setText(tmpStr);
+  m_elevationTolEdit->validator()->fixup(tmpStr.setNum(properties->elevationTolerance));
+  m_elevationTolEdit->setText(tmpStr);
+
+  topLayout->addWidget(elevationGroup);
+
   // Cloud fraction group
 
   m_cloudFractionGroup = new QGroupBox("Cloud fraction", this);
@@ -115,7 +147,7 @@ CWProjectTabSelection::CWProjectTabSelection(const mediate_project_selection_t *
   m_cloudFractionMinEdit->setFixedWidth(pixels);
   m_cloudFractionMinEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 1.0, 3, m_cloudFractionMinEdit));
   cloudFractionGroupLayout->addWidget(m_cloudFractionMinEdit, 0, 1);
-  cloudFractionGroupLayout->addWidget(new QLabel("Max", this), 1, 0);
+  cloudFractionGroupLayout->addWidget(new QLabel("Tol", this), 1, 0);
   m_cloudFractionMaxEdit = new QLineEdit(this);
   m_cloudFractionMaxEdit->setFixedWidth(pixels);
   m_cloudFractionMaxEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 1.0, 3, m_cloudFractionMaxEdit));
@@ -165,6 +197,15 @@ void CWProjectTabSelection::apply(mediate_project_selection_t *properties) const
   properties->recordNumberMinimum = tmpStr.isEmpty() ? 0 : tmpStr.toInt();
   tmpStr = m_recordMaxEdit->text();
   properties->recordNumberMaximum = tmpStr.isEmpty() ? 0 : tmpStr.toInt();
+
+  // Viewing elevation angle
+
+  tmpStr = m_elevationMinEdit->text();
+  properties->elevationMinimum = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
+  tmpStr = m_elevationMaxEdit->text();
+  properties->elevationMaximum = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
+  tmpStr = m_elevationTolEdit->text();
+  properties->elevationTolerance = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
 
   // Cloud fraction
 

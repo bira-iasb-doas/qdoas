@@ -173,6 +173,7 @@ void CQdoasConfigWriter::writePropertiesSelection(FILE *fp, const mediate_projec
 {
   fprintf(fp, "    <selection>\n");
   fprintf(fp, "      <sza min=\"%.3f\" max=\"%.3f\" delta=\"%.3f\" />\n", d->szaMinimum, d->szaMaximum, d->szaDelta);
+  fprintf(fp, "      <elevation min=\"%.3f\" max=\"%.3f\" tol=\"%.3f\" />\n", d->elevationMinimum, d->elevationMaximum,d->elevationTolerance);
   fprintf(fp, "      <record min=\"%d\" max=\"%d\" />\n", d->recordNumberMinimum, d->recordNumberMaximum);
   fprintf(fp, "      <cloud min=\"%.3f\" max=\"%.3f\" />\n", d->cloudFractionMinimum, d->cloudFractionMaximum);
   switch (d->geo.mode) {
@@ -1636,6 +1637,7 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     case PRJCT_RESULTS_TOTALACQTIME : config_string = "total_acq_time";break;
     case PRJCT_RESULTS_LAMBDA : config_string = "lambda"; break;
     case PRJCT_RESULTS_SPECTRA : config_string = "spectra"; break;
+    case PRJCT_RESULTS_FILENAME : config_string = "filename"; break;
 
     case PRJCT_RESULTS_PRECALCULATED_FLUXES:            config_string = "precalculated_fluxes"; break;
 

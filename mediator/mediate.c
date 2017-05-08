@@ -81,10 +81,10 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
       mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Dark Current","%s",pInstrumental->instrFunction);
      else if (pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_MFC)
       mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Transmission file","%s",pInstrumental->instrFunction);
-     else if (((pInstrumental->mfcMaskSpec!=0) && ((unsigned int)MFC_header.ty==pInstrumental->mfcMaskSpec)) ||
-              ((pInstrumental->mfcMaskSpec==0) &&
-               ((MFC_header.wavelength1==pInstrumental->mfcMaskInstr) ||
-                (fabs((double)(MFC_header.wavelength1-(float)pInstrumental->wavelength))<(double)5.))))
+     else if (((pInstrumental->mfc.mfcMaskSpec!=0) && ((unsigned int)MFC_header.ty==pInstrumental->mfc.mfcMaskSpec)) ||
+              ((pInstrumental->mfc.mfcMaskSpec==0) &&
+               ((MFC_header.wavelength1==pInstrumental->mfc.mfcMaskInstr) ||
+                (fabs((double)(MFC_header.wavelength1-(float)pInstrumental->mfc.wavelength))<(double)5.))))
       mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Transmission file","%s",pInstrumental->instrFunction);
     }
 
@@ -93,10 +93,10 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
      if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD)
       mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Dark current","%s",MFC_fileDark);
      else if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC) &&
-              (((pInstrumental->mfcMaskSpec!=0) && (((unsigned int)MFC_header.ty==pInstrumental->mfcMaskSpec) || ((unsigned int)MFC_header.ty==pInstrumental->mfcMaskInstr))) ||
-               ((pInstrumental->mfcMaskSpec==0) &&
-                ((MFC_header.wavelength1==pInstrumental->mfcMaskInstr) ||
-                 (fabs((double)(MFC_header.wavelength1-(float)pInstrumental->wavelength))<(double)5.)))))
+              (((pInstrumental->mfc.mfcMaskSpec!=0) && (((unsigned int)MFC_header.ty==pInstrumental->mfc.mfcMaskSpec) || ((unsigned int)MFC_header.ty==pInstrumental->mfc.mfcMaskInstr))) ||
+               ((pInstrumental->mfc.mfcMaskSpec==0) &&
+                ((MFC_header.wavelength1==pInstrumental->mfc.mfcMaskInstr) ||
+                 (fabs((double)(MFC_header.wavelength1-(float)pInstrumental->mfc.wavelength))<(double)5.)))))
       mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Dark current","%s",MFC_fileDark);
      else if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV)
       mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Straylight correction","%s",pInstrumental->vipFile);
@@ -110,13 +110,13 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
         mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Offset","%s",MFC_fileOffset);
       else if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC) &&
                (((MFC_header.ty!=0) &&
-                 (((unsigned int)MFC_header.ty==pInstrumental->mfcMaskSpec) ||
-                  ((unsigned int)MFC_header.ty==pInstrumental->mfcMaskDark) ||
-                  ((unsigned int)MFC_header.ty==pInstrumental->mfcMaskInstr))) ||
-                ((pInstrumental->mfcMaskSpec==0) &&
-                 ((MFC_header.wavelength1==pInstrumental->mfcMaskDark) ||
-                  (MFC_header.wavelength1==pInstrumental->mfcMaskInstr)||
-                  (fabs((double)(MFC_header.wavelength1-(float)pInstrumental->wavelength))<(double)5.)))))
+                 (((unsigned int)MFC_header.ty==pInstrumental->mfc.mfcMaskSpec) ||
+                  ((unsigned int)MFC_header.ty==pInstrumental->mfc.mfcMaskDark) ||
+                  ((unsigned int)MFC_header.ty==pInstrumental->mfc.mfcMaskInstr))) ||
+                ((pInstrumental->mfc.mfcMaskSpec==0) &&
+                 ((MFC_header.wavelength1==pInstrumental->mfc.mfcMaskDark) ||
+                  (MFC_header.wavelength1==pInstrumental->mfc.mfcMaskInstr)||
+                  (fabs((double)(MFC_header.wavelength1-(float)pInstrumental->mfc.wavelength))<(double)5.)))))
         mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Offset","%s",MFC_fileOffset);
     }
 
@@ -623,6 +623,12 @@ void setMediateProjectSelection(PRJCT_SPECTRA *pEngineSpectra,const mediate_proj
    pEngineSpectra->SZAMax=(float)pMediateSpectra->szaMaximum;
    pEngineSpectra->SZADelta=(float)pMediateSpectra->szaDelta;
 
+   // Elevation range of interest
+
+   pEngineSpectra->elevMin=(float)pMediateSpectra->elevationMinimum;
+   pEngineSpectra->elevMax=(float)pMediateSpectra->elevationMaximum;
+   pEngineSpectra->elevTol=(float)pMediateSpectra->elevationTolerance+1.e-4;
+
    // Cloud fraction
 
    pEngineSpectra->cloudMin=(float)pMediateSpectra->cloudFractionMinimum;
@@ -1074,15 +1080,15 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       pEngineInstrumental->lambdaMin=pMediateInstrumental->mfc.lambdaMin;
       pEngineInstrumental->lambdaMax=pMediateInstrumental->mfc.lambdaMax;
 
-      pEngineInstrumental->mfcRevert=pMediateInstrumental->mfc.revert;
+      pEngineInstrumental->mfc.mfcRevert=pMediateInstrumental->mfc.revert;
 
-      pEngineInstrumental->mfcMaskOffset=pMediateInstrumental->mfc.offsetMask;
-      pEngineInstrumental->mfcMaskInstr=pMediateInstrumental->mfc.instrFctnMask;
-      pEngineInstrumental->mfcMaskSpec=pMediateInstrumental->mfc.spectraMask;
-      pEngineInstrumental->mfcMaskDark=pMediateInstrumental->mfc.darkCurrentMask;
+      pEngineInstrumental->mfc.mfcMaskOffset=pMediateInstrumental->mfc.offsetMask;
+      pEngineInstrumental->mfc.mfcMaskInstr=pMediateInstrumental->mfc.instrFctnMask;
+      pEngineInstrumental->mfc.mfcMaskSpec=pMediateInstrumental->mfc.spectraMask;
+      pEngineInstrumental->mfc.mfcMaskDark=pMediateInstrumental->mfc.darkCurrentMask;
 
-      pEngineInstrumental->wavelength=pMediateInstrumental->mfc.firstWavelength;
-      pEngineInstrumental->mfcMaskUse=pMediateInstrumental->mfc.autoFileSelect;
+      pEngineInstrumental->mfc.wavelength=pMediateInstrumental->mfc.firstWavelength;
+      pEngineInstrumental->mfc.mfcMaskUse=pMediateInstrumental->mfc.autoFileSelect;
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->mfc.calibrationFile);     // calibration file
       strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->mfc.transmissionFunctionFile);     // instrumental function file
@@ -1095,12 +1101,12 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 
       NDET[0]=pMediateInstrumental->mfcstd.detectorSize;
 
-      pEngineInstrumental->mfcRevert=pMediateInstrumental->mfcstd.revert;
+      pEngineInstrumental->mfc.mfcRevert=pMediateInstrumental->mfcstd.revert;
       pEngineInstrumental->offsetFlag=pMediateInstrumental->mfcstd.straylight;
       pEngineInstrumental->lambdaMin=pMediateInstrumental->mfcstd.lambdaMin;
       pEngineInstrumental->lambdaMax=pMediateInstrumental->mfcstd.lambdaMax;
 
-      strcpy(pEngineInstrumental->mfcStdDate,pMediateInstrumental->mfcstd.dateFormat);
+      strcpy(pEngineInstrumental->mfc.mfcStdDate,pMediateInstrumental->mfcstd.dateFormat);
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->mfcstd.calibrationFile);     // calibration file
       strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->mfcstd.transmissionFunctionFile);     // instrumental function file
@@ -2064,15 +2070,38 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
          geoFlag=0;
        }
 
-       if (geoFlag) {
-         if (((fabs(pProject->spectra.SZAMin-pProject->spectra.SZAMax)<(double)1.e-4) ||
-              ((pRecord->Zm>=pProject->spectra.SZAMin) && (pRecord->Zm<=pProject->spectra.SZAMax))) &&
-             ((fabs(pProject->spectra.SZADelta)<(double)1.e-4) ||
-              (fabs(pRecord->Zm-pRecord->oldZm)>pProject->spectra.SZADelta))) {
-           // this record matches - exit the search loop
-           break;
-         }
-       }
+       // Check SZA
+
+       if (geoFlag &&
+       (((fabs(pProject->spectra.SZAMin-pProject->spectra.SZAMax)>(double)1.e-4) && ((pRecord->Zm>max(pProject->spectra.SZAMin,pProject->spectra.SZAMax)) || (pRecord->Zm<min(pProject->spectra.SZAMin,pProject->spectra.SZAMax)))) ||
+        ((fabs(pProject->spectra.SZADelta)>(double)1.e-4) && (fabs(pRecord->Zm-pRecord->oldZm)<pProject->spectra.SZADelta))))
+
+        geoFlag=0;
+
+       // Check elevation angle
+
+       if (geoFlag &&
+        (((fabs(pProject->spectra.elevMin-pProject->spectra.elevMax)>(double)1.e-4) || (fabs(pProject->spectra.elevMax)>0.)) &&
+         ((pRecord->elevationViewAngle>pProject->spectra.elevMax+pProject->spectra.elevTol) || (pRecord->elevationViewAngle<pProject->spectra.elevMin-pProject->spectra.elevTol))))
+
+        geoFlag=0;
+
+       if (geoFlag) // this record matches - exit the search loop
+        break;
+
+
+         //if (((fabs(pProject->spectra.SZAMin-pProject->spectra.SZAMax)<(double)1.e-4) ||
+         //     ((pRecord->Zm>=pProject->spectra.SZAMin) && (pRecord->Zm<=pProject->spectra.SZAMax))) &&
+         //    ((fabs(pProject->spectra.SZADelta)<(double)1.e-4) ||
+         //     (fabs(pRecord->Zm-pRecord->oldZm)>pProject->spectra.SZADelta))) {
+         //  // this record matches - exit the search loop
+         //  break;
+         // }
+
+
+       // }
+
+
      }
 
      if (outputFlag && (THRD_id!=THREAD_TYPE_EXPORT)) {   // analysis : bad record but save all spectra
@@ -2088,7 +2117,7 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
 
      // try the next record
      rec+=inc;
-    }
+    }  // end while
 
    if (rc != ERROR_ID_NO) {
     // search loop terminated due to fatal error - a message was already logged
@@ -2116,6 +2145,8 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
     }
     return 0; // No more matching records
    }
+
+
    else if (THRD_id==THREAD_TYPE_EXPORT)
     {
     	int indexFenoColumn=(pEngineContext->recordNumber - 1) % ANALYSE_swathSize;

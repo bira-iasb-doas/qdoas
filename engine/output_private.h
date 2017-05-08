@@ -40,6 +40,15 @@ static inline void get_name(struct output_field *this_field __attribute__ ((unus
   *name = strdup(pEngineContext->recordInfo.Nom);
 }
 
+static inline void get_filename(struct output_field *this_field __attribute__ ((unused)), char **name, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+
+  char *ptr;
+
+  ptr=strrchr(pEngineContext->fileInfo.fileName,PATH_SEP);
+
+  *name = (ptr!=NULL)?&ptr[1]:pEngineContext->fileInfo.fileName;
+}
+
 static inline void get_date(struct output_field *this_field __attribute__ ((unused)), struct date *date, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
   const struct date *datein = &pEngineContext->recordInfo.present_datetime.thedate;
   date->da_day = datein->da_day;

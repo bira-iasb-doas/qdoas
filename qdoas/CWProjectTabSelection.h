@@ -46,6 +46,7 @@ class CWProjectTabSelection : public QFrame
  private:
   QLineEdit *m_szaMinEdit, *m_szaMaxEdit, *m_szaDeltaEdit;
   QLineEdit *m_recordMinEdit, *m_recordMaxEdit;
+  QLineEdit *m_elevationMinEdit, *m_elevationMaxEdit, *m_elevationTolEdit;
   QLineEdit *m_cloudFractionMinEdit, *m_cloudFractionMaxEdit;
   CWGeolocation *m_geolocationEdit;
   QGroupBox *m_cloudFractionGroup;

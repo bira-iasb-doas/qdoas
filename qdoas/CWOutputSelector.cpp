@@ -167,6 +167,7 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_TOTALACQTIME,               "Total Acquisition Time"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_LAMBDA,               "Lambda"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SPECTRA,               "Spectra"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_FILENAME,              "File name"));
 
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_PRECALCULATED_FLUXES,   "Precalculated fluxes"));
 
@@ -568,6 +569,8 @@ void getValidFieldFlags(int *validFlags, int instrument,bool exportFlag)
 
       if (instrument==PRJCT_INSTR_FORMAT_MFC_BIRA)
        validFlags[PRJCT_RESULTS_MEASTYPE]=1;
+      else
+       validFlags[PRJCT_RESULTS_FILENAME]=1;
      }
     break;
  // ----------------------------------------------------------------------------

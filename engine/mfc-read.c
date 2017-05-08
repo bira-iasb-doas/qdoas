@@ -120,6 +120,7 @@ RC MFC_LoadOffset(ENGINE_CONTEXT *pEngineContext)
 
  	PROJECT *pProject;                                                            // pointer to the current project
   PRJCT_INSTRUMENTAL *pInstrumental;                                            // pointer to the instrumental part of the project
+  PRJCT_MFC *pMfc;
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
   RC rc;
 
@@ -127,6 +128,7 @@ RC MFC_LoadOffset(ENGINE_CONTEXT *pEngineContext)
 
   pProject=&pEngineContext->project;
   pInstrumental=&pProject->instrumental;
+  pMfc=&pInstrumental->mfc;
   pBuffers=&pEngineContext->buffers;
 
   rc=ERROR_ID_NO;
@@ -142,7 +144,7 @@ RC MFC_LoadOffset(ENGINE_CONTEXT *pEngineContext)
 
     rc=(pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC)?
         MFC_ReadRecord(pInstrumental->offsetFile,&MFC_headerOff,pBuffers->offset,
-       &MFC_headerDrk,NULL,&MFC_headerOff,NULL,pInstrumental->mfcMaskOffset,pInstrumental->mfcMaskSpec,pInstrumental->mfcRevert): // remove offset from dark current
+       &MFC_headerDrk,NULL,&MFC_headerOff,NULL,pMfc->mfcMaskOffset,pMfc->mfcMaskSpec,pMfc->mfcRevert): // remove offset from dark current
         MFC_ReadRecordStd(pEngineContext,pInstrumental->offsetFile,&MFC_headerOff,pBuffers->offset,
        &MFC_headerDrk,NULL,&MFC_headerOff,NULL);
 
@@ -161,6 +163,7 @@ RC MFC_LoadDark(ENGINE_CONTEXT *pEngineContext)
 
  	PROJECT *pProject;                                                            // pointer to the current project
   PRJCT_INSTRUMENTAL *pInstrumental;                                            // pointer to the instrumental part of the project
+  PRJCT_MFC *pMfc;
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
   RC rc;
 
@@ -168,6 +171,7 @@ RC MFC_LoadDark(ENGINE_CONTEXT *pEngineContext)
 
   pProject=&pEngineContext->project;
   pInstrumental=&pProject->instrumental;
+  pMfc=&pInstrumental->mfc;
   pBuffers=&pEngineContext->buffers;
 
   rc=ERROR_ID_NO;
@@ -183,7 +187,7 @@ RC MFC_LoadDark(ENGINE_CONTEXT *pEngineContext)
 
     rc=(pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC)?
         MFC_ReadRecord(pInstrumental->vipFile,&MFC_headerDrk,pBuffers->varPix,
-       &MFC_headerDrk,NULL,&MFC_headerOff,pBuffers->offset,pInstrumental->mfcMaskOffset,pInstrumental->mfcMaskSpec,pInstrumental->mfcRevert): // remove offset from dark current
+       &MFC_headerDrk,NULL,&MFC_headerOff,pBuffers->offset,pMfc->mfcMaskOffset,pMfc->mfcMaskSpec,pMfc->mfcRevert): // remove offset from dark current
         MFC_ReadRecordStd(pEngineContext,pInstrumental->vipFile,&MFC_headerDrk,pBuffers->varPix,
        &MFC_headerDrk,NULL,&MFC_headerOff,pBuffers->offset);
 
@@ -561,6 +565,7 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
                       *ptr,*ptr2;                                               // pointers to parts in the previous string
   struct date          today;                                                   // date of the current record
   PRJCT_INSTRUMENTAL  *pInstrumental;                                           // pointer to the instrumental part of the project
+  PRJCT_MFC           *pMfc;
   RC                   rc;                                                      // return code
   double tmLocal,Tm1,Tm2;
 
@@ -572,6 +577,7 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
   memset(fileName,0,MAX_STR_SHORT_LEN+1);
   strncpy(fileName,pEngineContext->fileInfo.fileName,MAX_STR_SHORT_LEN);
   pInstrumental=&pEngineContext->project.instrumental;
+  pMfc=&pInstrumental->mfc;
   rc=ERROR_ID_NO;
 
   if ((ptr=strrchr(fileName,PATH_SEP))==NULL)
@@ -596,49 +602,49 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
 
     // Record read out
 
-    if (!(rc=MFC_ReadRecord(fileName,&MFC_header,pBuffers->spectrum,&MFC_headerDrk,pBuffers->varPix,&MFC_headerOff,pBuffers->offset,mfcMask,pInstrumental->mfcMaskSpec,pInstrumental->mfcRevert)))
+    if (!(rc=MFC_ReadRecord(fileName,&MFC_header,pBuffers->spectrum,&MFC_headerDrk,pBuffers->varPix,&MFC_headerOff,pBuffers->offset,mfcMask,pMfc->mfcMaskSpec,pMfc->mfcRevert)))
      {
-      if ((mfcMask==pInstrumental->mfcMaskSpec) &&
-         (((pInstrumental->mfcMaskSpec!=(unsigned int)0) && ((unsigned int)MFC_header.ty==mfcMask)) ||
-		  ((pInstrumental->mfcMaskSpec==(unsigned int)0) && ((unsigned int)MFC_header.ty==pInstrumental->mfcMaskSpec))) &&
-        (((double)pInstrumental->wavelength>(double)100.) && ((MFC_header.wavelength1<(double)pInstrumental->wavelength-5.) || (MFC_header.wavelength1>(double)pInstrumental->wavelength+5.))))
+      if ((mfcMask==pMfc->mfcMaskSpec) &&
+         (((pMfc->mfcMaskSpec!=(unsigned int)0) && ((unsigned int)MFC_header.ty==mfcMask)) ||
+		  ((pMfc->mfcMaskSpec==(unsigned int)0) && ((unsigned int)MFC_header.ty==pMfc->mfcMaskSpec))) &&
+        (((double)pMfc->wavelength>(double)100.) && ((MFC_header.wavelength1<(double)pMfc->wavelength-5.) || (MFC_header.wavelength1>(double)pMfc->wavelength+5.))))
 
        rc=ERROR_ID_FILE_RECORD;
 
       // In automatic file selection, replace instrumental functions with new ones if found
 
-      if ((mfcMask==pInstrumental->mfcMaskSpec) &&
+      if ((mfcMask==pMfc->mfcMaskSpec) &&
         (((mfcMask!=(unsigned int)0) && ((unsigned int)MFC_header.ty!=mfcMask)) || ((mfcMask==(unsigned int)0) && (rc==ERROR_ID_FILE_RECORD) && ((unsigned int)MFC_header.wavelength1!=mfcMask))))
        {
-        if (pInstrumental->mfcMaskUse)
+        if (pMfc->mfcMaskUse)
          {
-          if ((((MFC_header.ty&pInstrumental->mfcMaskInstr)!=0) || (MFC_header.wavelength1==pInstrumental->mfcMaskInstr)) && (pBuffers->instrFunction!=NULL))
+          if ((((MFC_header.ty&pMfc->mfcMaskInstr)!=0) || (MFC_header.wavelength1==pMfc->mfcMaskInstr)) && (pBuffers->instrFunction!=NULL))
            {
             MFC_ReadRecord(fileName,
                           &MFC_headerInstr,pBuffers->instrFunction,
                           &MFC_headerDrk,pBuffers->varPix,               // instrument function should be corrected for dark current
                           &MFC_headerOff,pBuffers->offset,                  // instrument function should be corrected for offset
-                          pInstrumental->mfcMaskInstr,pInstrumental->mfcMaskSpec,pInstrumental->mfcRevert);
+                          pMfc->mfcMaskInstr,pMfc->mfcMaskSpec,pMfc->mfcRevert);
 
             FILES_CompactPath(MFC_fileInstr,fileName,1,1);
            }
-          else if ((((MFC_header.ty&pInstrumental->mfcMaskDark)!=0) || (MFC_header.wavelength1==pInstrumental->mfcMaskDark)) && (pBuffers->varPix!=NULL))
+          else if ((((MFC_header.ty&pMfc->mfcMaskDark)!=0) || (MFC_header.wavelength1==pMfc->mfcMaskDark)) && (pBuffers->varPix!=NULL))
            {
             MFC_ReadRecord(fileName,
                           &MFC_headerInstr,pBuffers->varPix,
                           &MFC_headerDrk,NULL,                            // no correction for dark current
                           &MFC_headerOff,pBuffers->offset,                  // dark current should be corrected for offset
-                          pInstrumental->mfcMaskDark,pInstrumental->mfcMaskSpec,0);
+                          pMfc->mfcMaskDark,pMfc->mfcMaskSpec,0);
 
             FILES_CompactPath(MFC_fileDark,fileName,1,1);
            }
-          else if ((((MFC_header.ty&pInstrumental->mfcMaskOffset)!=0) || (MFC_header.wavelength1==pInstrumental->mfcMaskOffset)) &&  (pBuffers->offset!=NULL))
+          else if ((((MFC_header.ty&pMfc->mfcMaskOffset)!=0) || (MFC_header.wavelength1==pMfc->mfcMaskOffset)) &&  (pBuffers->offset!=NULL))
            {
             MFC_ReadRecord(fileName,
                           &MFC_headerOff,pBuffers->offset,
                           &MFC_headerDrk,NULL,                            // no correction for dark current
                           &MFC_headerOff,NULL,                            // no correction for offset
-                          pInstrumental->mfcMaskOffset,pInstrumental->mfcMaskSpec,0);
+                          pMfc->mfcMaskOffset,pMfc->mfcMaskSpec,0);
 
             FILES_CompactPath(MFC_fileOffset,fileName,1,1);
            }
@@ -853,18 +859,18 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,char *fileName,
 
     memcpy(pRecord->Nom,pHeaderSpe->specname,20);
 
-    dateSize=strlen(pInstrumental->mfcStdDate);
+    dateSize=strlen(pInstrumental->mfc.mfcStdDate);
 
     for (i=0;i<dateSize;i++)
      {
-      if ((pInstrumental->mfcStdDate[i]=='Y') || (pInstrumental->mfcStdDate[i]=='y'))
+      if ((pInstrumental->mfc.mfcStdDate[i]=='Y') || (pInstrumental->mfc.mfcStdDate[i]=='y'))
        {
         iYear=sepN;
         yearN++;
        }
-      else if ((pInstrumental->mfcStdDate[i]=='M') ||(pInstrumental->mfcStdDate[i]=='m'))
+      else if ((pInstrumental->mfc.mfcStdDate[i]=='M') ||(pInstrumental->mfc.mfcStdDate[i]=='m'))
        iMon=sepN;
-      else if ((pInstrumental->mfcStdDate[i]=='D') || (pInstrumental->mfcStdDate[i]=='d'))
+      else if ((pInstrumental->mfc.mfcStdDate[i]=='D') || (pInstrumental->mfc.mfcStdDate[i]=='d'))
        iDay=sepN;
       else
        sepN++;
@@ -1077,7 +1083,7 @@ RC ReliMFCStd(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
 
       if (rc || (dateFlag && ((pRecord->localCalDay!=localDay) || (pRecord->elevationViewAngle<80.))) )                     // reference spectra are zenith only
        rc=ERROR_ID_FILE_RECORD;
-      else if (pEngineContext->project.instrumental.mfcRevert)
+      else if (pEngineContext->project.instrumental.mfc.mfcRevert)
        VECTOR_Invert(pBuffers->spectrum,n_wavel);
      }
    }
@@ -1484,7 +1490,7 @@ RC MFC_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                          &tbinaryRef,pTabFeno->Sref,
                          &MFC_headerDrk,pBuffers->varPix,
                          &MFC_headerOff,pBuffers->offset,
-                         pInstrumental->mfcMaskSpec,pInstrumental->mfcMaskSpec,pInstrumental->mfcRevert);
+                         pInstrumental->mfc.mfcMaskSpec,pInstrumental->mfc.mfcMaskSpec,pInstrumental->mfc.mfcRevert);
     	 	else
         rc=MFC_ReadRecordStd(pEngineContext,fileName,
                             &tbinaryRef,pTabFeno->Sref,

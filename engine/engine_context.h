@@ -21,6 +21,7 @@ extern "C" {
 typedef struct _prjctSpectra {
   int    noMin,noMax;                                                           // spectra numbers range
   float  SZAMin,SZAMax,SZADelta;                                                // SZA range
+  float  elevMin,elevMax,elevTol;
   float  cloudMin,cloudMax;                                                     // cloud fraction range (for satellite measurements)
   float  longMin,longMax,latMin,latMax,                                         // resp. longitude and latitude ranges
          radius;                                                                // radius if circle mode is used
@@ -145,6 +146,20 @@ typedef struct _prjctOmiFormat
  }
 PRJCT_OMI;
 
+typedef struct _prjctMfcFormat
+ {
+  unsigned int        mfcMaskOffset;
+  unsigned int        mfcMaskDark;
+  unsigned int        mfcMaskInstr;
+  unsigned int        mfcMaskSpec;
+  int         mfcMaskUse;
+  int         mfcMaxSpectra;
+  int         mfcRevert;
+  char       mfcStdDate[24];
+  int     wavelength;
+ }
+PRJCT_MFC;
+
 typedef struct _prjctInstrumental
  {
   char       observationSite[MAX_ITEM_NAME_LEN+1];                            // index of observation site in list
@@ -154,7 +169,6 @@ typedef struct _prjctInstrumental
   char       instrFunction[MAX_ITEM_TEXT_LEN];                              // instrumental function
   char       vipFile[MAX_ITEM_TEXT_LEN];                                    // interpixel variability correction
   char       dnlFile[MAX_ITEM_TEXT_LEN];                                    // detector not linearity correction
-  char       offsetFile[MAX_ITEM_TEXT_LEN];                                 // offset file
   char       imagePath[MAX_ITEM_TEXT_LEN];                                  // root path for camera pictures
   bool        use_row[MAX_SWATHSIZE];                          // to skip rows of imager instruments
   int         detectorSize;                                                     // size of detector in pixels
@@ -165,18 +179,11 @@ typedef struct _prjctInstrumental
   PRJCT_GOME  gome;
   PRJCT_SCIA  scia;
   PRJCT_OMI   omi;
+  PRJCT_MFC   mfc;
+  char       offsetFile[MAX_ITEM_TEXT_LEN];                                 // offset file
   struct instrumental_tropomi tropomi;
-  int         wavelength;
-  unsigned int        mfcMaskOffset;
-  unsigned int        mfcMaskDark;
-  unsigned int        mfcMaskInstr;
-  unsigned int        mfcMaskSpec;
-  int         mfcMaskUse;
-  int         mfcMaxSpectra;
-  int         mfcRevert;
   int         offsetFlag;
   double      lambdaMin,lambdaMax;
-  char       mfcStdDate[24];
   float       opusTimeShift;
   char       fileExt[50];
  }
