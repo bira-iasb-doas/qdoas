@@ -1296,7 +1296,8 @@ RC EngineBuildRefList(ENGINE_CONTEXT *pEngineContext)
      	if (pEngineContext->mfcDoasisFlag)
        sprintf(ENGINE_contextRef.fileInfo.fileName,"%s%c%s",pMfc->filePath,PATH_SEP,&pMfc->fileNames[(indexRecord-1)*(DOAS_MAX_PATH_LEN+1)]);
 
-      if (!(rc=EngineReadFile(&ENGINE_contextRef,(!pEngineContext->mfcDoasisFlag)?indexRecord:1,1,localCalDay)) && (ENGINE_contextRef.recordInfo.Zm>(double)0.) && (ENGINE_contextRef.recordInfo.Zm<(double)96.))
+      if (!(rc=EngineReadFile(&ENGINE_contextRef,(!pEngineContext->mfcDoasisFlag)?indexRecord:1,1,localCalDay)) &&
+           (ENGINE_contextRef.recordInfo.Zm>(double)0.) && (ENGINE_contextRef.recordInfo.Zm<(double)96.))
        {
         // Data on record
 
