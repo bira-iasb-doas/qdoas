@@ -13,13 +13,13 @@ QMAKE_CFLAGS += -g -std=gnu99 -Wall -Wextra -pedantic \
 QMAKE_LFLAGS += -g
 QMAKE_LFLAGS_RELEASE=
 
-QDOAS_VERSION=3.0
+QDOAS_VERSION=3.1
 
 win64 {
   QDOAS_VERSION = "$${QDOAS_VERSION}_x86_64"
 }
 
-DEFINES += QDOAS_VERSION="\"\\\"$${QDOAS_VERSION}\\\"\"" QDOAS_DATE="\"\\\"March 2016\\\"\""
+DEFINES += QDOAS_VERSION="\"\\\"$${QDOAS_VERSION}\\\"\"" QDOAS_DATE="\"\\\"14 June 2017\\\"\""
 
 LIBS += -L../mediator -lmediator -L../engine -lengine -L../common -lcommon
 DEPENDPATH += ../common ../engine ../mediator
@@ -30,21 +30,6 @@ LIBS += -lgsl -lgslcblas
 #----------------------------------------------
 # Platform dependency ...
 #----------------------------------------------
-
-unix {
-  INCLUDEPATH += $$(HOME)/include
-  QMAKE_LIBDIR += $$(HOME)/lib
-  QMAKE_RPATHDIR += $$(HOME)/lib
-
-  isEmpty(INSTALL_PREFIX) {
-    INSTALL_PREFIX = $$(HOME)
-  }
-
-  INCLUDEPATH += $$INSTALL_PREFIX/include
-  INCLUDEPATH += $$INSTALL_PREFIX/include/hdf4
-  INCLUDEPATH += $$INSTALL_PREFIX/include/qwt
-  QMAKE_LIBDIR += $$INSTALL_PREFIX/lib
-}
 
 bira {
   LIBS -= -lgslcblas
@@ -185,6 +170,18 @@ hpc {
 
   QMAKE_LIBDIR += /space/hpc-apps/bira/2015a/hdf-eos5-1.14-hdf5-1.8.10/lib64
   QMAKE_RPATHDIR += /space/hpc-apps/bira/2015a/hdf-eos5-1.14-hdf5-1.8.10/lib64
-  QMAKE_LIBDIR += /$$INSTALL_PREFIX/lib /sw/sdev/intel/parallel_studio_xe_2015_update_3-pguyan/composer_xe_2015.3.187/compiler/lib/intel64
-  QMAKE_RPATHDIR += /$$INSTALL_PREFIX/lib /sw/sdev/intel/parallel_studio_xe_2015_update_3-pguyan/composer_xe_2015.3.187/compiler/lib/intel64
+  QMAKE_LIBDIR += $$INSTALL_PREFIX/lib /sw/sdev/intel/parallel_studio_xe_2015_update_3-pguyan/composer_xe_2015.3.187/compiler/lib/intel64
+  QMAKE_RPATHDIR += $$INSTALL_PREFIX/lib /sw/sdev/intel/parallel_studio_xe_2015_update_3-pguyan/composer_xe_2015.3.187/compiler/lib/intel64
+}
+
+unix {
+  isEmpty(INSTALL_PREFIX) {
+    INSTALL_PREFIX = $$(HOME)
+  }
+
+  INCLUDEPATH += $$INSTALL_PREFIX/include
+  INCLUDEPATH += $$INSTALL_PREFIX/include/hdf4
+  INCLUDEPATH += $$INSTALL_PREFIX/include/qwt
+  QMAKE_LIBDIR += $$INSTALL_PREFIX/lib
+  QMAKE_RPATHDIR += $$INSTALL_PREFIX/lib
 }
