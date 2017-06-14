@@ -44,6 +44,8 @@ void FIT_PROPERTIES_free(const char *callingFunctionShort, struct fit_properties
   // Release allocated buffers
 
   LINEAR_free(fitprops->linfit);
+  fitprops->linfit=NULL;
+
   if (fitprops->A!=NULL)
    MEMORY_ReleaseDMatrix(functionNameShort,"A",fitprops->A,0,1);
   if (fitprops->P!=NULL)
@@ -67,6 +69,8 @@ RC FIT_PROPERTIES_alloc(const char *callingFunctionShort,struct fit_properties *
   #endif
 
   RC rc=ERROR_ID_NO;
+
+  fitprops->linfit=NULL;
 
   // Allocation
 
