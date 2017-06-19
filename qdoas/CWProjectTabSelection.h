@@ -42,14 +42,16 @@ class CWProjectTabSelection : public QFrame
 
  public slots:
   void slotInstrumentChanged(int instrument);
+  void slotInstrumentTypeChanged(int instrumentType);
 
  private:
   QLineEdit *m_szaMinEdit, *m_szaMaxEdit, *m_szaDeltaEdit;
+  QLineEdit *m_refAngleEdit, *m_refTolEdit;
   QLineEdit *m_recordMinEdit, *m_recordMaxEdit;
   QLineEdit *m_elevationMinEdit, *m_elevationMaxEdit, *m_elevationTolEdit;
   QLineEdit *m_cloudFractionMinEdit, *m_cloudFractionMaxEdit;
   CWGeolocation *m_geolocationEdit;
-  QGroupBox *m_cloudFractionGroup;
+  QGroupBox *m_cloudFractionGroup,*m_geolocationGroup,*m_elevationGroup,*m_refGroup;
 };
 
 class CWGeolocation : public QFrame

@@ -206,10 +206,10 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   maxdoasScanLayout->setMargin(0);
 
   m_scanCombo = new QComboBox(m_maxdoasScanFrame);
-  m_scanCombo->addItem("Zenith before", QVariant(ANLYS_MAXDOAS_REF_SCAN_BEFORE));
-  m_scanCombo->addItem("Zenith after", QVariant(ANLYS_MAXDOAS_REF_SCAN_AFTER));
-  m_scanCombo->addItem("Average zeniths after and before", QVariant(ANLYS_MAXDOAS_REF_SCAN_AVERAGE));
-  m_scanCombo->addItem("Interpolate zeniths after and before", QVariant(ANLYS_MAXDOAS_REF_SCAN_INTERPOLATE));
+  m_scanCombo->addItem("Reference before", QVariant(ANLYS_MAXDOAS_REF_SCAN_BEFORE));
+  m_scanCombo->addItem("Reference after", QVariant(ANLYS_MAXDOAS_REF_SCAN_AFTER));
+  m_scanCombo->addItem("Average references after and before", QVariant(ANLYS_MAXDOAS_REF_SCAN_AVERAGE));
+  m_scanCombo->addItem("Interpolate references after and before", QVariant(ANLYS_MAXDOAS_REF_SCAN_INTERPOLATE));
   maxdoasScanLayout->addWidget(m_scanCombo);
   maxdoasScanLayout->addStretch(1);
 
@@ -315,6 +315,7 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   m_refTwoStack->setMargin(0);
 
   if ((p->instrumental.format==PRJCT_INSTR_FORMAT_CCD_EEV) || (p->instrumental.format==PRJCT_INSTR_FORMAT_MFC) || (p->instrumental.format==PRJCT_INSTR_FORMAT_MFC_STD) || (p->instrumental.format==PRJCT_INSTR_FORMAT_MFC_BIRA) ||
+      (p->instrumental.format==PRJCT_INSTR_FORMAT_BIRA_MOBILE) || (p->instrumental.format==PRJCT_INSTR_FORMAT_BIRA_AIRBORNE) ||
      ((p->instrumental.format==PRJCT_INSTR_FORMAT_ASCII) && ((p->instrumental.ascii.flagElevationAngle) || (p->instrumental.ascii.format==PRJCT_INSTR_ASCII_FORMAT_COLUMN_EXTENDED))))
    m_refTwoStack->addWidget(m_maxdoasFrame);  // automatic - takes index 0
   else
@@ -548,6 +549,7 @@ bool CWAnalysisWindowPropertyEditor::actionOk(void)
     strcpy(d->residualFile, m_residualEdit->text().toLocal8Bit().data());
 
     if ((p->instrumental.format==PRJCT_INSTR_FORMAT_CCD_EEV) || (p->instrumental.format==PRJCT_INSTR_FORMAT_MFC) || (p->instrumental.format==PRJCT_INSTR_FORMAT_MFC_STD) || (p->instrumental.format==PRJCT_INSTR_FORMAT_MFC_BIRA) ||
+        (p->instrumental.format==PRJCT_INSTR_FORMAT_BIRA_MOBILE) || (p->instrumental.format==PRJCT_INSTR_FORMAT_BIRA_AIRBORNE) ||
        ((p->instrumental.format==PRJCT_INSTR_FORMAT_ASCII) && ((p->instrumental.ascii.flagElevationAngle) || (p->instrumental.ascii.format==PRJCT_INSTR_ASCII_FORMAT_COLUMN_EXTENDED))))
      {
       d->refSzaCenter = m_maxdoasSzaCenterEdit->text().toDouble();
@@ -650,6 +652,7 @@ void CWAnalysisWindowPropertyEditor::projectPropertiesChanged()
       // MAXDOAS measurements
 
       if ((d->instrumental.format==PRJCT_INSTR_FORMAT_CCD_EEV) || (d->instrumental.format==PRJCT_INSTR_FORMAT_MFC) || (d->instrumental.format==PRJCT_INSTR_FORMAT_MFC_STD) ||  (d->instrumental.format==PRJCT_INSTR_FORMAT_MFC_BIRA) ||
+          (d->instrumental.format==PRJCT_INSTR_FORMAT_BIRA_MOBILE) || (d->instrumental.format==PRJCT_INSTR_FORMAT_BIRA_AIRBORNE) ||
          ((d->instrumental.format==PRJCT_INSTR_FORMAT_ASCII) && ((d->instrumental.ascii.flagElevationAngle) || (d->instrumental.ascii.format==PRJCT_INSTR_ASCII_FORMAT_COLUMN_EXTENDED))))
        {
         m_maxdoasFrame->show();

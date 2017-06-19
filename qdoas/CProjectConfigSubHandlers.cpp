@@ -317,6 +317,13 @@ bool CProjectSelectionSubHandler::start(const QString &element, const QXmlAttrib
     m_selection->elevationTolerance = atts.value("tol").toDouble();
 
   }
+  if (element == "reference") {
+
+    // defaults from mediateInitializeProject() are ok if attributes are not present
+    m_selection->refAngle = atts.value("angle").toDouble();
+    m_selection->refTolerance = atts.value("tol").toDouble();
+
+  }
   else if (element == "record") {
 
     // defaults from mediateInitializeProject() are ok if attributes are not present

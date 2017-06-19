@@ -567,7 +567,7 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
   PRJCT_INSTRUMENTAL  *pInstrumental;                                           // pointer to the instrumental part of the project
   PRJCT_MFC           *pMfc;
   RC                   rc;                                                      // return code
-  double tmLocal,Tm1,Tm2;
+  double tmLocal,Tm1,Tm2,timeshift;
 
   // Initializations
 
@@ -740,12 +740,14 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
 
         MFC_header.longitude=-MFC_header.longitude;
 
+        timeshift=(fabs(THRD_localShift)>EPSILON)?THRD_localShift:floor(pRecord->longitude/15.);
+
         pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
         pRecord->Zm=ZEN_FNTdiz(ZEN_FNCrtjul(&pRecord->Tm),&pRecord->longitude,&pRecord->latitude,&pRecord->Azimuth);
-        tmLocal=pRecord->Tm+THRD_localShift*3600.;
+        tmLocal=pRecord->Tm+timeshift*3600.;
 
         pRecord->localCalDay=ZEN_FNCaljda(&tmLocal);
-        pRecord->localTimeDec=fmod(pRecord->TimeDec+24.+THRD_localShift,(double)24.);
+        pRecord->localTimeDec=fmod(pRecord->TimeDec+24.+timeshift,(double)24.);
 
         pRecord->longitude=-MFC_header.longitude;  // !!!
 
@@ -754,7 +756,10 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
 //        if (dateFlag && (pRecord->localCalDay>localDay))
 //         rc=ERROR_ID_FILE_END;
 
-        if (rc || (dateFlag && ((pRecord->localCalDay!=localDay) || (pRecord->elevationViewAngle<80.))))                  // reference spectra are zenith only
+        if (rc || (dateFlag && ((pRecord->localCalDay!=localDay) ||
+                                (pRecord->elevationViewAngle<pEngineContext->project.spectra.refAngle-pEngineContext->project.spectra.refTol) ||
+                                (pRecord->elevationViewAngle>pEngineContext->project.spectra.refAngle+pEngineContext->project.spectra.refTol))))         // reference spectra could be a not zenith sky spectrum
+
            rc=ERROR_ID_FILE_RECORD;
        }
      }
@@ -1036,7 +1041,7 @@ RC ReliMFCStd(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
   double               longit;                                                  // longitude of the current record
   FILE                *fp;                                                      // pointer to the current file
   RC                   rc;                                                      // return code
-  double               tmLocal;
+  double               tmLocal,timeshift;
 
   // Initializations
 
@@ -1067,21 +1072,27 @@ RC ReliMFCStd(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
       pRecord->BestShift=(double)0.;
       pRecord->NTracks=0;
 
+      longit=-pRecord->longitude;
+
       pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
       pRecord->Zm=ZEN_FNTdiz(ZEN_FNCrtjul(&pRecord->Tm),&longit,&pRecord->latitude,NULL);
       pRecord->TimeDec=(double)pRecord->present_datetime.thetime.ti_hour+pRecord->present_datetime.thetime.ti_min/60.+pRecord->present_datetime.thetime.ti_sec/3600.;
 
       pRecord->altitude=(double)0.;
-      longit=-pRecord->longitude;
 
-      tmLocal=pRecord->Tm+THRD_localShift*3600.;
+      timeshift=(fabs(THRD_localShift)>EPSILON)?THRD_localShift:floor(pRecord->longitude/15.);
+
+      tmLocal=pRecord->Tm+timeshift*3600.;
 
       pRecord->localCalDay=ZEN_FNCaljda(&tmLocal);
-      pRecord->localTimeDec=fmod(pRecord->TimeDec+24.+THRD_localShift,(double)24.);
+      pRecord->localTimeDec=fmod(pRecord->TimeDec+24.+timeshift,(double)24.);
 
       // User constraints
 
-      if (rc || (dateFlag && ((pRecord->localCalDay!=localDay) || (pRecord->elevationViewAngle<80.))) )                     // reference spectra are zenith only
+      if (rc || (dateFlag && ((pRecord->localCalDay!=localDay) ||
+                              (pRecord->elevationViewAngle<pEngineContext->project.spectra.refAngle-pEngineContext->project.spectra.refTol) ||
+                              (pRecord->elevationViewAngle>pEngineContext->project.spectra.refAngle+pEngineContext->project.spectra.refTol))))            // reference spectra could be a not zenith sky spectrum
+      // if (rc || (dateFlag && ((pRecord->localCalDay!=localDay) || (pRecord->elevationViewAngle<80.))) )                     // reference spectra are zenith only
        rc=ERROR_ID_FILE_RECORD;
       else if (pEngineContext->project.instrumental.mfc.mfcRevert)
        VECTOR_Invert(pBuffers->spectrum,n_wavel);
@@ -1302,18 +1313,19 @@ RC MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
   // Declarations
 
   MFCBIRA_HEADER header;                                                        // header of records
-  RECORD_INFO *pRecordInfo;                                                     // pointer to the data part of the engine context
+  RECORD_INFO *pRecord;                                                     // pointer to the data part of the engine context
   BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
   float *spectrum;                                                              // pointer to spectrum and offset
   double Tm1,Tm2,tmLocal,longit;
   int nsec,nsec1,nsec2;
   struct date measurement_date;
+  double timeshift;
   INDEX   i;                                                                    // browse pixels of the detector
   RC      rc;                                                                   // return code
 
   // Initializations
 
-  pRecordInfo=&pEngineContext->recordInfo;
+  pRecord=&pEngineContext->recordInfo;
   pBuffers=&pEngineContext->buffers;
   rc=ERROR_ID_NO;
 
@@ -1331,64 +1343,66 @@ RC MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
 
    	// Retrieve the main information from the header
 
-   	pRecordInfo->NSomme=header.scansNumber;
-   	pRecordInfo->Tint=header.exposureTime;
-   	pRecordInfo->latitude=header.latitude;
-   	pRecordInfo->longitude=header.longitude;
-   	pRecordInfo->TotalAcqTime=header.totalAcqTime;
-    pRecordInfo->elevationViewAngle=header.elevationAngle;
-    pRecordInfo->azimuthViewAngle=header.azimuthAngle;
-    pRecordInfo->TDet=header.temperature;
+   	pRecord->NSomme=header.scansNumber;
+   	pRecord->Tint=header.exposureTime;
+   	pRecord->latitude=header.latitude;
+   	pRecord->longitude=header.longitude;
+   	pRecord->TotalAcqTime=header.totalAcqTime;
+    pRecord->elevationViewAngle=header.elevationAngle;
+    pRecord->azimuthViewAngle=header.azimuthAngle;
+    pRecord->TDet=header.temperature;
 
-    strcpy(pRecordInfo->mfcBira.originalFileName,header.fileName);
-    pRecordInfo->mfcBira.measurementType=header.measurementType;
+    strcpy(pRecord->mfcBira.originalFileName,header.fileName);
+    pRecord->mfcBira.measurementType=header.measurementType;
 
     // Calculate the date and time at half of the measurement
 
-    memcpy(&pRecordInfo->startDateTime.thetime,&header.startTime,sizeof(struct time));
-    memcpy(&pRecordInfo->endDateTime.thetime,&header.endTime,sizeof(struct time));
+    memcpy(&pRecord->startDateTime.thetime,&header.startTime,sizeof(struct time));
+    memcpy(&pRecord->endDateTime.thetime,&header.endTime,sizeof(struct time));
 
     measurement_date.da_year = header.measurementDate.da_year;
     measurement_date.da_mon = header.measurementDate.da_mon;
     measurement_date.da_day = header.measurementDate.da_day;
-    Tm1=(double)ZEN_NbSec(&measurement_date,&pRecordInfo->startDateTime.thetime,0);
-    Tm2=(double)ZEN_NbSec(&measurement_date,&pRecordInfo->endDateTime.thetime,0);
+    Tm1=(double)ZEN_NbSec(&measurement_date,&pRecord->startDateTime.thetime,0);
+    Tm2=(double)ZEN_NbSec(&measurement_date,&pRecord->endDateTime.thetime,0);
 
-    pRecordInfo->TotalExpTime=(double)Tm2-Tm1;
+    pRecord->TotalExpTime=(double)Tm2-Tm1;
 
     Tm1=(Tm1+Tm2)*0.5;
 
-    pRecordInfo->present_datetime.thedate.da_year = ZEN_FNCaljye (&Tm1);
-    pRecordInfo->present_datetime.thedate.da_mon  = ZEN_FNCaljmon (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
-    pRecordInfo->present_datetime.thedate.da_day  = ZEN_FNCaljday (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
+    pRecord->present_datetime.thedate.da_year = ZEN_FNCaljye (&Tm1);
+    pRecord->present_datetime.thedate.da_mon  = ZEN_FNCaljmon (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
+    pRecord->present_datetime.thedate.da_day  = ZEN_FNCaljday (ZEN_FNCaljye(&Tm1),ZEN_FNCaljda(&Tm1));
 
-    memcpy(&pRecordInfo->startDateTime.thedate,&pRecordInfo->present_datetime.thedate,sizeof(struct date));
-    memcpy(&pRecordInfo->endDateTime.thedate,&pRecordInfo->present_datetime.thedate,sizeof(struct date));
+    memcpy(&pRecord->startDateTime.thedate,&pRecord->present_datetime.thedate,sizeof(struct date));
+    memcpy(&pRecord->endDateTime.thedate,&pRecord->present_datetime.thedate,sizeof(struct date));
 
     // Data on the current spectrum
 
-    nsec1=pRecordInfo->startDateTime.thetime.ti_hour*3600+pRecordInfo->startDateTime.thetime.ti_min*60+pRecordInfo->startDateTime.thetime.ti_sec;
-    nsec2=pRecordInfo->endDateTime.thetime.ti_hour*3600+pRecordInfo->endDateTime.thetime.ti_min*60+pRecordInfo->endDateTime.thetime.ti_sec;
+    nsec1=pRecord->startDateTime.thetime.ti_hour*3600+pRecord->startDateTime.thetime.ti_min*60+pRecord->startDateTime.thetime.ti_sec;
+    nsec2=pRecord->endDateTime.thetime.ti_hour*3600+pRecord->endDateTime.thetime.ti_min*60+pRecord->endDateTime.thetime.ti_sec;
 
     if (nsec2<nsec1)
      nsec2+=86400;
 
     nsec=(nsec1+nsec2)/2;
 
-    pRecordInfo->present_datetime.thetime.ti_hour=(unsigned char)(nsec/3600);
-    pRecordInfo->present_datetime.thetime.ti_min=(unsigned char)((nsec%3600)/60);
-    pRecordInfo->present_datetime.thetime.ti_sec=(unsigned char)((nsec%3600)%60);
+    pRecord->present_datetime.thetime.ti_hour=(unsigned char)(nsec/3600);
+    pRecord->present_datetime.thetime.ti_min=(unsigned char)((nsec%3600)/60);
+    pRecord->present_datetime.thetime.ti_sec=(unsigned char)((nsec%3600)%60);
 
     longit=-header.longitude;
 
-    pRecordInfo->Tm=(double)ZEN_NbSec(&pRecordInfo->present_datetime.thedate,&pRecordInfo->present_datetime.thetime,0);
-    pRecordInfo->Zm=ZEN_FNTdiz(ZEN_FNCrtjul(&pRecordInfo->Tm),&longit,&pRecordInfo->latitude,&pRecordInfo->Azimuth);
+    pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
+    pRecord->Zm=ZEN_FNTdiz(ZEN_FNCrtjul(&pRecord->Tm),&longit,&pRecord->latitude,&pRecord->Azimuth);
 
-    pRecordInfo->TimeDec=(double)pRecordInfo->present_datetime.thetime.ti_hour+pRecordInfo->present_datetime.thetime.ti_min/60.+pRecordInfo->present_datetime.thetime.ti_sec/3600.;
+    pRecord->TimeDec=(double)pRecord->present_datetime.thetime.ti_hour+pRecord->present_datetime.thetime.ti_min/60.+pRecord->present_datetime.thetime.ti_sec/3600.;
 
-    tmLocal=pRecordInfo->Tm+THRD_localShift*3600.;
-    pRecordInfo->localCalDay=ZEN_FNCaljda(&tmLocal);
-    pRecordInfo->localTimeDec=fmod(pRecordInfo->TimeDec+24.+THRD_localShift,(double)24.);
+    timeshift=(fabs(THRD_localShift)>EPSILON)?THRD_localShift:floor(header.longitude/15.);
+
+    tmLocal=pRecord->Tm+timeshift*3600.;
+    pRecord->localCalDay=ZEN_FNCaljda(&tmLocal);
+    pRecord->localTimeDec=fmod(pRecord->TimeDec+24.+timeshift,(double)24.);
 
    	for (i=0;i<n_wavel;i++)
    	 pBuffers->spectrum[i]=(double)spectrum[i];
@@ -1415,8 +1429,12 @@ RC MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
   	   // for (i=0;i<NDET;i++)
   	   // pBuffers->spectrum[i]/=header.scansNumber;
 
-      if (rc || (dateFlag && ((pRecordInfo->elevationViewAngle<80.) || (header.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH))) ) //||                     // reference spectra are zenith only
-                //(!dateFlag && pEngineContext->analysisRef.refScan && !pEngineContext->analysisRef.refSza && (pRecordInfo->elevationViewAngle>80.)))
+      if (rc || (dateFlag && ((pRecord->localCalDay!=localDay) ||
+                              (pRecord->elevationViewAngle<pEngineContext->project.spectra.refAngle-pEngineContext->project.spectra.refTol) ||
+                              (pRecord->elevationViewAngle>pEngineContext->project.spectra.refAngle+pEngineContext->project.spectra.refTol))))  	                 // reference spectra could be a not zenith sky spectrum
+
+      //  if (rc || (dateFlag && ((pRecord->elevationViewAngle<80.) || (header.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH))) ) //||                     // reference spectra are zenith only
+                //(!dateFlag && pEngineContext->analysisRef.refScan && !pEngineContext->analysisRef.refSza && (pRecord->elevationViewAngle>80.)))
 
        rc=ERROR_ID_FILE_RECORD;
      }

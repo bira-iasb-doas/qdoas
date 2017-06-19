@@ -840,7 +840,13 @@ RC ASCII_QDOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int
 
     measurementType=pEngineContext->project.instrumental.user;
 
-    if (rc || (dateFlag && ((pRecordInfo->asc.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH) && (pRecordInfo->elevationViewAngle<80.))))
+    // if (rc || (dateFlag && ((pRecordInfo->asc.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH) && (pRecordInfo->elevationViewAngle<80.))))
+
+    if (rc || (dateFlag &&
+            (((fabs(pRecordInfo->elevationViewAngle+0.1)>EPSILON) || (fabs(pRecordInfo->azimuthViewAngle+0.1)>EPSILON)) &&
+             ((pRecordInfo->elevationViewAngle<pEngineContext->project.spectra.refAngle-pEngineContext->project.spectra.refTol) ||
+              (pRecordInfo->elevationViewAngle>pEngineContext->project.spectra.refAngle+pEngineContext->project.spectra.refTol)))))
+
      rc=ERROR_ID_FILE_RECORD;
 
     else if (!dateFlag && (measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_NONE))

@@ -46,6 +46,11 @@ void initializeMediateProjectSelection(mediate_project_selection_t *d)
 
   d->szaMinimum = 0.0;
   d->szaMaximum = 0.0;
+  d->szaDelta   = 0.0;
+
+  d->refAngle   = 90.;
+  d->refTolerance = 10.;
+
 
   d->elevationMinimum = 0.0;
   d->elevationMaximum = 0.0;
@@ -130,6 +135,7 @@ void initializeMediateProjectInstrumental(mediate_project_instrumental_t *d)
   d->uoft.lambdaMin=d->uoft.lambdaMax=(double)0.;
   d->noaa.lambdaMin=d->noaa.lambdaMax=(double)0.;
   d->mkzy.lambdaMin=d->mkzy.lambdaMax=(double)0.;
+  d->biramobile.lambdaMin=d->biramobile.lambdaMax=(double)0.;
   d->biraairborne.lambdaMin=d->biraairborne.lambdaMax=(double)0.;
   d->oceanoptics.lambdaMin=d->oceanoptics.lambdaMax=(double)0.;
 

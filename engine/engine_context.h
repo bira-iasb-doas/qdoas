@@ -22,6 +22,7 @@ typedef struct _prjctSpectra {
   int    noMin,noMax;                                                           // spectra numbers range
   float  SZAMin,SZAMax,SZADelta;                                                // SZA range
   float  elevMin,elevMax,elevTol;
+  float  refAngle,refTol;                                                       // for maxdoas measurements, angle to use for reference (usually zenith but could be another elevation angle)
   float  cloudMin,cloudMax;                                                     // cloud fraction range (for satellite measurements)
   float  longMin,longMax,latMin,latMax,                                         // resp. longitude and latitude ranges
          radius;                                                                // radius if circle mode is used

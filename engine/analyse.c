@@ -3119,7 +3119,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
     // Apply Kurucz on spectrum
 
     for (WrkFeno=0;WrkFeno<NFeno;WrkFeno++)
-     if (!TabFeno[indexFenoColumn][WrkFeno].hidden &&
+     if (!TabFeno[indexFenoColumn][WrkFeno].hidden && !TabFeno[indexFenoColumn][WrkFeno].rc &&
          ((TabFeno[indexFenoColumn][WrkFeno].useKurucz==ANLYS_KURUCZ_REF_AND_SPEC) ||
           (TabFeno[indexFenoColumn][WrkFeno].useKurucz==ANLYS_KURUCZ_SPEC)))
 
@@ -3171,7 +3171,17 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
         Feno->rc=ERROR_ID_NO;
         Feno->rc=(!Feno->hidden && (VECTOR_Equal(Spectre,Feno->Sref,n_wavel,(double)1.e-7) ||
-                 ((Feno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC) && (Feno->refMaxdoasSelectionMode==ANLYS_MAXDOAS_REF_SCAN) && (pRecord->elevationViewAngle>80.))))?-1:ERROR_ID_NO;
+
+                 ((Feno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC) &&      // Additional security (in principle, if one twilight is missing, use ref of the other twilight
+                  (Feno->refMaxdoasSelectionMode==ANLYS_MAXDOAS_REF_SZA) &&                    // if both twilights are missing, exit
+                 (((pRecord->localTimeDec<=12.) && (Feno->indexRefMorning==ITEM_NONE)) ||
+                  ((pRecord->localTimeDec>12.) && (Feno->indexRefAfternoon==ITEM_NONE)))) ||
+
+
+                 ((Feno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC) &&
+                  (Feno->refMaxdoasSelectionMode==ANLYS_MAXDOAS_REF_SCAN) &&
+                  (pRecord->elevationViewAngle>=pEngineContext->project.spectra.refAngle-pEngineContext->project.spectra.refTol) &&
+                  (pRecord->elevationViewAngle<=pEngineContext->project.spectra.refAngle+pEngineContext->project.spectra.refTol))))?-1:ERROR_ID_NO;
 
         sprintf(windowTitle,"Analysis results for %s window",Feno->windowName);
 
@@ -3636,6 +3646,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
            }
           else
            spectrum_destroy(old_range);
+
          }  // if (!Feno->hidden && (Feno->rcKurucz==ERROR_ID_NO) &&
        }  // for (WrkFeno=0;(WrkFeno<NFeno) && (rc!=THREAD_EVENT_STOP);WrkFeno++)
      }  // if (THRD_id==THREAD_TYPE_ANALYSIS)

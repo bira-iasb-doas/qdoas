@@ -290,7 +290,13 @@ RC AIRBORNE_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int lo
     pRecord->localCalDay=ZEN_FNCaljda(&tmLocal);
     pRecord->localTimeDec=fmod(pRecord->TimeDec+24.+THRD_localShift,(double)24.);
 
-    if (dateFlag && (pRecord->localCalDay!=localDay))
+//    if (dateFlag && (pRecord->localCalDay!=localDay))
+
+    if (rc || (dateFlag && ((pRecord->localCalDay!=localDay) ||
+            (((fabs(pRecord->elevationViewAngle+1.)>EPSILON) || (fabs(pRecord->azimuthViewAngle+1.)>EPSILON)) &&
+             ((pRecord->elevationViewAngle<pEngineContext->project.spectra.refAngle-pEngineContext->project.spectra.refTol) ||
+              (pRecord->elevationViewAngle>pEngineContext->project.spectra.refAngle+pEngineContext->project.spectra.refTol))))))
+
      rc=ERROR_ID_FILE_RECORD;
    }
 

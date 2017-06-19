@@ -187,6 +187,7 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
   m_instrumentalTab->slotInstrumentChanged(m_selectedInstrument);
   m_outputTab->slotInstrumentChanged(m_selectedInstrument);
 
+  m_selectionTab->slotInstrumentTypeChanged(m_instrTypeCombo->itemData(m_instrTypeCombo->currentIndex()).toInt());
   m_instrumentalTab->slotInstrumentTypeChanged(m_instrTypeCombo->itemData(m_instrTypeCombo->currentIndex()).toInt());
 
   // connections
@@ -200,6 +201,7 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
   connect(this, SIGNAL(signalInstrumentChanged(int)), m_instrumentalTab, SLOT(slotInstrumentChanged(int)));
   connect(this, SIGNAL(signalInstrumentChanged(int)), m_outputTab, SLOT(slotInstrumentChanged(int)));
   connect(this, SIGNAL(signalInstrumentTypeChanged(int)), m_instrumentalTab, SLOT(slotInstrumentTypeChanged(int)));
+  connect(this, SIGNAL(signalInstrumentTypeChanged(int)), m_selectionTab, SLOT(slotInstrumentTypeChanged(int)));
 
   connect(m_tabs,SIGNAL(currentChanged(int)),this,SLOT(slotPageChanged(int)));
 

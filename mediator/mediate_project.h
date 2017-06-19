@@ -127,6 +127,10 @@ extern "C" {
     int recordNumberMinimum;
     int recordNumberMaximum;
 
+    /* ref angle */
+    double refAngle;
+    double refTolerance;
+
     /* Viewing elevation angle range of interest */
     double elevationMinimum;
     double elevationMaximum;

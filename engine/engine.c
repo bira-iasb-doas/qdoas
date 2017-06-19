@@ -1338,16 +1338,28 @@ RC EngineBuildRefList(ENGINE_CONTEXT *pEngineContext)
   pEngineContext->analysisRef.zmMinIndex=indexZmMin;
   pEngineContext->analysisRef.zmMaxIndex=indexZmMax;
 
-   // TO CHECK WITH MPI PEOPLE  {
-   // TO CHECK WITH MPI PEOPLE   FILE *fp;
-   // TO CHECK WITH MPI PEOPLE   int i;
-   // TO CHECK WITH MPI PEOPLE   fp=fopen("RefList.dat","w+t");
-   // TO CHECK WITH MPI PEOPLE   fprintf(fp,"List of references : \n");
-   // TO CHECK WITH MPI PEOPLE   for (i=0;i<NRecord;i++)
-   // TO CHECK WITH MPI PEOPLE    fprintf(fp,"%d %g %s\n",indexList[i],ZmList[i],&pEngineContext->recordInfo.mfcDoasis.fileNames[(indexList[i]-1)*(DOAS_MAX_PATH_LEN+1)]);
-   // TO CHECK WITH MPI PEOPLE
-   // TO CHECK WITH MPI PEOPLE   fclose(fp);
-   // TO CHECK WITH MPI PEOPLE  }
+  //  {                                                                                                                                                   // TO CHECK WITH MPI PEOPLE
+  //   FILE *fp;                                                                                                                                          // TO CHECK WITH MPI PEOPLE
+  //   int i;                                                                                                                                             // TO CHECK WITH MPI PEOPLE
+  //   fp=fopen("RefList.dat","w+t");                                                                                                                     // TO CHECK WITH MPI PEOPLE
+  //   fprintf(fp,"List of references : \n");                                                                                                             // TO CHECK WITH MPI PEOPLE
+  //   for (i=0;i<NRecord;i++)                                                                                                                            // TO CHECK WITH MPI PEOPLE
+  //    fprintf(fp,"%d %g %s\n",indexList[i],ZmList[i],&pEngineContext->recordInfo.mfcDoasis.fileNames[(indexList[i]-1)*(DOAS_MAX_PATH_LEN+1)]);          // TO CHECK WITH MPI PEOPLE
+  //                                                                                                                                                      // TO CHECK WITH MPI PEOPLE
+  //   fclose(fp);                                                                                                                                        // TO CHECK WITH MPI PEOPLE
+  //  }                                                                                                                                                   // TO CHECK WITH MPI PEOPLE
+
+
+  // {
+  //  FILE *fp;
+  //  int i;
+  //  fp=fopen("RefList.dat","w+t");
+  //  fprintf(fp,"List of references : \n");
+  //  for (i=0;i<NRecord;i++)
+  //   fprintf(fp,"%d %g %g\n",indexList[i],ZmList[i],TimeDec[i]);
+  //
+  //  fclose(fp);
+  // }
 
 
   // Copy information from the ref context to the main context
@@ -1390,6 +1402,7 @@ RC EngineSZASetRefIndexes(ENGINE_CONTEXT *pEngineContext,FENO *pTabFeno)
  	indexZmMin=pRef->zmMinIndex;
 
  	recordNumber=(!pEngineContext->mfcDoasisFlag)?pEngineContext->recordNumber:pMfc->nFiles;
+ 	pTabFeno->indexRefMorning=pTabFeno->indexRefAfternoon=ITEM_NONE;
 
  	rc=ERROR_ID_NO;
 
@@ -1398,8 +1411,6 @@ RC EngineSZASetRefIndexes(ENGINE_CONTEXT *pEngineContext,FENO *pTabFeno)
       (pTabFeno->refMaxdoasSelectionMode==ANLYS_MAXDOAS_REF_SZA))
    {
     // Indexes reinitialization
-
-    pTabFeno->indexRefMorning=pTabFeno->indexRefAfternoon=pTabFeno->indexRef=ITEM_NONE;
 
     // No reference spectrum found in SZA range
 
@@ -1444,12 +1455,14 @@ RC EngineSZASetRefIndexes(ENGINE_CONTEXT *pEngineContext,FENO *pTabFeno)
        {
         if (pTabFeno->indexRefMorning==ITEM_NONE)
          {
-          rc=ERROR_SetLast("EngineSetRefIndexesMFC",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the morning",pEngineContext->fileInfo.fileName);
+          // rc=ERROR_SetLast("EngineSetRefIndexesMFC",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the morning",pEngineContext->fileInfo.fileName);
+          // Returning an error at this step makes stange behaviours of the program
           pTabFeno->indexRefMorning=pTabFeno->indexRefAfternoon;
          }
         else if (pTabFeno->indexRefAfternoon==ITEM_NONE)
          {
-          rc=ERROR_SetLast("EngineSetRefIndexesMFC",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the afternoon",ENGINE_contextRef.fileInfo.fileName);
+          // rc=ERROR_SetLast("EngineSetRefIndexesMFC",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the afternoon",ENGINE_contextRef.fileInfo.fileName);
+          // Returning an error at this step makes stange behaviours of the program
           pTabFeno->indexRefAfternoon=pTabFeno->indexRefMorning;
          }
        }
@@ -1457,6 +1470,8 @@ RC EngineSZASetRefIndexes(ENGINE_CONTEXT *pEngineContext,FENO *pTabFeno)
 
     pTabFeno->ZmRefMorning=(pTabFeno->indexRefMorning!=ITEM_NONE)?pRef->zmList[pTabFeno->indexRefMorning]:(double)-1.;
     pTabFeno->ZmRefAfternoon=(pTabFeno->indexRefAfternoon!=ITEM_NONE)?pRef->zmList[pTabFeno->indexRefAfternoon]:(double)-1.;
+
+    // Before the following tests, pTabFeno->indexRefMorning and pTabFeno->indexRefAfternoon are indexes in the reference list; after, there are record indexes of the reference in the file
 
     if (pTabFeno->indexRefMorning!=ITEM_NONE)
      pTabFeno->indexRefMorning=pRef->refIndexes[pTabFeno->indexRefMorning];
@@ -1530,6 +1545,7 @@ void EngineScanSetRefIndexes(ENGINE_CONTEXT *pEngineContext,INDEX indexRecord)
 
   pRef->indexScanBefore=indexScanBefore;
   pRef->indexScanAfter=indexScanAfter;
+
  }
 
 RC EngineLoadRefMFC(ENGINE_CONTEXT *pEngineContextRef,ENGINE_CONTEXT *pEngineContext,INDEX indexRefRecord)

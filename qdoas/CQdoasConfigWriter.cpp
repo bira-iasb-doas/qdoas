@@ -174,6 +174,7 @@ void CQdoasConfigWriter::writePropertiesSelection(FILE *fp, const mediate_projec
   fprintf(fp, "    <selection>\n");
   fprintf(fp, "      <sza min=\"%.3f\" max=\"%.3f\" delta=\"%.3f\" />\n", d->szaMinimum, d->szaMaximum, d->szaDelta);
   fprintf(fp, "      <elevation min=\"%.3f\" max=\"%.3f\" tol=\"%.3f\" />\n", d->elevationMinimum, d->elevationMaximum,d->elevationTolerance);
+  fprintf(fp, "      <reference angle=\"%.3f\" tol=\"%.3f\" />\n", d->refAngle, d->refTolerance);
   fprintf(fp, "      <record min=\"%d\" max=\"%d\" />\n", d->recordNumberMinimum, d->recordNumberMaximum);
   fprintf(fp, "      <cloud min=\"%.3f\" max=\"%.3f\" />\n", d->cloudFractionMinimum, d->cloudFractionMaximum);
   switch (d->geo.mode) {

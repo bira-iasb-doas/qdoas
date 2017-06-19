@@ -105,37 +105,20 @@ CWProjectTabSelection::CWProjectTabSelection(const mediate_project_selection_t *
 
   topLayout->addWidget(recordGroup);
 
-  // Elevation group
-  QGroupBox *elevationGroup = new QGroupBox("Viewing Elevation angles", this);
-  QGridLayout *elevationGroupLayout = new QGridLayout;
+  mainLayout->addLayout(topLayout);
 
-  pixels = fm.width("00000000");
-  elevationGroupLayout->addWidget(new QLabel("Min", this), 0, 0);
-  m_elevationMinEdit = new QLineEdit(this);
-  m_elevationMinEdit->setFixedWidth(pixels);
-  m_elevationMinEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 3, m_elevationMinEdit));
-  elevationGroupLayout->addWidget(m_elevationMinEdit, 0, 1);
-  elevationGroupLayout->addWidget(new QLabel("Max", this), 1, 0);
-  m_elevationMaxEdit = new QLineEdit(this);
-  m_elevationMaxEdit->setFixedWidth(pixels);
-  m_elevationMaxEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 3, m_elevationMaxEdit));
-  elevationGroupLayout->addWidget(m_elevationMaxEdit, 1, 1);
-  elevationGroupLayout->addWidget(new QLabel("Tol", this), 2, 0);
-  m_elevationTolEdit = new QLineEdit(this);
-  m_elevationTolEdit->setFixedWidth(pixels);
-  m_elevationTolEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 3, m_elevationTolEdit));
-  elevationGroupLayout->addWidget(m_elevationTolEdit, 2, 1);
-  elevationGroupLayout->setColumnStretch(2, 1);
-  elevationGroup->setLayout(elevationGroupLayout);
+  QHBoxLayout *satelliteLayout = new QHBoxLayout;
+  satelliteLayout->setMargin(0);
 
-  m_elevationMinEdit->validator()->fixup(tmpStr.setNum(properties->elevationMinimum));
-  m_elevationMinEdit->setText(tmpStr);
-  m_elevationMaxEdit->validator()->fixup(tmpStr.setNum(properties->elevationMaximum));
-  m_elevationMaxEdit->setText(tmpStr);
-  m_elevationTolEdit->validator()->fixup(tmpStr.setNum(properties->elevationTolerance));
-  m_elevationTolEdit->setText(tmpStr);
+  // Gelocation selection - also in a group box
+  m_geolocationGroup = new QGroupBox("Geolocations", this);
+  QVBoxLayout *geoGroupLayout = new QVBoxLayout;
+  geoGroupLayout->setMargin(0);
+  m_geolocationEdit = new CWGeolocation(&(properties->geo));
+  geoGroupLayout->addWidget(m_geolocationEdit);
 
-  topLayout->addWidget(elevationGroup);
+  m_geolocationGroup->setLayout(geoGroupLayout);
+  satelliteLayout->addWidget(m_geolocationGroup);
 
   // Cloud fraction group
 
@@ -162,19 +145,73 @@ CWProjectTabSelection::CWProjectTabSelection(const mediate_project_selection_t *
   m_cloudFractionMaxEdit->validator()->fixup(tmpStr.setNum(properties->cloudFractionMaximum));
   m_cloudFractionMaxEdit->setText(tmpStr);
 
-  topLayout->addWidget(m_cloudFractionGroup);
+  satelliteLayout->addWidget(m_cloudFractionGroup);
 
-  mainLayout->addLayout(topLayout);
+  mainLayout->addLayout(satelliteLayout);
 
-  // Gelocation selection - also in a group box
-  QGroupBox *geoGroup = new QGroupBox("Geolocations", this);
-  QVBoxLayout *geoGroupLayout = new QVBoxLayout;
-  geoGroupLayout->setMargin(0);
-  m_geolocationEdit = new CWGeolocation(&(properties->geo));
-  geoGroupLayout->addWidget(m_geolocationEdit);
-  geoGroup->setLayout(geoGroupLayout);
+  QHBoxLayout *maxdoasLayout = new QHBoxLayout;
+  maxdoasLayout->setMargin(0);
 
-  mainLayout->addWidget(geoGroup);
+   // Reference group
+
+  m_refGroup = new QGroupBox("Elevation ngle for reference selection (MAXDOAS)", this);
+  QGridLayout *refGroupLayout = new QGridLayout;
+
+  pixels = fm.width("00000000");
+  refGroupLayout->addWidget(new QLabel("Elevation angle (deg)", this), 0, 0);
+  m_refAngleEdit = new QLineEdit(this);
+  m_refAngleEdit->setFixedWidth(pixels);
+  m_refAngleEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 3, m_refAngleEdit));
+  refGroupLayout->addWidget(m_refAngleEdit, 0, 1);
+  refGroupLayout->addWidget(new QLabel("Tolerance (deg)", this), 2, 0);
+  m_refTolEdit = new QLineEdit(this);
+  m_refTolEdit->setFixedWidth(pixels);
+  m_refTolEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 3, m_refTolEdit));
+  refGroupLayout->addWidget(m_refTolEdit, 2, 1);
+  refGroupLayout->setColumnStretch(2, 1);
+  m_refGroup->setLayout(refGroupLayout);
+
+  // use the validators to input-check the initial values
+  m_refAngleEdit->validator()->fixup(tmpStr.setNum(properties->refAngle));
+  m_refAngleEdit->setText(tmpStr);
+  m_refTolEdit->validator()->fixup(tmpStr.setNum(properties->refTolerance));
+  m_refTolEdit->setText(tmpStr);
+
+  maxdoasLayout->addWidget(m_refGroup);
+
+  // Elevation group
+  m_elevationGroup = new QGroupBox("Viewing Elevation angles (MAXDOAS)", this);
+  QGridLayout *elevationGroupLayout = new QGridLayout;
+
+  pixels = fm.width("00000000");
+  elevationGroupLayout->addWidget(new QLabel("Min", this), 0, 0);
+  m_elevationMinEdit = new QLineEdit(this);
+  m_elevationMinEdit->setFixedWidth(pixels);
+  m_elevationMinEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 3, m_elevationMinEdit));
+  elevationGroupLayout->addWidget(m_elevationMinEdit, 0, 1);
+  elevationGroupLayout->addWidget(new QLabel("Max", this), 1, 0);
+  m_elevationMaxEdit = new QLineEdit(this);
+  m_elevationMaxEdit->setFixedWidth(pixels);
+  m_elevationMaxEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 3, m_elevationMaxEdit));
+  elevationGroupLayout->addWidget(m_elevationMaxEdit, 1, 1);
+  elevationGroupLayout->addWidget(new QLabel("Tol", this), 2, 0);
+  m_elevationTolEdit = new QLineEdit(this);
+  m_elevationTolEdit->setFixedWidth(pixels);
+  m_elevationTolEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 3, m_elevationTolEdit));
+  elevationGroupLayout->addWidget(m_elevationTolEdit, 2, 1);
+  elevationGroupLayout->setColumnStretch(2, 1);
+  m_elevationGroup->setLayout(elevationGroupLayout);
+
+  m_elevationMinEdit->validator()->fixup(tmpStr.setNum(properties->elevationMinimum));
+  m_elevationMinEdit->setText(tmpStr);
+  m_elevationMaxEdit->validator()->fixup(tmpStr.setNum(properties->elevationMaximum));
+  m_elevationMaxEdit->setText(tmpStr);
+  m_elevationTolEdit->validator()->fixup(tmpStr.setNum(properties->elevationTolerance));
+  m_elevationTolEdit->setText(tmpStr);
+
+  maxdoasLayout->addWidget(m_elevationGroup);
+
+  mainLayout->addLayout(maxdoasLayout);
 
   mainLayout->addStretch(1);
 }
@@ -184,7 +221,7 @@ void CWProjectTabSelection::apply(mediate_project_selection_t *properties) const
   // extract state from the GUI and set properties
   QString tmpStr;
 
-  // SZA
+  // sza
   tmpStr = m_szaMinEdit->text();
   properties->szaMinimum = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
   tmpStr = m_szaMaxEdit->text();
@@ -197,6 +234,12 @@ void CWProjectTabSelection::apply(mediate_project_selection_t *properties) const
   properties->recordNumberMinimum = tmpStr.isEmpty() ? 0 : tmpStr.toInt();
   tmpStr = m_recordMaxEdit->text();
   properties->recordNumberMaximum = tmpStr.isEmpty() ? 0 : tmpStr.toInt();
+
+  // ref
+  tmpStr = m_refAngleEdit->text();
+  properties->refAngle = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
+  tmpStr = m_refTolEdit->text();
+  properties->refTolerance = tmpStr.isEmpty() ? 0.0 : tmpStr.toDouble();
 
   // Viewing elevation angle
 
@@ -224,6 +267,22 @@ void CWProjectTabSelection::slotInstrumentChanged(int instrument)
 	 m_cloudFractionGroup->show();
 	else
 	 m_cloudFractionGroup->hide();
+}
+
+void CWProjectTabSelection::slotInstrumentTypeChanged(int instrumentType)
+{
+ if (instrumentType==PRJCT_INSTR_TYPE_SATELLITE)
+  {
+   m_geolocationGroup->show();
+   m_elevationGroup->hide();
+   m_refGroup->hide();
+  }
+ else
+  {
+   m_geolocationGroup->hide();
+   m_elevationGroup->show();
+   m_refGroup->show();
+  }
 }
 
 

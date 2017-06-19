@@ -629,6 +629,11 @@ void setMediateProjectSelection(PRJCT_SPECTRA *pEngineSpectra,const mediate_proj
    pEngineSpectra->elevMax=(float)pMediateSpectra->elevationMaximum;
    pEngineSpectra->elevTol=(float)pMediateSpectra->elevationTolerance+1.e-4;
 
+   // Angle to use for the reference spectrum
+
+   pEngineSpectra->refAngle=(float)pMediateSpectra->refAngle;
+   pEngineSpectra->refTol=(float)pMediateSpectra->refTolerance+1.e-4;;
+
    // Cloud fraction
 
    pEngineSpectra->cloudMin=(float)pMediateSpectra->cloudFractionMinimum;
@@ -938,6 +943,17 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       break;
       // ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_BIRA_MOBILE :                                                              // BIRA MOBILE
+
+      NDET[0]=2048;                                                                                     // size of the detector
+
+      pEngineInstrumental->offsetFlag=pMediateInstrumental->biramobile.straylight;
+      pEngineInstrumental->lambdaMin=pMediateInstrumental->biramobile.lambdaMin;
+      pEngineInstrumental->lambdaMax=pMediateInstrumental->biramobile.lambdaMax;
+
+      strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->biramobile.calibrationFile);    // calibration file
+      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->biramobile.transmissionFunctionFile);    // instrumental function file
+
+      break;
     case PRJCT_INSTR_FORMAT_BIRA_AIRBORNE :                                                              // BIRA AIRBORNE
 
       NDET[0]=2048;                                                                                     // size of the detector
@@ -1629,7 +1645,8 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
 
            if ((pTabFeno->refSpectrumSelectionMode=pAnalysisWindows->refSpectrumSelection)==ANLYS_REF_SELECTION_MODE_AUTOMATIC) {
              if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV) || (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC) || (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) || (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA) ||
-                 ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_ASCII) && (pEngineContext->project.instrumental.ascii.elevSaveFlag || (pEngineContext->project.instrumental.ascii.format==PRJCT_INSTR_ASCII_FORMAT_COLUMN_EXTENDED)))) {
+                 (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_BIRA_MOBILE) || (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_BIRA_AIRBORNE) ||
+                ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_ASCII) && (pEngineContext->project.instrumental.ascii.elevSaveFlag || (pEngineContext->project.instrumental.ascii.format==PRJCT_INSTR_ASCII_FORMAT_COLUMN_EXTENDED)))) {
 
                if ((pTabFeno->refMaxdoasSelectionMode=pAnalysisWindows->refMaxdoasSelection)==ANLYS_MAXDOAS_REF_SCAN)
                  pEngineContext->analysisRef.refScan++;
