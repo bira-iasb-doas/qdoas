@@ -604,7 +604,7 @@ enum _prjctResults
   PRJCT_RESULTS_LAMBDA,
   PRJCT_RESULTS_SPECTRA,
   PRJCT_RESULTS_FILENAME,
-  PRJCT_RESULTS_MAX
+  PRJCT_RESULTS_MAX            // addition/deletion of new fields impact changes in ascii-qdoas (ascFieldsNames)
  };
 
 // --------------------------

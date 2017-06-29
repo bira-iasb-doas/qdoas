@@ -236,7 +236,8 @@ char *ascFieldsNames[PRJCT_RESULTS_MAX]=
   (char *)"Total Measurement Time",                                             // PRJCT_RESULTS_TOTALEXPTIME
   (char *)"Total Acquisition Time",                                             // PRJCT_RESULTS_TOTALACQTIME
   (char *)"lambda",                                                             // PRJCT_RESULTS_LAMBDA,
-  (char *)"spectrum"                                                            // PRJCT_RESULTS_SPECTRA,
+  (char *)"spectrum",                                                           // PRJCT_RESULTS_SPECTRA,
+  (char *)"filename"                                                            // PRJCT_RESULTS_FILENAME
  };
 
 enum _ascLineType
