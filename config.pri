@@ -124,6 +124,12 @@ caro {
   CODE_GENERATION = release # Override because debug is broken
 }
 
+macports {
+  INSTALL_PREFIX = $$(HOME)
+  INCLUDEPATH += /opt/local/include /opt/local/lib/hdfeos5/include /opt/local/libexec/qt5/lib/qwt.framework/Versions/6/Headers
+  QMAKE_LIBDIR += /opt/local/lib /opt/local/lib/hdfeos5/lib /opt/local/libexec/qt5/lib
+}
+
 ubuntu {
 
   CONFIG += qwt
@@ -163,7 +169,7 @@ openblas {
 hpc {
   LIBS += -lirc -lsvml
 
-  INSTALL_PREFIX = /home/thomasd/
+  INSTALL_PREFIX = $$(HOME)
   INCLUDEPATH += $$INSTALL_PREFIX/include
 
   INCLUDEPATH +=/space/hpc-apps/bira/2015a/hdf-eos5-1.14-hdf5-1.8.10/include64

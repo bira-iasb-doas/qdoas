@@ -33,6 +33,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QCloseEvent>
 #include <QApplication>
 #include <QLocale>
+#include <clocale>
 #include <QTextCodec>
 
 #include "CWMain.h"

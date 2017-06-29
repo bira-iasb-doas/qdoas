@@ -13,6 +13,7 @@
 #include <QDir>
 #include <QFileInfo>
 #include <QLocale>
+#include <clocale>
 #include <QTextCodec>
 
 #include "CWorkSpace.h"
