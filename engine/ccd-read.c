@@ -154,7 +154,7 @@ typedef struct cameraPicture
 CAMERA_PICTURE;
 
 const char *MAXDOAS_measureTypes[PRJCT_INSTR_MAXDOAS_TYPE_MAX]=
-     	                            { "None","Off axis","Direct sun","Zenith","Dark","Lamp","Bentham","Almucantar","Offset","Azimuth", "Principal plane", "Horizon" };
+     	                            { "None","Off axis","Direct sun","Zenith","Dark","Lamp","Bentham","Almucantar","Offset","Azimuth", "Principal plane", "Horizon", "Moon" };
 
 
 // ------------------------------------------------------------------

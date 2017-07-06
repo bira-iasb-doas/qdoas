@@ -772,8 +772,10 @@ RC ASCII_QDOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int
 
            if (strstr(keyValue,"off")!=NULL)
             pRecordInfo->asc.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS;
-           else if ((strstr(keyValue,"dir")!=NULL) || (strstr(keyValue,"ds")!=NULL))
+           else if ((strstr(keyValue,"sun")!=NULL) || (strstr(keyValue,"ds")!=NULL))
             pRecordInfo->asc.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_DIRECTSUN;
+           else if ((strstr(keyValue,"moon")!=NULL) || (strstr(keyValue,"dm")!=NULL))
+            pRecordInfo->asc.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_MOON;
            else if (strstr(keyValue,"alm")!=NULL)
             pRecordInfo->asc.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_ALMUCANTAR;
            else if (strstr(keyValue,"hor")!=NULL)
