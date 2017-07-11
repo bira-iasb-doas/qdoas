@@ -333,6 +333,29 @@ char *STD_Strlwr(char *n)
   return n;
  }
 
+// -----------------------------------------------------------------------------
+// FUNCTION      STD_StrRep
+// -----------------------------------------------------------------------------
+// PURPOSE       Replace all occurrences of character old by character new in n
+//
+// INPUT         n : character string to convert
+//               oldchar : character to replace
+//               newchar ; new character
+//
+// OUTPUT        converted character string
+//
+// RETURN        converted character string
+// -----------------------------------------------------------------------------
+
+char *STD_StrRep(char *n,char oldchar,char newchar)
+ {
+  int i;
+  for (i=0;n[i];i++)
+   if (n[i]==oldchar)
+  	 n[i] = newchar;
+  return n;
+ }
+
 // =====================
 // FILES AND DIRECTORIES
 // =====================

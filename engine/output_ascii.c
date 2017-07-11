@@ -123,6 +123,7 @@ static void OutputAscPrintTitles(FILE *fp){
     file, using the correct format string and data type. */
 static void print_output_field(FILE *fp, const struct output_field *thefield, int recordno) {
   size_t ncols = thefield->data_cols;
+
   switch(thefield->memory_type) {
   case OUTPUT_INT:
     for(size_t i=0; i<ncols; i++,fprintf(fp,"\t")) fprintf(fp,thefield->format, ((int (*)[ncols])thefield->data)[recordno][i]);
@@ -210,24 +211,31 @@ static void print_output_field_value(FILE *fp, const struct output_field *thefie
   struct time *thetime;
   int millis, micros;
 
+  char strFormat[100];
+
+  strcpy(strFormat,thefield->format);
+  if (OUTPUT_exportSpectraFlag)
+   STD_StrRep(strFormat,'#','-');
+
+
   switch(thefield->memory_type) {
   case OUTPUT_INT:
-    fprintf(fp,thefield->format, ((int (*)[ncols])thefield->data)[recordno][col]);
+    fprintf(fp,strFormat, ((int (*)[ncols])thefield->data)[recordno][col]);
     break;
   case OUTPUT_SHORT:
-    fprintf(fp,thefield->format, ((short (*)[ncols])thefield->data)[recordno][col]);
+    fprintf(fp,strFormat, ((short (*)[ncols])thefield->data)[recordno][col]);
     break;
   case OUTPUT_USHORT:
-    fprintf(fp,thefield->format, ((unsigned short (*)[ncols])thefield->data)[recordno][col]);
+    fprintf(fp,strFormat, ((unsigned short (*)[ncols])thefield->data)[recordno][col]);
     break;
   case OUTPUT_STRING:
-    fprintf(fp,thefield->format, ((char* (*)[ncols])thefield->data)[recordno][col]);
+    fprintf(fp,strFormat, ((char* (*)[ncols])thefield->data)[recordno][col]);
     break;
   case OUTPUT_FLOAT:
-    fprintf(fp,thefield->format, ((float (*)[ncols])thefield->data)[recordno][col]);
+    fprintf(fp,strFormat, ((float (*)[ncols])thefield->data)[recordno][col]);
     break;
   case OUTPUT_DOUBLE:
-    fprintf(fp,thefield->format, ((double (*)[ncols])thefield->data)[recordno][col]);
+    fprintf(fp,strFormat, ((double (*)[ncols])thefield->data)[recordno][col]);
     break;
   case OUTPUT_DATE:
     thedate = &((struct date (*)[ncols])thefield->data)[recordno][col];

@@ -18,11 +18,12 @@ long        STD_FileLength(FILE *fp);
 
 char       *STD_Strupr(char *n);
 char       *STD_Strlwr(char *n);
+char       *STD_StrRep(char *n,char oldchar,char newchar);
 
 int         STD_IsDir(char *filename);
 
 time_t STD_timegm(register struct tm * t);
-  
+
 #if defined(_cplusplus) || defined(__cplusplus)
 }
 #endif
