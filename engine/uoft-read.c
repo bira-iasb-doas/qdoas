@@ -352,7 +352,7 @@ RC ReliUofT(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
      !(rc=UofTGotoRecord(specFp,recordNo)) &&
      (!(rc=UofTReadRecord(pUofT,pEngineContext->buffers.spectrum,specFp,pEngineContext->fileInfo.fileName)) || (rc==ERROR_ID_FILE_RECORD)))
    {
-    memcpy(&pRecord->present_datetime.thedate,&pUofT->meanDate,sizeof(SHORT_DATE));
+    memcpy(&pRecord->present_datetime.thedate,&pUofT->meanDate,sizeof(struct date));
     memcpy(&pRecord->present_datetime.thetime,&pUofT->meanTime,sizeof(struct time));
     memcpy(&pRecord->startDateTime.thetime,&pUofT->startTime,sizeof(struct time));
     memcpy(&pRecord->endDateTime.thetime,&pUofT->endTime,sizeof(struct time));

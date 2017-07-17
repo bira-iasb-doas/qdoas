@@ -370,9 +370,9 @@ MFC_BIRA;
 
 typedef struct uoft_format
  {
-  SHORT_DATE meanDate;                                                          // averaged date
-  SHORT_DATE startDate;                                                         // start date
-  SHORT_DATE endDate;                                                           // end date
+  struct date meanDate;                                                         // averaged date
+  struct date startDate;                                                        // start date
+  struct date endDate;                                                          // end date
   struct time meanTime;                                                         // averaged time
   struct time startTime;                                                        // start time
   struct time endTime;                                                          // end time
