@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <sstream>
 
+#include <cmath>
+
 #include "tropomi.h"
 #include "tropomi_read.h"
 #include "netcdfwrapper.h"
@@ -242,7 +244,7 @@ int tropomi_read(ENGINE_CONTEXT *pEngineContext,int record) {
     obsGroup.getVar("radiance_noise", start, count, rad_noise.data() );
 
     const double fill_rad = obsGroup.getFillValue<double>("radiance");
-    const double fill_sigma = obsGroup.getFillValue<double>("radiance_noise");
+    const double fill_noise = obsGroup.getFillValue<double>("radiance_noise");
     const vector<double>& lambda = nominal_wavelengths.at(indexPixel);
     
     // copy non-fill values to buffers:
@@ -250,11 +252,11 @@ int tropomi_read(ENGINE_CONTEXT *pEngineContext,int record) {
     for (size_t i=0; i<rad.size() && j<n_wavel; ++i) {
       double li = lambda[i];
       double ri = rad[i];
-      double si = rad_noise[i];
-      if (li != fill_nominal_wavelengths && ri != fill_rad && si != fill_sigma) {
+      double ni = rad_noise[i];
+      if (li != fill_nominal_wavelengths && ri != fill_rad && ni != fill_noise) {
         pEngineContext->buffers.lambda[j]=li;
         pEngineContext->buffers.spectrum[j]=ri;
-        pEngineContext->buffers.sigmaSpec[j]=si;
+        pEngineContext->buffers.sigmaSpec[j]=ri/(std::pow(10.0, ni/10.0));
         ++j;
       }
     }
@@ -306,24 +308,24 @@ vector<refspec> loadReference(const string& filename, const string& band) {
 
     vector<double> lambda(nlambda);
     vector<double> irra(nlambda);
-    vector<double> sigma(nlambda);
+    vector<double> noise(nlambda);
 
     instrGroup.getVar("calibrated_wavelength", start_lambda, count_lambda, lambda.data());
     irrObsGroup.getVar("irradiance", start_irr, count_irr, irra.data());
-    irrObsGroup.getVar("irradiance_noise", start_irr, count_irr, sigma.data());
+    irrObsGroup.getVar("irradiance_noise", start_irr, count_irr, noise.data());
 
     const double fill_lambda = instrGroup.getFillValue<double>("calibrated_wavelength");
     const double fill_irra = irrObsGroup.getFillValue<double>("irradiance");
-    const double fill_sigma = irrObsGroup.getFillValue<double>("irradiance_noise");
+    const double fill_noise = irrObsGroup.getFillValue<double>("irradiance_noise");
 
     for (size_t j=0; j<nlambda; ++j) {
       double lj = lambda[j];
       double ij = irra[j];
-      double sj = sigma[j];
-      if (lj != fill_lambda && ij != fill_irra && sj != fill_sigma) {
+      double nj = noise[j];
+      if (lj != fill_lambda && ij != fill_irra && nj != fill_noise) {
         ref_pixel.lambda.push_back(lj);
         ref_pixel.irradiance.push_back(ij);
-        ref_pixel.sigma.push_back(sj);
+        ref_pixel.sigma.push_back(ij/(std::pow(10.0, nj/10.0)));
       }
     }
   }
