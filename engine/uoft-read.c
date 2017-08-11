@@ -359,6 +359,8 @@ RC ReliUofT(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
     memcpy(&pRecord->startDateTime.thedate,&pUofT->startDate,sizeof(struct date));
     memcpy(&pRecord->endDateTime.thedate,&pUofT->endDate,sizeof(struct date));
 
+
+
     // Get information on the current record
 
     pRecord->NSomme=(int)pUofT->numAcc;                                         // number of accumulations
