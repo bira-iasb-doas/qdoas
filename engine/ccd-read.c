@@ -662,11 +662,18 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
                }
               else
                {
-               	if (fabs(header.targetElevation-header.targetAzimuth)<EPSILON)
-               	 {
-               	 	header.targetElevation=floor(header.trackerElevation+0.5);
-               	 	header.targetAzimuth=floor(header.trackerAzimuth+0.5);
-               	 }
+                if (fabs(header.targetElevation-header.targetAzimuth)<EPSILON)
+                 {
+                  header.targetElevation=floor(header.trackerElevation+0.5);
+                  header.targetAzimuth=floor(header.trackerAzimuth+0.5);
+                 }
+                else
+                 {
+               	  if (fabs(header.targetElevation+1.)<EPSILON)
+              	   	header.targetElevation=floor(header.trackerElevation+0.5);
+              	   if (fabs(header.targetAzimuth+1.)<EPSILON)
+              	   	header.targetAzimuth=floor(header.trackerAzimuth+0.5);
+              	  }
 
                	pRecord->ccd.targetElevation=header.targetElevation;
                	pRecord->ccd.targetAzimuth=header.targetAzimuth;
