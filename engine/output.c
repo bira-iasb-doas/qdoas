@@ -807,6 +807,10 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
   case PRJCT_INSTR_FORMAT_CCD_EEV:
     func_meastype = ccd_get_meastype;
     break;
+  case PRJCT_INSTR_FORMAT_ASCII:
+    if (pEngineContext->project.instrumental.ascii.format==PRJCT_INSTR_ASCII_FORMAT_COLUMN_EXTENDED)
+     func_meastype = asc_get_meastype;
+    break;
   case PRJCT_INSTR_FORMAT_MFC_BIRA:
     func_meastype= mfc_get_meastype;
     break;

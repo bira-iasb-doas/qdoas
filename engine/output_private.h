@@ -385,6 +385,10 @@ static inline void ccd_get_meastype(struct output_field *this_field __attribute_
   *meastype = pEngineContext->recordInfo.ccd.measureType;
 }
 
+static inline void asc_get_meastype(struct output_field *this_field __attribute__ ((unused)), int *meastype, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  *meastype = pEngineContext->recordInfo.asc.measurementType;
+}
+
 static inline void mfc_get_meastype(struct output_field *this_field __attribute__ ((unused)), int *meastype, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
   *meastype = pEngineContext->recordInfo.mfcBira.measurementType;
 }
