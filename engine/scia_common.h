@@ -326,8 +326,6 @@ SCIA_err set_DSD_offset (FILE* unit, DSD *dsd);
 /* definitions in nadc_date.c */
 /* UTC is here the GOME structure */
 
-extern size_t strlcpy( /*@out@*/ char *, /*@unique@*/ const char *, size_t );
-
 extern void Julian_2_MJD( double, /*@out@*/ double *,
 			  /*@out@*/ int *, /*@out@*/ int * );
 extern void MJD_2_Julian( double, int, int, /*@out@*/ double * );
