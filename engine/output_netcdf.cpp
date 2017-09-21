@@ -1,5 +1,6 @@
 #include <array>
 #include <algorithm>
+#include <map>
 #include <cassert>
 #include <sstream>
 #include <ctime>
@@ -12,70 +13,72 @@
 using std::string;
 using std::vector;
 using std::array;
+using std::map;
 
 static NetCDFFile output_file;
 static NetCDFGroup output_group;
 
 static size_t n_alongtrack, n_crosstrack, n_calib;
 
-static int dim_crosstrack, dim_alongtrack, dim_calib, dim_date, dim_time, dim_datetime, 
-  dim_2, dim_3, dim_4, dim_5, dim_6, dim_7, dim_8, dim_9; // dimids
-
 const static string calib_subgroup_name = "Calib";
+
+// map of dimension-name -> dimension-size.
+map<const string, size_t> dimensions = {
+  { "date", 3}, // year, month, day
+  { "time", 3}, // hour, min, secs
+  { "datetime", 7}, // hour, min, secs, milliseconds
+
+  // The following numbered dimensions are used for fields with
+  // different numbers of columns. for example: fields such as
+  // azimuth/longitude/... can contain 3, 4 or 5 values
+  { "2", 2},
+  { "3", 3},
+  { "4", 4},
+  { "5", 5},
+  { "6", 6},
+  { "7", 7},
+  { "8", 8},
+  { "9", 9} };
 
 enum vartype { Analysis, Calibration};
 
-static void create_dimensions(NetCDFGroup &group) {
-  struct dim {
-    string name;
-    size_t size;
-    int &id;
-  };
-
-  const array<struct dim,14> swathdims  {
-    { { "n_crosstrack", n_crosstrack, dim_crosstrack},
-        { "n_alongtrack", n_alongtrack, dim_alongtrack },
-          { "n_calib", n_calib, dim_calib},
-            { "date", 3, dim_date}, // year, month, day
-              { "time", 3, dim_time}, // hour, min, secs
-                { "datetime", 7, dim_datetime}, // hour, min, secs, milliseconds
-        // allow for fields with different number of columns
-        // example: fields such as
-        // azimuth/longitude/... can contain 3-4-5 values
-                  { "2", 2, dim_2}, 
-                    { "3", 3, dim_3}, 
-                      { "4", 4, dim_4},
-                        { "5", 5, dim_5},
-                          { "6", 6, dim_6},
-                            { "7", 7, dim_7},
-                              { "8", 8, dim_8},
-                                { "9", 9, dim_9} } };
- 
-  for (auto& dim : swathdims) {
-    dim.id = group.defDim(dim.name, dim.size);
+// Get the id for a given dimension in output_group.  Create the
+// dimension if it doesn't exist yet.
+static int get_dimid(const string& dim_name) {
+  int id;
+  int rc = nc_inq_dimid(output_group.groupID(), dim_name.c_str(), &id);
+  if (rc == NC_NOERR) {
+    return id;
   }
+
+  // The dimension does not exist yet -> create it.
+  rc = nc_redef(output_file.groupID()); // Dataset must be put back into "define mode".
+  if (rc != NC_NOERR && rc != NC_EINDEFINE) {
+    throw std::runtime_error("Cannot create dimension '" + dim_name + "': nc_redef() failed.");
+  }
+  return output_group.defDim(dim_name, dimensions[dim_name]);
 }
 
 static void getDims(const struct output_field& thefield, vector<int>& dimids, vector<size_t>& chunksizes) {
   // for dimensions simply numbered "2, 3, ... 9"
-  const array<int, 8> dimnumbers { { dim_2, dim_3, dim_4, dim_5, dim_6, dim_7, dim_8, dim_9 } };
+  const array<const char*, 8> dim_names { { "2", "3", "4", "5", "6", "7", "8", "9" } };
 
   if (thefield.data_cols > 1) {
     assert(thefield.data_cols < 10);
-    dimids.push_back(dimnumbers[thefield.data_cols -2]);
+    dimids.push_back(get_dimid(dim_names[thefield.data_cols -2]));
     chunksizes.push_back(thefield.data_cols);
   }
   switch (thefield.memory_type) {
   case OUTPUT_DATE:
-    dimids.push_back(dim_date);
+    dimids.push_back(get_dimid("date"));
     chunksizes.push_back(3);
     break;
   case OUTPUT_TIME:
-    dimids.push_back(dim_time);
+    dimids.push_back(get_dimid("time"));
     chunksizes.push_back(3);
     break;
   case OUTPUT_DATETIME:
-    dimids.push_back(dim_datetime);
+    dimids.push_back(get_dimid("datetime"));
     chunksizes.push_back(7);
     break;
   default:
@@ -127,18 +130,18 @@ static void define_variable(NetCDFGroup &group, const struct output_field& thefi
 
   if (vtype == Calibration) {
     if (n_crosstrack > 1) {
-      dimids.push_back(dim_crosstrack);
+      dimids.push_back(get_dimid("n_crosstrack"));
       chunksizes.push_back(std::min<size_t>(100, n_crosstrack));
     }
   
-    dimids.push_back(dim_calib);
+    dimids.push_back(get_dimid("n_calib"));
     chunksizes.push_back(std::min<size_t>(100, n_calib));
   } else {
-    dimids.push_back(dim_alongtrack);
+    dimids.push_back(get_dimid("n_alongtrack"));
     chunksizes.push_back(std::min<size_t>(100, n_alongtrack));
 
     if (n_crosstrack > 1) {
-      dimids.push_back(dim_crosstrack);
+      dimids.push_back(get_dimid("n_crosstrack"));
       chunksizes.push_back(std::min<size_t>(100, n_crosstrack));
     }
   }
@@ -250,7 +253,7 @@ static void write_calibration_data(NetCDFGroup& group) {
     start[0] = calibfield.index_row;
     vector<size_t> count;
     for (auto dim : dimids) {
-      if (dim == dim_crosstrack) {
+      if (n_crosstrack > 1 && dim == get_dimid("n_crosstrack")) {
         count.push_back(1);
       } else { // we want to write across the full extent of each dimension, except crosstrack
         count.push_back(group.dimLen(dim));
@@ -315,20 +318,28 @@ void create_subgroups(NetCDFGroup &group) {
 
 RC netcdf_open(const ENGINE_CONTEXT *pEngineContext, const char *filename) {
   try {
-    NetCDFFile output(filename + string(output_file_extensions[NETCDF]), NC_WRITE );
-    output_group = output.defGroup(pEngineContext->project.asciiResults.swath_name);
+    output_file = NetCDFFile(filename + string(output_file_extensions[NETCDF]), NC_WRITE );
+    output_group = output_file.defGroup(pEngineContext->project.asciiResults.swath_name);
 
     n_crosstrack = ANALYSE_swathSize;
     n_alongtrack = pEngineContext->recordNumber / n_crosstrack;
+
     n_calib = 0;
     for (int firstrow = 0; firstrow<ANALYSE_swathSize; firstrow++) {
+      // look up the number of calibration windows by searching the first valid entry in KURUCZ_buffers[]
       if (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI ||
           pEngineContext->project.instrumental.use_row[firstrow] ) {
         n_calib = KURUCZ_buffers[firstrow].Nb_Win;
         break;
       }
     }
-    create_dimensions(output_group);
+
+    // Now that we know n_alongtrack, n_crosstrack and n_calib, we can
+    // initialize the map of dimension sizes:
+    dimensions["n_crosstrack"] = n_crosstrack;
+    dimensions["n_alongtrack"] = n_alongtrack;
+    dimensions["n_calib"] = n_calib;
+
     create_subgroups(output_group);
     write_global_attrs(pEngineContext, output_group);
     write_automatic_reference_info(pEngineContext, output_group);
@@ -339,9 +350,8 @@ RC netcdf_open(const ENGINE_CONTEXT *pEngineContext, const char *filename) {
         output_group.getGroup(output_data_analysis[i].windowname) : output_group;
       define_variable(group, output_data_analysis[i], get_netcdf_varname(output_data_analysis[i].fieldname), Analysis);
     }
-
-    output_file = std::move(output);
   } catch (std::runtime_error& e) {
+    output_file.close();
     return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, e.what() );
   }
   return 0;
