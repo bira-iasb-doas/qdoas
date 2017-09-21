@@ -321,23 +321,6 @@ SCIA_err Write_DSD (FILE* unit, DSD *dsd);
 
 SCIA_err set_DSD_offset (FILE* unit, DSD *dsd);
 
-
-/* Date conversion taken from NADC */
-/* definitions in nadc_date.c */
-/* UTC is here the GOME structure */
-
-extern void Julian_2_MJD( double, /*@out@*/ double *,
-			  /*@out@*/ int *, /*@out@*/ int * );
-extern void MJD_2_Julian( double, int, int, /*@out@*/ double * );
-extern void ASCII_2_UTC( const char *,
-			/*@out@*/ int *, /*@out@*/ unsigned int * )
-     /*@globals errno;@*/;
-extern int ASCII_2_MJD( const char ASCII_DateTime[],
-			 /*@out@*/ MJD *mjd );
-     /*@globals errno;@*/
-extern void UTC_2_ASCII( int, unsigned int, /*@out@*/ char * );
-extern void MJD_2_ASCII( int, unsigned int, unsigned int, /*@out@*/ char * );
-
 /*********************************************************************\
  * Compare two dates MJD
  * MJD compare : 0 equal  -1 earlier  1 later
