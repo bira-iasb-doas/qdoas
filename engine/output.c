@@ -117,7 +117,7 @@ const char *output_file_extensions[] = { [ASCII] = ".ASC",
 
 struct output_field output_data_analysis[MAX_FIELDS];
 unsigned int output_num_fields = 0;
-struct output_field output_data_calib[MAX_FIELDS];
+struct output_field output_data_calib[MAX_CALIB_FIELDS];
 unsigned int calib_num_fields = 0;
 /*! \brief For GOME-2/Sciamachy automatic reference spectrum: number
     of spectra used. */
@@ -1524,7 +1524,7 @@ static void OutputRegisterFieldsToExport(const ENGINE_CONTEXT *pEngineContext, c
 /*! \brief Helper function to initialize a new output_field in the
     \ref output_data_calib array.*/
 static int register_calibration_field(struct output_field newfield) {
-  if (calib_num_fields == MAX_FIELDS) {
+  if (calib_num_fields == MAX_CALIB_FIELDS) {
     return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_BUG, "Maximum number of calibration output fields reached.");
   }
   struct output_field *calibfield = &output_data_calib[calib_num_fields++];
