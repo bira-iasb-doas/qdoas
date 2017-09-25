@@ -260,6 +260,10 @@ int tropomi_read(ENGINE_CONTEXT *pEngineContext,int record) {
         ++j;
       }
     }
+    if (j == 0) {
+      // All fill values, can't use this spectrum:
+      return ERROR_ID_FILE_RECORD;
+    }
     // check if the earthshine spectrum is shorter than the reference
     // spectrum (e.g.due to different number of fill values).
     if (j<n_wavel) {
