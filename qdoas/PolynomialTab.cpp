@@ -92,7 +92,7 @@ PolynomialTab::PolynomialTab(QWidget *parent) :
 
   QHBoxLayout *izero_layout = new QHBoxLayout;
   izero_layout->addWidget(offset_izero);
-  izero_layout->addWidget(new QLabel("divide by I<sub>0</sub>", this), Qt::AlignLeft);
+  izero_layout->addWidget(new QLabel("normalize by reference", this), Qt::AlignLeft);
   add_layout(layout, izero_layout, 2, 4);
 
   layout->addWidget(white_frame(), 3, 1, 1, 4);
