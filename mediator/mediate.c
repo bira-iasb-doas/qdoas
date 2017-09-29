@@ -167,6 +167,7 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Record","%d/%d",pEngineContext->indexRecord,pEngineContext->recordNumber);
   else if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI ||
            pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_TROPOMI ||
+           pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMPS ||
            pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_APEX)
     {
       if (pInstrumental->averageFlag)
@@ -1190,6 +1191,14 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->tropomi.instrFunctionFile);     // instrumental function file
 
       break;
+      // ----------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_OMPS:
+
+      for (int i=0; i<MAX_SWATHSIZE; ++i) {
+        NDET[i]=512;
+      }
+
+      break;
     }
  }
 
@@ -1592,6 +1601,12 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
      break;
    case PRJCT_INSTR_FORMAT_TROPOMI:
      rc = tropomi_init(analysisWindows[0].refOneFile,pEngineContext);
+     break;
+   case PRJCT_INSTR_FORMAT_OMPS:
+     ANALYSE_swathSize = 36;
+     for (int i =0; i< ANALYSE_swathSize; ++i)
+       pInstrumental->use_row[i] = true;
+
      break;
    case PRJCT_INSTR_FORMAT_APEX:
      rc = apex_init(analysisWindows[0].refOneFile,pEngineContext);
@@ -2105,19 +2120,6 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
 
        if (geoFlag) // this record matches - exit the search loop
         break;
-
-
-         //if (((fabs(pProject->spectra.SZAMin-pProject->spectra.SZAMax)<(double)1.e-4) ||
-         //     ((pRecord->Zm>=pProject->spectra.SZAMin) && (pRecord->Zm<=pProject->spectra.SZAMax))) &&
-         //    ((fabs(pProject->spectra.SZADelta)<(double)1.e-4) ||
-         //     (fabs(pRecord->Zm-pRecord->oldZm)>pProject->spectra.SZADelta))) {
-         //  // this record matches - exit the search loop
-         //  break;
-         // }
-
-
-       // }
-
 
      }
 

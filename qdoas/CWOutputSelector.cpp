@@ -656,6 +656,22 @@ void getValidFieldFlags(int *validFlags, int instrument,bool exportFlag)
       validFlags[PRJCT_RESULTS_SAT_LON]=1;
      }
     break;
+
+ // ----------------------------------------------------------------------------
+
+    case PRJCT_INSTR_FORMAT_OMPS :
+     {
+      validFlags[PRJCT_RESULTS_LONGIT]=1;
+      validFlags[PRJCT_RESULTS_LATIT]=1;
+      validFlags[PRJCT_RESULTS_VIEW_ZENITH]=1;
+      validFlags[PRJCT_RESULTS_VIEW_AZIMUTH]=1;
+      validFlags[PRJCT_RESULTS_LOS_ZA]=1;
+      validFlags[PRJCT_RESULTS_LOS_AZIMUTH]=1;
+      validFlags[PRJCT_RESULTS_INDEX_ALONGTRACK]=1;
+      validFlags[PRJCT_RESULTS_INDEX_CROSSTRACK]=1;
+     }
+    break;
+
  // ----------------------------------------------------------------------------
    case PRJCT_INSTR_FORMAT_APEX :
      {

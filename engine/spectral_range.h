@@ -59,6 +59,10 @@ typedef struct {
   int current_pixel;
 } doas_iterator;
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 /*! Removes a pixel from a spectrum.
  *
  * \param spectrum Pointer to the spectrum from which the pixel should be
@@ -139,5 +143,9 @@ int interval_start(const doas_interval *interval);
 int interval_end(const doas_interval *interval);
 
 void spectrum_debug(doas_spectrum *spectrum);
+
+#if defined(__cplusplus)
+}
+#endif
 
 #endif

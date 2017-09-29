@@ -49,6 +49,7 @@ class CWInstrGdpEdit;
 class CWInstrGome2Edit;
 class CWInstrSciaEdit;
 class CWInstrOmiEdit;
+class CWInstrOmpsEdit;
 class CWInstrTropomiEdit;
 class CWInstrMfcEdit;
 class CWInstrMfcStdEdit;
@@ -99,6 +100,7 @@ Q_OBJECT
   CWInstrMinimumEdit *m_uoftEdit;
   CWInstrMinimumEdit *m_noaaEdit;
   CWInstrOmiEdit *m_omiEdit;
+  CWInstrOmpsEdit *m_ompsEdit;
   CWInstrTropomiEdit *m_tropomiEdit;
   CWInstrGome2Edit *m_gome2Edit;
   CWInstrMinimumEdit *m_mkzyEdit;
@@ -455,6 +457,14 @@ class CWInstrOmiEdit : public CWCalibInstrEdit
   QRadioButton *m_strictXTrackQF;
 };
 
+//--------------------------------------------------------------------------
+
+class CWInstrOmpsEdit : public CWCalibInstrEdit
+{
+public:
+  CWInstrOmpsEdit(QWidget *parent = 0);
+  void apply(void);
+};
 //--------------------------------------------------------------------------
 
 class CWInstrTropomiEdit : public CWCalibInstrEdit

@@ -3113,9 +3113,9 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
     memcpy(Spectre,pBuffers->spectrum,sizeof(double)*n_wavel);
 
-    if ( (rc=VECTOR_NormalizeVector(Spectre-1,n_wavel,&speNormFact,"ANALYSE_Spectrum (Spectrum) "))!=ERROR_ID_NO )
+    if ( (rc=VECTOR_NormalizeVector(Spectre-1,n_wavel,&speNormFact,"ANALYSE_Spectrum (Spectrum) "))!=ERROR_ID_NO ) {
      goto EndAnalysis;
-
+    }
     // Apply Kurucz on spectrum
 
     for (WrkFeno=0;WrkFeno<NFeno;WrkFeno++)
@@ -3128,12 +3128,11 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
     if (useKurucz || (THRD_id==THREAD_TYPE_KURUCZ))
      {
       if (((SpectreK=(double *)MEMORY_AllocDVector(__func__,"SpectreK",0,n_wavel-1))==NULL) ||
-          ((LambdaK=(double *)MEMORY_AllocDVector(__func__,"LambdaK",0,n_wavel-1))==NULL))
+          ((LambdaK=(double *)MEMORY_AllocDVector(__func__,"LambdaK",0,n_wavel-1))==NULL)) {
 
        rc=ERROR_ID_ALLOC;
 
-      else
-       {
+      } else {
         memcpy(SpectreK,Spectre,sizeof(double)*n_wavel);
         if (!(rc=KURUCZ_Spectrum(pBuffers->lambda,LambdaK,SpectreK,KURUCZ_buffers[indexFenoColumn].solar,pBuffers->instrFunction,
                                  1,"Calibration applied on spectrum",KURUCZ_buffers[indexFenoColumn].fwhmPolySpec,KURUCZ_buffers[indexFenoColumn].fwhmVector,KURUCZ_buffers[indexFenoColumn].fwhmDeriv2,saveFlag,
@@ -3187,6 +3186,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
         switch (pEngineContext->project.instrumental.readOutFormat) {
         case PRJCT_INSTR_FORMAT_OMI:
+        case PRJCT_INSTR_FORMAT_OMPS:
         case PRJCT_INSTR_FORMAT_TROPOMI:
           memcpy(Feno->Lambda,pBuffers->lambda,sizeof(double)*n_wavel);
           break;
@@ -3204,7 +3204,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
                   1+pEngineContext->recordInfo.i_crosstrack,pEngineContext->recordInfo.n_crosstrack);
         }
 
-        displayFlag=Feno->displaySpectrum+                                      //  force display spectrum
+        displayFlag=Feno->displaySpectrum+                            //  force display spectrum
           Feno->displayResidue+                                       //  force display residue
           Feno->displayTrend+                                         //  force display trend
           Feno->displayRefEtalon+                                     //  force display alignment of reference on etalon
@@ -3238,9 +3238,10 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
           Lambda=Feno->LambdaK;
           LambdaSpec=Feno->Lambda;
 
-          // For OMI, Tropomi and GOME-2, interpolate earthshine                // FRM4DOAS : check with Michel what to do with ASCII spectra
+          // For OMI, OMPS, Tropomi and GOME-2, interpolate earthshine          // FRM4DOAS : check with Michel what to do with ASCII spectra
           // spectrum onto the solar reference wavelength grid
           if (pInstrumental->readOutFormat == PRJCT_INSTR_FORMAT_OMI
+              || pInstrumental->readOutFormat == PRJCT_INSTR_FORMAT_OMPS
               || pInstrumental->readOutFormat == PRJCT_INSTR_FORMAT_TROPOMI
               || pInstrumental->readOutFormat == PRJCT_INSTR_FORMAT_GOME2 ) {
 
@@ -3259,8 +3260,6 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
             // earthshine spectrum as well
             LambdaSpec = Feno->LambdaK;
           }
-
-
 
           // Make a backup of spectral window limits + gaps
 
@@ -5233,7 +5232,8 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
   pTabFeno->gomeRefFlag=((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GDP_ASCII)&&
                          (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GDP_BIN) &&
                          (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_SCIA_PDS) &&
-                         (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GOME2))?1:0;
+                         (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GOME2) &&
+                         (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMPS) )?1:0;
 
   //
   // in the case of satellites measurements :
@@ -5256,7 +5256,8 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
       (((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
         (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
         (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) ||
-        (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_TROPOMI)
+        (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_TROPOMI) ||
+        (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMPS)
         ) &&
        ((pTabFeno->SrefSigma=(double *)MEMORY_AllocDVector(__func__,"SrefSigma",0,n_wavel))==NULL)) ||
 
@@ -5269,7 +5270,8 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
         (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
         (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME2) ||
         (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) ||
-        (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_TROPOMI)
+        (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_TROPOMI) ||
+        (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMPS)
         ) &&
        (((pTabFeno->SrefN=(double *)MEMORY_AllocDVector(__func__,"SrefN",0,n_wavel-1))==NULL) ||
         ((pTabFeno->SrefS=(double *)MEMORY_AllocDVector(__func__,"SrefS",0,n_wavel-1))==NULL) ||
@@ -5320,6 +5322,7 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
           pEngineContext->project.instrumental.use_row[indexFenoColumn] = false;
         }
         break;
+
       default:
         rc=AnalyseLoadVector(pTabFeno->ref1,lambdaRefEtalon,SrefEtalon,n_wavel,1,NULL);
         break;

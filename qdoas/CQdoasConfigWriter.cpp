@@ -419,6 +419,9 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   case PRJCT_INSTR_FORMAT_OMI:
     fprintf(fp, "\"omi\"");
     break;
+  case PRJCT_INSTR_FORMAT_OMPS:
+    fprintf(fp, "\"omps\"");
+    break;
   case PRJCT_INSTR_FORMAT_TROPOMI:
     fprintf(fp, "\"tropomi\"");
     break;

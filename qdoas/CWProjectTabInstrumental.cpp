@@ -206,6 +206,11 @@ CWProjectTabInstrumental::CWProjectTabInstrumental(const mediate_project_instrum
   index = m_formatStack->addWidget(m_omiEdit);
   m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_OMI, index));
 
+  // omps
+  m_ompsEdit = new CWInstrOmpsEdit;
+  index = m_formatStack->addWidget(m_ompsEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_OMPS, index));
+
   // tropomi
   m_tropomiEdit = new CWInstrTropomiEdit(&(instr->tropomi));
   index = m_formatStack->addWidget(m_tropomiEdit);
@@ -291,6 +296,7 @@ void CWProjectTabInstrumental::apply(mediate_project_instrumental_t *instr) cons
   m_uoftEdit->apply(&(instr->uoft));
   m_noaaEdit->apply(&(instr->noaa));
   m_omiEdit->apply(&(instr->omi));
+  m_ompsEdit->apply();
   m_tropomiEdit->apply(&(instr->tropomi));
   m_gome2Edit->apply(&(instr->gome2));
   m_mkzyEdit->apply(&(instr->mkzy));
@@ -2012,6 +2018,13 @@ void CWInstrTropomiEdit::apply(struct instrumental_tropomi *pInstrTropomi) const
   // spectral band
   pInstrTropomi->spectralBand = static_cast<tropomiSpectralBand>(m_spectralBandCombo->itemData(m_spectralBandCombo->currentIndex()).toInt());
 }
+
+//--------------------------------------------------------
+
+CWInstrOmpsEdit::CWInstrOmpsEdit(QWidget *parent) :
+  CWCalibInstrEdit(parent) { }
+
+void CWInstrOmpsEdit::apply(void) { }
 
 //--------------------------------------------------------
 

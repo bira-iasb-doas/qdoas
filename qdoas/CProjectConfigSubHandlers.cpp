@@ -722,6 +722,8 @@ bool CProjectInstrumentalSubHandler::start(const QXmlAttributes &atts)
     m_instrumental->format = PRJCT_INSTR_FORMAT_NOAA;
   else if (str == "omi")
     m_instrumental->format = PRJCT_INSTR_FORMAT_OMI;
+  else if (str == "omps")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_OMPS;
   else if (str == "tropomi")
     m_instrumental->format = PRJCT_INSTR_FORMAT_TROPOMI;
   else if (str == "gome2")

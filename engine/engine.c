@@ -66,7 +66,7 @@
 #include "zenithal.h"
 #include "output.h"
 #include "tropomi_read.h"
-
+#include "omps_read.h"
 #include "omi_read.h"
 #include "gdp_bin_read.h"
 #include "apex_read.h"
@@ -357,6 +357,7 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
                                   (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
                                   (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI) ||
                                   (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_TROPOMI) ||
+                                  (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMPS) ||
                                   (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GOME2))?1:0;
 
    ENGINE_localNoon=(double)12.;
@@ -397,6 +398,7 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
            pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS ||
            pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI ||
            pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_TROPOMI ||
+           pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMPS ||
            pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GOME2 ) &&
 
          ( (pBuffers->sigmaSpec=MEMORY_AllocDVector(__func__,"sigmaSpec",0,max_ndet-1))==NULL ||
@@ -619,6 +621,7 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
 
    if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) &&
        (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_TROPOMI) &&
+       (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMPS) &&
        (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_SCIA_PDS) &&
        (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GOME2) &&
        ((pFile->specFp=fopen(pEngineContext->fileInfo.fileName,"rb"))==NULL))
@@ -709,6 +712,12 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
      case PRJCT_INSTR_FORMAT_TROPOMI:
        rc=tropomi_set(pEngineContext);
        // todo: OMI_load_analysis
+       break;
+       // ---------------------------------------------------------------------------
+     case PRJCT_INSTR_FORMAT_OMPS :
+       rc=OMPS_set(pEngineContext);
+       if (!rc)
+         rc=OMPS_load_analysis(pEngineContext, responseHandle);
        break;
        // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_CCD_EEV :
@@ -893,6 +902,10 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_TROPOMI :
       rc=tropomi_read(pEngineContext,indexRecord);
+      break;
+      // ---------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_OMPS :
+      rc=OMPS_read(pEngineContext,indexRecord);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_CCD_EEV :
@@ -1906,4 +1919,3 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
    return rc;
  }
-
