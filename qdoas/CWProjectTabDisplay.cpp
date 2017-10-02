@@ -82,7 +82,7 @@ void CWProjectTabDisplay::apply(mediate_project_display_t *properties) const
 
 void CWProjectTabDisplay::slotInstrumentChanged(int instrument)
 {
-  m_selector->setInstrument(instrument,false);
+  m_selector->setInstrument(instrument,TAB_SELECTOR_DISPLAY);
 }
 
 

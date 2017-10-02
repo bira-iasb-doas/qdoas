@@ -691,6 +691,7 @@ RC ReliNOAA(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
    	 	 	 pRecord->azimuthViewAngle=(float)pRecordNoaa->observationCase.Field.viewAzimuth;
    	 	 	 pRecord->latitude=(float)pRecordNoaa->observationCase.Field.placeRecord.latitude;
    	 	 	 pRecord->longitude=(float)pRecordNoaa->observationCase.Field.placeRecord.longitude;
+   	 	 	 pRecord->maxdoas.measurementType=(pRecord->elevationViewAngle<(double)80.)?PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS:PRJCT_INSTR_MAXDOAS_TYPE_ZENITH;
 
    	 	 	break;
    	 // ------------------------------------------------------------------------
@@ -700,9 +701,9 @@ RC ReliNOAA(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
    	 	 	 pRecord->Azimuth=(double)pRecordNoaa->observationCase.Air.sunAzimuth;
    	 	 	 pRecord->elevationViewAngle=(float)90.-pRecordNoaa->observationCase.Air.viewZenith;
    	 	 	 pRecord->azimuthViewAngle=(float)pRecordNoaa->observationCase.Air.viewAzimuth;
-
    	 	 	 pRecord->latitude=(float)pRecordNoaa->observationCase.Air.latitude;
    	 	 	 pRecord->longitude=(float)pRecordNoaa->observationCase.Air.longitude;
+   	 	 	 pRecord->maxdoas.measurementType=(pRecord->elevationViewAngle<(double)80.)?PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS:PRJCT_INSTR_MAXDOAS_TYPE_ZENITH;
 
    	 	 	break;
    	 // ------------------------------------------------------------------------
@@ -710,6 +711,8 @@ RC ReliNOAA(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
 
    	 	 	 pRecord->Zm=pRecord->Azimuth=(double)-1.;
    	 	 	 pRecord->elevationViewAngle=pRecord->azimuthViewAngle=-1.;
+   	 	 	 pRecord->maxdoas.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_NONE;
+
 
    	 	 	break;
      // ------------------------------------------------------------------------

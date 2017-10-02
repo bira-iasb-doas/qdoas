@@ -27,7 +27,7 @@ RC              EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,in
 RC              EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *spectraFileName,void *responseHandle);
 RC              EngineRequestEndBrowseSpectra(ENGINE_CONTEXT *pEngineContext);
 RC              EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle);
-
+RC              EngineBuildScanIndex(ENGINE_CONTEXT *pEngineContext);
 RC              EngineEndCurrentSession(ENGINE_CONTEXT *pEngineContext);
 ENGINE_CONTEXT *EngineCreateContext(void);
 RC              EngineDestroyContext(ENGINE_CONTEXT *pEngineContext);

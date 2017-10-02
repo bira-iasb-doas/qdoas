@@ -29,7 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 #include "debugutil.h"
 
-static void getValidFieldFlags(int *validFlags, int instrument,bool exportFlag);
+static void getValidFieldFlags(int *validFlags, int instrument,int selectorOrigin);
 
 CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent) :
   QFrame(parent)
@@ -169,6 +169,9 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SPECTRA,               "Spectra"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_FILENAME,              "File name"));
 
+  // if (selectorOrigin==TAB_SELECTOR_OUTPUT)
+   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SCANINDEX,              "Scan index"));
+
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_PRECALCULATED_FLUXES,   "Precalculated fluxes"));
 
   // populate the selected list by key-reference to the available list ...
@@ -206,12 +209,12 @@ void CWOutputSelector::apply(data_select_list_t *d)
   d->nSelected = n;
 }
 
-void CWOutputSelector::setInstrument(int instrument,bool exportFlag)
+void CWOutputSelector::setInstrument(int instrument,int selectorOrigin)
 {
   int validFlags[PRJCT_RESULTS_MAX];
 
   // get this information from somewhere ...
-  getValidFieldFlags(validFlags, instrument,exportFlag);
+  getValidFieldFlags(validFlags, instrument,selectorOrigin);
 
   for (int key=0; key<PRJCT_RESULTS_MAX; ++key) {
     bool hideItems = (validFlags[key] == 0);
@@ -293,9 +296,10 @@ QVariant CWOutputFieldItem::data(int role) const
 
 //------------------------------------------------------
 
-void getValidFieldFlags(int *validFlags, int instrument,bool exportFlag)
+void getValidFieldFlags(int *validFlags, int instrument,int selectorOrigin)
  {
    int satelliteFlag = is_satellite(static_cast<enum _prjctInstrFormat>(instrument));
+   int maxdoasFlag = is_maxdoas(static_cast<enum _prjctInstrFormat>(instrument));
 
   // validFlags is indexed by the PRJCT_RESULTS_* enumerated values. A non-zero
   // value means that the corresponding field is valid for the instrument. The value of
@@ -319,12 +323,12 @@ void getValidFieldFlags(int *validFlags, int instrument,bool exportFlag)
   validFlags[PRJCT_RESULTS_AZIM]=                                         // solar azimuth angle (can be calculated if date, time and observation site specified)
   validFlags[PRJCT_RESULTS_TINT]=1;                                       // the integration time
 
-  validFlags[PRJCT_RESULTS_COVAR]=!exportFlag;
-  validFlags[PRJCT_RESULTS_CORR]=!exportFlag;
+  validFlags[PRJCT_RESULTS_COVAR]=(selectorOrigin!=TAB_SELECTOR_EXPORT)?1:0;
+  validFlags[PRJCT_RESULTS_CORR]=(selectorOrigin!=TAB_SELECTOR_EXPORT)?1:0;
 
   // Output fields related to overall analysis (or run calibration) results (per analysis window)
 
-  if (!exportFlag)
+  if (selectorOrigin!=TAB_SELECTOR_EXPORT)
    {
      validFlags[PRJCT_RESULTS_REFZM]=(satelliteFlag)?0:1;                    // in automatic reference selection, the solar zenith angle of the reference spectrum
      validFlags[PRJCT_RESULTS_REFNUMBER]=(satelliteFlag)?0:1;                // in automatic reference selection, the index of the reference spectrum
@@ -354,7 +358,8 @@ void getValidFieldFlags(int *validFlags, int instrument,bool exportFlag)
 
   validFlags[PRJCT_RESULTS_TOTALACQTIME]=
   validFlags[PRJCT_RESULTS_TOTALEXPTIME]=!satelliteFlag;
-
+  validFlags[PRJCT_RESULTS_MEASTYPE]=maxdoasFlag;
+  validFlags[PRJCT_RESULTS_SCANINDEX]=maxdoasFlag;
 
   // set the appropriate flags
 
@@ -383,7 +388,6 @@ void getValidFieldFlags(int *validFlags, int instrument,bool exportFlag)
       validFlags[PRJCT_RESULTS_ENDDATE]=1;
       validFlags[PRJCT_RESULTS_STARTTIME]=1;
       validFlags[PRJCT_RESULTS_ENDTIME]=1;
-      validFlags[PRJCT_RESULTS_MEASTYPE]=1;
      }
     break;
  // ----------------------------------------------------------------------------
@@ -502,7 +506,6 @@ void getValidFieldFlags(int *validFlags, int instrument,bool exportFlag)
       validFlags[PRJCT_RESULTS_VIEW_AZIMUTH]=1;                                 // not present in all measurements]=1; but could be in the next future
       validFlags[PRJCT_RESULTS_SCANNING]=1;
       validFlags[PRJCT_RESULTS_FILTERNUMBER]=1;
-      validFlags[PRJCT_RESULTS_MEASTYPE]=1;
       validFlags[PRJCT_RESULTS_CCD_HEADTEMPERATURE]=1;
       validFlags[PRJCT_RESULTS_STARTTIME]=1;
       validFlags[PRJCT_RESULTS_ENDTIME]=1;
@@ -567,10 +570,9 @@ void getValidFieldFlags(int *validFlags, int instrument,bool exportFlag)
       validFlags[PRJCT_RESULTS_ENDTIME]=1;
       validFlags[PRJCT_RESULTS_TDET]=1;
 
-      if (instrument==PRJCT_INSTR_FORMAT_MFC_BIRA)
-       validFlags[PRJCT_RESULTS_MEASTYPE]=1;
-      else
+      if (instrument!=PRJCT_INSTR_FORMAT_MFC_BIRA)
        validFlags[PRJCT_RESULTS_FILENAME]=1;
+
      }
     break;
  // ----------------------------------------------------------------------------
@@ -649,7 +651,7 @@ void getValidFieldFlags(int *validFlags, int instrument,bool exportFlag)
       validFlags[PRJCT_RESULTS_OMI_XTRACK_QF]=1;
       validFlags[PRJCT_RESULTS_OMI_CONFIGURATION_ID]=1;
 
-      if (!exportFlag)
+      if (selectorOrigin!=TAB_SELECTOR_EXPORT)
        validFlags[PRJCT_RESULTS_OMI_PIXELS_QF]=1;
 
       validFlags[PRJCT_RESULTS_SAT_LAT]=1;
@@ -688,7 +690,7 @@ void getValidFieldFlags(int *validFlags, int instrument,bool exportFlag)
  // ----------------------------------------------------------------------------
    }
 
-  if (exportFlag)
+  if (selectorOrigin==TAB_SELECTOR_EXPORT)
    {
    	validFlags[PRJCT_RESULTS_LAMBDA]=1;
    	validFlags[PRJCT_RESULTS_SPECTRA]=1;

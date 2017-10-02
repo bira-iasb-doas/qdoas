@@ -154,19 +154,19 @@ CWProjectTabSelection::CWProjectTabSelection(const mediate_project_selection_t *
 
    // Reference group
 
-  m_refGroup = new QGroupBox("Elevation ngle for reference selection (MAXDOAS)", this);
+  m_refGroup = new QGroupBox("Elevation angle for reference selection (MAXDOAS)", this);
   QGridLayout *refGroupLayout = new QGridLayout;
 
   pixels = fm.width("00000000");
   refGroupLayout->addWidget(new QLabel("Elevation angle (deg)", this), 0, 0);
   m_refAngleEdit = new QLineEdit(this);
   m_refAngleEdit->setFixedWidth(pixels);
-  m_refAngleEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 3, m_refAngleEdit));
+  m_refAngleEdit->setValidator(new CDoubleFixedFmtValidator(-90.0, 100.0, 3, m_refAngleEdit));
   refGroupLayout->addWidget(m_refAngleEdit, 0, 1);
   refGroupLayout->addWidget(new QLabel("Tolerance (deg)", this), 2, 0);
   m_refTolEdit = new QLineEdit(this);
   m_refTolEdit->setFixedWidth(pixels);
-  m_refTolEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 3, m_refTolEdit));
+  m_refTolEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 100.0, 3, m_refTolEdit));
   refGroupLayout->addWidget(m_refTolEdit, 2, 1);
   refGroupLayout->setColumnStretch(2, 1);
   m_refGroup->setLayout(refGroupLayout);
@@ -187,12 +187,12 @@ CWProjectTabSelection::CWProjectTabSelection(const mediate_project_selection_t *
   elevationGroupLayout->addWidget(new QLabel("Min", this), 0, 0);
   m_elevationMinEdit = new QLineEdit(this);
   m_elevationMinEdit->setFixedWidth(pixels);
-  m_elevationMinEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 3, m_elevationMinEdit));
+  m_elevationMinEdit->setValidator(new CDoubleFixedFmtValidator(-90., 100.0, 3, m_elevationMinEdit));
   elevationGroupLayout->addWidget(m_elevationMinEdit, 0, 1);
   elevationGroupLayout->addWidget(new QLabel("Max", this), 1, 0);
   m_elevationMaxEdit = new QLineEdit(this);
   m_elevationMaxEdit->setFixedWidth(pixels);
-  m_elevationMaxEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 3, m_elevationMaxEdit));
+  m_elevationMaxEdit->setValidator(new CDoubleFixedFmtValidator(-90., 100.0, 3, m_elevationMaxEdit));
   elevationGroupLayout->addWidget(m_elevationMaxEdit, 1, 1);
   elevationGroupLayout->addWidget(new QLabel("Tol", this), 2, 0);
   m_elevationTolEdit = new QLineEdit(this);

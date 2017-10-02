@@ -276,6 +276,8 @@ INDEX CCD_SearchForImage(int timestampMin,int timestampMax)
 // Read out functions
 // ------------------
 
+
+
 // -----------------------------------------------------------------------------
 // FUNCTION      SetCCD_EEV
 // -----------------------------------------------------------------------------
@@ -634,7 +636,8 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
              strcpy(pRecord->als.atrString,header.ignored);
 
-             pRecord->ccd.filterNumber=pRecord->ccd.measureType=0;
+             pRecord->ccd.filterNumber=0;
+             pRecord->maxdoas.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH;
              pRecord->ccd.headTemperature=(double)0.;
             }
            else
@@ -642,13 +645,13 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
               pRecord->ccd.filterNumber=header.filterNumber;
               pRecord->ccd.headTemperature=header.headTemperature;
 
-              if ((pRecord->ccd.measureType=header.measureType)==PRJCT_INSTR_MAXDOAS_TYPE_AZIMUTH)
-                pRecord->ccd.measureType=PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS;
+              if ((pRecord->maxdoas.measurementType=header.measureType)==PRJCT_INSTR_MAXDOAS_TYPE_AZIMUTH)
+                pRecord->maxdoas.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS;
 
 
               // This part is not elegant at all but the code should be more consistent in the acquisition program according to the different situations with the pointing mode
 
-              if (pRecord->ccd.measureType==PRJCT_INSTR_MAXDOAS_TYPE_OFFSET)
+              if (pRecord->maxdoas.measurementType==PRJCT_INSTR_MAXDOAS_TYPE_OFFSET)
                {
                	pRecord->ccd.targetElevation=header.targetElevation=-1.;
                	pRecord->ccd.targetAzimuth=header.targetAzimuth=-1.;
@@ -658,7 +661,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
                	pRecord->ccd.targetElevation=header.targetElevation=-1.;
                	pRecord->ccd.targetAzimuth=header.targetAzimuth=-1.;
 
-               	pRecord->ccd.measureType=header.measureType=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH;
+               	pRecord->maxdoas.measurementType=header.measureType=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH;
                }
               else
                {
@@ -790,7 +793,7 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
            // before 02/02/2016 if (rc ||
            // before 02/02/2016    (dateFlag && (((pRecord->elevationViewAngle>0.) && (pRecord->elevationViewAngle<80.)) ||
-           // before 02/02/2016                  ((pRecord->ccd.measureType!=PRJCT_INSTR_MAXDOAS_TYPE_NONE) && (pRecord->ccd.measureType!=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH)))) ||                    // reference spectra are zenith only
+           // before 02/02/2016                  ((pRecord->maxdoas.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_NONE) && (pRecord->maxdoas.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH)))) ||                    // reference spectra are zenith only
            // before 02/02/2016    (!dateFlag && pEngineContext->analysisRef.refScan && !pEngineContext->analysisRef.refSza && (pRecord->elevationViewAngle>80.)))    // zenith sky spectra are not analyzed in scan reference selection mode
 
            if (rc || (dateFlag &&
@@ -798,14 +801,14 @@ RC ReliCCD_EEV(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
                     ((pRecord->elevationViewAngle<pEngineContext->project.spectra.refAngle-pEngineContext->project.spectra.refTol) ||
                      (pRecord->elevationViewAngle>pEngineContext->project.spectra.refAngle+pEngineContext->project.spectra.refTol)))))
 
-                  //   ((pRecord->ccd.measureType!=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH) && (pRecord->elevationViewAngle<80.))))   // Bug fixed for Harestua
+                  //   ((pRecord->maxdoas.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH) && (pRecord->elevationViewAngle<80.))))   // Bug fixed for Harestua
 
             rc=ERROR_ID_FILE_RECORD;
 
            else if (!dateFlag && (measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_NONE))
             {
-            	if (((measurementType==PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) && (pRecord->ccd.measureType!=PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) && (pRecord->ccd.measureType!=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH)) ||
-            	    ((measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) && (pRecord->ccd.measureType!=measurementType)))
+            	if (((measurementType==PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) && (pRecord->maxdoas.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) && (pRecord->maxdoas.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH)) ||
+            	    ((measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) && (pRecord->maxdoas.measurementType!=measurementType)))
 
             	 rc=ERROR_ID_FILE_RECORD;
             }
@@ -963,6 +966,7 @@ RC SetCCD (ENGINE_CONTEXT *pEngineContext,FILE *specFp,int flag)
       // Calculate the position in bytes from the beginning of the file for each spectra
 
       recordIndexes[0]=(int32_t)(pEngineContext->recordIndexesSize+1)*sizeof(short);    // file header : size of indexes table + curvenum
+
 
       for (i=1;i<curvenum;i++)
        recordIndexes[i]=recordIndexes[i-1]+                                     // position of the previous record

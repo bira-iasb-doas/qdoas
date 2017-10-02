@@ -46,7 +46,7 @@ caro {
     DEFINES     += QWT_DLL
   }
 
-  LIBS         += -L$$GSL_LIB_PATH -lgsl -L$$CODA_LIB_PATH -lcoda -L$$HDF_LIB_PATH -lhdf -L$$MFHDF_LIB_PATH -lmfhdf  -L$$HDFEOS_LIB_PATH -lhdfeos -L$$HDFEOS5_LIB_PATH -lhe5_hdfeos -L$$NETCDF_LIB_PATH -L$$HDF5_LIB_PATH -lhdf5 -lhdf5_hl -lhdf5_tools -lnetcdf -lm
+  LIBS         += -L$$GSL_LIB_PATH -lgsl -L$$CODA_LIB_PATH -lcoda -L$$HDF_LIB_PATH -lhdf -L$$MFHDF_LIB_PATH -lmfhdf  -L$$HDFEOS_LIB_PATH -lhdfeos -L$$HDFEOS5_LIB_PATH -lhe5_hdfeos -L$$NETCDF_LIB_PATH -L$$HDF5_LIB_PATH -lhdf5 -lhdf5_hl -lhdf5_cpp -lhdf5_hl_cpp -lhdf5_tools -lnetcdf -lm
 
   CONFIG      += console
 }

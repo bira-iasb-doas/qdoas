@@ -33,7 +33,7 @@ Q_OBJECT
   CWOutputSelector(const data_select_list_t *d, QWidget *parent = 0);
 
   void apply(data_select_list_t *d);
-  void setInstrument(int instrument,bool exportFlag);
+  void setInstrument(int instrument,int selectorOrigin);
 
   static QListWidgetItem* locateItemByKey(QListWidget *listWidget, int key);
 

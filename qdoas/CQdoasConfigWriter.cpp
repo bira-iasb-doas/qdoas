@@ -1642,7 +1642,7 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     case PRJCT_RESULTS_LAMBDA : config_string = "lambda"; break;
     case PRJCT_RESULTS_SPECTRA : config_string = "spectra"; break;
     case PRJCT_RESULTS_FILENAME : config_string = "filename"; break;
-
+    case PRJCT_RESULTS_SCANINDEX : config_string = "scan_index"; break;
     case PRJCT_RESULTS_PRECALCULATED_FLUXES:            config_string = "precalculated_fluxes"; break;
 
     default: puts("ERROR: no configuration string defined for output field. This is a bug, please contact Qdoas developers.");

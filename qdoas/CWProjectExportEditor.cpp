@@ -148,7 +148,7 @@ void CWProjectExportEditor::slotDirectoryChanged(const QString &text)
 
 void CWProjectExportEditor::slotInstrumentChanged(int instrument)
 {
-  m_selector->setInstrument(instrument,true);
+  m_selector->setInstrument(instrument,TAB_SELECTOR_EXPORT);
 
   if ((instrument!=PRJCT_INSTR_FORMAT_OMI) &&
      (instrument!=PRJCT_INSTR_FORMAT_GDP_BIN) &&

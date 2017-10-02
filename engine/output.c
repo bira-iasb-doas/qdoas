@@ -714,7 +714,7 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
   PROJECT *pProject=(PROJECT *)&pEngineContext->project;
 
   // default values for instrument-dependent output functions:
-  func_int func_meastype = &mfc_get_meastype;
+  func_int func_meastype = &get_meastype;
   func_float func_corner_latitudes = NULL;
   func_float func_corner_longitudes = NULL;
   size_t num_sza = 1;
@@ -803,16 +803,6 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
     break;
   case PRJCT_INSTR_FORMAT_MKZY:
     func_scanning_angle = &mkzy_get_scanning_angle;
-    break;
-  case PRJCT_INSTR_FORMAT_CCD_EEV:
-    func_meastype = ccd_get_meastype;
-    break;
-  case PRJCT_INSTR_FORMAT_ASCII:
-    if (pEngineContext->project.instrumental.ascii.format==PRJCT_INSTR_ASCII_FORMAT_COLUMN_EXTENDED)
-     func_meastype = asc_get_meastype;
-    break;
-  case PRJCT_INSTR_FORMAT_MFC_BIRA:
-    func_meastype= mfc_get_meastype;
     break;
   }
 
@@ -1104,6 +1094,10 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
      case PRJCT_RESULTS_FILENAME:
        register_field( (struct output_field) { .basic_fieldname = "Filename", .memory_type = OUTPUT_STRING, .resulttype = fieldtype, .format = "%s", .get_data = (func_void)&get_filename });
      break;
+     case PRJCT_RESULTS_SCANINDEX:
+       register_field( (struct output_field) { .basic_fieldname = "Scan index", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&get_scan_index });
+     break;
+
      default:
        break;
      }
@@ -1121,7 +1115,7 @@ static void OutputRegisterFieldsToExport(const ENGINE_CONTEXT *pEngineContext, c
   PROJECT *pProject=(PROJECT *)&pEngineContext->project;
 
   // default values for instrument-dependent output functions:
-  func_int func_meastype = &mfc_get_meastype;
+  func_int func_meastype = &get_meastype;
   func_float func_corner_latitudes = NULL;
   func_float func_corner_longitudes = NULL;
   size_t num_sza = 1;
@@ -1210,12 +1204,6 @@ static void OutputRegisterFieldsToExport(const ENGINE_CONTEXT *pEngineContext, c
     break;
   case PRJCT_INSTR_FORMAT_MKZY:
     func_scanning_angle = &mkzy_get_scanning_angle;
-    break;
-  case PRJCT_INSTR_FORMAT_CCD_EEV:
-    func_meastype = ccd_get_meastype;
-    break;
-  case PRJCT_INSTR_FORMAT_MFC_BIRA:
-    func_meastype= mfc_get_meastype;
     break;
   }
 
@@ -1515,6 +1503,10 @@ static void OutputRegisterFieldsToExport(const ENGINE_CONTEXT *pEngineContext, c
      case PRJCT_RESULTS_FILENAME: // !!! EXPORT FUNCTION !!!
        register_field( (struct output_field) { .basic_fieldname = "Filename", .memory_type = OUTPUT_STRING, .resulttype = fieldtype, .format = "%s", .get_data = (func_void)&get_filename });
      break;
+     case PRJCT_RESULTS_SCANINDEX:  // !!! EXPORT FUNCTION !!!
+       register_field( (struct output_field) { .basic_fieldname = "Scan index", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&get_scan_index });
+     break;
+
      default:  // !!! EXPORT FUNCTION !!!
        break;
      }
@@ -1692,13 +1684,33 @@ static int register_analysis_field(const struct output_field* fieldcontent, int 
 
   \param [in] windowName name of the analysis window, with suffix "."
 */
+
+static int register_analysis_output_field(int field,struct outputconfig analysis_infos[],size_t *parr_length,int indexFeno, int index_calib, const char *windowName)
+ {
+   enum _prjctResults indexField=field;
+   struct outputconfig *output =  (struct outputconfig *) lfind(&indexField, analysis_infos, parr_length, sizeof(analysis_infos[0]), &compare_record);
+    if (output)
+     {
+      output->field.get_tabfeno = &get_tabfeno_analysis;
+      output->field.resulttype = output->type;
+      int rc = register_analysis_field(&output->field, indexFeno, index_calib, ITEM_NONE, windowName, "");
+      if (rc != ERROR_ID_NO) return rc;
+     }
+   return ERROR_ID_NO;
+ }
+
 static int register_analysis_output(const PRJCT_RESULTS *pResults, int indexFeno, int index_calib, const char *windowName) {
 
   struct outputconfig analysis_infos[] = {
+
     { (outputRunCalib) ? -1 : PRJCT_RESULTS_REFZM, // no REFZM in "run calibration" mode
       { .basic_fieldname = "RefZm", .format = FORMAT_FLOAT, .memory_type = OUTPUT_FLOAT, .get_data = (func_void) &get_refzm} },
     { (outputRunCalib) ? -1 : PRJCT_RESULTS_REFNUMBER, // no REFNUMBER in "run calibration" mode
       { .basic_fieldname = "RefNumber", .format = FORMAT_INT, .memory_type = OUTPUT_INT, .get_data = (func_void) &get_refnumber} },
+    { (outputRunCalib) ? -1 : PRJCT_RESULTS_REFNUMBER_BEFORE, // no REFNUMBER in "run calibration" mode
+      { .basic_fieldname = "RefNumber(before)", .format = FORMAT_INT, .memory_type = OUTPUT_INT, .get_data = (func_void) &get_refnumber_before} },
+    { (outputRunCalib) ? -1 : PRJCT_RESULTS_REFNUMBER_AFTER, // no REFNUMBER in "run calibration" mode
+      { .basic_fieldname = "RefNumber(after)", .format = FORMAT_INT, .memory_type = OUTPUT_INT, .get_data = (func_void) &get_refnumber_after} },
     { (outputRunCalib) ? -1 : PRJCT_RESULTS_REFSHIFT, // no REFSHIFT in "run calibration" mode
       { .basic_fieldname = "Ref2/Ref1 Shift", .format = FORMAT_FLOAT, .memory_type = OUTPUT_FLOAT, .get_data = (func_void) &get_ref_shift} },
     { (outputRunCalib) ? -1 : PRJCT_RESULTS_SPIKES, // no spike removal in "run calibration" mode
@@ -1727,17 +1739,34 @@ static int register_analysis_output(const PRJCT_RESULTS *pResults, int indexFeno
   };
 
   size_t arr_length = sizeof(analysis_infos)/sizeof(analysis_infos[0]);
+  FENO *pTabFeno=&TabFeno[0][indexFeno];
+  int refUnique=((pTabFeno->refMaxdoasSelectionMode==ANLYS_MAXDOAS_REF_SZA) ||
+                 (pTabFeno->refSpectrumSelectionScanMode==ANLYS_MAXDOAS_REF_SCAN_BEFORE) ||
+                 (pTabFeno->refSpectrumSelectionScanMode==ANLYS_MAXDOAS_REF_SCAN_AFTER))?1:0;
 
-  for(int i = 0; i<pResults->fieldsNumber; i++) {
-    enum _prjctResults indexField = pResults->fieldsFlag[i];
-    struct outputconfig *output =  (struct outputconfig *) lfind(&indexField, analysis_infos, &arr_length, sizeof(analysis_infos[0]), &compare_record);
-    if(output) {
-      output->field.get_tabfeno = &get_tabfeno_analysis;
-      output->field.resulttype = output->type;
-      int rc = register_analysis_field(&output->field, indexFeno, index_calib, ITEM_NONE, windowName, "");
-      if (rc != ERROR_ID_NO) return rc;
-    }
-  }
+  for(int i = 0; i<pResults->fieldsNumber; i++)
+   {
+    if ((pResults->fieldsFlag[i]!=PRJCT_RESULTS_REFNUMBER) || refUnique)
+     register_analysis_output_field(pResults->fieldsFlag[i],analysis_infos,&arr_length,indexFeno,index_calib,windowName);
+    else
+     {
+      register_analysis_output_field(PRJCT_RESULTS_REFNUMBER_BEFORE,analysis_infos,&arr_length,indexFeno,index_calib,windowName);
+      register_analysis_output_field(PRJCT_RESULTS_REFNUMBER_AFTER,analysis_infos,&arr_length,indexFeno,index_calib,windowName);
+     }
+   }
+  // for(int i = 0; i<pResults->fieldsNumber; i++) {
+  //   enum _prjctResults indexField = pResults->fieldsFlag[i];
+  //   struct outputconfig *output =  (struct outputconfig *) lfind(&indexField, analysis_infos, &arr_length, sizeof(analysis_infos[0]), &compare_record);
+  //   if(output) {
+  //      {
+  //       output->field.get_tabfeno = &get_tabfeno_analysis;
+  //       output->field.resulttype = output->type;
+  //       int rc = register_analysis_field(&output->field, indexFeno, index_calib, ITEM_NONE, windowName, "");
+  //       if (rc != ERROR_ID_NO) return rc;
+  //      }
+  //     else
+  //   }
+  // }
 
   return ERROR_ID_NO;
 }

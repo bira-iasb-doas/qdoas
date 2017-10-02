@@ -113,8 +113,19 @@ static inline bool is_satellite(enum _prjctInstrFormat format) {
           format==PRJCT_INSTR_FORMAT_GDP_ASCII ||
           format==PRJCT_INSTR_FORMAT_SCIA_PDS ||
           format==PRJCT_INSTR_FORMAT_OMI ||
+          format==PRJCT_INSTR_FORMAT_OMPS ||
           format==PRJCT_INSTR_FORMAT_TROPOMI ||
           format==PRJCT_INSTR_FORMAT_GOME2);
+}
+
+static inline bool is_maxdoas(enum _prjctInstrFormat format) {
+  return (format==PRJCT_INSTR_FORMAT_ASCII ||                                                   //  0 ASCII
+          format==PRJCT_INSTR_FORMAT_MFC ||                                                     // 12 MFC Heidelberg
+          format==PRJCT_INSTR_FORMAT_MFC_STD ||                                                 // 13 MFC Heidelberg
+          format==PRJCT_INSTR_FORMAT_MFC_BIRA ||                                                // 14 MFC BIRA-IASB
+          format==PRJCT_INSTR_FORMAT_CCD_EEV ||                                                 // 18 CCD EEV
+          format==PRJCT_INSTR_FORMAT_UOFT ||                                                    // 23 University of Toronto
+          format==PRJCT_INSTR_FORMAT_NOAA);                                                     // 24 NOAA
 }
 
 #if defined(_cplusplus) || defined(__cplusplus)

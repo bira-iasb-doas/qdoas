@@ -58,6 +58,7 @@
 // Standard arrays dimensions
 
 #define STRING_LENGTH 1023                                                      // maximum size for strings
+#define MAX_GB_RECORDS 4000
 
 #define EPSILON     (double)   1.e-6
 
@@ -479,6 +480,15 @@ enum _omiSpectralTypes {
 // RESULTS TAB PAGE
 // ----------------
 
+// CWOutputSelector is called from display, output and export pages
+
+enum _outputSelectorOrigin
+ {
+  TAB_SELECTOR_DISPLAY,
+  TAB_SELECTOR_OUTPUT,
+  TAB_SELECTOR_EXPORT
+ };
+
 // Possible fields to store
 // ------------------------
 
@@ -505,6 +515,8 @@ enum _prjctResults
   PRJCT_RESULTS_BESTSHIFT,
   PRJCT_RESULTS_REFZM,
   PRJCT_RESULTS_REFNUMBER,
+  PRJCT_RESULTS_REFNUMBER_BEFORE,
+  PRJCT_RESULTS_REFNUMBER_AFTER,
   PRJCT_RESULTS_REFSHIFT,
   PRJCT_RESULTS_PIXEL,
   PRJCT_RESULTS_PIXEL_TYPE,
@@ -606,6 +618,7 @@ enum _prjctResults
   PRJCT_RESULTS_LAMBDA,
   PRJCT_RESULTS_SPECTRA,
   PRJCT_RESULTS_FILENAME,
+  PRJCT_RESULTS_SCANINDEX,
   PRJCT_RESULTS_MAX            // addition/deletion of new fields impact changes in ascii-qdoas (ascFieldsNames)
  };
 

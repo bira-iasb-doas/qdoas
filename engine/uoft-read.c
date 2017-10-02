@@ -387,6 +387,8 @@ RC ReliUofT(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDa
     pRecord->longitude=pUofT->longitude;
     pRecord->latitude=pUofT->latitude;
 
+    pRecord->maxdoas.measurementType=(pRecord->elevationViewAngle<(double)80.)?PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS:PRJCT_INSTR_MAXDOAS_TYPE_ZENITH;
+
     // Determine the local time
 
     tmLocal=pRecord->Tm+THRD_localShift*3600.;

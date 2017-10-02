@@ -271,12 +271,8 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
      }
    }
 
-  if (pSpectra->fieldsFlag[PRJCT_RESULTS_MEASTYPE] && (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV))
-   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Measurement type","%s",MAXDOAS_measureTypes[pRecord->ccd.measureType]);
-  if (pSpectra->fieldsFlag[PRJCT_RESULTS_MEASTYPE] && (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA))
-   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Measurement type","%s",MAXDOAS_measureTypes[pRecord->mfcBira.measurementType]);
-  if (pSpectra->fieldsFlag[PRJCT_RESULTS_MEASTYPE] && (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_ASCII))
-   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Measurement type","%s",MAXDOAS_measureTypes[pRecord->asc.measurementType]);   // TEST FORMAT ASCII
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_MEASTYPE] && is_maxdoas(pInstrumental->readOutFormat))
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Measurement type","%s",MAXDOAS_measureTypes[pRecord->maxdoas.measurementType]);   // TEST FORMAT ASCII
 
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_TDET])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Detector temperature","%.3f",pRecord->TDet);
@@ -344,6 +340,9 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
     if (pSpectra->fieldsFlag[PRJCT_RESULTS_UAV_HEADING])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Heading","%.3f",(float)pRecord->uavBira.heading);
    }
+
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_SCANINDEX])
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Scan index","%d",pRecord->maxdoas.scanIndex);
 
   // Return
 
@@ -1316,6 +1315,27 @@ int mediateRequestSetProject(void *engineContext,
    setMediateProjectSlit(&pEngineProject->slit,&project->slit);
    setMediateProjectOutput(&pEngineProject->asciiResults,&project->output);
    setMediateProjectExport(&pEngineProject->exportSpectra,&project->export_spectra);
+
+   if (is_maxdoas(pEngineProject->instrumental.readOutFormat))
+    {
+     char fieldsFlag[PRJCT_RESULTS_MAX];
+
+     memset(fieldsFlag,0,PRJCT_RESULTS_MAX);
+
+     // fieldsFlag not processed the same time in display page and output/export ??? -> to check later
+
+     if (operatingMode==THREAD_TYPE_ANALYSIS)
+      for (int i=0;i<project->output.selection.nSelected;i++)
+       fieldsFlag[project->output.selection.selected[i]]=1;
+     else if (operatingMode==THREAD_TYPE_EXPORT)
+      for (int i=0;i<project->export_spectra.selection.nSelected;i++)
+       fieldsFlag[project->export_spectra.selection.selected[i]]=1;
+
+     pEngineContext->maxdoasScanIndexFlag=((pEngineProject->spectra.fieldsFlag[PRJCT_RESULTS_SCANINDEX] && pEngineProject->spectra.displayDataFlag) ||
+                                          ((operatingMode==THREAD_TYPE_ANALYSIS) && fieldsFlag[PRJCT_RESULTS_SCANINDEX] && pEngineProject->asciiResults.analysisFlag) ||
+                                          ((operatingMode==THREAD_TYPE_EXPORT) && fieldsFlag[PRJCT_RESULTS_SCANINDEX]))?1:0;
+    }
+
 
    // Allocate buffers requested by the project
 

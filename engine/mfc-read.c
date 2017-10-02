@@ -349,7 +349,7 @@ INDEX MFC_SearchForCurrentFileIndex(ENGINE_CONTEXT *pEngineContext)
 
  	//  Browse files
 
- 	if (pEngineContext->analysisRef.refScan && (filesList!=NULL) && ((ptr=strrchr(pEngineContext->fileInfo.fileName,'/'))!=NULL) && (strlen(ptr+1)>0))
+ 	if ((pEngineContext->analysisRef.refScan || pEngineContext->maxdoasScanIndexFlag) && (filesList!=NULL) && ((ptr=strrchr(pEngineContext->fileInfo.fileName,'/'))!=NULL) && (strlen(ptr+1)>0))
  	 {
  	  strcpy(fileName,ptr+1);
 
@@ -359,7 +359,7 @@ INDEX MFC_SearchForCurrentFileIndex(ENGINE_CONTEXT *pEngineContext)
      indexRecord=ITEM_NONE;
     else
      {
-      indexRecordLow=0;
+      indexRecordLow=indexRecord=0;
       indexRecordHigh=nFiles;
 
       while (indexRecordHigh-indexRecordLow>1)
@@ -751,6 +751,8 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
 
         pRecord->longitude=-MFC_header.longitude;  // !!!
 
+        pRecord->maxdoas.measurementType=(pRecord->elevationViewAngle>80.)?PRJCT_INSTR_MAXDOAS_TYPE_ZENITH:PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS;  // Not the possibility to separate almucantar, horizon and direct sun from off-axis measurements
+
         // User constraints
 
 //        if (dateFlag && (pRecord->localCalDay>localDay))
@@ -972,6 +974,8 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,char *fileName,
      	 	 pRecord->TDet=(double)atof(keyValue);
      	 }
      }
+
+    pRecord->maxdoas.measurementType=(pRecord->elevationViewAngle>80.)?PRJCT_INSTR_MAXDOAS_TYPE_ZENITH:PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS;  // Not the possibility to separate almucantar, horizon and direct sun from off-axis measurements
 
     if ((pRecord->Tint<(double)1.e-3) && (pRecord->TotalAcqTime>(double)1.e-3))
      pRecord->Tint=pRecord->TotalAcqTime;
@@ -1353,7 +1357,7 @@ RC MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
     pRecord->TDet=header.temperature;
 
     strcpy(pRecord->mfcBira.originalFileName,header.fileName);
-    pRecord->mfcBira.measurementType=header.measurementType;
+    pRecord->maxdoas.measurementType=header.measurementType;
 
     // Calculate the date and time at half of the measurement
 

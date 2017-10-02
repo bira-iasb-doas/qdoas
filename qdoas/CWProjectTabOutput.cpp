@@ -224,7 +224,7 @@ void CWProjectTabOutput::slotBrowsePath()
 
 void CWProjectTabOutput::slotInstrumentChanged(int instrument)
 {
-  m_selector->setInstrument(instrument,false);
+  m_selector->setInstrument(instrument,TAB_SELECTOR_OUTPUT);
 }
 
 void CWProjectTabOutput::slotAnalysisCheckChanged(int state)

@@ -381,16 +381,8 @@ static inline void get_filter_number(struct output_field *this_field __attribute
   *filter_number = pEngineContext->recordInfo.ccd.filterNumber;
 }
 
-static inline void ccd_get_meastype(struct output_field *this_field __attribute__ ((unused)), int *meastype, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  *meastype = pEngineContext->recordInfo.ccd.measureType;
-}
-
-static inline void asc_get_meastype(struct output_field *this_field __attribute__ ((unused)), int *meastype, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  *meastype = pEngineContext->recordInfo.asc.measurementType;
-}
-
-static inline void mfc_get_meastype(struct output_field *this_field __attribute__ ((unused)), int *meastype, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  *meastype = pEngineContext->recordInfo.mfcBira.measurementType;
+static inline void get_meastype(struct output_field *this_field __attribute__ ((unused)), int *meastype, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  *meastype = pEngineContext->recordInfo.maxdoas.measurementType;
 }
 
 static inline void ccd_get_head_temperature(struct output_field *this_field __attribute__ ((unused)), double *head_temperature, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
@@ -676,6 +668,14 @@ static inline void get_refnumber(struct output_field *this_field, int *refnumber
   *refnumber= (float) this_field->get_tabfeno(this_field, indexFenoColumn)->indexRef;
 }
 
+static inline void get_refnumber_before(struct output_field *this_field, int *refnumber, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib __attribute__ ((unused))) {
+  *refnumber= (float) this_field->get_tabfeno(this_field, indexFenoColumn)->indexRefScanBefore;
+}
+
+static inline void get_refnumber_after(struct output_field *this_field, int *refnumber, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib __attribute__ ((unused))) {
+  *refnumber= (float) this_field->get_tabfeno(this_field, indexFenoColumn)->indexRefScanAfter;
+}
+
 static inline void get_ref_shift(struct output_field *this_field, float *ref_shift, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib __attribute__ ((unused))) {
   *ref_shift = (float) this_field->get_tabfeno(this_field, indexFenoColumn)->Shift;
 }
@@ -805,6 +805,9 @@ static inline void get_spectrum(struct output_field *this_field __attribute__ ((
   memcpy(spectrum,pEngineContext->buffers.spectrum,sizeof(double)*n_wavel);
 }
 
+static inline void get_scan_index(struct output_field *this_field __attribute__ ((unused)), int *scanIndex, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  *scanIndex = pEngineContext->recordInfo.maxdoas.scanIndex;
+}
 // write_spikes:
 // concatenate all pixels containing spikes into a single string for output.
 

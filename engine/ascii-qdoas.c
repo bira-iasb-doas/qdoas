@@ -137,6 +137,8 @@ char *ascFieldsNames[PRJCT_RESULTS_MAX]=
   (char *)"",                                                                   // PRJCT_RESULTS_BESTSHIFT,
   (char *)"",                                                                   // PRJCT_RESULTS_REFZM,
   (char *)"",                                                                   // PRJCT_RESULTS_REFNUMBER,
+  (char *)"",                                                                   // PRJCT_RESULTS_REFNUMBER_BEFORE,
+  (char *)"",                                                                   // PRJCT_RESULTS_REFNUMBER_AFTER,
   (char *)"",                                                                   // PRJCT_RESULTS_REFSHIFT,
   (char *)"Pixel Number",                                                       // PRJCT_RESULTS_PIXEL,
   (char *)"Pixel Type",                                                         // PRJCT_RESULTS_PIXEL_TYPE,
@@ -237,7 +239,8 @@ char *ascFieldsNames[PRJCT_RESULTS_MAX]=
   (char *)"Total Acquisition Time",                                             // PRJCT_RESULTS_TOTALACQTIME
   (char *)"lambda",                                                             // PRJCT_RESULTS_LAMBDA,
   (char *)"spectrum",                                                           // PRJCT_RESULTS_SPECTRA,
-  (char *)"filename"                                                            // PRJCT_RESULTS_FILENAME
+  (char *)"filename",                                                           // PRJCT_RESULTS_FILENAME
+  (char *)"Scan index"                                                          // PRJCT_RESULTS_SCANINDEX
  };
 
 enum _ascLineType
@@ -771,17 +774,17 @@ RC ASCII_QDOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int
           case PRJCT_RESULTS_MEASTYPE :
 
            if (strstr(keyValue,"off")!=NULL)
-            pRecordInfo->asc.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS;
+            pRecordInfo->maxdoas.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS;
            else if ((strstr(keyValue,"sun")!=NULL) || (strstr(keyValue,"ds")!=NULL))
-            pRecordInfo->asc.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_DIRECTSUN;
+            pRecordInfo->maxdoas.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_DIRECTSUN;
            else if ((strstr(keyValue,"moon")!=NULL) || (strstr(keyValue,"dm")!=NULL))
-            pRecordInfo->asc.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_MOON;
+            pRecordInfo->maxdoas.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_MOON;
            else if (strstr(keyValue,"alm")!=NULL)
-            pRecordInfo->asc.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_ALMUCANTAR;
+            pRecordInfo->maxdoas.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_ALMUCANTAR;
            else if (strstr(keyValue,"hor")!=NULL)
-            pRecordInfo->asc.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_HORIZON;
+            pRecordInfo->maxdoas.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_HORIZON;
            else
-            pRecordInfo->asc.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH;
+            pRecordInfo->maxdoas.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH;
           break;
        // ----------------------------------------------------------------------
           case PRJCT_RESULTS_TOTALEXPTIME :
@@ -818,7 +821,7 @@ RC ASCII_QDOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int
        // Force zenith for viewing elevation angles higher than 80 deg
 
        if (pRecordInfo->elevationViewAngle>80.)
-        pRecordInfo->asc.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH;
+        pRecordInfo->maxdoas.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH;
 
        if (useDate && useTime)
         {
@@ -843,7 +846,7 @@ RC ASCII_QDOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int
 
     measurementType=pEngineContext->project.instrumental.user;
 
-    // if (rc || (dateFlag && ((pRecordInfo->asc.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH) && (pRecordInfo->elevationViewAngle<80.))))
+    // if (rc || (dateFlag && ((pRecordInfo->maxdoas.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH) && (pRecordInfo->elevationViewAngle<80.))))
 
     if (rc || (dateFlag &&
             (((fabs(pRecordInfo->elevationViewAngle+0.1)>EPSILON) || (fabs(pRecordInfo->azimuthViewAngle+0.1)>EPSILON)) &&
@@ -854,8 +857,8 @@ RC ASCII_QDOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int
 
     else if (!dateFlag && (measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_NONE))
      {
-     	if (((measurementType==PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) && (pRecordInfo->asc.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) && (pRecordInfo->asc.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH)) ||
-     	    ((measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) && (pRecordInfo->asc.measurementType!=measurementType)))
+     	if (((measurementType==PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) && (pRecordInfo->maxdoas.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) && (pRecordInfo->maxdoas.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH)) ||
+     	    ((measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) && (pRecordInfo->maxdoas.measurementType!=measurementType)))
 
      	 rc=ERROR_ID_FILE_RECORD;
      }

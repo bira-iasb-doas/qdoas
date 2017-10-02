@@ -825,6 +825,8 @@ static enum fieldtype get_fieldtype(enum _prjctResults output_field) {
   case PRJCT_RESULTS_SKY:
   case PRJCT_RESULTS_REFZM:
   case PRJCT_RESULTS_REFNUMBER:
+  case PRJCT_RESULTS_REFNUMBER_BEFORE:
+  case PRJCT_RESULTS_REFNUMBER_AFTER:
   case PRJCT_RESULTS_PIXEL:
   case PRJCT_RESULTS_PIXEL_TYPE:
   case PRJCT_RESULTS_ORBIT:
@@ -893,6 +895,7 @@ static enum fieldtype get_fieldtype(enum _prjctResults output_field) {
   case PRJCT_RESULTS_TOTALEXPTIME :
   case PRJCT_RESULTS_TOTALACQTIME :
   case PRJCT_RESULTS_FILENAME :
+  case PRJCT_RESULTS_SCANINDEX :
     result = GEO;
     break;
     // all other fields are Data fields:

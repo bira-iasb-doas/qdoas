@@ -261,6 +261,8 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
 
   else if (str == "precalculated_fluxes")
     d->selected[d->nSelected] = PRJCT_RESULTS_PRECALCULATED_FLUXES;
+  else if (str == "scan_index")
+    d->selected[d->nSelected] = PRJCT_RESULTS_SCANINDEX;
   else
     return postErrorMessage("Invalid output field " + str);
 

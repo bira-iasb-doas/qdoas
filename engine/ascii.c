@@ -553,6 +553,8 @@ RC ASCII_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
       }
     }
 
+    pRecordInfo->maxdoas.measurementType=(elevFlag && (pRecordInfo->elevationViewAngle<(double)80.))?PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS:PRJCT_INSTR_MAXDOAS_TYPE_ZENITH;
+
     // Get information on the current record
     if (timeFlag) {
       pRecordInfo->present_datetime.thetime.ti_hour=(unsigned char)pRecordInfo->TimeDec;

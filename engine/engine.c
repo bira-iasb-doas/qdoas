@@ -127,6 +127,8 @@ void EngineResetContext(ENGINE_CONTEXT *pEngineContext)
     MEMORY_ReleaseDVector("EngineResetContext ","offset",pBuffers->offset,0);
    if (pBuffers->scanRef!=NULL)
     MEMORY_ReleaseDVector("EngineResetContext ","scanRef",pBuffers->scanRef,0);
+   if (pBuffers->scanIndexes!=NULL)
+    MEMORY_ReleaseBuffer("EngineResetContext ","scanIndexes",pBuffers->scanIndexes);
    if (pBuffers->specMaxx!=NULL)
     MEMORY_ReleaseDVector("EngineResetContext ","specMaxx",pBuffers->specMaxx,0);
    if (pBuffers->specMax!=NULL)
@@ -212,6 +214,8 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
         ((pBuffersTarget->offset=(double *)MEMORY_AllocDVector("EngineCopyContext","offset",0,max_ndet-1))==NULL)) ||
        ((pBuffersSource->scanRef!=NULL) && (pBuffersTarget->scanRef==NULL) &&
         ((pBuffersTarget->scanRef=(double *)MEMORY_AllocDVector("EngineCopyContext","scanRef",0,max_ndet-1))==NULL)) ||
+       ((pBuffersSource->scanIndexes!=NULL) && (pBuffersTarget->scanIndexes==NULL) &&
+        ((pBuffersTarget->scanIndexes=(INDEX *)MEMORY_AllocBuffer("EngineCopyContext","scanIndexes",pEngineContextSource->recordNumber,sizeof(INDEX),0,MEMORY_TYPE_INT))==NULL)) ||
        ((pBuffersSource->varPix!=NULL) && (pBuffersTarget->varPix==NULL) &&
         ((pBuffersTarget->varPix=(double *)MEMORY_AllocDVector("EngineCopyContext","varPix",0,max_ndet-1))==NULL)) ||
        ((pBuffersSource->specMaxx!=NULL) && (pBuffersTarget->specMaxx==NULL) &&
@@ -254,6 +258,8 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
       memcpy(pBuffersTarget->offset,pBuffersSource->offset,sizeof(double)*max_ndet);
      if ((pBuffersTarget->scanRef!=NULL) && (pBuffersSource->scanRef!=NULL))
       memcpy(pBuffersTarget->scanRef,pBuffersSource->scanRef,sizeof(double)*max_ndet);
+     if ((pBuffersTarget->scanIndexes!=NULL) && (pBuffersSource->scanIndexes!=NULL))
+      memcpy(pBuffersTarget->scanIndexes,pBuffersSource->scanIndexes,sizeof(INDEX)*pEngineContextSource->recordNumber);
      if ((pBuffersTarget->varPix!=NULL) && (pBuffersSource->varPix!=NULL))
       memcpy(pBuffersTarget->varPix,pBuffersSource->varPix,sizeof(double)*max_ndet);
      if ((pBuffersTarget->specMaxx!=NULL) && (pBuffersSource->specMaxx!=NULL))
@@ -349,16 +355,16 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
    pRecord->nSpecMax=0;
    pRecord->i_crosstrack=0;
 
+   // MAXDOAS ONLY
+
+   pRecord->maxdoas.scanIndex=ITEM_NONE;
+   pRecord->maxdoas.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH;
+
    pEngineContext->mfcDoasisFlag=((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC) ||
                                   (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD))?1:0;
 
-   pEngineContext->satelliteFlag=((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
-                                  (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
-                                  (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) ||
-                                  (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI) ||
-                                  (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_TROPOMI) ||
-                                  (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMPS) ||
-                                  (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GOME2))?1:0;
+   pEngineContext->satelliteFlag=is_satellite(pInstrumental->readOutFormat);
+   pEngineContext->maxdoasFlag=is_maxdoas(pInstrumental->readOutFormat);
 
    ENGINE_localNoon=(double)12.;
 
@@ -391,19 +397,10 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
 
         (((pBuffers->specMaxx=(double *)MEMORY_AllocDVector(__func__,"specMaxx",0,MAX_SPECMAX-1))==NULL) ||
         ((pBuffers->specMax=(double *)MEMORY_AllocDVector(__func__,"specMax",0,MAX_SPECMAX-1))==NULL))) ||
-
-
-       ( ( pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII ||
-           pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN ||
-           pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS ||
-           pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI ||
-           pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_TROPOMI ||
-           pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMPS ||
-           pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GOME2 ) &&
-
-         ( (pBuffers->sigmaSpec=MEMORY_AllocDVector(__func__,"sigmaSpec",0,max_ndet-1))==NULL ||
-           (pBuffers->lambda_irrad=MEMORY_AllocDVector(__func__,"lambda_irrad",0,max_ndet-1))==NULL ||
-           (pBuffers->irrad=MEMORY_AllocDVector(__func__,"irrad",0,max_ndet-1))==NULL
+         (pEngineContext->satelliteFlag &&
+        ((pBuffers->sigmaSpec=MEMORY_AllocDVector(__func__,"sigmaSpec",0,max_ndet-1))==NULL ||
+         (pBuffers->lambda_irrad=MEMORY_AllocDVector(__func__,"lambda_irrad",0,max_ndet-1))==NULL ||
+         (pBuffers->irrad=MEMORY_AllocDVector(__func__,"irrad",0,max_ndet-1))==NULL
            )
          ) ||
 
@@ -818,6 +815,9 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
    pRecord->hMoon=0.;
    pRecord->fracMoon=0.;
 
+   pRecord->maxdoas.scanIndex=ITEM_NONE;
+   pRecord->maxdoas.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH;
+
    pEngineContext->indexRecord=indexRecord;  // !!! for the output
 
    switch((int)pEngineContext->project.instrumental.readOutFormat)
@@ -961,6 +961,19 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
    if (pRecord->oldZm<(double)0.)
      pRecord->oldZm=pRecord->Zm;
 
+   // MAXDOAS ONLY : add the scan index
+
+   if (is_maxdoas(pEngineContext->project.instrumental.readOutFormat) && (pEngineContext->maxdoasScanIndexFlag) && (pEngineContext->buffers.scanIndexes!=NULL))
+    {
+     INDEX indexFile=ITEM_NONE;
+
+     if (!pEngineContext->mfcDoasisFlag)
+      pRecord->maxdoas.scanIndex=pEngineContext->buffers.scanIndexes[indexRecord-1];
+     else if ((indexFile=MFC_SearchForCurrentFileIndex(pEngineContext))>0)            // indexFile is modeled on indexRecord, this means that first record has indexFile=1
+      pRecord->maxdoas.scanIndex=pEngineContext->buffers.scanIndexes[indexFile-1];
+
+    }
+
    // Correction of the solar zenith angle with the geolocation of the specified observation site
 
    if ((indexSite=SITES_GetIndex(pEngineContext->project.instrumental.observationSite))!=ITEM_NONE) {
@@ -1003,9 +1016,6 @@ RC EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *sp
 
    // Initializations
 
-   resetFlag=(!pEngineContext->mfcDoasisFlag || (THRD_id!=THREAD_TYPE_ANALYSIS) || !pEngineContext->recordInfo.mfcDoasis.nFiles || (MFC_SearchForCurrentFileIndex(pEngineContext)==ITEM_NONE))?1:0;
-   pEngineContext->recordInfo.mfcDoasis.resetFlag=resetFlag;
-
    pRef=&pEngineContext->analysisRef;
    rc=ERROR_ID_NO;
 
@@ -1020,14 +1030,27 @@ RC EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *sp
        pEngineContext->currentRecord=1;
      }
 
+   // pEngineContext->fileInfo.fileName is assigned by EngineSetFile.
+   // this means that MFC_SearchForCurrentFileIndex has to be called after EngineSetFile and not before (21/09/2017)
+
+   resetFlag=(!pEngineContext->mfcDoasisFlag || ((THRD_id!=THREAD_TYPE_ANALYSIS) && !pEngineContext->maxdoasScanIndexFlag) || !pEngineContext->recordInfo.mfcDoasis.nFiles || (MFC_SearchForCurrentFileIndex(pEngineContext)==ITEM_NONE))?1:0;
+   pEngineContext->recordInfo.mfcDoasis.resetFlag=resetFlag;
+
+   // MFC measurements : allocate a buffer for files only for the automatic selection of the reference or to assign a scan index
+
+   if (pEngineContext->mfcDoasisFlag && resetFlag &&
+      (pEngineContext->maxdoasScanIndexFlag || ((THRD_id==THREAD_TYPE_ANALYSIS) && pEngineContext->analysisRef.refAuto)) &&
+      (MFC_AllocFiles(pEngineContext)!=ERROR_ID_NO))
+
+    rc=ERROR_ID_ALLOC;
+
    // For ground-based measurements, allocate a buffer for the indexes of selected reference spectra (automatic reference selection mode)
 
-   if (resetFlag && (THRD_id==THREAD_TYPE_ANALYSIS) && pEngineContext->analysisRef.refAuto && !pEngineContext->satelliteFlag && pEngineContext->recordNumber) {
-     if (   (pEngineContext->mfcDoasisFlag && (MFC_AllocFiles(pEngineContext)!=ERROR_ID_NO)) ||
-            !(recordNumber=(pEngineContext->mfcDoasisFlag)?pEngineContext->recordInfo.mfcDoasis.nFiles:pEngineContext->recordNumber) ||
-            ((pRef->refIndexes=(int *)MEMORY_AllocBuffer("EngineRequestBeginBrowseSpectra","refIndexes",recordNumber,sizeof(int),0,MEMORY_TYPE_INT))==NULL) ||
-            ((pRef->zmList=(double *)MEMORY_AllocDVector("EngineRequestBeginBrowseSpectra","zmList",0,recordNumber-1))==NULL) ||
-            ((pRef->timeDec=(double *)MEMORY_AllocDVector("EngineRequestBeginBrowseSpectra","timeDec",0,recordNumber-1))==NULL)) {
+   else if (resetFlag && (THRD_id==THREAD_TYPE_ANALYSIS) && pEngineContext->analysisRef.refAuto && !pEngineContext->satelliteFlag && pEngineContext->recordNumber) {
+     if (!(recordNumber=(pEngineContext->mfcDoasisFlag)?pEngineContext->recordInfo.mfcDoasis.nFiles:pEngineContext->recordNumber) ||
+         ((pRef->refIndexes=(int *)MEMORY_AllocBuffer("EngineRequestBeginBrowseSpectra","refIndexes",recordNumber,sizeof(int),0,MEMORY_TYPE_INT))==NULL) ||
+         ((pRef->zmList=(double *)MEMORY_AllocDVector("EngineRequestBeginBrowseSpectra","zmList",0,recordNumber-1))==NULL) ||
+         ((pRef->timeDec=(double *)MEMORY_AllocDVector("EngineRequestBeginBrowseSpectra","timeDec",0,recordNumber-1))==NULL)) {
 
        rc=ERROR_ID_ALLOC;
 
@@ -1038,6 +1061,12 @@ RC EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *sp
          pRef->indexScanAfter=ITEM_NONE;
      }
    }
+
+   // For MAXDOAS measurements, calculate the scan indexes (as this operation takes time, it is executed only if it is requested
+   // from the Display or Output pages of project properties of it is a selected field to export)
+
+   if (!rc && resetFlag && is_maxdoas(pEngineContext->project.instrumental.readOutFormat) && pEngineContext->maxdoasScanIndexFlag)
+    rc=EngineBuildScanIndex(pEngineContext);
 
    // retain calibration plot in case it is already there (e.g. for OMI)
    if (ANALYSE_plotKurucz)
@@ -1236,6 +1265,168 @@ RC EngineDestroyContext(ENGINE_CONTEXT *pEngineContext)
 // ==========================================
 // AUTOMATIC SEARCH OF THE REFERENCE SPECTRUM
 // ==========================================
+
+// -----------------------------------------------------------------------------
+// FUNCTION      EngineBuildScanIndex
+// -----------------------------------------------------------------------------
+// PURPOSE       For MAXDOAS measurements, determine the scan index of all
+//               records in the current file.  This function is called from
+//               EngineSetFile i.e. at the file opening but before browsing
+//               MAXDOAS files.
+//
+// INPUT         pEngineContext     pointer to the engine context
+//
+// RETURN        0 in case of success; the code of the error otherwise
+// -----------------------------------------------------------------------------
+
+RC EngineBuildScanIndex(ENGINE_CONTEXT *pEngineContext)
+ {
+  // Declarations
+
+  BUFFERS *pBuffers;                                                            // pointer to the buffers part of the engine context
+  RECORD_INFO *pRecord;                                                         // pointer to the record information part of the engine context
+  MFC_DOASIS *pMfc;                                                             // pointer to MFC structure
+  char   fileName[MAX_STR_LEN+1];                                               // backup of the current file name (useful for MFC format)
+  INDEX *scanIndexes;                                                           // substitution variable for the scanIndexes buffer in the engine context
+  double lastElevationAngle,                                                    // elevation angle of the last off axis measurement
+         lastTime,                                                              // time of the last measurement
+         tmLocal;                                                               // number of seconds of the current record
+  int indexRecord;                                                              // browse records in the current file
+  int scanIndex;                                                                // current scan index
+  int lastMeasurementType,                                                      // measurement type of the last browsed measurement
+      lastZenith,                                                               // index of the last zenith measurement
+      recordNumber;                                                             // the number of records to read
+
+  int upFlag=-1;                                                                // -1 : initial value that means no measurement browsed yet;
+                                                                                // 0 if the elevation angles of off axis measurement are decreasing;
+                                                                                // 1 if the elevation angles of off axis measurement are increasing;
+
+  RC rc;                                                                        // Return code
+
+  // Initializations
+
+  pBuffers=&pEngineContext->buffers;
+  pRecord=&pEngineContext->recordInfo;
+  pMfc=&pEngineContext->recordInfo.mfcDoasis;
+  lastElevationAngle=(double)-99.;
+  lastTime=(double)-999.;
+  lastZenith=ITEM_NONE;
+  scanIndex=ITEM_NONE;
+  lastMeasurementType=ITEM_NONE;
+  recordNumber=(pEngineContext->mfcDoasisFlag)?pMfc->nFiles:pEngineContext->recordNumber;
+  strcpy(fileName,pEngineContext->fileInfo.fileName);
+  rc=ERROR_ID_NO;
+
+  // Disable temporarily maxdoasScanIndexFlag (useful to avoid unuseful MFC_SearchForCurrentFileIndex)
+
+  pEngineContext->maxdoasScanIndexFlag=0;
+
+
+  // The buffers is released/re-allocated for each new file to read
+  // It is possible to avoid this step by saving the size of the buffer and reallocated it
+  // only if the size of the new file is larger
+
+  if (pBuffers->scanIndexes!=NULL)
+   {
+    MEMORY_ReleaseBuffer("EngineBuildScanIndex","scanIndexes",pBuffers->scanIndexes);
+    pBuffers->scanIndexes=NULL;
+   }
+
+  if (!recordNumber ||
+     ((pBuffers->scanIndexes=(INDEX *)MEMORY_AllocBuffer(__func__,"scanIndexes",recordNumber,sizeof(INDEX),0,MEMORY_TYPE_INT))==NULL))
+
+   rc=ERROR_ID_ALLOC;
+
+  else
+   {
+    scanIndexes=pEngineContext->buffers.scanIndexes;
+
+    // Browse records in the file
+
+    for (indexRecord=0;(indexRecord<recordNumber) && !rc;indexRecord++)
+     {
+      // Default value
+
+      scanIndexes[indexRecord]=ITEM_NONE;
+
+      // For MFC format, get filename
+
+      if (pEngineContext->mfcDoasisFlag)
+       sprintf(pEngineContext->fileInfo.fileName,"%s%c%s",pMfc->filePath,PATH_SEP,&pMfc->fileNames[indexRecord*(DOAS_MAX_PATH_LEN+1)]);
+
+      // Read the next record
+
+      if (!(rc=EngineReadFile(pEngineContext,(!pEngineContext->mfcDoasisFlag)?indexRecord+1:1,0,0)))
+       {
+        // Get the local time of the current record
+
+        tmLocal=pRecord->Tm+THRD_localShift*3600.;
+
+        // Zenith following a off-axis increasing sequence are assigned a scan index
+
+        if (pRecord->maxdoas.measurementType==PRJCT_INSTR_MAXDOAS_TYPE_ZENITH)
+         {
+          lastZenith=indexRecord;
+
+          if ((upFlag==1) &&                                                    // increasing sequence of off axis measurements
+              (lastMeasurementType==PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) &&        // last measurement was an off-axis one; the current one is a zenith one
+              (tmLocal-lastTime<(double)900.))                                  // no more than 15 minutes between the last off axis measurement and the current zenith one
+
+           scanIndexes[indexRecord]=scanIndex;                                  // same scan index as the last off axis measurement
+         }
+
+        // Current record is an off-axis measurement
+
+        if (pRecord->maxdoas.measurementType==PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS)
+         {
+          // if there is more than 15 minutes with the last off-axis measurement, increase the scan index
+
+          if (tmLocal-lastTime>(double)900.)   // 900 sec -> 15 min
+           scanIndex++;
+
+          // use the two first off axis measurements, to determine if the sequences are increasing or decreasing
+
+          else if ((upFlag==-1) && (lastMeasurementType==PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) && (fabs(pRecord->elevationViewAngle-lastElevationAngle)>EPSILON))
+           upFlag=(pRecord->elevationViewAngle<lastElevationAngle)?0:1;
+
+          // Check discontinuities in elevation angles to increase the scan index
+
+          else if (((upFlag==0) && (pRecord->elevationViewAngle>lastElevationAngle+EPSILON)) ||
+                   ((upFlag==1) && (pRecord->elevationViewAngle<lastElevationAngle-EPSILON)))
+           scanIndex++;
+
+           // For decreasing sequences, the scan index of the last preceding zenith measurement is assigned
+
+          if ((upFlag==0) && (lastZenith!=ITEM_NONE) && (scanIndexes[lastZenith]==ITEM_NONE))
+           scanIndexes[lastZenith]=scanIndex;
+
+          // Update
+
+          scanIndexes[indexRecord]=scanIndex;                                   // the scan index of the current off axis measurement
+          lastElevationAngle=pRecord->elevationViewAngle;                       // keep the elevation angle of the last off axis record
+          lastTime=tmLocal;                                                     // keep the local measurement time of the last off axis record
+         }
+
+        // Update the measurement type of the last record
+
+        lastMeasurementType=pRecord->maxdoas.measurementType;
+       }
+     }
+   }
+
+  // For MFC, restore the original file name
+
+  if (pEngineContext->mfcDoasisFlag)
+   strcpy(pEngineContext->fileInfo.fileName,fileName);
+
+  // Enable maxdoasScanIndexFlag again
+
+  pEngineContext->maxdoasScanIndexFlag=1;
+
+  // Return
+
+  return rc;
+ }
 
 // -----------------------------------------------------------------------------
 // FUNCTION      EngineBuildRefList
