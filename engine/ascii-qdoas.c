@@ -544,6 +544,9 @@ RC ASCII_QDOAS_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
     if (!asciiSpectraSize && spectraSize)
      asciiSpectraSize=spectraSize;
 
+    if (!recordNumber && spectraSize)
+     recordNumber=1;
+
     if (!pEngineContext->recordNumber && recordNumber)
      pEngineContext->recordNumber=recordNumber;
 
