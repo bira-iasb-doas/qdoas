@@ -27,7 +27,7 @@ extern "C" {
 
 using H5::H5File; using H5::DataSet; using H5::DataSpace; using H5::Group;
 
-using std::cout; using std::cerr; using std::endl;
+using std::cerr; using std::endl;
 using std::vector;
 using std::set;
 using std::string;
@@ -232,7 +232,6 @@ namespace {
             // load spectrum and add it to refSpectra for this
             // row, if not yet done
             if(!refLoaded) {
-              //              cout << "measurement: " << i << ", row: " << j << endl;
               refSpectra.push_back(loadRef(i, j, orbitFile));
               refLoaded = true;
             }
@@ -305,17 +304,8 @@ namespace {
       try {
         find_matching_spectra(curFileDir.filePath(*i), refSpectra, offsets);
       } catch (H5::Exception &e) {
-        cout << "invalid file " << i->toLatin1().constData() << ", " << e.getDetailMsg() << endl;
+        cerr << "invalid file " << i->toLatin1().constData() << ", " << e.getDetailMsg() << endl;
       }
-
-//      cout << "matching spectra: " << refSpectra.size() << endl;
-//      unsigned int totalnum=0;
-//      for(unsigned int j=0; j<currentOrbit.nXTrack; ++j) {
-//        totalnum +=offsets[1][j].size();
-//        cout << offsets[1][j].size() << endl;
-//      }
-//      cout << "sum should equal " << totalnum << endl;
-
     }
 
     // generate average spectrum for each analysis window and each detector row
@@ -332,15 +322,8 @@ namespace {
         // TODO: check that we have enough matching spectra (how much is enough?)
         Reference ref = averageSpectrum(refSpectra, offsets[j][i], refLambda);
 
-//        if(i==0 && j==1) {
-//          for(unsigned int k=0; k<ref.lambda.size(); ++k) {
-//            cout << ref.lambda[k] << " " << ref.radiance[k] << " " << ref.sigma[k] << endl;
-//          }
-//        }
-
         memcpy(pTabFeno->SrefN, &ref.radiance[0], sizeof(ref.radiance[0])*ref.radiance.size());
         // normalize SrefN
-        cout << __func__ << ", " << __LINE__ << ": Normalize" << pTabFeno->SrefN[0] << ", ..." << endl;
         VECTOR_NormalizeVector(pTabFeno->SrefN-1,NDET[i],&pTabFeno->refNormFactN, __func__);
         // copy SrefN to SrefS
         memcpy(pTabFeno->SrefS, pTabFeno->SrefN, sizeof(ref.radiance[0])*ref.radiance.size());
@@ -501,12 +484,12 @@ RC OMPS_load_analysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle) {
   double (*irradiances)[currentOrbit.nLambda] =
     reinterpret_cast<double (*)[currentOrbit.nLambda]>(&currentOrbit.irradiances[0]);
 
-  for(int indexXTrack=0; indexXTrack<currentOrbit.nXTrack; ++indexXTrack) {
+  for(size_t j=0; j<currentOrbit.nXTrack; ++j) {
     for(int i=0; i<NFeno; ++i) {
-      FENO *pTabFeno=&TabFeno[indexXTrack][i];
+      FENO *pTabFeno=&TabFeno[j][i];
       pTabFeno->NDET = currentOrbit.nLambda;
-      memcpy(pTabFeno->LambdaRef, wavelengths[indexXTrack], currentOrbit.nLambda*sizeof(double));
-      memcpy(pTabFeno->Sref, irradiances[indexXTrack], currentOrbit.nLambda*sizeof(double));
+      memcpy(pTabFeno->LambdaRef, wavelengths[j], currentOrbit.nLambda*sizeof(double));
+      memcpy(pTabFeno->Sref, irradiances[j], currentOrbit.nLambda*sizeof(double));
 
       rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,pTabFeno->NDET,&pTabFeno->refNormFact, __func__);
       if(rc)
@@ -546,19 +529,18 @@ RC OMPS_load_analysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle) {
     }
 
     if (useKurucz || (THRD_id==THREAD_TYPE_KURUCZ)) {
-      KURUCZ_Init(0, indexXTrack);
+      KURUCZ_Init(0, j);
 
-      if ((THRD_id!=THREAD_TYPE_KURUCZ) && ((rc=KURUCZ_Reference(NULL,0,pEngineContext->project.spectra.displayDataFlag,0,responseHandle,indexXTrack))!=ERROR_ID_NO))
+      if ((THRD_id!=THREAD_TYPE_KURUCZ) && ((rc=KURUCZ_Reference(NULL,0,pEngineContext->project.spectra.displayDataFlag,0,responseHandle,j))!=ERROR_ID_NO))
         return rc;
     }
   }
 
   if(pEngineContext->analysisRef.refAuto && referenceFileNames.find(pEngineContext->fileInfo.fileName) == referenceFileNames.end() ) {
-    cout << "Need automatic reference spectrum" << endl;
     referenceFileNames.clear();
     rc = make_automatic_reference(pEngineContext);
 
-    for(int i=0; i<currentOrbit.nXTrack; ++i) {
+    for(size_t i=0; i<currentOrbit.nXTrack; ++i) {
       // fit wavelength shift between calibrated solar irradiance
       // and automatic reference spectrum and apply this shift to
       // absorption crosssections
