@@ -1587,7 +1587,7 @@ RC GOME2_get_vza_ref(double scanner_angle, int index_feno, FENO *feno) {
       : refs_right_scan[index_feno][bin-1];
   }
 
-  if (!ref->n_spectra) {
+  if (!ref->n_spectra) { // no reference spectra were found for this bin
     const double vza_min = vza_bins[bin];
     const double vza_max = (1+bin) < NUM_VZA_BINS
       ? vza_bins[1+bin]
