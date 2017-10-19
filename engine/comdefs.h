@@ -259,8 +259,10 @@ SHORT_DATE;
 #define ERROR_ID_FWHM_INCOMPATIBLE_OPTIONS     1261                             // Can't apply fitting of slit function parameters with calibration and resolution correction
 #define ERROR_ID_OUT_OF_RANGE                  1270                             // field is out of range
 #define ERROR_ID_FILE_AUTOMATIC                1280                             // no automatic reference selection can be performed on this type of file
+#define ERROR_ID_REFERENCE_SELECTION 1281 // can't find (enough) spectra matching automatic reference criteria
 #define ERROR_ID_REF_ALIGNMENT                 1285                             // problem with the alignment of the reference spectrum in one analysis window
 #define ERROR_ID_NO_REF                        1290                             // no reference file found in the specified file
+#define ERROR_ID_VZA_REF                       1291                             // no reference for this vza bin.
 #define ERROR_ID_CONVOLUTION                   1295                             // incompatibility with convolution options
 #define ERROR_ID_NO_RESULT_PREVIOUS_WINDOW     1296                             // when using result from previous window as fixed column value: cannot link molecule with a molecule from a previous analysis window
 #define ERROR_ID_IMAGER_CALIB                  1297                             // calibration error for imager row

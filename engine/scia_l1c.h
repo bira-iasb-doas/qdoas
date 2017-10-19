@@ -3,8 +3,6 @@
 
 #include "scia_defs.h"
 #include "scia_common.h"
-#include "scia_l1b.h"
-
 
 /* DSD name enum */
     extern char DS_NAME_SCI_NLC_1C [40][29];

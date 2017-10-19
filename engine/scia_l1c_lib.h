@@ -2,7 +2,6 @@
 #define  __SCIA_L1C_LIB
 
 #include "scia_defs.h"
-#include "scia_l1b.h"
 #include "scia_l1c.h"
 
 #define SCAN_LIMB_DURATION 24
@@ -194,14 +193,14 @@ STATE_CLCON_MEASTIME;
 /* (DSD) info structure */
 typedef struct info_l1c
 {
-    FILE *FILE_l1c;		/* File handler for Lv1C - file */
-    MPH mph;
-    SPH_SCI_NLC_1C sph;
-    User_File_Info user_file_info; /* Store user important information of product */
-    int num_dsd;		/* No. of DSDs */
-    DSD states;		/* state summary DSD */
-    DSD states_geolocation; /* geolocation of states DSD */
-    DSD nadir;		/* nadir DSD */
+  FILE *FILE_l1c;		/* File handler for Lv1C - file */
+  MPH mph;
+  SPH_SCI_NLC_1C sph;
+  User_File_Info user_file_info; /* Store user important information of product */
+  int num_dsd;		/* No. of DSDs */
+  DSD states;		/* state summary DSD */
+  DSD states_geolocation; /* geolocation of states DSD */
+  DSD nadir;		/* nadir DSD */
   DSD limb;		/* limb DSD */
   DSD occ;	        /* occultation  DSD */
   DSD mon;	        /* monitoring DSD */
@@ -216,19 +215,19 @@ typedef struct info_l1c
   DSD specpar;	        /* spectral calibration paramters DSD */
   DSD cal_options;	/* calibration options DSD */
   /* other DSDs may be added */
-    int n_mds[MAX_MDS_TYPES]; /* No. of Measurem. data sets
+  int n_mds[MAX_MDS_TYPES]; /* No. of Measurem. data sets
 				 (previous 4 numbers); */
-    int n_pmd_mds[MAX_MDS_TYPES]; /* No of PMD datasets for each type; */
+  int n_pmd_mds[MAX_MDS_TYPES]; /* No of PMD datasets for each type; */
 
-    ADS_STATES *ads_states;    /* Complete State info (Clusterdefs!)*/
-    STATE_CLCON_MEASTIME *stateClconMeasTime;
-    Geolocation *ads_states_geolocation;
+  ADS_STATES *ads_states;    /* Complete State info (Clusterdefs!)*/
+  STATE_CLCON_MEASTIME *stateClconMeasTime;
+  Geolocation *ads_states_geolocation;
 
-    int *idx_states[MAX_MDS_TYPES]; /* index to state in ads_states */
-    int n_states[MAX_MDS_TYPES];    /* number of indexes */
+  int *idx_states[MAX_MDS_TYPES]; /* index to state in ads_states */
+  int n_states[MAX_MDS_TYPES];    /* number of indexes */
 
-    int mds_offset[MAX_MDS_TYPES];     /* actual offset of MDS  */
-    int mds_pmd_offset[MAX_MDS_TYPES]; /* actual offset of PMD-DS  */
+  int mds_offset[MAX_MDS_TYPES];     /* actual offset of MDS  */
+  int mds_pmd_offset[MAX_MDS_TYPES]; /* actual offset of PMD-DS  */
 
 //    MJD *mjd_mds;
 //    int *idx_mds;
@@ -244,38 +243,38 @@ typedef struct info_l1c
   float wl[NPIXEL];  /* Fixed wawelength grid */
   CAL_OPTIONS_GADS cal_options_GADS;   /*Calibration Options GADS*/
 
-    int cluster_ids[MAX_MDS_TYPES][64];	/* List of clusterids in File */
-    int max_cluster_ids[MAX_MDS_TYPES];	/* Number of clusterids */
+  int cluster_ids[MAX_MDS_TYPES][64];	/* List of clusterids in File */
+  int max_cluster_ids[MAX_MDS_TYPES];	/* Number of clusterids */
 
-    int cur_cluster_ids[64];	/* List of clusterids in this state */
-    int cur_max_cluster_ids;	/* Number of current clusterids */
+  int cur_cluster_ids[64];	/* List of clusterids in this state */
+  int cur_max_cluster_ids;	/* Number of current clusterids */
 
-    int cur_state_nr[MAX_MDS_TYPES]; /* index to current state */
+  int cur_state_nr[MAX_MDS_TYPES]; /* index to current state */
 
-    int cur_mds_read[MAX_MDS_TYPES]; /* counter for MDS already read */
+  int cur_mds_read[MAX_MDS_TYPES]; /* counter for MDS already read */
 
-    int cur_readout_in_state;	/* Actual readout for window in state */
-    int cur_max_readout_in_state; /* Max readouts in state */
-    int cur_pix_start;		/* Actual pix_window */
-    int cur_pix_end;		/* Actual pix_window */
-    int cur_pix_start_arr[64];	/* Actual pix_windows */
-    int cur_pix_end_arr[64];	/* Actual pix_windows */
-    int n_cur_pix;		/* number of pix_windows */
+  int cur_readout_in_state;	/* Actual readout for window in state */
+  int cur_max_readout_in_state; /* Max readouts in state */
+  int cur_pix_start;		/* Actual pix_window */
+  int cur_pix_end;		/* Actual pix_window */
+  int cur_pix_start_arr[64];	/* Actual pix_windows */
+  int cur_pix_end_arr[64];	/* Actual pix_windows */
+  int n_cur_pix;		/* number of pix_windows */
 
-    float cur_wl_start;		/* Actual wl_window */
-    float cur_wl_end;		/* Actual wl_window */
-    float cur_wl_start_arr[64];	/* Actual wl_windows */
-    float cur_wl_end_arr[64];	/* Actual wl_windows */
-    float cur_wl_channel_arr[64];	/* Actual wl_windows */
-    int n_cur_wl;		/* number of wl_windows */
+  float cur_wl_start;		/* Actual wl_window */
+  float cur_wl_end;		/* Actual wl_window */
+  float cur_wl_start_arr[64];	/* Actual wl_windows */
+  float cur_wl_end_arr[64];	/* Actual wl_windows */
+  float cur_wl_channel_arr[64];	/* Actual wl_windows */
+  int n_cur_wl;		/* number of wl_windows */
 				/* flag for real output */
-    int cur_pix_output_flag[MAX_PIXELS];
+  int cur_pix_output_flag[MAX_PIXELS];
 
-    int wanted_clusters[64];	/* User may define cluster only */
-    int n_wanted_clusters;	/* Number of user defined clusters */
+  int wanted_clusters[64];	/* User may define cluster only */
+  int n_wanted_clusters;	/* Number of user defined clusters */
 
-    int set_int_time;		/* wanted integration time for larger pixels */
-    int max_int_time;           /* largest integration time in cluster set */
+  int set_int_time;		/* wanted integration time for larger pixels */
+  int max_int_time;           /* largest integration time in cluster set */
 
 //    short cur_used_clusters[64];/* List of really used clusters in current state */
 				/* actual cluster data */
@@ -289,18 +288,18 @@ typedef struct info_l1c
 				/*  number of pixels really used */
 //    int pix_n_cur_used_clusters[64];
 				/*  list of really used clusters in current state*/
-    cur_used_cluster cur_used_cl[64];
+  cur_used_cluster cur_used_cl[64];
 				/*  total number of really used pixels */
-    int sum_pix_cur_used_clusters;
-    int geo_cur_used_clusters;	/* geolocation to use for output */
-    int max_cur_used_clusters;  /* number of used clusters */
-    int cur_it;			/* Integration time currently used */
-    int cur_num_pmd;
+  int sum_pix_cur_used_clusters;
+  int geo_cur_used_clusters;	/* geolocation to use for output */
+  int max_cur_used_clusters;  /* number of used clusters */
+  int cur_it;			/* Integration time currently used */
+  int cur_num_pmd;
 				/* Data in one state */
-    state_cluster_data st_cl_data[64];
-    Nadir_Pmd nadir_pmd_data;
+  state_cluster_data st_cl_data[64];
+  Nadir_Pmd nadir_pmd_data;
     /* flag for recaculating limb TH */
-    int cfi_limb_flag;
+  int cfi_limb_flag;
 } info_l1c;
 
 #pragma pack(pop)

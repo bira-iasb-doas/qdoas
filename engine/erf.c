@@ -225,7 +225,7 @@ double ERF_GetValue(double newX)
 
   if ((ERF_x!=NULL) && (ERF_y!=NULL) && (ERF_y2!=NULL) &&
       (absX>=ERF_x[0]) && (absX<=ERF_x[(int)(ERF_N)-1]) &&
-      !SPLINE_Vector(ERF_x,ERF_y,ERF_y2,(int)(ERF_N),&absX,&newY,1,SPLINE_CUBIC,"ERF_GetValue "))
+      !SPLINE_Vector(ERF_x,ERF_y,ERF_y2,(int)(ERF_N),&absX,&newY,1,SPLINE_CUBIC))
    {
     if (newX<0)
      newY=-newY;

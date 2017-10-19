@@ -108,10 +108,6 @@ INDEX pdaLastRecord=ITEM_NONE;   // Record number of the last record read out.
 //               ERROR_ID_FILE_NOT_FOUND  the input file pointer 'specFp' is NULL;
 //               ERROR_ID_NO              otherwise.
 // -----------------------------------------------------------------------------
-
-#if defined(__BC32_) && __BC32_
-#pragma argsused
-#endif
 RC SetPDA_EGG_Logger(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  {
   // Declarations
@@ -226,10 +222,6 @@ RC GotoPDA_EGG_Logger(FILE *specFp,int recordNo)
 //               ERROR_ID_FILE_RECORD    : the record doesn't satisfy user constraints
 //               ERROR_ID_NO             : otherwise.
 // -----------------------------------------------------------------------------
-
-#if defined(__BC32_) && __BC32_
-#pragma argsused
-#endif
 RC ReliPDA_EGG_Logger(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp)
  {
   // Declarations
@@ -446,10 +438,6 @@ float Tps2[MAXTPS2] =
 //               ERROR_ID_FILE_EMPTY      the file is empty;
 //               ERROR_ID_NO              otherwise.
 // -----------------------------------------------------------------------------
-
-#if defined(__BC32_) && __BC32_
-#pragma argsused
-#endif
 RC SetPDA_EGG(ENGINE_CONTEXT *pEngineContext,FILE *specFp,int newFlag)
  {
   // Declarations
@@ -571,10 +559,6 @@ RC SetPDA_EGG(ENGINE_CONTEXT *pEngineContext,FILE *specFp,int newFlag)
 //               ERROR_ID_FILE_RECORD    : the record doesn't satisfy user constraints
 //               ERROR_ID_NO             : otherwise.
 // -----------------------------------------------------------------------------
-
-#if defined(__BC32_) && __BC32_
-#pragma argsused
-#endif
 RC ReliPDA_EGG(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp,FILE *darkFp,int newFlag)
  {
   // Declarations

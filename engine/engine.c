@@ -65,6 +65,8 @@
 #include "stdfunc.h"
 #include "zenithal.h"
 #include "output.h"
+#include "gome2_read.h"
+#include "scia-read.h"
 #include "tropomi_read.h"
 #include "omps_read.h"
 #include "omi_read.h"
@@ -505,7 +507,7 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
              }
 
            if (!SPLINE_Deriv2(lambdaInstr,instrFunction,instrDeriv2,max_ndet,__func__))
-            rc=SPLINE_Vector(lambdaInstr,instrFunction,instrDeriv2,max_ndet,pBuffers->lambda,pBuffers->instrFunction,max_ndet,SPLINE_CUBIC,__func__);
+            rc=SPLINE_Vector(lambdaInstr,instrFunction,instrDeriv2,max_ndet,pBuffers->lambda,pBuffers->instrFunction,max_ndet,SPLINE_CUBIC);
           }
 
          if (fp!=NULL)
@@ -729,13 +731,9 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
        rc=SetCCD(pEngineContext,pFile->specFp,1);
        break;
        // ---------------------------------------------------------------------------
-     case PRJCT_INSTR_FORMAT_GDP_ASCII :
-       rc=GDP_ASC_Set(pEngineContext,pFile->specFp);
-       break;
-       // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_GDP_BIN :
-       if (!(rc=GDP_BIN_Set(pEngineContext,pFile->specFp)) &&  (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_EXPORT) && (THRD_id!=THREAD_TYPE_NONE))
-        rc=GDP_BIN_LoadAnalysis(pEngineContext,pEngineContext->fileInfo.specFp,responseHandle);
+       if (!(rc=GDP_BIN_Set(pEngineContext) ) &&  (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_EXPORT) && (THRD_id!=THREAD_TYPE_NONE))
+        rc=GDP_BIN_LoadAnalysis(pEngineContext,responseHandle);
        break;
        // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_SCIA_PDS :
@@ -920,12 +918,8 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
       rc=ReliCCDTrack(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pFile->namesFp,pFile->darkFp);
       break;
       // ---------------------------------------------------------------------------
-    case PRJCT_INSTR_FORMAT_GDP_ASCII :
-      rc=GDP_ASC_Read(pEngineContext,indexRecord,dateFlag,pFile->specFp);
-      break;
-      // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_GDP_BIN :
-      rc=GDP_BIN_Read(pEngineContext,indexRecord,pFile->specFp,GDP_BIN_currentFileIndex);
+      rc=GDP_BIN_Read(pEngineContext,indexRecord,pFile->specFp);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_SCIA_PDS :
@@ -1166,7 +1160,6 @@ RC EngineEndCurrentSession(ENGINE_CONTEXT *pEngineContext)
 
      // Release other allocated buffers
 
-     GDP_ASC_ReleaseBuffers();
      GDP_BIN_ReleaseBuffers();
      GOME2_ReleaseBuffers();
      OMI_ReleaseBuffers();

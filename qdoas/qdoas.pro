@@ -27,6 +27,10 @@ hpc {
   LIBS += -lGctp # must be linked after hdfeos
 }
 
+hpc {
+  LIBS += -lGctp # must be linked after hdfeos
+}
+
 linux_package {
   TARGET = ../../linux_package/bin/qdoas.bin
   LIBS += -lcoda -lhdfeos -lnetcdf -lmfhdf -ldf -lz -lhe5_hdfeos -lhdf5_hl -lhdf5 -lqwt

@@ -25,6 +25,10 @@ hpc {
   LIBS += -lGctp # must be linked after hdfeos
 }
 
+hpc {
+  LIBS += -lGctp # must be linked after hdfeos
+}
+
 linux_package {
   TARGET = ../../linux_package/bin/doas_cl.bin
   LIBS         += -lcoda -lhdfeos -lnetcdf -lmfhdf -ldf -ljpeg -lz -lhe5_hdfeos -lhdf5_hl -lhdf5

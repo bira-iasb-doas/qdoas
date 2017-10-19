@@ -1702,21 +1702,6 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
              pTabFeno->cloudFractionMin=pAnalysisWindows->cloudFractionMin;
              pTabFeno->cloudFractionMax=pAnalysisWindows->cloudFractionMax;
 
-             pTabFeno->gomePixelType[0]=pTabFeno->gomePixelType[1]=pTabFeno->gomePixelType[2]=pTabFeno->gomePixelType[3]=0;
-
-             // GOME Pixel type : probably will be replaced later by a maximum value for LOS angle
-
-             if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
-                 (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN)) {
-
-               pTabFeno->gomePixelType[0]=pAnalysisWindows->pixelTypeEast;
-               pTabFeno->gomePixelType[1]=pAnalysisWindows->pixelTypeCenter;
-               pTabFeno->gomePixelType[2]=pAnalysisWindows->pixelTypeWest;
-               pTabFeno->gomePixelType[3]=pAnalysisWindows->pixelTypeBackscan;
-             }
-
-             pTabFeno->nspectra=pAnalysisWindows->refNs;
-
              pEngineContext->analysisRef.refAuto++;
 
              if ((fabs(pTabFeno->refLonMax-pTabFeno->refLonMin)>1.e-5) ) // && (fabs(pTabFeno->refLonMax-pTabFeno->refLonMin)<359.))

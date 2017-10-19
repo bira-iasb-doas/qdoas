@@ -237,8 +237,6 @@ RC MFC_AllocFiles(ENGINE_CONTEXT *pEngineContext)
 
     if ((ptr=strrchr(ptr,'.'))!=NULL)
      strcpy(fileExt,ptr+1);
-    else if (strlen(pEngineContext->project.instrumental.fileExt))
-     strcpy(fileExt,pEngineContext->project.instrumental.fileExt);
     else
      memset(fileExt,0,MAX_STR_SHORT_LEN+1);
 
@@ -547,10 +545,6 @@ RC MFC_ReadRecord(char *fileName,
 //               ERROR_ID_FILE_RECORD    : the record doesn't satisfy user constraints
 //               ERROR_ID_NO             : otherwise.
 // -----------------------------------------------------------------------------
-
-#if defined(__BC32_) && __BC32_
-#pragma argsused
-#endif
 RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,unsigned int mfcMask)
  {
   // Declarations
@@ -1028,10 +1022,6 @@ RC MFC_ReadRecordStd(ENGINE_CONTEXT *pEngineContext,char *fileName,
 //               ERROR_ID_FILE_RECORD    : the record doesn't satisfy user constraints
 //               ERROR_ID_NO             : otherwise.
 // -----------------------------------------------------------------------------
-
-#if defined(__BC32_) && __BC32_
-#pragma argsused
-#endif
 RC ReliMFCStd(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp)
  {
   // Declarations

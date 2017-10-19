@@ -239,23 +239,6 @@ RC write_automatic_reference_info(const ENGINE_CONTEXT *pEngineContext) {
   if ( pEngineContext->project.asciiResults.referenceFlag
        && pEngineContext->analysisRef.refAuto ) {
     switch(format) {
-    case PRJCT_INSTR_FORMAT_GDP_ASCII:
-    case PRJCT_INSTR_FORMAT_GDP_BIN:
-    case PRJCT_INSTR_FORMAT_SCIA_PDS:
-    case PRJCT_INSTR_FORMAT_GOME2:
-      {
-        hsize_t charlength = 1+strlen(OUTPUT_refFile);
-        herr_t result = HE5_SWwriteattr(swath_id, attr_reference_file, HE5T_CHARSTRING,
-                                        &charlength, OUTPUT_refFile);
-        if(result)
-          return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_WRITEATTR, attr_reference_file);
-        hsize_t one = 1;
-        result = HE5_SWwriteattr(swath_id, attr_reference_num_records, HE5T_NATIVE_INT,
-                                 &one, &OUTPUT_nRec);
-        if(result)
-          return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_HDFEOS5_WRITEATTR, attr_reference_num_records);
-      }
-      break;
     case PRJCT_INSTR_FORMAT_OMI:
       return write_omi_automatic_reference_info();
       break;

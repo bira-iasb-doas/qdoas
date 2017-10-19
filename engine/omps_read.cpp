@@ -257,12 +257,12 @@ namespace {
     for(auto i : indices) {
       // interpolate refs[i] on final wavelength grid refLambda
       int rc = SPLINE_Deriv2(&refs[i].lambda[0],&refs[i].radiance[0],&derivs[0],refs[i].lambda.size(),__func__);
-      rc |= SPLINE_Vector(&refs[i].lambda[0],&refs[i].radiance[0],&derivs[0],derivs.size(),&refLambda[0],&tempspectrum[0],tempspectrum.size(),SPLINE_CUBIC,__func__);
+      rc |= SPLINE_Vector(&refs[i].lambda[0],&refs[i].radiance[0],&derivs[0],derivs.size(),&refLambda[0],&tempspectrum[0],tempspectrum.size(),SPLINE_CUBIC);
       if (rc) {
         throw std::runtime_error("Error interpolating radiance on automatic reference wavelength grid.");
       }
 
-      rc = SPLINE_Vector(&refs[i].lambda[0],&refs[i].sigma[0],NULL,refs[i].lambda.size(),&refLambda[0],&tempsigma[0],tempsigma.size(),SPLINE_LINEAR,__func__);
+      rc = SPLINE_Vector(&refs[i].lambda[0],&refs[i].sigma[0],NULL,refs[i].lambda.size(),&refLambda[0],&tempsigma[0],tempsigma.size(),SPLINE_LINEAR);
       if (rc) {
         throw std::runtime_error("Error interpolating radiance errors on automatic reference wavelength grid.");
       }
@@ -322,17 +322,13 @@ namespace {
         // TODO: check that we have enough matching spectra (how much is enough?)
         Reference ref = averageSpectrum(refSpectra, offsets[j][i], refLambda);
 
-        memcpy(pTabFeno->SrefN, &ref.radiance[0], sizeof(ref.radiance[0])*ref.radiance.size());
-        // normalize SrefN
-        VECTOR_NormalizeVector(pTabFeno->SrefN-1,NDET[i],&pTabFeno->refNormFactN, __func__);
-        // copy SrefN to SrefS
-        memcpy(pTabFeno->SrefS, pTabFeno->SrefN, sizeof(ref.radiance[0])*ref.radiance.size());
-        pTabFeno->refNormFactS = pTabFeno->refNormFactN;
+        memcpy(pTabFeno->Sref, &ref.radiance[0], sizeof(ref.radiance[0])*ref.radiance.size());
+        // normalize Sref
+        VECTOR_NormalizeVector(pTabFeno->Sref-1,NDET[i],&pTabFeno->refNormFact, __func__);
 
         memcpy(pTabFeno->SrefSigma, &ref.sigma[0], sizeof(ref.sigma[0])*ref.sigma.size());
 
-        memcpy(pTabFeno->LambdaN,pTabFeno->LambdaK, sizeof(pTabFeno->LambdaK[0]) * currentOrbit.nLambda);
-        memcpy(pTabFeno->LambdaS,pTabFeno->LambdaK, sizeof(pTabFeno->LambdaK[0]) * currentOrbit.nLambda);
+        memcpy(pTabFeno->LambdaRef,pTabFeno->LambdaK, sizeof(pTabFeno->LambdaK[0]) * currentOrbit.nLambda);
       }
     }
     return rc;

@@ -183,6 +183,15 @@ typedef struct Coord_deg
 }
 Coord_deg;
 
+typedef struct Geolocation {
+        /*  Start time of the scan phase of the state */
+    MJD dsr_time;
+        /*  Attachment Flag (set to 1 if all MDSRs corresponding to this ADSR
+            are blank, set to zero otherwise) */
+    char attach_flag;
+        /*  4 geolocation co-ordinates */
+    Coord coord_grd[4];
+} Geolocation;
 
 typedef struct GeoL
 {
@@ -212,7 +221,7 @@ typedef struct GeoN
   float earth_radius;
   Coord sub_sat;
   Coord corner_coord[4];
-    Coord centre_coord ;
+  Coord centre_coord ;
 }
 GeoN;
 
@@ -227,38 +236,6 @@ GeoCal;
 
 
 /* Geolocation Nadir as common set */
-
-
-				/* Just like GeoN_L2, but with real (numbers except IT)*/
-typedef struct GeoN_L2_user
-{
-MJD dsr_time ;                /* Start Time of DSR MJD 1 UtcTransport */
-char attach_flag ;            /* Attachment Flag     */
-unsigned short integr_time ;             /* Integration time for this geolocation entity 1/16 s */
-float sol_zen_angle_toa[3] ;  /* Solar zenith angles of the start, middle and end of the integration time*/
-float los_zen_angle_toa[3] ;  /* Line-of-sight zenith angles of start, middle and end of the integration time at TOA degree 3 FloatFl 3 */
-float rel_azi_angle_toa[3] ;  /* Relative azimuth angles of start, middle and end of the integration time at TOA degree 3 FloatFl 3 */
-float sat_geod_ht ;           /* Satellite geodetic height at the middle of the integration time km 1 */
-float earth_rad ;             /* Earth radius at the middle of the integration time km  */
-Coord_deg sub_sat_point;      /* Sub-satelite point at the middle of the integration time (OL)*/
-Coord_deg cor_coor_nad[4] ;   /* 4 corner coordinates of the nadir ground pixel */
-Coord_deg cen_coor_nad ;      /* Centre coordinate of the nadir ground pixel */
-    int subset_counter;	      /* Subset Counter */
-    				/*  0 - 63 forward */
-				/*  64 - 79 backward */
-				/*  -2  large 10s scan */
-                                /* 0-23 : Limb */
-                                /* 0-3  : GOME east-nadir-west-back */
-			      /* GOME specific parts */
-    int gp;
-        /* 3 Solar Zenith Angles at satellite for the points {A , B , C } */
-    float sol_zen_angle_sat[3];
-    /* 3 Line of Sight Angles at satellite for the points {A , B , C } */
-    float los_zen_angle_sat[3];
-    /* 3 Relative Azimuth Angles at satellite for the points {A , B , C } */
-    float rel_azi_angle_sat[3];
-
-} GeoN_L2_user;
 
 #pragma pack(pop)
 

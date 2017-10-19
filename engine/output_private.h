@@ -40,13 +40,13 @@ static inline void get_name(struct output_field *this_field __attribute__ ((unus
   *name = strdup(pEngineContext->recordInfo.Nom);
 }
 
-static inline void get_filename(struct output_field *this_field __attribute__ ((unused)), char **name, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+static inline void get_filename(struct output_field *this_field __attribute__ ((unused)), char const **name, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
 
-  char *ptr;
+ const char *ptr;
 
   ptr=strrchr(pEngineContext->fileInfo.fileName,PATH_SEP);
 
-  *name = (ptr!=NULL)?&ptr[1]:pEngineContext->fileInfo.fileName;
+  *name = (ptr!=NULL) ? &ptr[1]:pEngineContext->fileInfo.fileName;
 }
 
 static inline void get_date(struct output_field *this_field __attribute__ ((unused)), struct date *date, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
@@ -115,18 +115,10 @@ static inline void gome2_get_sza(struct output_field *this_field __attribute__ (
   }
 }
 
-static inline void gdp3_get_sza(struct output_field *this_field __attribute__ ((unused)), float *sza, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  float *sza_gdp = GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex].gdpBinGeo3.szaArray;
-  memcpy(sza, sza_gdp, 3 * sizeof(*sza));
-}
-
-static inline void gdp4_get_sza(struct output_field *this_field __attribute__ ((unused)), float *sza, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  float *sza_gdp = GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex].gdpBinGeo4.szaArrayBOA;
-  memcpy(sza, sza_gdp, 3 * sizeof(*sza));
-}
-
-static inline void gdpasc_get_sza(struct output_field *this_field __attribute__ ((unused)), float *sza, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  memcpy(sza, pEngineContext->recordInfo.gome.sza, 3 * sizeof(*sza));
+static inline void gdp_get_sza(struct output_field *this_field __attribute__ ((unused)), float *sza, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  for (int i=0; i<3; ++i) {
+    sza[i] = pEngineContext->recordInfo.gome.sza[i];
+  }
 }
 
 static inline void get_sza(struct output_field *this_field __attribute__ ((unused)), float *sza, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
@@ -143,18 +135,10 @@ static inline void gome2_get_azim(struct output_field *this_field __attribute__ 
   }
 }
 
-static inline void gdp3_get_azim(struct output_field *this_field __attribute__ ((unused)), float *azim, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  float *azim_gdp = GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex].gdpBinGeo3.aziArray;
-  memcpy(azim, azim_gdp, 3 * sizeof(*azim));
-}
-
-static inline void gdp4_get_azim(struct output_field *this_field __attribute__ ((unused)), float *azim, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  float *azim_gdp = GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex].gdpBinGeo4.aziArrayBOA;
-  memcpy(azim, azim_gdp, 3 * sizeof(*azim));
-}
-
-static inline void gdpasc_get_azim(struct output_field *this_field __attribute__ ((unused)), float *azim, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  memcpy(azim, pEngineContext->recordInfo.gome.azim, 3 * sizeof(*azim));
+static inline void gdp_get_azim(struct output_field *this_field __attribute__ ((unused)), float *azim, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  for (int i=0; i<3; ++i) {
+    azim[i] = pEngineContext->recordInfo.gome.azim[i];
+  }
 }
 
 static inline void get_azim(struct output_field *this_field __attribute__ ((unused)), float *azim, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
@@ -255,14 +239,10 @@ static inline void gome2_get_los_zenith(struct output_field *this_field __attrib
   }
 }
 
-static inline void gdp3_get_los_zenith(struct output_field *this_field __attribute__ ((unused)), float *los_zenith, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+static inline void gdp_get_los_zenith(struct output_field *this_field __attribute__ ((unused)), float *los_zenith, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
   for(int i=0; i<3; i++) {
-    los_zenith[i] = GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex].gdpBinGeo3.losZa[i] * 0.01;
+    los_zenith[i] = pEngineContext->recordInfo.gome.vza[i];
   }
-}
-
-static inline void gdp4_get_los_zenith(struct output_field *this_field __attribute__ ((unused)), float *los_zenith, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  memcpy(los_zenith, GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex].gdpBinGeo4.losZaBOA, 3 * sizeof(*los_zenith));
 }
 
 static inline void get_los_zenith (struct output_field *this_field __attribute__ ((unused)), float *los_zenith, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
@@ -279,14 +259,10 @@ static inline void gome2_get_los_azimuth(struct output_field *this_field __attri
   }
 }
 
-static inline void gdp3_get_los_azimuth(struct output_field *this_field __attribute__ ((unused)), float *los_azimuth, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+static inline void gdp_get_los_azimuth(struct output_field *this_field __attribute__ ((unused)), float *los_azimuth, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
   for(int i=0; i<3; i++) {
-    los_azimuth[i] = GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex].gdpBinGeo3.losAzim[i] * 0.01;
+    los_azimuth[i] = pEngineContext->recordInfo.gome.vaa[i];
   }
-}
-
-static inline void gdp4_get_los_azimuth(struct output_field *this_field __attribute__ ((unused)), float *los_azimuth, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  memcpy(los_azimuth, GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex].gdpBinGeo4.losZaBOA, 3 * sizeof(*los_azimuth));
 }
 
 static inline void get_los_azimuth (struct output_field *this_field __attribute__ ((unused)), float *los_azimuth, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
@@ -297,60 +273,18 @@ static inline void get_longitude (struct output_field *this_field __attribute__ 
   *longitude = pEngineContext->recordInfo.longitude;
 }
 
-static inline void scia_get_corner_longitudes(struct output_field *this_field __attribute__ ((unused)), float *longitude, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+static inline void get_corner_longitudes(struct output_field *this_field __attribute__ ((unused)), float *longitude, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
   for(int i=0; i<4; i++)
-    longitude[i] = (float)pEngineContext->recordInfo.scia.longitudes[i];
-}
-
-static inline void gome2_get_corner_longitudes(struct output_field *this_field __attribute__ ((unused)), float *longitude, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  for(int i=0; i<4; i++)
-    longitude[i] = (float)pEngineContext->recordInfo.gome2.longitudes[i];
-}
-
-static inline void gdp3_get_corner_longitudes(struct output_field *this_field __attribute__ ((unused)), float *longitude, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  for (int i=0; i<4; i++) {
-    longitude[i] = 0.01 * GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex].gdpBinGeo3.lonArray[i];
-  }
-}
-
-static inline void gdp4_get_corner_longitudes(struct output_field *this_field __attribute__ ((unused)), float *longitude, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  for (int i=0; i<4; i++) {
-    longitude[i] = 0.01 * GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex].gdpBinGeo4.lonArray[i];
-  }
-}
-
-static inline void gdpasc_get_corner_longitudes(struct output_field *this_field __attribute__ ((unused)), float *longitude, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  memcpy(longitude, pEngineContext->recordInfo.gome.longit, 4 * sizeof(*longitude));
+    longitude[i] = (float)pEngineContext->recordInfo.satellite.cornerlons[i];
 }
 
 static inline void get_latitude (struct output_field *this_field __attribute__ ((unused)), float *latitude, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
   *latitude = pEngineContext->recordInfo.latitude;
 }
 
-static inline void scia_get_corner_latitudes(struct output_field *this_field __attribute__ ((unused)), float *latitude, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+static inline void get_corner_latitudes(struct output_field *this_field __attribute__ ((unused)), float *latitude, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
   for(int i=0; i<4; i++)
-    latitude[i] = (float)pEngineContext->recordInfo.scia.latitudes[i];
-}
-
-static inline void gome2_get_corner_latitudes(struct output_field *this_field __attribute__ ((unused)), float *latitude, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  for(int i=0; i<4; i++)
-    latitude[i] = (float)pEngineContext->recordInfo.gome2.latitudes[i];
-}
-
-static inline void gdp3_get_corner_latitudes(struct output_field *this_field __attribute__ ((unused)), float *latitude, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  for (int i=0; i<4; i++) {
-    latitude[i] = 0.01 * GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex].gdpBinGeo3.latArray[i];
-  }
-}
-
-static inline void gdp4_get_corner_latitudes(struct output_field *this_field __attribute__ ((unused)), float *latitude, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  for (int i=0; i<4; i++) {
-    latitude[i] = 0.01 * GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex].gdpBinGeo4.latArray[i];
-  }
-}
-
-static inline void gdpasc_get_corner_latitudes(struct output_field *this_field __attribute__ ((unused)), float *latitude, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  memcpy(latitude, pEngineContext->recordInfo.gome.latit, 4 * sizeof(*latitude));
+    latitude[i] = (float)pEngineContext->recordInfo.satellite.cornerlats[i];
 }
 
 static inline void get_altitude(struct output_field *this_field __attribute__ ((unused)), float *altitude, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {

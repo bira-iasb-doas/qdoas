@@ -126,8 +126,8 @@ RC FILTER_OddEvenCorrection(double *lambdaData,double *specData,double *output,i
 
       for (i=0;i<vectorSize/2;i++)
 
-       if (((rc=SPLINE_Vector(lambda+(vectorSize/2),spectrum+(vectorSize/2),spectrum2+(vectorSize/2),vectorSize/2,&lambdaData[(i<<1)],&spec1[(i<<1)],1,SPLINE_CUBIC,"FILTER_OddEvenCorrection "))!=0) ||
-           ((rc=SPLINE_Vector(lambda,spectrum,spectrum2,vectorSize/2,&lambdaData[(i<<1)+1],&spec2[(i<<1)+1],1,SPLINE_CUBIC,"FILTER_OddEvenCorrection "))!=0))
+       if (((rc=SPLINE_Vector(lambda+(vectorSize/2),spectrum+(vectorSize/2),spectrum2+(vectorSize/2),vectorSize/2,&lambdaData[(i<<1)],&spec1[(i<<1)],1,SPLINE_CUBIC))!=0) ||
+           ((rc=SPLINE_Vector(lambda,spectrum,spectrum2,vectorSize/2,&lambdaData[(i<<1)+1],&spec2[(i<<1)+1],1,SPLINE_CUBIC))!=0))
 
         break;
 

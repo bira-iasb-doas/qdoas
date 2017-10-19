@@ -186,7 +186,6 @@ typedef struct _prjctInstrumental
   int         offsetFlag;
   double      lambdaMin,lambdaMax;
   float       opusTimeShift;
-  char       fileExt[50];
  }
 PRJCT_INSTRUMENTAL;
 
@@ -259,6 +258,7 @@ MAXDOAS;
 
 // common location data for satellite instruments
 struct satellite_location {
+  double cornerlats[4], cornerlons[4]; // pixel corner coordinates
   double latitude, longitude; // coordinates of sub-satellite point
   double altitude;
   double earth_radius;
@@ -270,7 +270,7 @@ struct satellite_location {
 // Record information specific to the GOME format
 
 typedef struct _gomeData                                                        // data on the current GOME pixel
- {
+{
   int   pixelNumber;                                                            // pixel number
   int   pixelType;                                                              // pixel type
 
@@ -279,18 +279,17 @@ typedef struct _gomeData                                                        
 
   int     nRef;                                                                 // size of irradiance vectors
 
-  float longit[5];                                                              // longitudes (four corners of the GOME pixel + pixel centre)
-  float latit[5];                                                               // latitudes (four corners of the GOME pixel + pixel centre)
   float sza[3];                                                                 // solar zenith angles (East, center and west points of the GOME pixel)
   float azim[3];                                                                // solar azimuth angles (East, center and west points of the GOME pixel)
- }
+  float vza[3];
+  float vaa[3];
+}
 GOME_DATA;
 
 // Record information specific to SCIAMACHY
 
 typedef struct _sciamachy
  {
-  double longitudes[4],latitudes[4];                                            // geolocations at the 4 corners of the pixels
   float  solZen[3],solAzi[3],losZen[3],losAzi[3];                               // resp. solar and line of sight zenith and azimuth angles
   INDEX  stateIndex,stateId;                                                    // information on the state
   int    qualityFlag;
@@ -301,7 +300,6 @@ SCIA_DATA;
 
 typedef struct _gome2
 {
-  double longitudes[4],latitudes[4];                                            // geolocations at the 4 corners of the pixels
   double solZen[3],solAzi[3],losZen[3],losAzi[3];                               // resp. solar and line of sight zenith and azimuth angles
 
   int    saaFlag;

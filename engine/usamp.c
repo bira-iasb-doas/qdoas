@@ -142,8 +142,8 @@ RC USAMP_BuildCrossSections(double *phase1,                                     
       {
        if (gomeLambda2[i]<=(double)1.e-3)
         phase1[i]=(double)0.;
-       else if (!(rc=SPLINE_Vector(kuruczLambda,kuruczConvolved,kuruczConvolvedDeriv2,nKurucz,&gomeLambda2[i],&over,1,SPLINE_CUBIC,"USAMP_BuildCrossSections ")) &&
-                !(rc=SPLINE_Vector(gomeLambda,kuruczInterpolated,kuruczInterpolatedDeriv2,nGome,&gomeLambda2[i],&under,1,SPLINE_CUBIC,"USAMP_BuildCrossSections ")))
+       else if (!(rc=SPLINE_Vector(kuruczLambda,kuruczConvolved,kuruczConvolvedDeriv2,nKurucz,&gomeLambda2[i],&over,1,SPLINE_CUBIC)) &&
+                !(rc=SPLINE_Vector(gomeLambda,kuruczInterpolated,kuruczInterpolatedDeriv2,nGome,&gomeLambda2[i],&under,1,SPLINE_CUBIC)))
 
         phase1[i]=(analysisMethod==OPTICAL_DENSITY_FIT)?log(over/under):over-under;
       }
@@ -151,7 +151,7 @@ RC USAMP_BuildCrossSections(double *phase1,                                     
     // Phase 2 : calculate solar spectrum at GOME+phase positions
 
     if ((phase2!=NULL) &&
-       !(rc=SPLINE_Vector(kuruczLambda,kuruczConvolved,kuruczConvolvedDeriv2,nKurucz,gomeLambda2,resample,nGome,SPLINE_CUBIC,"USAMP_BuildCrossSections ")) && // calculate solar spectrum at GOME positions
+       !(rc=SPLINE_Vector(kuruczLambda,kuruczConvolved,kuruczConvolvedDeriv2,nKurucz,gomeLambda2,resample,nGome,SPLINE_CUBIC)) && // calculate solar spectrum at GOME positions
        !(rc=SPLINE_Deriv2(&gomeLambda2[indexMin],&resample[indexMin],&d2res[indexMin],(indexMax-indexMin+1),"USAMP_Build (resample 2) ")))
 
      for (i=0;(i<nGome) && !rc;i++)
@@ -160,7 +160,7 @@ RC USAMP_BuildCrossSections(double *phase1,                                     
 
        if (gomeLambda2[i]<(double)1.e-3)
         phase2[i]=(double)0.;
-       else if (!(rc=SPLINE_Vector(&gomeLambda2[indexMin],&resample[indexMin],&d2res[indexMin],(indexMax-indexMin+1),&gomeLambda[i],&under,1,SPLINE_CUBIC,"USAMP_BuildCrossSections ")))
+       else if (!(rc=SPLINE_Vector(&gomeLambda2[indexMin],&resample[indexMin],&d2res[indexMin],(indexMax-indexMin+1),&gomeLambda[i],&under,1,SPLINE_CUBIC)))
         phase2[i]=(analysisMethod==OPTICAL_DENSITY_FIT)?log(over/under):over-under;
       }
    }
@@ -247,7 +247,7 @@ RC USAMP_Build(double *phase1,                                                  
 //        !(rc=XSCONV_TypeStandardFFT(&usampFFT,slitType,pSlit->slitParam,pSlit->slitParam2,kuruczLambda,kuruczConvolved,nKurucz)) &&
         !(rc=XSCONV_TypeStandard(&xsnew,0,nKurucz,pKuruczMatrix,pKuruczMatrix,NULL,slitType,slitMatrix,slitParam,pSlit->slitWveDptFlag)) &&
         !(rc=SPLINE_Deriv2(kuruczLambda,xsnew.matrix[1],xsnew.deriv2[1],nKurucz,"USAMP_Build (kuruczConvolved) ")) &&
-        !(rc=SPLINE_Vector(kuruczLambda,xsnew.matrix[1],xsnew.deriv2[1],nKurucz,gomeLambda,resample,nGome,SPLINE_CUBIC,"USAMP_Build (kuruczConvolved) ")) && // calculate solar spectrum at GOME positions
+        !(rc=SPLINE_Vector(kuruczLambda,xsnew.matrix[1],xsnew.deriv2[1],nKurucz,gomeLambda,resample,nGome,SPLINE_CUBIC)) && // calculate solar spectrum at GOME positions
         !(rc=SPLINE_Deriv2(gomeLambda,resample,d2res,nGome,"USAMP_Build (resample 1) ")))
 
       rc=USAMP_BuildCrossSections(phase1,                                        // OUTPUT : phase 1 calculation

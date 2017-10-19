@@ -88,12 +88,12 @@
 
 #include "tropomi_read.h"
 #include "gdp_bin_read.h"
+#include "tropomi_read.h"
+#include "gome2_read.h"
+#include "scia-read.h"
 #include "spectrum_files.h"
 
 AMF_SYMBOL *OUTPUT_AmfSpace;                                                 // list of cross sections with associated AMF file
-
-char OUTPUT_refFile[DOAS_MAX_PATH_LEN+1];
-int OUTPUT_nRec;
 
 const char *QDOAS_FILL_STRING = "";
 const char QDOAS_FILL_BYTE = -127;
@@ -386,8 +386,7 @@ RC OutputGetAmf(CROSS_RESULTS *pResults,double Zm,double Tm,double *pAmf)
        case ANLYS_AMF_TYPE_SZA :
 
         if ((pAmfSymbol->deriv2!=NULL) &&
-           ((rc=SPLINE_Vector(pAmfSymbol->Phi[1]+1,pAmfSymbol->Phi[2]+1,pAmfSymbol->deriv2[2]+1,pAmfSymbol->PhiLines,&Zm,pAmf,1,
-                                 SPLINE_CUBIC,"OutputGetAmf"))!=ERROR_ID_NO))
+           ((rc=SPLINE_Vector(pAmfSymbol->Phi[1]+1,pAmfSymbol->Phi[2]+1,pAmfSymbol->deriv2[2]+1,pAmfSymbol->PhiLines,&Zm,pAmf,1,SPLINE_CUBIC))!=ERROR_ID_NO))
 
          rc=ERROR_ID_AMF;
 
@@ -715,8 +714,7 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
 
   // default values for instrument-dependent output functions:
   func_int func_meastype = &get_meastype;
-  func_float func_corner_latitudes = NULL;
-  func_float func_corner_longitudes = NULL;
+  bool have_corner_coordinates = false;
   size_t num_sza = 1;
   func_float func_sza = &get_sza;
   size_t num_azimuth = 1;
@@ -748,14 +746,13 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
   case PRJCT_INSTR_FORMAT_GDP_BIN:
   case PRJCT_INSTR_FORMAT_GDP_ASCII:
     num_sza = num_azimuth = num_los_zenith = num_los_azimuth = 3;
+    have_corner_coordinates = true;
     break;
   }
 
   switch(pProject->instrumental.readOutFormat) {
   case PRJCT_INSTR_FORMAT_SCIA_PDS:
     func_frac_time = &get_frac_time_recordinfo;
-    func_corner_longitudes = &scia_get_corner_longitudes;
-    func_corner_latitudes = &scia_get_corner_latitudes;
     func_los_azimuth = &scia_get_los_azimuth;
     func_los_zenith = &scia_get_los_zenith;
     func_sza = &scia_get_sza;
@@ -765,41 +762,21 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
   case PRJCT_INSTR_FORMAT_GOME2:
     func_sza = &gome2_get_sza;
     func_azimuth = &gome2_get_azim;
-    func_corner_longitudes = &gome2_get_corner_longitudes;
-    func_corner_latitudes = &gome2_get_corner_latitudes;
     func_los_azimuth = &gome2_get_los_azimuth;
     func_los_zenith = &gome2_get_los_zenith;
     format_datetime = "%4d%02d%02d%02d%02d%02d.%06d"; // year, month, day, hour, min, sec, microseconds
     func_frac_time = &get_frac_time_recordinfo;
     break;
   case PRJCT_INSTR_FORMAT_GDP_BIN:
-    if (GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex].gdpBinHeader.version<40) {
-      func_sza = &gdp3_get_sza;
-      func_azimuth = &gdp3_get_azim;
-      func_corner_longitudes = &gdp3_get_corner_longitudes;
-      func_corner_latitudes = &gdp3_get_corner_latitudes;
-      func_los_azimuth = &gdp3_get_los_azimuth;
-      func_los_zenith = &gdp3_get_los_zenith;
-    }
-   else {
-     func_sza = &gdp4_get_sza;
-     func_azimuth = &gdp4_get_azim;
-     func_corner_longitudes = &gdp4_get_corner_longitudes;
-     func_corner_latitudes = &gdp4_get_corner_latitudes;
-     func_los_azimuth = &gdp4_get_los_azimuth;
-     func_los_zenith = &gdp4_get_los_zenith;
-   }
+    func_sza = &gdp_get_sza;
+    func_azimuth = &gdp_get_azim;
+    func_los_azimuth = &gdp_get_los_azimuth;
+    func_los_zenith = &gdp_get_los_zenith;
     break;
   case PRJCT_INSTR_FORMAT_BIRA_AIRBORNE :
   case PRJCT_INSTR_FORMAT_BIRA_MOBILE :
     func_frac_time = &get_frac_time_recordinfo;
     format_datetime = "%4d%02d%02d%02d%02d%02d.%03d"; // year, month, day, hour, min, sec, milliseconds
-    break;
-  case PRJCT_INSTR_FORMAT_GDP_ASCII:
-    func_sza = &gdpasc_get_sza;
-    func_azimuth = &gdpasc_get_azim;
-    func_corner_longitudes = &gdpasc_get_corner_longitudes;
-    func_corner_latitudes = &gdpasc_get_corner_latitudes;
     break;
   case PRJCT_INSTR_FORMAT_MKZY:
     func_scanning_angle = &mkzy_get_scanning_angle;
@@ -888,14 +865,14 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
        register_field( (struct output_field) { .basic_fieldname = "Orbit number", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#8d", .get_data = (func_void)&get_orbit_number});
        break;
      case PRJCT_RESULTS_LONGIT:
-       if(func_corner_longitudes) { // we have pixel corners
-         register_field( (struct output_field) { .basic_fieldname = "Longitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)func_corner_longitudes, .data_cols = 4, .column_number_format="(%d)" });
+       if(have_corner_coordinates) { // we have pixel corners
+         register_field( (struct output_field) { .basic_fieldname = "Longitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)get_corner_longitudes, .data_cols = 4, .column_number_format="(%d)" });
        }
        register_field( (struct output_field) { .basic_fieldname = lon_fieldname, .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_longitude }); // pixel centre
        break;
      case PRJCT_RESULTS_LATIT:
-       if(func_corner_latitudes) { // we have pixel corners
-         register_field( (struct output_field) { .basic_fieldname = "Latitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)func_corner_latitudes, .data_cols = 4, .column_number_format="(%d)" });
+       if(have_corner_coordinates) { // we have pixel corners
+         register_field( (struct output_field) { .basic_fieldname = "Latitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)get_corner_latitudes, .data_cols = 4, .column_number_format="(%d)" });
        }
        register_field( (struct output_field) { .basic_fieldname = lat_fieldname, .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_latitude });
        break;
@@ -1116,8 +1093,6 @@ static void OutputRegisterFieldsToExport(const ENGINE_CONTEXT *pEngineContext, c
 
   // default values for instrument-dependent output functions:
   func_int func_meastype = &get_meastype;
-  func_float func_corner_latitudes = NULL;
-  func_float func_corner_longitudes = NULL;
   size_t num_sza = 1;
   func_float func_sza = &get_sza;
   size_t num_azimuth = 1;
@@ -1130,6 +1105,8 @@ static void OutputRegisterFieldsToExport(const ENGINE_CONTEXT *pEngineContext, c
   const char *format_datetime = "%02d/%02d/%d %02d:%02d:%02d"; // day, month, year, hour, min, sec
   func_datetime func_datetime = &get_datetime;
   func_double func_frac_time = &get_frac_time;
+
+  bool have_corner_coordinates = false;
 
   const char *title_sza = "Solar Zenith Angle (deg)";
   const char *title_azimuth = "Solar Azimuth Angle (deg)";
@@ -1149,14 +1126,13 @@ static void OutputRegisterFieldsToExport(const ENGINE_CONTEXT *pEngineContext, c
   case PRJCT_INSTR_FORMAT_GDP_BIN:
   case PRJCT_INSTR_FORMAT_GDP_ASCII:
     num_sza = num_azimuth = num_los_zenith = num_los_azimuth = 3;
+    have_corner_coordinates = true;
     break;
   }
 
   switch(pProject->instrumental.readOutFormat) {
   case PRJCT_INSTR_FORMAT_SCIA_PDS:
     func_frac_time = &get_frac_time_recordinfo;
-    func_corner_longitudes = &scia_get_corner_longitudes;
-    func_corner_latitudes = &scia_get_corner_latitudes;
     func_los_azimuth = &scia_get_los_azimuth;
     func_los_zenith = &scia_get_los_zenith;
     func_sza = &scia_get_sza;
@@ -1166,41 +1142,21 @@ static void OutputRegisterFieldsToExport(const ENGINE_CONTEXT *pEngineContext, c
   case PRJCT_INSTR_FORMAT_GOME2:
     func_sza = &gome2_get_sza;
     func_azimuth = &gome2_get_azim;
-    func_corner_longitudes = &gome2_get_corner_longitudes;
-    func_corner_latitudes = &gome2_get_corner_latitudes;
     func_los_azimuth = &gome2_get_los_azimuth;
     func_los_zenith = &gome2_get_los_zenith;
     format_datetime = "%4d%02d%02d%02d%02d%02d.%06d"; // year, month, day, hour, min, sec, microseconds
     func_frac_time = &get_frac_time_recordinfo;
     break;
   case PRJCT_INSTR_FORMAT_GDP_BIN:
-    if (GDP_BIN_orbitFiles[GDP_BIN_currentFileIndex].gdpBinHeader.version<40) {
-      func_sza = &gdp3_get_sza;
-      func_azimuth = &gdp3_get_azim;
-      func_corner_longitudes = &gdp3_get_corner_longitudes;
-      func_corner_latitudes = &gdp3_get_corner_latitudes;
-      func_los_azimuth = &gdp3_get_los_azimuth;
-      func_los_zenith = &gdp3_get_los_zenith;
-    }
-   else {
-     func_sza = &gdp4_get_sza;
-     func_azimuth = &gdp4_get_azim;
-     func_corner_longitudes = &gdp4_get_corner_longitudes;
-     func_corner_latitudes = &gdp4_get_corner_latitudes;
-     func_los_azimuth = &gdp4_get_los_azimuth;
-     func_los_zenith = &gdp4_get_los_zenith;
-   }
+    func_sza = &gdp_get_sza;
+    func_azimuth = &gdp_get_azim;
+    func_los_azimuth = &gdp_get_los_azimuth;
+    func_los_zenith = &gdp_get_los_zenith;
     break;
   case PRJCT_INSTR_FORMAT_BIRA_AIRBORNE :
   case PRJCT_INSTR_FORMAT_BIRA_MOBILE :
     func_frac_time = &get_frac_time_recordinfo;
     format_datetime = "%4d%02d%02d%02d%02d%02d.%03d"; // year, month, day, hour, min, sec, milliseconds
-    break;
-  case PRJCT_INSTR_FORMAT_GDP_ASCII:
-    func_sza = &gdpasc_get_sza;
-    func_azimuth = &gdpasc_get_azim;
-    func_corner_longitudes = &gdpasc_get_corner_longitudes;
-    func_corner_latitudes = &gdpasc_get_corner_latitudes;
     break;
   case PRJCT_INSTR_FORMAT_MKZY:
     func_scanning_angle = &mkzy_get_scanning_angle;
@@ -1289,14 +1245,14 @@ static void OutputRegisterFieldsToExport(const ENGINE_CONTEXT *pEngineContext, c
        register_field( (struct output_field) { .basic_fieldname = "Orbit number", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#8d", .get_data = (func_void)&get_orbit_number});
        break;
      case PRJCT_RESULTS_LONGIT:  // !!! EXPORT FUNCTION !!!
-       if(func_corner_longitudes) { // we have pixel corners
-         register_field( (struct output_field) { .basic_fieldname = "Longitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)func_corner_longitudes, .data_cols = 4, .column_number_format="(%d)" });
+       if(have_corner_coordinates) { // we have pixel corners
+         register_field( (struct output_field) { .basic_fieldname = "Longitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)get_corner_longitudes, .data_cols = 4, .column_number_format="(%d)" });
        }
        register_field( (struct output_field) { .basic_fieldname = lon_fieldname, .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_longitude }); // pixel centre
        break;
      case PRJCT_RESULTS_LATIT:  // !!! EXPORT FUNCTION !!!
-       if(func_corner_latitudes) { // we have pixel corners
-         register_field( (struct output_field) { .basic_fieldname = "Latitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)func_corner_latitudes, .data_cols = 4, .column_number_format="(%d)" });
+       if(have_corner_coordinates) { // we have pixel corners
+         register_field( (struct output_field) { .basic_fieldname = "Latitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)get_corner_latitudes, .data_cols = 4, .column_number_format="(%d)" });
        }
        register_field( (struct output_field) { .basic_fieldname = lat_fieldname, .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_latitude });
        break;
@@ -1947,17 +1903,14 @@ RC OUTPUT_RegisterData(const ENGINE_CONTEXT *pEngineContext)
   return ERROR_ID_NO;
 }
 
-RC OUTPUT_RegisterSpectra(const ENGINE_CONTEXT *pEngineContext)
- {
-  // Declarations
+RC OUTPUT_RegisterSpectra(const ENGINE_CONTEXT *pEngineContext) {
 
-  char *fieldsFlag;
-  int i,fieldsNumber;
+  int i;
 
   // Initializations
 
-  fieldsFlag=pEngineContext->project.exportSpectra.fieldsFlag;
-  fieldsNumber=pEngineContext->project.exportSpectra.fieldsNumber;
+  const char *fieldsFlag=pEngineContext->project.exportSpectra.fieldsFlag;
+  int fieldsNumber=pEngineContext->project.exportSpectra.fieldsNumber;
 
   // Browse fields
 
@@ -2059,9 +2012,6 @@ static RC get_orbit_date(const ENGINE_CONTEXT *pEngineContext, int *orbit_year, 
     break;
   case PRJCT_INSTR_FORMAT_GDP_BIN:
     rc = GDP_BIN_get_orbit_date(orbit_year, orbit_month, orbit_day);
-    break;
-  case PRJCT_INSTR_FORMAT_GDP_ASCII:
-    GDP_ASC_get_orbit_date(orbit_year, orbit_month, orbit_day);
     break;
   case PRJCT_INSTR_FORMAT_GOME2:
     GOME2_get_orbit_date(orbit_year, orbit_month, orbit_day);

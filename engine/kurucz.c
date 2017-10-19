@@ -158,7 +158,7 @@ double ShiftCorrel(double *lambda,double *ref,double *spec,double *spec2,double 
   // Interpolate the spectrum on the original wavelength calibration
 
   if (!(rc=SPLINE_Deriv2(&lambdas[imin],&spec[imin],&spec2[imin],npix,__func__)) &&
-      !(rc=SPLINE_Vector(&lambdas[imin],&spec[imin],&spec2[imin],npix,&lambda[imin],&specInt[imin],npix,PRJCT_ANLYS_INTERPOL_SPLINE,__func__)))
+      !(rc=SPLINE_Vector(&lambdas[imin],&spec[imin],&spec2[imin],npix,&lambda[imin],&specInt[imin],npix,PRJCT_ANLYS_INTERPOL_SPLINE)))
 
    correl=(double)1.-corrcoef(&ref[imin],&specInt[imin],npix);
 
@@ -1095,8 +1095,8 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
       if ((pKurucz->hrSolar.nl==n_wavel) && VECTOR_Equal(pKurucz->hrSolar.matrix[0],oldLambda,n_wavel,(double)1.e-7))
         memcpy(solar,pKurucz->hrSolar.matrix[1],sizeof(double)*n_wavel);
       else
-        rc=SPLINE_Vector(pKurucz->hrSolar.matrix[0],pKurucz->hrSolar.matrix[1],pKurucz->hrSolar.deriv2[1],pKurucz->hrSolar.nl,
-                         oldLambda,solar,n_wavel,pAnalysisOptions->interpol,__func__);
+        SPLINE_Vector(pKurucz->hrSolar.matrix[0],pKurucz->hrSolar.matrix[1],pKurucz->hrSolar.deriv2[1],pKurucz->hrSolar.nl,
+                      oldLambda,solar,n_wavel,pAnalysisOptions->interpol);
     } else {
       // 20130208 : a high resolution spectrum is now loaded from the slit page of project properties and convolved
       rc=ANALYSE_ConvoluteXs(NULL,ANLYS_CROSS_ACTION_CONVOLUTE,(double)0.,&pKurucz->hrSolar,
@@ -1179,7 +1179,7 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
     DEBUG_Start(ENGINE_dbgFile,"Kurucz",DEBUG_FCTTYPE_MATH|DEBUG_FCTTYPE_APPL,5,DEBUG_DVAR_YES,0); // !debugResetFlag++);
 #endif
 
-    if (((rc=ANALYSE_SvdInit(&TabFeno[indexFenoColumn][pKurucz->indexKurucz], &subwindow_fit[indexWindow], n_wavel))!=ERROR_ID_NO) ||
+    if (((rc=ANALYSE_SvdInit(&TabFeno[indexFenoColumn][pKurucz->indexKurucz], &subwindow_fit[indexWindow], n_wavel, Lambda))!=ERROR_ID_NO) ||
 
         // Analysis method
 
@@ -1892,7 +1892,7 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,int saveFlag,int gomeFla
            	 	if (pKuruczOptions->fwhmFit)
            	 	 rc=KuruczConvolveSolarSpectrum(&calibratedMatrix,pTabFeno->LambdaRef,n_wavel,indexFenoColumn);
            	 	else
-           	 	 rc=SPLINE_Vector(pKurucz->hrSolar.matrix[0],pKurucz->hrSolar.matrix[1],pKurucz->hrSolar.deriv2[1],pKurucz->hrSolar.nl,pTabFeno->LambdaRef,calibratedMatrix.matrix[1],n_wavel,pAnalysisOptions->interpol,__func__);
+                          SPLINE_Vector(pKurucz->hrSolar.matrix[0],pKurucz->hrSolar.matrix[1],pKurucz->hrSolar.deriv2[1],pKurucz->hrSolar.nl,pTabFeno->LambdaRef,calibratedMatrix.matrix[1],n_wavel,pAnalysisOptions->interpol);
 
            	 	// Calculate preshift
 
@@ -2382,7 +2382,7 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
 
     if (hFilterFlag && pKurucz->solarFGap && (lambda[n_wavel-1]-lambda[0]+1!=n_wavel) &&
      (((rc=SPLINE_Vector(pKurucz->hrSolar.matrix[0],pKurucz->hrSolar.matrix[1],pKurucz->hrSolar.deriv2[1],pKurucz->hrSolar.nl,
-                            pKurucz->lambdaF,pKurucz->solarF,n_wavel+2*pKurucz->solarFGap,pAnalysisOptions->interpol,__func__))!=0) ||
+                         pKurucz->lambdaF,pKurucz->solarF,n_wavel+2*pKurucz->solarFGap,pAnalysisOptions->interpol))!=0) ||
       ((rc=FILTER_Vector(ANALYSE_phFilter,pKurucz->solarF,pKurucz->solarF,n_wavel+2*pKurucz->solarFGap,PRJCT_FILTER_OUTPUT_LOW))!=0) ||
       ((rc=SPLINE_Deriv2(pKurucz->lambdaF,pKurucz->solarF,pKurucz->solarF2,n_wavel+2*pKurucz->solarFGap,"KURUCZ_Alloc (solarF) "))!=0)))
 

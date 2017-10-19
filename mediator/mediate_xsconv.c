@@ -1039,7 +1039,7 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
           if (wveDptFlag)
            {
             if ((slitLambda2!=NULL) &&
-               ((rc=SPLINE_Vector(slitLambda2,slitVector2,slitDeriv22,nslit2,&lambda,&slitParam[1],1,SPLINE_CUBIC,"mediateRingCalculate"))!=0))
+               ((rc=SPLINE_Vector(slitLambda2,slitVector2,slitDeriv22,nslit2,&lambda,&slitParam[1],1,SPLINE_CUBIC))!=0))
              goto EndRing;
 
             if (slitType==SLIT_TYPE_FILE)
@@ -1053,14 +1053,14 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
                rc=XSCONV_GetFwhm(slitLambda,slitVector,slitDeriv2,slitTmp.nl,SLIT_TYPE_FILE,&slitParam[0]);
              }
             else
-            	rc=SPLINE_Vector(slitLambda,slitVector,slitDeriv2,nslit,&lambda,&slitParam[0],1,SPLINE_CUBIC,"mediateRingCalculate ");
+            	rc=SPLINE_Vector(slitLambda,slitVector,slitDeriv2,nslit,&lambda,&slitParam[0],1,SPLINE_CUBIC);
            }
           else if ((slitType==SLIT_TYPE_FILE) && (pSlit->nc>2))
            {
             for (j=0;j<slitTmp.nl;j++)
              slitTmp.matrix[1][j]=(double)VECTOR_Table2(pSlit->matrix,pSlit->nl,pSlit->nc,slitTmp.matrix[0][j],lambda);
 
-            SPLINE_Deriv2(slitTmp.matrix[0],slitTmp.matrix[1],slitTmp.deriv2[1],slitTmp.nl,"mediateRingCalculate");
+            SPLINE_Deriv2(slitTmp.matrix[0],slitTmp.matrix[1],slitTmp.deriv2[1],slitTmp.nl, __func__);
            }
          }
 
@@ -1087,8 +1087,8 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
           n2xsec=n2xref[j]*sigprimen2*gamman2;
           sumn2xsec+=n2xsec;
 
-          if (!(rc=SPLINE_Vector(solarLambda,solarVector,solarDeriv2,nsolar,&sign2,&solar,1,SPLINE_CUBIC,"mediateRingCalculate")))
-           raman[i]+=solar*n2xsec;
+          SPLINE_Vector(solarLambda,solarVector,solarDeriv2,nsolar,&sign2,&solar,1,SPLINE_CUBIC);
+          raman[i]+=solar*n2xsec;
          }
 
         for (j=0;j<O2_SIZE;j++)
@@ -1103,8 +1103,8 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
           o2xsec=o2xref[j]*sigprimeo2*gammao2;
           sumo2xsec+=o2xsec;
 
-          if (!(rc=SPLINE_Vector(solarLambda,solarVector,solarDeriv2,nsolar,&sigo2,&solar,1,SPLINE_CUBIC,"mediateRingCalculate")))
-           raman[i]+=solar*o2xsec;
+          SPLINE_Vector(solarLambda,solarVector,solarDeriv2,nsolar,&sigo2,&solar,1,SPLINE_CUBIC);
+          raman[i]+=solar*o2xsec;
          }
 
         // normalization
@@ -1122,12 +1122,12 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
       // Interpolate the high resolution spectrum
 
       if (!rc && !(rc=SPLINE_Deriv2(solarLambda,solarVector,solarDeriv2,nsolar,"mediateRingCalculate")) &&
-         !(rc=SPLINE_Vector(solarLambda,solarVector,solarDeriv2,nsolar,ringLambda,ringVector,nring,SPLINE_CUBIC,"mediateRingCalculate")) &&
+         !(rc=SPLINE_Vector(solarLambda,solarVector,solarDeriv2,nsolar,ringLambda,ringVector,nring,SPLINE_CUBIC)) &&
 
       // Interpolate the raman spectrum
 
          !(rc=SPLINE_Deriv2(solarLambda,raman,raman2,nsolar,"mediateRingCalculate")) &&
-         !(rc=SPLINE_Vector(solarLambda,raman,raman2,nsolar,ringLambda,ramanint,nring,SPLINE_CUBIC,"mediateRingCalculate")))
+         !(rc=SPLINE_Vector(solarLambda,raman,raman2,nsolar,ringLambda,ramanint,nring,SPLINE_CUBIC)))
        {
         if ((fp=fopen(ringFileName,"w+t"))!=NULL)
          {

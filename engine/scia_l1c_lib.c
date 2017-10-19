@@ -2,10 +2,8 @@
 
 #include "scia_defs.h"
 #include "scia_common.h"
-#include "scia_l1b.h"
 #include "scia_l1c_lib.h"
 #include "bin_read.h"
-#include "scia_common.h"
 
 // #define __DEBUG_L1C__
 
@@ -1869,9 +1867,8 @@ SCIA_err read_next_pmd_state (info_l1c *info, L1_MDS_TYPE type)
 /* hopefully outdated... */
 SCIA_err Read_DSD_1C (FILE* unit, DSD *dsd)
 {
-    int err;
     char *str_ptr;
-    err=fscanf(unit,
+    fscanf(unit,
 	   "DS_NAME=\"%28c\"\n"
 	   "DS_TYPE=%1c\n"
 	   "FILENAME=\"%62c\"\n"
@@ -2081,7 +2078,7 @@ SCIA_err GeoCal_add (GeoCal *geo, /* array with 1c geolocations */
 {
 
 
-    int i,n0,n1,n2;
+    int i,n1;
     int geo_n = n_coadd*n_readout;
 
     geo_coadd->esm_pos = 0;
@@ -2105,9 +2102,7 @@ SCIA_err GeoCal_add (GeoCal *geo, /* array with 1c geolocations */
 	case 2:
 	case 4:
 	case 8:
-		n0 = geo_n;
 		n1 = geo_n + n_coadd/2 -1;
-		n2 = geo_n + n_coadd -1;
 		/*  angles */
 
 /*  coordinates */

@@ -268,15 +268,6 @@ void write_automatic_reference_info(const ENGINE_CONTEXT *pEngineContext, NetCDF
   if ( pEngineContext->project.asciiResults.referenceFlag
        && pEngineContext->analysisRef.refAuto ) {
     switch(pEngineContext->project.instrumental.readOutFormat) {
-    case PRJCT_INSTR_FORMAT_GDP_ASCII:
-    case PRJCT_INSTR_FORMAT_GDP_BIN:
-    case PRJCT_INSTR_FORMAT_SCIA_PDS:
-    case PRJCT_INSTR_FORMAT_GOME2: {
-      const char *reffile = OUTPUT_refFile;
-      group.putAttr("Automatic reference file", reffile);
-      group.putAttr("Automatic reference: number of records", OUTPUT_nRec);
-    }
-      break;
     case PRJCT_INSTR_FORMAT_OMI:
       for(int analysiswindow=0; analysiswindow < NFeno; ++analysiswindow) {
         for(int row=0; row< OMI_TOTAL_ROWS; row++ ) {

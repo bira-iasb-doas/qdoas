@@ -150,26 +150,15 @@
 //               0 otherwise.
 // -----------------------------------------------------------------------------
 
-    RC VECTOR_Log(double *out,double *in,int dim, const char *callingFunction)
-     {
-      // Declarations
-
-      INDEX i;
-      RC rc;
-
-      // Calculates the logarithm of the input vector
-
-      for (rc=0,i=0;(i<dim) && !rc;i++)
-
-       if (in[i]<=(double)0.)
-        rc=ERROR_SetLast(callingFunction,ERROR_TYPE_WARNING,ERROR_ID_LOG);
-       else
-        out[i]=log(in[i]);
-
-      // Return
-
-      return rc;
-     }
+RC VECTOR_Log(double *restrict out, const double *restrict in, int dim, const char *callingFunction) {
+  for (int i=0; i!=dim; ++i) {
+    if (in[i]<=(double)0.)
+      return ERROR_SetLast(callingFunction,ERROR_TYPE_WARNING,ERROR_ID_LOG);
+    else
+      out[i]=log(in[i]);
+  }
+  return ERROR_ID_NO;
+}
 
 // -----------------------------------------------------------------------------
 // FUNCTION      VECTOR_LocGt

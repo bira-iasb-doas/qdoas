@@ -1241,21 +1241,15 @@ void CQdoasConfigWriter::writeAnalysisWindows(FILE *fp, const QString &projectNa
 	 	break;
 	 }
 
-
-
-
-
-
- fprintf(fp,"minlon=\"%.3f\" maxlon=\"%.3f\" minlat=\"%.3f\" maxlat=\"%.3f\" refns=\"%d\" cloudfmin=\"%.3f\" cloudfmax=\"%.3f\" \n",
+        fprintf(fp,"minlon=\"%.3f\" maxlon=\"%.3f\" minlat=\"%.3f\" maxlat=\"%.3f\" refns=\"%d\" cloudfmin=\"%.3f\" cloudfmax=\"%.3f\" \n",
                 properties->refMinLongitude, properties->refMaxLongitude,
                 properties->refMinLatitude, properties->refMaxLatitude, properties->refNs,
                 properties->cloudFractionMin,properties->cloudFractionMax);
 
-	fprintf(fp,"              maxdoasrefmode=\"%s\" \n",
-	           (properties->refMaxdoasSelection==ANLYS_MAXDOAS_REF_SCAN)?"scan":"sza");
-	fprintf(fp, "             east=\"%s\" center=\"%s\" west=\"%s\" backscan=\"%s\" />\n",
-		(properties->pixelTypeEast ? sTrue : sFalse), (properties->pixelTypeCenter ? sTrue : sFalse),
-		(properties->pixelTypeWest ? sTrue : sFalse), (properties->pixelTypeBackscan ? sTrue : sFalse));
+        fprintf(fp,"              maxdoasrefmode=\"%s\" \n",
+                (properties->refMaxdoasSelection==ANLYS_MAXDOAS_REF_SCAN)?"scan":"sza");
+        // for backwards compatibility, we still write the GOME pixeltype selection configuration, defaulting to "true" for all types.
+        fprintf(fp, "             east=\"true\" center=\"true\" west=\"true\" backscan=\"true\" />\n");
 
 	// cross sections ....
 	writeCrossSectionList(fp, &(properties->crossSectionList));

@@ -191,3 +191,26 @@ unix {
   QMAKE_LIBDIR += $$INSTALL_PREFIX/lib
   QMAKE_RPATHDIR += $$INSTALL_PREFIX/lib
 }
+
+asan { # use 'CONFIG+=asan' to build with adress sanitizer support
+  QMAKE_CXXFLAGS += -fsanitize=address -fno-omit-frame-pointer
+  QMAKE_CFLAGS += -fsanitize=address -fno-omit-frame-pointer
+  QMAKE_LFLAGS += -fsanitize=address
+}
+
+# Notes for installation on hpc:
+#
+# hdf-eos5:
+#
+#   CC=/space/hpc-apps/bira/2015a/hdf5-1.8.10-64/bin/h5cc ./configure \
+#     --prefix=/home/thomasd --with-szlib=/home/thomasd \
+#     --enable-install-include
+hpc {
+  LIBS += -lirc -lsvml
+
+  INSTALL_PREFIX = /home/thomasd/
+  INCLUDEPATH += $$INSTALL_PREFIX/include
+
+  QMAKE_LIBDIR += /$$INSTALL_PREFIX/lib /sw/sdev/intel/parallel_studio_xe_2015_update_3-pguyan/composer_xe_2015.3.187/compiler/lib/intel64
+  QMAKE_RPATHDIR += /$$INSTALL_PREFIX/lib /sw/sdev/intel/parallel_studio_xe_2015_update_3-pguyan/composer_xe_2015.3.187/compiler/lib/intel64
+}

@@ -156,8 +156,6 @@ struct _crossResults {
   INDEX  indexAmf;                  // index of AMF data in AMF table cross reference
 };
 
-typedef struct _satellite_ref_ SATELLITE_REF;
-
 /*! \brief Configuration data related to an analysis window. */
 struct _feno {
                                                                                 // copy of data from analysis window panel
@@ -203,28 +201,16 @@ struct _feno {
   int             xsToConvolute;                                                // flag set if high resolution cross sections to convolute real time
   int             xsToConvoluteI0;
 
-  SATELLITE_REF  *satelliteRef;
-
   double         *LambdaRef,                                                    // absolute reference wavelength scale
                  *LambdaK,                                                      // new wavelength scale after Kurucz
                  *Lambda,                                                       // wavelength scale to use for analysis
                  *Sref,                                                         // reference spectrum
                  *SrefSigma,                                                    // error on reference spectrum
                  *SrefEtalon,                                                   // etalon reference spectrum
-                 *LambdaN,*LambdaS,
-                 *SrefN,*SrefS,
                   Shift,                                                        // shift found when aligning etalon on reference
                   Stretch,                                                      // stretch order 1 found when aligning etalon on reference
                   Stretch2,                                                     // stretch order 2 found when aligning etalon on reference
                   refNormFact,
-                  ShiftN,                                                       // shift found when aligning etalon on reference
-                  StretchN,                                                     // stretch order 1 found when aligning etalon on reference
-                  Stretch2N,                                                    // stretch order 2 found when aligning etalon on reference
-                  refNormFactN,
-                  ShiftS,                                                       // shift found when aligning etalon on reference
-                  StretchS,                                                     // stretch order 1 found when aligning etalon on reference
-                  Stretch2S,                                                    // stretch order 2 found when aligning etalon on reference
-                  refNormFactS,
                   chiSquare,                                                    // chi square
                   RMS;
   char           *ref_description;                                              // string describing spectra used in automatic reference.
@@ -263,14 +249,12 @@ struct _feno {
   int             bandType;
   double          refLatMin,refLatMax;
   double          refLonMin,refLonMax;
-  int             nspectra;
   int             NDET;
   int             gomeRefFlag;
   int             mfcRefFlag;
   RC              rcKurucz;
   int             SvdPDeb,SvdPFin,Dim,LimMin,LimMax,LimN;
   int             rc;
-  char           gomePixelType[4];
   enum linear_offset_mode linear_offset_mode;
   int             longPathFlag;                                                 // for Anoop
   INDEX           indexRefOmi;
@@ -300,8 +284,7 @@ extern double *x,*Lambda,*LambdaSpec,
                     *ANALYSE_shift,
                     *ANALYSE_zeros,
                     *ANALYSE_ones,
-                     ANALYSE_nFree,
-                     ANALYSE_oldLatitude;
+  ANALYSE_nFree;
 
 // ----------
 // PROTOTYPES
@@ -316,10 +299,11 @@ RC   ANALYSE_ConvoluteXs(const FENO *pTabFeno,int action,double conc,const MATRI
                          const double *newlambda, double *output, INDEX indexlambdaMin, INDEX indexlambdaMax, const int n_wavel,
                          INDEX indexFenoColumn, int wveDptFlag);
 RC   ANALYSE_XsConvolution(FENO *pTabFeno,double *newLambda,MATRIX_OBJECT *slitMatrix,double *slitParam,int slitType,INDEX indexFenoColumn,int wveDptFlag);
-RC   ANALYSE_SvdInit(FENO *feno, struct fit_properties *fit, const int n_wavel);
+RC   ANALYSE_SvdInit(FENO *feno, struct fit_properties *fit, const int n_wavel, const double *lambda);
 RC   ANALYSE_CurFitMethod(INDEX indexFenoColumn, const double *Spectre, const double *SigmaSpec, const double *Sref, int n_wavel, double *residuals, double *Chisqr,int *pNiter,double speNormFact,double refNormFact, struct fit_properties *fit);
 void ANALYSE_ResetData(void);
 RC   ANALYSE_SetInit(ENGINE_CONTEXT *pEngineContext);
+RC ANALYSE_fit_shift_stretch(int indexFeno, int indexFenoColumn, const double *spec1, const double *spec2, double *shift, double *stretch, double *stretch2, double *sigma_shift, double *sigma_stretch, double *sigma_stretch2);
 RC   ANALYSE_AlignReference(ENGINE_CONTEXT *pEngineContext,int refFlag,void *responseHandle,INDEX indexFenoColumn);
 RC   ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle);
 

@@ -174,14 +174,14 @@ size_t output_get_size(enum output_datatype datatype);
 
     \param [in] pEngineContext structure including information on
 
-    \param [in] outputFileName the name of the outputFile
+    \param [in] filename the name of the outputFile
 
     \retval ERROR_ID_FILE_OPEN if the requested file could not be
     opened
     \retval ERROR_ID_NONE else
 */
 RC open_output_file(const ENGINE_CONTEXT *pEngineContext, const char *filename);
-RC ascii_open(const ENGINE_CONTEXT *pEngineContext, const char *filename);
+RC ascii_open(const ENGINE_CONTEXT *pEngineContext, char *filename);
 RC hdfeos5_open(const ENGINE_CONTEXT *pEngineContext, const char *filename);
 //!@}
 

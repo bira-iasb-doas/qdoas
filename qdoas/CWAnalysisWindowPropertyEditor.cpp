@@ -48,11 +48,8 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   m_projectName(projectName),
   m_analysisWindowName(analysisWindowName),
   m_autoSelection(false),
-  m_activePixelType(false),
-  m_activeCloudFraction(false),
   m_scanSelection(false)
 {
-  const int cIntEditWidth = 50;
   const int cDoubleEditWidth = 70;
 
   mediate_analysis_window_t *d = CWorkSpace::instance()->findAnalysisWindow(m_projectName, m_analysisWindowName);
@@ -246,11 +243,14 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   QLabel *labelTwoSza = new QLabel(" Reference 2 ", m_refTwoSzaFrame);
   labelTwoSza->setFixedWidth(85);
   m_szaCenterEdit = new QLineEdit(m_refTwoSzaFrame);
-  m_szaCenterEdit->setFixedWidth(cDoubleEditWidth);
-  m_szaCenterEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 3, m_szaCenterEdit));
+  m_szaCenterEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 1, m_szaCenterEdit));
+  m_szaCenterEdit->setAlignment(Qt::AlignRight);
   m_szaDeltaEdit = new QLineEdit(m_refTwoSzaFrame);
-  m_szaDeltaEdit->setFixedWidth(cDoubleEditWidth);
-  m_szaDeltaEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 3, m_szaDeltaEdit));
+  const int sza_width = m_szaCenterEdit->fontMetrics().width("0090.0");
+  m_szaCenterEdit->setFixedWidth(sza_width);
+  m_szaDeltaEdit->setFixedWidth(sza_width);
+  m_szaDeltaEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 180.0, 1, m_szaDeltaEdit));
+  m_szaDeltaEdit->setAlignment(Qt::AlignRight);
   szaLayout->addWidget(labelTwoSza);
   szaLayout->addWidget(new QLabel("SZA ", m_refTwoSzaFrame));
   szaLayout->addWidget(m_szaCenterEdit);
@@ -267,30 +267,45 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   // longitude (min/max)
   satelliteLayout->addWidget(new QLabel("Lon.", m_satelliteFrame));
   m_refTwoLonMinEdit = new QLineEdit(m_satelliteFrame);
-  m_refTwoLonMinEdit->setFixedWidth(cDoubleEditWidth);
-  m_refTwoLonMinEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 360.0, 3, m_refTwoLonMinEdit));
+  m_refTwoLonMinEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 360.0, 1, m_refTwoLonMinEdit));
+  m_refTwoLonMinEdit->setAlignment(Qt::AlignRight);
+  const int lon_width = m_refTwoLonMinEdit->fontMetrics().width("00360.0");
+  m_refTwoLonMinEdit->setFixedWidth(lon_width);
   satelliteLayout->addWidget(m_refTwoLonMinEdit);
   m_refTwoLonMaxEdit = new QLineEdit(m_satelliteFrame);
-  m_refTwoLonMaxEdit->setFixedWidth(cDoubleEditWidth);
-  m_refTwoLonMaxEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 360.0, 3, m_refTwoLonMaxEdit));
+  m_refTwoLonMaxEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 360.0, 1, m_refTwoLonMaxEdit));
+  m_refTwoLonMaxEdit->setAlignment(Qt::AlignRight);
+  m_refTwoLonMaxEdit->setFixedWidth(lon_width);
   satelliteLayout->addWidget(m_refTwoLonMaxEdit);
   // latitude (min/max)
   satelliteLayout->addWidget(new QLabel("Lat.", m_satelliteFrame));
   m_refTwoLatMinEdit = new QLineEdit(m_satelliteFrame);
-  m_refTwoLatMinEdit->setFixedWidth(cDoubleEditWidth);
-  m_refTwoLatMinEdit->setValidator(new CDoubleFixedFmtValidator(-90.0, 90.0, 3, m_refTwoLatMinEdit));
+  const int lat_width = m_refTwoLatMinEdit->fontMetrics().width("0090.0");
+  m_refTwoLatMinEdit->setFixedWidth(lat_width);
+  m_refTwoLatMinEdit->setValidator(new CDoubleFixedFmtValidator(-90.0, 90.0, 1, m_refTwoLatMinEdit));
+  m_refTwoLatMinEdit->setAlignment(Qt::AlignRight);
   satelliteLayout->addWidget(m_refTwoLatMinEdit);
   m_refTwoLatMaxEdit = new QLineEdit(m_satelliteFrame);
-  m_refTwoLatMaxEdit->setFixedWidth(cDoubleEditWidth);
-  m_refTwoLatMaxEdit->setValidator(new CDoubleFixedFmtValidator(-90.0, 90.0, 3, m_refTwoLatMaxEdit));
+  m_refTwoLatMaxEdit->setFixedWidth(lat_width);
+  m_refTwoLatMaxEdit->setValidator(new CDoubleFixedFmtValidator(-90.0, 90.0, 1, m_refTwoLatMaxEdit));
+  m_refTwoLatMaxEdit->setAlignment(Qt::AlignRight);
   satelliteLayout->addWidget(m_refTwoLatMaxEdit);
-  // ns
+  // cloud fraction (min/max)
+  satelliteLayout->addWidget(new QLabel("Cloud fraction", m_satelliteFrame));
+  m_cloudFractionMinEdit = new QLineEdit(m_satelliteFrame);
+  const int cloud_frac_width = m_cloudFractionMinEdit->fontMetrics().width("001.0");
+  m_cloudFractionMinEdit->setFixedWidth(cloud_frac_width);
+  m_cloudFractionMinEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 1.0, 1, m_cloudFractionMinEdit));
+  m_cloudFractionMinEdit->setAlignment(Qt::AlignRight);
+  m_cloudFractionMinEdit->setEnabled(false);
+  satelliteLayout->addWidget(m_cloudFractionMinEdit);
+  m_cloudFractionMaxEdit = new QLineEdit(m_satelliteFrame);
+  m_cloudFractionMaxEdit->setFixedWidth(cloud_frac_width);
+  m_cloudFractionMaxEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 1.0, 1, m_cloudFractionMaxEdit));
+  m_cloudFractionMaxEdit->setAlignment(Qt::AlignRight);
+  m_cloudFractionMaxEdit->setEnabled(false);
+  satelliteLayout->addWidget(m_cloudFractionMaxEdit);
   satelliteLayout->addSpacing(10);
-  satelliteLayout->addWidget(new QLabel("Ns", m_satelliteFrame));
-  m_refTwoNsSpin = new QSpinBox(m_satelliteFrame);
-  m_refTwoNsSpin->setFixedWidth(cIntEditWidth);
-  m_refTwoNsSpin->setRange(1, 50);
-  satelliteLayout->addWidget(m_refTwoNsSpin);
 
   szaLayout->addWidget(m_satelliteFrame);
   szaLayout->addStretch(1);
@@ -324,7 +339,7 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   m_refTwoStack->addWidget(m_refTwoEditFrame); // file      - takes index 1
   filesLayout->addLayout(m_refTwoStack);
 
-  // row 2 - residual or pixel type or cloud fraction
+  // row 2 - residual
 
   QFrame *residualFrame = new QFrame(filesGroup);
   residualFrame->setFrameStyle(QFrame::NoFrame);
@@ -340,53 +355,7 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   residualFrameLayout->addWidget(m_residualEdit, 1);
   residualFrameLayout->addWidget(residualBrowseBtn);
 
-  // pixel type
-  QFrame *pixelTypeFrame = new QFrame(filesGroup);
-  pixelTypeFrame->setFrameStyle(QFrame::NoFrame);
-  QHBoxLayout *pixelTypeLayout = new QHBoxLayout(pixelTypeFrame);
-  pixelTypeLayout->setMargin(0);
-
-  QLabel *labelPixelType = new QLabel(" Pixel Type ", pixelTypeFrame);
-  labelPixelType->setFixedWidth(85);
-  pixelTypeLayout->addWidget(labelPixelType);
-
-  m_eastCheck = new QCheckBox("East", pixelTypeFrame);
-  pixelTypeLayout->addWidget(m_eastCheck);
-  m_centerCheck = new QCheckBox("Center", pixelTypeFrame);
-  pixelTypeLayout->addWidget(m_centerCheck);
-  m_westCheck = new QCheckBox("West", pixelTypeFrame);
-  pixelTypeLayout->addWidget(m_westCheck);
-  m_backscanCheck = new QCheckBox("Backscan", pixelTypeFrame);
-  pixelTypeLayout->addWidget(m_backscanCheck);
-  pixelTypeLayout->addStretch(1);
-
-  QFrame *cloudFractionFrame = new QFrame(filesGroup);
-  cloudFractionFrame->setFrameStyle(QFrame::NoFrame);
-  QHBoxLayout *cloudFractionFrameLayout = new QHBoxLayout(cloudFractionFrame);
-  cloudFractionFrameLayout->setMargin(0);
-  QLabel *labelCloudFraction = new QLabel(" Cloud fraction ", cloudFractionFrame);
-  labelCloudFraction->setFixedWidth(85);
-  m_cloudFractionMinEdit = new QLineEdit(cloudFractionFrame);
-  m_cloudFractionMinEdit->setFixedWidth(cDoubleEditWidth);
-  m_cloudFractionMinEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 1.0, 3, m_cloudFractionMinEdit));
-  m_cloudFractionMaxEdit = new QLineEdit(cloudFractionFrame);
-  m_cloudFractionMaxEdit->setFixedWidth(cDoubleEditWidth);
-  m_cloudFractionMaxEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 1.0, 3, m_cloudFractionMaxEdit));
-
-  cloudFractionFrameLayout->addWidget(labelCloudFraction);
-  cloudFractionFrameLayout->addWidget(m_cloudFractionMinEdit, 1);
-  cloudFractionFrameLayout->addWidget(m_cloudFractionMaxEdit,2);
-
-  cloudFractionFrameLayout->addStretch(0);
-
-  // stack for residual / pixel type
-  m_residualStack = new QStackedLayout;
-  m_residualStack->setMargin(0);
-  m_residualStack->addWidget(residualFrame);     // takes index 0
-  m_residualStack->addWidget(pixelTypeFrame);    // takes index 1
-  m_residualStack->addWidget(cloudFractionFrame);// takes index 2
-
-  filesLayout->addLayout(m_residualStack);
+  filesLayout->addWidget(residualFrame);
 
   mainLayout->addWidget(filesGroup);
 
@@ -480,13 +449,6 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   m_refTwoLatMinEdit->setText(tmpStr);
   m_refTwoLatMaxEdit->validator()->fixup(tmpStr.setNum(d->refMaxLatitude));
   m_refTwoLatMaxEdit->setText(tmpStr);
-  m_refTwoNsSpin->setValue(d->refNs);
-
-  m_eastCheck->setCheckState(d->pixelTypeEast ? Qt::Checked : Qt::Unchecked);
-  m_centerCheck->setCheckState(d->pixelTypeCenter ? Qt::Checked : Qt::Unchecked);
-  m_westCheck->setCheckState(d->pixelTypeWest ? Qt::Checked : Qt::Unchecked);
-  m_backscanCheck->setCheckState(d->pixelTypeBackscan ? Qt::Checked : Qt::Unchecked);
-
   m_cloudFractionMinEdit->validator()->fixup(tmpStr.setNum(d->cloudFractionMin));
   m_cloudFractionMinEdit->setText(tmpStr);
   m_cloudFractionMaxEdit->validator()->fixup(tmpStr.setNum(d->cloudFractionMax));
@@ -565,12 +527,6 @@ bool CWAnalysisWindowPropertyEditor::actionOk(void)
     d->refMaxLongitude = m_refTwoLonMaxEdit->text().toDouble();
     d->refMinLatitude = m_refTwoLatMinEdit->text().toDouble();
     d->refMaxLatitude = m_refTwoLatMaxEdit->text().toDouble();
-    d->refNs = m_refTwoNsSpin->value();
-
-    d->pixelTypeEast = (m_eastCheck->checkState() == Qt::Checked) ? 1 : 0;
-    d->pixelTypeCenter = (m_centerCheck->checkState() == Qt::Checked) ? 1 : 0;
-    d->pixelTypeWest = (m_westCheck->checkState() == Qt::Checked) ? 1 : 0;
-    d->pixelTypeBackscan = (m_backscanCheck->checkState() == Qt::Checked) ? 1 : 0;
 
     d->cloudFractionMin = m_cloudFractionMinEdit->text().toDouble();
     d->cloudFractionMax = m_cloudFractionMaxEdit->text().toDouble();
@@ -672,34 +628,23 @@ void CWAnalysisWindowPropertyEditor::projectPropertiesChanged()
 
     // satellite instruments
 
-    switch (d->instrumental.format)
-     {
+    switch (d->instrumental.format)  {
     // -------------------------------------------------------------------------
-       case PRJCT_INSTR_FORMAT_GDP_ASCII:
        case PRJCT_INSTR_FORMAT_GDP_BIN:
-        {
-	        m_activePixelType = true;
-	        m_activeCloudFraction = false;
-	        m_satelliteFrame->show();
-        }
-       break;
-    // -------------------------------------------------------------------------
        case PRJCT_INSTR_FORMAT_GOME2:
+         // GOME & GOME-2 have cloud fraction info in L1 data:
+         m_cloudFractionMinEdit->setEnabled(true);
+         m_cloudFractionMaxEdit->setEnabled(true);
+         //FALL-THROUGH
        case PRJCT_INSTR_FORMAT_SCIA_PDS:
        case PRJCT_INSTR_FORMAT_OMI:
        case PRJCT_INSTR_FORMAT_OMPS:
        case PRJCT_INSTR_FORMAT_TROPOMI:
-        {
-	        m_activePixelType = false;
-	        m_activeCloudFraction = (d->instrumental.format==PRJCT_INSTR_FORMAT_GOME2)?true:false;
-	        m_satelliteFrame->show();
-        }
+          m_satelliteFrame->show();
        break;
     // -------------------------------------------------------------------------
        default:
         {
-	        m_activePixelType = false;
-	        m_activeCloudFraction = false;
 	        m_satelliteFrame->hide();
         }
        break;
@@ -707,17 +652,6 @@ void CWAnalysisWindowPropertyEditor::projectPropertiesChanged()
     }
 
     m_refTwoStack->setCurrentIndex((m_autoSelection)?0:1);
-
-    if (!m_autoSelection)
-     m_residualStack->setCurrentIndex(0);
-    else if (m_activePixelType)
-     m_residualStack->setCurrentIndex(1);
-    else if (m_activeCloudFraction)
-     m_residualStack->setCurrentIndex(2);
-    else
-     m_residualStack->setCurrentIndex(0);
-
-    // Commented by CF on 25/11/2010 m_residualStack->setCurrentIndex((m_autoSelection && m_activePixelType) ? 1 : 0);
   }
 }
 
@@ -744,17 +678,6 @@ void CWAnalysisWindowPropertyEditor::slotRefSelectionChanged(bool checked)
   m_autoSelection = checked;
 
   m_refTwoStack->setCurrentIndex(m_autoSelection ? 0 : 1);
-
-    if (!m_autoSelection)
-     m_residualStack->setCurrentIndex(0);
-    else if (m_activePixelType)
-     m_residualStack->setCurrentIndex(1);
-    else if (m_activeCloudFraction)
-     m_residualStack->setCurrentIndex(2);
-    else
-     m_residualStack->setCurrentIndex(0);
-
-  // Commented by CF on 25/11/2010 m_residualStack->setCurrentIndex((m_autoSelection && m_activePixelType) ? 1 : 0);
 }
 
 void CWAnalysisWindowPropertyEditor::slotWavelengthCalibrationChanged(int index)

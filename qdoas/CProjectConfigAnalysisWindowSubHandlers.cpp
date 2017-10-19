@@ -139,12 +139,6 @@ bool CAnalysisWindowSubHandler::start(const QString &element, const QXmlAttribut
       d->refSzaCenter = atts.value("szacenter").toDouble();
       d->refSzaDelta = atts.value("szadelta").toDouble();
      }
-
-    d->pixelTypeEast = (atts.value("east") == "true") ? 1 : 0;
-    d->pixelTypeCenter = (atts.value("center") == "true") ? 1 : 0;
-    d->pixelTypeWest = (atts.value("west") == "true") ? 1 : 0;
-    d->pixelTypeBackscan = (atts.value("backscan") == "true") ? 1 : 0;
-
   }
   else if (element == "cross_section") {
     return m_master->installSubHandler(new CAnalysisWindowCrossSectionSubHandler(m_master, &(d->crossSectionList)), atts);

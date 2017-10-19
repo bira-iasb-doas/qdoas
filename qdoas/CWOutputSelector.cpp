@@ -598,6 +598,8 @@ void getValidFieldFlags(int *validFlags, int instrument,int selectorOrigin)
       validFlags[PRJCT_RESULTS_SCIA_STATE_INDEX]=1;
       validFlags[PRJCT_RESULTS_SCIA_STATE_ID]=1;
       validFlags[PRJCT_RESULTS_SCIA_QUALITY]=1;
+      validFlags[PRJCT_RESULTS_SAT_LAT]=1;
+      validFlags[PRJCT_RESULTS_SAT_LON]=1;
      }
     break;
  // ----------------------------------------------------------------------------

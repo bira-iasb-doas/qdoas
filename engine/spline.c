@@ -189,26 +189,32 @@ RC SPLINE_Deriv2(const double *X, const double *Y,double *Y2,int n,const char *c
    The ceil of the binary log of x is given by the position of the
    first non-zero bit in the binary representation of x.*/
 unsigned int log2_ceil (unsigned long x) {
-        if (x <= 1) return 0;
-        // number of bits in x, minus the number of leading zeroes: 
-        return (8*sizeof(x))-__builtin_clzl(x-1);
+  if (x <= 1) return 0;
+  // number of bits in x, minus the number of leading zeroes: 
+  return (8*sizeof(x))-__builtin_clzl(x-1);
 }
 
 /*! \brief linear or cubic spline interpolation
+
   \param[in] xa,ya x and y values of the tabulated function
   xa=f(ya). The xa must be monotonously increasing.
+
   \param[in] na size of input vectors xa,ya (expects na >=2)
+
   \param[in] xb x values for which we want to calculate the interpolated y values
+
   \param[out] yb output y values
+
   \param[in] nb number of points for which we want to interpolate.
+
   \param[in] type SPLINE_LINEAR or SPLINE_CUBIC
+
   \retval ERROR_ID_NO
 */
-RC SPLINE_Vector(const double *restrict xa, const double *restrict ya, const double *restrict y2a,int na, const double *restrict xb, double *restrict yb,int nb,int type, const char *caller) {
+RC SPLINE_Vector(const double *restrict xa, const double *restrict ya, const double *restrict y2a,int na, const double *restrict xb, double *restrict yb,int nb,int type)
+{
   // input vector must contain at least 2 elements for interpolation to work.
-  assert(na > 1);
-
-  RC rc=ERROR_ID_NO;
+  assert(na >= 2);
 
   // if na is a power of 2 we need exactly log_2(na) steps to find
   // xlo.  if na is not a power of 2, the number of steps is log_2
@@ -266,5 +272,5 @@ RC SPLINE_Vector(const double *restrict xa, const double *restrict ya, const dou
       yb[i] += ((a*a*a-a)*y2a[k]+(b*b*b-b)*y2a[k+1])*(h*h)/6.;
   }
 
-  return rc;
+  return ERROR_ID_NO;
 }

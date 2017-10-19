@@ -76,12 +76,8 @@ Q_OBJECT
   QLineEdit *m_refTwoLonMinEdit, *m_refTwoLonMaxEdit;
   QLineEdit *m_refTwoLatMinEdit, *m_refTwoLatMaxEdit;
   QLineEdit *m_cloudFractionMinEdit,*m_cloudFractionMaxEdit;
-  QSpinBox *m_refTwoNsSpin;
-  // gome pixel type ...
-  QCheckBox *m_eastCheck, *m_centerCheck, *m_westCheck, *m_backscanCheck;
 
   QStackedLayout *m_refTwoStack;
-  QStackedLayout *m_residualStack;
 
   QTabWidget *m_tabs;
   // specialized DoasTables for each tab ...
@@ -94,7 +90,7 @@ Q_OBJECT
 
 
   QString m_projectName, m_analysisWindowName;
-  bool m_autoSelection, m_activePixelType, m_activeCloudFraction,m_scanSelection;
+  bool m_autoSelection, m_scanSelection;
   int m_selectedPage;
 };
 
