@@ -1244,7 +1244,7 @@ RC AnalyseLoadVector(const char *function, const char *fileName, double *lambda,
       rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_NOT_FOUND,fullFileName);
     else {
       for (i=0;  i<n_wavel && fgets(string,MAX_ITEM_TEXT_LEN,fp) && !rc; ) {
-        if ((strchr(string,';')==NULL) && (strchr(string,'*')==NULL)) {
+        if (strchr(string,';')==NULL && strchr(string,'*')==NULL && strchr(string,'#')==NULL) {
           int n_scan = sscanf(string,"%lf %lf",&lambda[i],&vector[i]);
           if (n_scan != 2) {
             rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_BAD_LENGTH, fullFileName);
