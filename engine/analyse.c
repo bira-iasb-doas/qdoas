@@ -3155,8 +3155,9 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           if (Feno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC) {
             switch(pEngineContext->project.instrumental.readOutFormat) {
+            case PRJCT_INSTR_FORMAT_OMPS:
             case PRJCT_INSTR_FORMAT_TROPOMI:
-              rc=ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, "Automatic reference selection not implemented for Tropomi");
+              rc=ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, "Automatic reference selection not implemented for this file format");
               goto EndAnalysis;
               break;
             case PRJCT_INSTR_FORMAT_GDP_BIN:
