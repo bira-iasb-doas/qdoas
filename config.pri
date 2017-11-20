@@ -161,23 +161,32 @@ openblas {
 
 # Notes for installation on hpc:
 #
-# hdf-eos5:
+# Modules:
+# --------
 #
-#   CC=/space/hpc-apps/bira/2015a/hdf5-1.8.10-64/bin/h5cc ./configure /
-#     --prefix=/home/thomasd --with-szlib=/home/thomasd /
-#     --enable-install-include
+# Currently, QDOAS relies on modules 17/doas, 17/intel-17u1, 17/base,
+# 17/hdf-netcdf and 17/linalg.  The module 17/doas, installed in
+# /space/hpc-apps/bira/17/doas, contains libraries maintained by us
+# specifically for QDOAS.  The '17' indicates the version (we might
+# use newer versions later on).  The different versions of QDOAS
+# itself will be installed in /space/hpc-apps/bira/doas.  Different
+# versions might use different modules (i.e. in the future, versions
+# using module 17/doas might coexist with versions using a newer
+# module version such as 18/doas)
+#
+# Compilation procedure:
+# ----------------------
+#
+# module purge
+# module load 17/doas 17/intel-17u1 17/base 17/hdf-netcdf 17/linalg
+# qmake all.pro CONFIG+=hpc
 hpc {
-  LIBS += -lirc -lsvml
-
-  INSTALL_PREFIX = $$(HOME)
-  INCLUDEPATH += $$INSTALL_PREFIX/include
-
-  INCLUDEPATH +=/space/hpc-apps/bira/2015a/hdf-eos5-1.14-hdf5-1.8.10/include64
-
-  QMAKE_LIBDIR += /space/hpc-apps/bira/2015a/hdf-eos5-1.14-hdf5-1.8.10/lib64
-  QMAKE_RPATHDIR += /space/hpc-apps/bira/2015a/hdf-eos5-1.14-hdf5-1.8.10/lib64
-  QMAKE_LIBDIR += $$INSTALL_PREFIX/lib /sw/sdev/intel/parallel_studio_xe_2015_update_3-pguyan/composer_xe_2015.3.187/compiler/lib/intel64
-  QMAKE_RPATHDIR += $$INSTALL_PREFIX/lib /sw/sdev/intel/parallel_studio_xe_2015_update_3-pguyan/composer_xe_2015.3.187/compiler/lib/intel64
+  LIBS -= -lgslcblas
+  LIBS += -latlas -lgfortran
+  INSTALL_PREFIX = /space/hpc-apps/bira/doas
+  QDOASLIBS = $$INSTALL_PREFIX/lib /space/hpc-apps/bira/17/base/lib64 /space/hpc-apps/bira/17/linalg/lib64 /space/hpc-apps/bira/17/hdf-netcdf/lib64 /space/hpc-apps/bira/17/doas/lib
+  QMAKE_LIBDIR += $$QDOASLIBS
+  QMAKE_RPATHDIR += $$QDOASLIBS
 }
 
 unix {
