@@ -97,6 +97,10 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
     d->selected[d->nSelected] = PRJCT_RESULTS_PIXEL_TYPE;
   else if (str == "orbit")
     d->selected[d->nSelected] = PRJCT_RESULTS_ORBIT;
+  else if (str == "corner_longitudes")
+    d->selected[d->nSelected] = PRJCT_RESULTS_LON_CORNERS;
+  else if (str == "corner_latitudes")
+    d->selected[d->nSelected] = PRJCT_RESULTS_LAT_CORNERS;
   else if (str == "longit")
     d->selected[d->nSelected] = PRJCT_RESULTS_LONGIT;
   else if (str == "latit")

@@ -1551,6 +1551,8 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     case PRJCT_RESULTS_PIXEL:            config_string = "pixel"; break;
     case PRJCT_RESULTS_PIXEL_TYPE:       config_string = "pixel_type"; break;
     case PRJCT_RESULTS_ORBIT:            config_string = "orbit"; break;
+    case PRJCT_RESULTS_LON_CORNERS: config_string = "corner_longitudes"; break;
+    case PRJCT_RESULTS_LAT_CORNERS: config_string = "corner_latitudes"; break;
     case PRJCT_RESULTS_LONGIT:           config_string = "longit"; break;
     case PRJCT_RESULTS_LATIT:            config_string = "latit"; break;
     case PRJCT_RESULTS_ALTIT:            config_string = "altit"; break;
