@@ -195,7 +195,7 @@ double output_flux(const ENGINE_CONTEXT *pEngineContext, double wavelength, int 
   return flux;
 }
 
-/*! \brief Structure to associate a _prjctResutls type to an
+/*! \brief Structure to associate a _prjctResults type to an
     output_field configuration.*/
 struct outputconfig {
   enum _prjctResults type;
@@ -714,7 +714,6 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
 
   // default values for instrument-dependent output functions:
   func_int func_meastype = &get_meastype;
-  bool have_corner_coordinates = false;
   size_t num_sza = 1;
   func_float func_sza = &get_sza;
   size_t num_azimuth = 1;
@@ -740,13 +739,14 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
       max_ndet = NDET[i];
   }
 
+  // For GOME, SCIA, GOME-2, the latitude output field contains pixel
+  // corner coordinates instead of pixel center coordinates:
   switch(pProject->instrumental.readOutFormat) {
   case PRJCT_INSTR_FORMAT_SCIA_PDS:
   case PRJCT_INSTR_FORMAT_GOME2:
   case PRJCT_INSTR_FORMAT_GDP_BIN:
   case PRJCT_INSTR_FORMAT_GDP_ASCII:
     num_sza = num_azimuth = num_los_zenith = num_los_azimuth = 3;
-    have_corner_coordinates = true;
     break;
   }
 
@@ -781,19 +781,6 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
   case PRJCT_INSTR_FORMAT_MKZY:
     func_scanning_angle = &mkzy_get_scanning_angle;
     break;
-  }
-
-  const char *lat_fieldname, *lon_fieldname;
-  if (is_satellite(pProject->instrumental.readOutFormat) ) {
-    // for satellites, we keep the convention that
-    // "Latitude/Longitude" means "pixel corner latitude/longitude",
-    // and the latitudes/longitudes of the observations are called
-    // "Latitude(pixel center)"
-    lat_fieldname = "Latitude(pixel center)";
-    lon_fieldname = "Longitude(pixel center)";
-  } else {
-    lat_fieldname = "Latitude";
-    lon_fieldname = "Longitude";
   }
 
   OUTPUT_exportSpectraFlag=0;
@@ -865,16 +852,17 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
        register_field( (struct output_field) { .basic_fieldname = "Orbit number", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#8d", .get_data = (func_void)&get_orbit_number});
        break;
      case PRJCT_RESULTS_LONGIT:
-       if(have_corner_coordinates) { // we have pixel corners
-         register_field( (struct output_field) { .basic_fieldname = "Longitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)get_corner_longitudes, .data_cols = 4, .column_number_format="(%d)" });
-       }
-       register_field( (struct output_field) { .basic_fieldname = lon_fieldname, .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_longitude }); // pixel centre
+       register_field( (struct output_field) { .basic_fieldname = "Longitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)get_longitude });
        break;
      case PRJCT_RESULTS_LATIT:
-       if(have_corner_coordinates) { // we have pixel corners
-         register_field( (struct output_field) { .basic_fieldname = "Latitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)get_corner_latitudes, .data_cols = 4, .column_number_format="(%d)" });
-       }
-       register_field( (struct output_field) { .basic_fieldname = lat_fieldname, .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_latitude });
+       register_field( (struct output_field) { .basic_fieldname = "Latitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)get_latitude });
+       break;
+     case PRJCT_RESULTS_LON_CORNERS:
+       register_field( (struct output_field) { .basic_fieldname = "Pixel corner longitudes", .memory_type = OUTPUT_FLOAT, .resulttype= fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_corner_longitudes, .data_cols = 4, .column_number_format="(%d)" });
+       break;
+     case PRJCT_RESULTS_LAT_CORNERS:
+       register_field( (struct output_field) { .basic_fieldname = "Pixel corner latitudes", .memory_type = OUTPUT_FLOAT, .resulttype= fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_corner_latitudes, .data_cols = 4, .column_number_format="(%d)" });
+       break;
        break;
      case PRJCT_RESULTS_ALTIT:
        register_field( (struct output_field) { .basic_fieldname = "Altitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_altitude });
@@ -1106,8 +1094,6 @@ static void OutputRegisterFieldsToExport(const ENGINE_CONTEXT *pEngineContext, c
   func_datetime func_datetime = &get_datetime;
   func_double func_frac_time = &get_frac_time;
 
-  bool have_corner_coordinates = false;
-
   const char *title_sza = "Solar Zenith Angle (deg)";
   const char *title_azimuth = "Solar Azimuth Angle (deg)";
   const char *title_los_zenith = "LoS ZA";
@@ -1126,7 +1112,6 @@ static void OutputRegisterFieldsToExport(const ENGINE_CONTEXT *pEngineContext, c
   case PRJCT_INSTR_FORMAT_GDP_BIN:
   case PRJCT_INSTR_FORMAT_GDP_ASCII:
     num_sza = num_azimuth = num_los_zenith = num_los_azimuth = 3;
-    have_corner_coordinates = true;
     break;
   }
 
@@ -1161,19 +1146,6 @@ static void OutputRegisterFieldsToExport(const ENGINE_CONTEXT *pEngineContext, c
   case PRJCT_INSTR_FORMAT_MKZY:
     func_scanning_angle = &mkzy_get_scanning_angle;
     break;
-  }
-
-  const char *lat_fieldname, *lon_fieldname;
-  if (is_satellite(pProject->instrumental.readOutFormat) ) {
-    // for satellites, we keep the convention that
-    // "Latitude/Longitude" means "pixel corner latitude/longitude",
-    // and the latitudes/longitudes of the observations are called
-    // "Latitude(pixel center)"
-    lat_fieldname = "Latitude(pixel center)";
-    lon_fieldname = "Longitude(pixel center)";
-  } else {
-    lat_fieldname = "Latitude";
-    lon_fieldname = "Longitude";
   }
 
   OUTPUT_exportSpectraFlag=0;
@@ -1245,16 +1217,10 @@ static void OutputRegisterFieldsToExport(const ENGINE_CONTEXT *pEngineContext, c
        register_field( (struct output_field) { .basic_fieldname = "Orbit number", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#8d", .get_data = (func_void)&get_orbit_number});
        break;
      case PRJCT_RESULTS_LONGIT:  // !!! EXPORT FUNCTION !!!
-       if(have_corner_coordinates) { // we have pixel corners
-         register_field( (struct output_field) { .basic_fieldname = "Longitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)get_corner_longitudes, .data_cols = 4, .column_number_format="(%d)" });
-       }
-       register_field( (struct output_field) { .basic_fieldname = lon_fieldname, .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_longitude }); // pixel centre
+       register_field( (struct output_field) { .basic_fieldname = "Longitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)get_longitude});
        break;
      case PRJCT_RESULTS_LATIT:  // !!! EXPORT FUNCTION !!!
-       if(have_corner_coordinates) { // we have pixel corners
-         register_field( (struct output_field) { .basic_fieldname = "Latitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)get_corner_latitudes, .data_cols = 4, .column_number_format="(%d)" });
-       }
-       register_field( (struct output_field) { .basic_fieldname = lat_fieldname, .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_latitude });
+       register_field( (struct output_field) { .basic_fieldname = "Latitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_latitude});
        break;
      case PRJCT_RESULTS_ALTIT:  // !!! EXPORT FUNCTION !!!
        register_field( (struct output_field) { .basic_fieldname = "Altitude", .memory_type = OUTPUT_FLOAT, .resulttype = fieldtype, .format = "%#12.6f", .get_data = (func_void)&get_altitude });
@@ -1710,19 +1676,6 @@ static int register_analysis_output(const PRJCT_RESULTS *pResults, int indexFeno
       register_analysis_output_field(PRJCT_RESULTS_REFNUMBER_AFTER,analysis_infos,&arr_length,indexFeno,index_calib,windowName);
      }
    }
-  // for(int i = 0; i<pResults->fieldsNumber; i++) {
-  //   enum _prjctResults indexField = pResults->fieldsFlag[i];
-  //   struct outputconfig *output =  (struct outputconfig *) lfind(&indexField, analysis_infos, &arr_length, sizeof(analysis_infos[0]), &compare_record);
-  //   if(output) {
-  //      {
-  //       output->field.get_tabfeno = &get_tabfeno_analysis;
-  //       output->field.resulttype = output->type;
-  //       int rc = register_analysis_field(&output->field, indexFeno, index_calib, ITEM_NONE, windowName, "");
-  //       if (rc != ERROR_ID_NO) return rc;
-  //      }
-  //     else
-  //   }
-  // }
 
   return ERROR_ID_NO;
 }
@@ -2329,7 +2282,7 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
    else
      ptr++;
 
-   if ( strcasecmp(ptr,"automatic") != 0) {
+   if (strcasecmp(ptr,"automatic") != 0) {
      // - we have a user-specified filename (not 'automatic'), or
      //
      // the complete filename was already built in 'OutputBuildFileName' because we have

@@ -89,6 +89,8 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ORBIT,                  "Orbit number"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_LONGIT,                 "Longitude"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_LATIT,                  "Latitude"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_LON_CORNERS,            "Pixel corner longitudes"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_LAT_CORNERS,            "Pixel corner latitudes"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ALTIT,                  "Altitude"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_COVAR,                  "Covariances"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_CORR,                   "Correlations"));
@@ -590,6 +592,8 @@ void getValidFieldFlags(int *validFlags, int instrument,int selectorOrigin)
       validFlags[PRJCT_RESULTS_TINT]=0;
       validFlags[PRJCT_RESULTS_CLOUD]=1;
       validFlags[PRJCT_RESULTS_CLOUDTOPP]=1;
+      validFlags[PRJCT_RESULTS_LON_CORNERS]=1;
+      validFlags[PRJCT_RESULTS_LAT_CORNERS]=1;
      }
     break;
  // ----------------------------------------------------------------------------
@@ -600,6 +604,8 @@ void getValidFieldFlags(int *validFlags, int instrument,int selectorOrigin)
       validFlags[PRJCT_RESULTS_SCIA_QUALITY]=1;
       validFlags[PRJCT_RESULTS_SAT_LAT]=1;
       validFlags[PRJCT_RESULTS_SAT_LON]=1;
+      validFlags[PRJCT_RESULTS_LON_CORNERS]=1;
+      validFlags[PRJCT_RESULTS_LAT_CORNERS]=1;
      }
     break;
  // ----------------------------------------------------------------------------
@@ -616,6 +622,8 @@ void getValidFieldFlags(int *validFlags, int instrument,int selectorOrigin)
       validFlags[PRJCT_RESULTS_GOME2_SUNGLINT_RISK]=1;
       validFlags[PRJCT_RESULTS_GOME2_SUNGLINT_HIGHRISK]=1;
       validFlags[PRJCT_RESULTS_GOME2_RAINBOW]=1;
+      validFlags[PRJCT_RESULTS_LON_CORNERS]=1;
+      validFlags[PRJCT_RESULTS_LAT_CORNERS]=1;
       validFlags[PRJCT_RESULTS_SAT_LAT]=1;
       validFlags[PRJCT_RESULTS_SAT_LON]=1;
       validFlags[PRJCT_RESULTS_SAT_SAA]=1;
@@ -675,6 +683,16 @@ void getValidFieldFlags(int *validFlags, int instrument,int selectorOrigin)
       validFlags[PRJCT_RESULTS_INDEX_CROSSTRACK]=1;
      }
     break;
+
+ // ----------------------------------------------------------------------------
+
+   case PRJCT_INSTR_FORMAT_TROPOMI:
+     {
+       validFlags[PRJCT_RESULTS_LON_CORNERS]=1;
+       validFlags[PRJCT_RESULTS_LAT_CORNERS]=1;
+       validFlags[PRJCT_RESULTS_SAT_LAT]=1;
+       validFlags[PRJCT_RESULTS_SAT_LON]=1;
+     }
 
  // ----------------------------------------------------------------------------
    case PRJCT_INSTR_FORMAT_APEX :

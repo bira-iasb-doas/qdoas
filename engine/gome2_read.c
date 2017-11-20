@@ -1541,6 +1541,10 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex) {
       pRecord->satellite.altitude = pGeoloc->sat_alt;
       pRecord->satellite.latitude = pGeoloc->sat_lat;
       pRecord->satellite.longitude = pGeoloc->sat_lon;
+      for (int i=0; i!=4; ++i) {
+        pRecord->satellite.cornerlats[i] = pGeoloc->latCorners[i];
+        pRecord->satellite.cornerlons[i] = pGeoloc->lonCorners[i];
+      }
       pRecord->satellite.saa = pGeoloc->sat_saa;
       pRecord->satellite.sza = pGeoloc->sat_sza;
       pRecord->satellite.vza = pGeoloc->sat_vza;

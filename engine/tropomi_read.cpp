@@ -205,6 +205,16 @@ static void get_geodata(RECORD_INFO *pRecord, const geodata& geo, int record) {
   pRecord->Azimuth= geo.saa[record-1];
   pRecord->zenithViewAngle= geo.vza[record-1];
   pRecord->azimuthViewAngle= geo.vaa[record-1];
+
+  // ugly casting because we store the (num_records * 4) corner arrays as a flat array:
+  const double (*lon_bounds)[4] = reinterpret_cast<const double(*)[4]>(geo.lon_bounds.data());
+  const double (*lat_bounds)[4] = reinterpret_cast<const double(*)[4]>(geo.lat_bounds.data());
+  for (int i=0; i!=4; ++i) {
+    pRecord->satellite.cornerlons[i] = lon_bounds[record-1][i];
+    pRecord->satellite.cornerlats[i] = lat_bounds[record-1][i];
+  }
+  pRecord->satellite.longitude = geo.sat_lon[record-1];
+  pRecord->satellite.latitude = geo.sat_lat[record-1];
 }
 
 int tropomi_read(ENGINE_CONTEXT *pEngineContext,int record) {

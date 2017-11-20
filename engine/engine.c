@@ -1112,15 +1112,15 @@ RC EngineRequestEndBrowseSpectra(ENGINE_CONTEXT *pEngineContext)
        // Release buffers used for automatic reference
 
        if (pRef->refIndexes!=NULL)
-        MEMORY_ReleaseBuffer("EngineRequestEndBrowseSpectra","refIndexes",pRef->refIndexes);
+        MEMORY_ReleaseBuffer(__func__,"refIndexes",pRef->refIndexes);
        pRef->refIndexes=NULL;
 
        if (pRef->zmList!=NULL)
-        MEMORY_ReleaseDVector("EngineRequestEndBrowseSpectra","zmList",pRef->zmList,0);
+        MEMORY_ReleaseDVector(__func__,"zmList",pRef->zmList,0);
        pRef->zmList=NULL;
 
        if (pRef->timeDec!=NULL)
-        MEMORY_ReleaseDVector("EngineRequestEndBrowseSpectra","timeDec",pRef->timeDec,0);
+        MEMORY_ReleaseDVector(__func__,"timeDec",pRef->timeDec,0);
        pRef->timeDec=NULL;
       }
     }
