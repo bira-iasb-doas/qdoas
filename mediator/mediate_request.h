@@ -175,17 +175,6 @@ int mediateRequestNextMatchingBrowseSpectrum(void *engineContext, void *response
 
 int mediateRequestPrevMatchingBrowseSpectrum(void *engineContext, void *responseHandle);
 
-
-// mediateRequestEndBrowseSpectra
-//
-// notifies the engine that any resources DIRECTLY associated with the current spectra file
-// may be released.
-//
-// On success, 0 is returned, -1 otherwise and an error message should be posted with
-//    mediateResponseErrorMessage(functionName, messageString, errorLevel, responseHandle);
-
-int mediateRequestEndBrowseSpectra(void *engineContext, void *responseHandle);
-
 //----------------------------------------------------------
 
 //----------------------------------------------------------
@@ -224,17 +213,6 @@ int mediateRequestBeginExportSpectra(void *engineContext, const char *spectraFil
 //    mediateResponseErrorMessage(functionName, messageString, errorLevel, responseHandle);
 
 int mediateRequestNextMatchingExportSpectrum(void *engineContext, void *responseHandle);
-
-
-// mediateRequestEndExportSpectra
-//
-// notifies the engine that any resources DIRECTLY associated with the current spectra file
-// may be released.
-//
-// On success, 0 is returned, -1 otherwise and an error message should be posted with
-//    mediateResponseErrorMessage(functionName, messageString, errorLevel, responseHandle);
-
-int mediateRequestEndExportSpectra(void *engineContext, void *responseHandle);
 
 //----------------------------------------------------------
 
@@ -310,19 +288,6 @@ int mediateRequestNextMatchingAnalyseSpectrum(void *engineContext, void *respons
 
 int mediateRequestPrevMatchingAnalyseSpectrum(void *engineContext, void *responseHandle);
 
-
-// mediateRequestEndAnalyseSpectra
-//
-// notifies the engine that any resources DIRECTLY associated with the current spectra file
-// may be released.
-//
-// On success, 0 is returned, -1 otherwise and an error message should be posted with
-//    mediateResponseErrorMessage(functionName, messageString, errorLevel, responseHandle);
-
-int mediateRequestEndAnalyseSpectra(void *engineContext, void *responseHandle);
-
-
-
 //----------------------------------------------------------
 // Calibrate Interface
 //----------------------------------------------------------
@@ -346,7 +311,6 @@ int mediateRequestEndAnalyseSpectra(void *engineContext, void *responseHandle);
 // On success, spectraFileName becomes the 'current spectra file' for the engineContext.
 
 int mediateRequestBeginCalibrateSpectra(void *engineContext, const char *spectraFileName, void *responseHandle);
-
 
 // mediateRequestNextMatchingCalibrateSpectrum
 //
@@ -394,17 +358,6 @@ int mediateRequestNextMatchingCalibrateSpectrum(void *engineContext, void *respo
 //    mediateResponseErrorMessage(functionName, messageString, errorLevel, responseHandle);
 
 int mediateRequestPrevMatchingCalibrateSpectrum(void *engineContext, void *responseHandle);
-
-
-// mediateRequestEndCalibrateSpectra
-//
-// notifies the engine that any resources DIRECTLY associated with the current spectra file
-// may be released.
-//
-// On success, 0 is returned, -1 otherwise and an error message should be posted with
-//    mediateResponseErrorMessage(functionName, messageString, errorLevel, responseHandle);
-
-int mediateRequestEndCalibrateSpectra(void *engineContext, void *responseHandle);
 
 
 // mediateRequestStop

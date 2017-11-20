@@ -2226,19 +2226,6 @@ int mediateRequestNextMatchingBrowseSpectrum(void *engineContext,
    return rec;
  }
 
-int mediateRequestEndBrowseSpectra(void *engineContext,
-				   void *responseHandle)
- {
-   RC rc;
-
-   if ((rc=EngineRequestEndBrowseSpectra((ENGINE_CONTEXT *)engineContext))!=0)
-    ERROR_DisplayMessage(responseHandle);
-
-   // Close open files and release allocated buffers to reset the engine context
-
-   return 0;
- }
-
 int mediateRequestBeginExportSpectra(void *engineContext,
 				     const char *spectraFileName,
 				     void *responseHandle)
@@ -2267,19 +2254,6 @@ int mediateRequestBeginExportSpectra(void *engineContext,
 // if a matching spectrum is not found. -1 is returned for all other errors and an error message
 // should be posted with
 //    mediateResponseErrorMessage(functionName, messageString, errorLevel, responseHandle);
-
-int mediateRequestEndExportSpectra(void *engineContext,
-				   void *responseHandle)
- {
-   RC rc;
-
-   if ((rc=EngineRequestEndBrowseSpectra((ENGINE_CONTEXT *)engineContext))!=0)
-    ERROR_DisplayMessage(responseHandle);
-
-   // Close open files and release allocated buffers to reset the engine context
-
-   return 0;
- }
 
 int mediateRequestBeginAnalyseSpectra(void *engineContext,
                                       const char *configFileName,
@@ -2347,24 +2321,6 @@ int mediateRequestPrevMatchingAnalyseSpectrum(void *engineContext,
    return 0;
  }
 
-int mediateRequestEndAnalyseSpectra(void *engineContext,
-				    void *responseHandle)
- {
-   // Declarations
-
-   RC rc;
-
-   // Close open files and release allocated buffers to reset the engine context
-
-   if ((rc=EngineRequestEndBrowseSpectra((ENGINE_CONTEXT *)engineContext))!=0)
-    ERROR_DisplayMessage(responseHandle);
-
-   // Return
-
-   return 0;
- }
-
-
 int mediateRequestBeginCalibrateSpectra(void *engineContext,
 					const char *spectraFileName,
 					void *responseHandle)
@@ -2403,21 +2359,6 @@ int mediateRequestNextMatchingCalibrateSpectrum(void *engineContext,
 int mediateRequestPrevMatchingCalibrateSpectrum(void *engineContext,
 						void *responseHandle)
  {
-   return 0;
- }
-
-int mediateRequestEndCalibrateSpectra(void *engineContext,
-				      void *responseHandle)
- {
-   RC rc;
-
-   // Close open files and release allocated buffers to reset the engine context
-
-   if ((rc=EngineRequestEndBrowseSpectra((ENGINE_CONTEXT *)engineContext))!=0)
-    ERROR_DisplayMessage(responseHandle);
-
-   // Return
-
    return 0;
  }
 
