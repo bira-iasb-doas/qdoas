@@ -92,7 +92,7 @@ RESOURCES = ../resources/convolution.qrc
 #----------------------------------------------
 
 target.path = $${INSTALL_PREFIX}/bin
-bira {
+compute {
   target.path = $${INSTALL_PREFIX}/bin_$${QDOAS_VERSION}
 }
 hpc {

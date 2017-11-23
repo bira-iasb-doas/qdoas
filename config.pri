@@ -13,7 +13,7 @@ QMAKE_CFLAGS += -g -std=gnu99 -Wall -Wextra -pedantic \
 QMAKE_LFLAGS += -g
 QMAKE_LFLAGS_RELEASE=
 
-QDOAS_VERSION=3.4
+QDOAS_VERSION=3.4testforthomas2
 
 win64 {
   QDOAS_VERSION = "$${QDOAS_VERSION}_x86_64"
@@ -30,17 +30,6 @@ LIBS += -lgsl -lgslcblas
 #----------------------------------------------
 # Platform dependency ...
 #----------------------------------------------
-
-bira {
-  LIBS -= -lgslcblas
-  LIBS += -latlas
-  INSTALL_PREFIX = /bira-iasb/projects/DOAS/Programmes/QDOAS
-  QMAKE_CFLAGS_RELEASE -= -g
-  QMAKE_CXXFLAGS_RELEASE -= -g
-  INCLUDEPATH += $$INSTALL_PREFIX/include
-  QMAKE_LIBDIR += $$INSTALL_PREFIX/lib_$${QDOAS_VERSION} $$INSTALL_PREFIX/lib_common
-  QMAKE_RPATHDIR += $$INSTALL_PREFIX/lib_$${QDOAS_VERSION} $$INSTALL_PREFIX/lib_common
-}
 
 # portable executable for linux using Linux Standard Base (LSB)
 # requires static Qt and Qwt libraries compiled using LSB, as well as
@@ -159,6 +148,46 @@ openblas {
   LIBS += -lopenblas
 }
 
+# Notes for installation on bira computes
+#
+# QDOAS needs a somewhat recent GCC compilere.  On the SLES systems,
+# we need to load a module for that:
+#
+# compilation on SLES computes:
+# -----------------------------
+# 
+# module load gcc-4.9.2
+# qmake all.pro CONFIG+=compute
+# make
+#
+# compilation on CentOS computes:
+# -------------------------------
+# module load 17/base 17/linalg
+# qmake-qt4 all.pro CONFIG+=compute
+#
+# (We need qmake-qt4 because our version of Qwt is compiled against Qt4.)
+#
+# installation:
+# -------------
+#
+# make install <- !!! attention
+#
+# This will install in /bira-iasb/projects/DOAS/Programmes/QDOAS/bin_$$VERSION
+compute {
+  # Atlas is faster than gslcblas, so use it when it is available
+  LIBS -= -lgslcblas
+  LIBS += -latlas
+  INSTALL_PREFIX = /bira-iasb/projects/DOAS/Programmes/QDOAS
+  INCLUDEPATH += $$INSTALL_PREFIX/include
+  QMAKE_LIBDIR += $$INSTALL_PREFIX/lib_2016 $$INSTALL_PREFIX/lib_common
+  QMAKE_RPATHDIR += /bira-iasb/softs/gcc492/lib $$INSTALL_PREFIX/lib_2016 $$INSTALL_PREFIX/lib_common
+
+  # When compiling from the CentOS computes, uncomment these:
+  #
+  #QMAKE_LIBDIR += /bira-iasb/softs/17/linalg/lib64 /bira-iasb/softs/17/base/lib64
+  #QMAKE_RPATHDIR += /bira-iasb/softs/17/linalg/lib64 /bira-iasb/softs/17/base/lib64
+}
+
 # Notes for installation on hpc:
 #
 # Modules:
@@ -174,12 +203,19 @@ openblas {
 # using module 17/doas might coexist with versions using a newer
 # module version such as 18/doas)
 #
-# Compilation procedure:
-# ----------------------
+# compilation:
+# ------------
 #
 # module purge
 # module load 17/doas 17/intel-17u1 17/base 17/hdf-netcdf 17/linalg
 # qmake all.pro CONFIG+=hpc
+# make
+# 
+# installation:
+# -------------
+# make install <= !!! attention
+# 
+# This will install qdoas in /space/hpc-aps/bira/doas/bin_$$VERSION,
 hpc {
   LIBS -= -lgslcblas
   LIBS += -latlas -lgfortran

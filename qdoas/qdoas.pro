@@ -185,7 +185,7 @@ linux_package {
   doc.path = $${INSTALL_PREFIX}/doc
 }
 
-bira {
+compute {
   target.path = $${INSTALL_PREFIX}/bin_$${QDOAS_VERSION}
   doc.path = $${INSTALL_PREFIX}/doc_$${QDOAS_VERSION}
 }
