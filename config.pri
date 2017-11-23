@@ -13,7 +13,7 @@ QMAKE_CFLAGS += -g -std=gnu99 -Wall -Wextra -pedantic \
 QMAKE_LFLAGS += -g
 QMAKE_LFLAGS_RELEASE=
 
-QDOAS_VERSION=3.4testforthomas2
+QDOAS_VERSION=3.4
 
 win64 {
   QDOAS_VERSION = "$${QDOAS_VERSION}_x86_64"
@@ -150,11 +150,20 @@ openblas {
 
 # Notes for installation on bira computes
 #
-# QDOAS needs a somewhat recent GCC compilere.  On the SLES systems,
-# we need to load a module for that:
+# Currently we have old SLES systems and new CentOS systems.  We can
+# compile and run QDOAS on both, BUT
+#
+# * if we compile on CentOS, the binary will not work on SLES (because
+#   the CentOS system uses a newer libc)
+#
+# * if we compile on SLES, the binary will also work on CentOS, if the
+#   user loads module 17/linalg (<- needed for libatlas.so on CentOS).
 #
 # compilation on SLES computes:
 # -----------------------------
+#
+# QDOAS needs a somewhat recent GCC compiler.  On the SLES systems, we
+# need to load a module for that:
 # 
 # module load gcc-4.9.2
 # qmake all.pro CONFIG+=compute
@@ -164,15 +173,17 @@ openblas {
 # -------------------------------
 # module load 17/base 17/linalg
 # qmake-qt4 all.pro CONFIG+=compute
+# make
 #
-# (We need qmake-qt4 because our version of Qwt is compiled against Qt4.)
+# (We need qmake-qt4.  Qt4 and Qt5 are both available on CentOS, but
+# our version of Qwt is compiled against Qt4.)
 #
 # installation:
 # -------------
 #
 # make install <- !!! attention
 #
-# This will install in /bira-iasb/projects/DOAS/Programmes/QDOAS/bin_$$VERSION
+# This will install in /bira-iasb/projects/DOAS/Programmes/QDOAS/bin_$$QDOAS_VERSION
 compute {
   # Atlas is faster than gslcblas, so use it when it is available
   LIBS -= -lgslcblas
@@ -215,7 +226,7 @@ compute {
 # -------------
 # make install <= !!! attention
 # 
-# This will install qdoas in /space/hpc-aps/bira/doas/bin_$$VERSION,
+# This will install qdoas in /space/hpc-aps/bira/doas/bin_$$QDOAS_VERSION,
 hpc {
   LIBS -= -lgslcblas
   LIBS += -latlas -lgfortran
