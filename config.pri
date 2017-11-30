@@ -237,6 +237,8 @@ hpc {
 }
 
 unix {
+  CONFIG += qwt
+
   isEmpty(INSTALL_PREFIX) {
     INSTALL_PREFIX = $$(HOME)
   }
