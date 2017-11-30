@@ -11,6 +11,8 @@ extern "C" {
   // load reference spectra, set NDET[] and use_row[] arrays.
   int tropomi_init(const char *ref_filename, ENGINE_CONTEXT *pEngineContext);
 
+  int tropomi_prepare_automatic_reference(ENGINE_CONTEXT *pEngineContext, void *responseHandle);
+
   int tropomi_read(ENGINE_CONTEXT *pEngineContext,int recordNo);
 
   int tropomi_set(ENGINE_CONTEXT *pEngineContext);

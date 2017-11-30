@@ -710,7 +710,8 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
        // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_TROPOMI:
        rc=tropomi_set(pEngineContext);
-       // todo: OMI_load_analysis
+       if (!rc)
+         rc = tropomi_prepare_automatic_reference(pEngineContext, responseHandle);
        break;
        // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_OMPS :
