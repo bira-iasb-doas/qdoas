@@ -705,7 +705,7 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
      case PRJCT_INSTR_FORMAT_OMI :
        rc=OMI_Set(pEngineContext);
        if(!rc)
-         rc = OMI_load_analysis(pEngineContext, responseHandle);
+         rc = OMI_prepare_automatic_reference(pEngineContext, responseHandle);
        break;
        // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_TROPOMI:

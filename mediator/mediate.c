@@ -1626,7 +1626,6 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
      ANALYSE_swathSize = 36;
      for (int i =0; i< ANALYSE_swathSize; ++i)
        pInstrumental->use_row[i] = true;
-
      break;
    case PRJCT_INSTR_FORMAT_APEX:
      rc = apex_init(analysisWindows[0].refOneFile,pEngineContext);

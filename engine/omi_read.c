@@ -648,7 +648,7 @@ static void free_row_references(struct omi_ref_list *(*row_references)[NFeno][OM
  * spectra matching the search criteria for the automatic reference
  * spectrum for one or more analysis windows in a list.
  */
-static RC find_matching_spectra(ENGINE_CONTEXT *pEngineContext, struct omi_orbit_file *orbit_file, struct omi_ref_list *(*row_references)[NFeno][OMI_TOTAL_ROWS], struct omi_ref_spectrum **first)
+static RC find_matching_spectra(const ENGINE_CONTEXT *pEngineContext, struct omi_orbit_file *orbit_file, struct omi_ref_list *(*row_references)[NFeno][OMI_TOTAL_ROWS], struct omi_ref_spectrum **first)
 {
   RC rc = 0;
 
@@ -725,15 +725,11 @@ static void average_spectrum( double *average, double *errors, const struct omi_
 
     // interpolate reference on wavelength_grid
     int rc = SPLINE_Deriv2(reference->wavelengths,reference->spectrum,derivs,nWavel,__func__);
-    rc |= SPLINE_Vector(reference->wavelengths,reference->spectrum,derivs,nWavel,wavelength_grid,tempspectrum,nWavel,SPLINE_CUBIC);
-    if (rc) {
-      break;
-    }
+    if (rc) break;
+    SPLINE_Vector(reference->wavelengths,reference->spectrum,derivs,nWavel,wavelength_grid,tempspectrum,nWavel,SPLINE_CUBIC);
 
     // interpolate instrumental errors on wavelength_grid
-    rc = SPLINE_Vector(reference->wavelengths,reference->errors,NULL,nWavel,wavelength_grid,temperrors,nWavel,SPLINE_LINEAR);
-    if(rc)
-      break;
+    SPLINE_Vector(reference->wavelengths,reference->errors,NULL,nWavel,wavelength_grid,temperrors,nWavel,SPLINE_LINEAR);
 
     for(int i=0; i<nWavel; i++) {
       average[i] += tempspectrum[i];
@@ -743,7 +739,7 @@ static void average_spectrum( double *average, double *errors, const struct omi_
 
   for(int i=0; i<nWavel; i++) {
     average[i] /= n_spectra;
-    errors[i] = sqrt(errors[i])/n_spectra; // * sqrt_n_spectra; // random error on the average of n_spectra gaussian variables
+    errors[i] = sqrt(errors[i])/n_spectra; // std deviation of the average of n_spectra independent gaussian variables
   }
 }
 
@@ -1275,15 +1271,11 @@ RC OMI_GetReference(int spectralType, const char *refFile, INDEX indexColumn, do
   return rc;
 }
 
-RC OMI_load_analysis(ENGINE_CONTEXT *pEngineContext, void *responseHandle) {
-  RC rc = ERROR_ID_NO;
-
+RC OMI_prepare_automatic_reference(ENGINE_CONTEXT *pEngineContext, void *responseHandle) {
   // if we need a new automatic reference, generate it
   if(pEngineContext->analysisRef.refAuto && !valid_reference_file(current_orbit_file.omiFileName)) {
-    rc = setup_automatic_reference(pEngineContext, responseHandle);
-    if(rc) {
-      goto end_omi_load_analysis;
-    }
+    int rc = setup_automatic_reference(pEngineContext, responseHandle);
+    if(rc) return rc;
 
     for(int i=0; i<ANALYSE_swathSize; i++) {
       if (pEngineContext->project.instrumental.use_row[i]) {
@@ -1291,13 +1283,11 @@ RC OMI_load_analysis(ENGINE_CONTEXT *pEngineContext, void *responseHandle) {
         // and automatic reference spectrum and apply this shift to
         // absorption crosssections
         rc = ANALYSE_AlignReference(pEngineContext,2,responseHandle,i);
+        if (rc) return rc;
       }
     }
-
   }
-
- end_omi_load_analysis:
-  return rc;
+  return ERROR_ID_NO;
 }
 
 // -----------------------------------------------------------------------------
