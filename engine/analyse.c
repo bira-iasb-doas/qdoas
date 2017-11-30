@@ -2131,12 +2131,7 @@ RC ANALYSE_Function(double *spectrum_orig, double *reference, const double *Sigm
                }
                break;
              case LINEAR_OFFSET_REF: {
-               // offset normalized w.r.t. the reference. We want to
-               // use "ref1" if available, the irradiance (from "ref1" or embedded in L1
-               // file) for satellites, or the automatic reference spectrum
-
-               // if "SrefEtalon" is available, it contains
-               // user-chosen ref1, ref2, or the satellite irradiance. Otherwise, use current reference
+               // offset normalized w.r.t. the reference.
                const double * const offset_ref = reference;
                for( int k=1,l=iterator_start(&my_iterator, global_doas_spectrum); l != ITERATOR_FINISHED; k++,l=iterator_next(&my_iterator)) {
                  fitprops->A[indexSvdA][k]=pTabCross->vector[l]= (fabs(offset_ref[l])> 1.e-6)
