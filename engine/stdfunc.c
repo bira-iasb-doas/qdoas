@@ -113,7 +113,7 @@ char *STD_StrTrim(char *str)
  	// Browse characters from the end of the string
 
  	for (i=strlen(str)-1;i>=0;i--)
- 	 if ((str[i]=='\n') || (str[i]=='\n') || (str[i]=='\r') || (str[i]=='\t') || (str[i]==' '))
+ 	 if ((str[i]=='\n') || (str[i]=='\r') || (str[i]=='\t') || (str[i]==' '))
  	  str[i]='\0';
  	 else
  	  break;
