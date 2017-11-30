@@ -1685,7 +1685,7 @@ RC ANALYSE_fit_shift_stretch(int indexFeno, int indexFenoColumn, const double *s
 
   RC rc=ANALYSE_SvdInit(Feno, &Feno->fit_properties, Feno->NDET,Feno->Lambda);
   // TODO: when we call curfitmethod here, absorber constraints between analysis windows will not work. is this ok?
-  if (!rc) rc=ANALYSE_CurFitMethod(0,                           // not for OMI for the moment // TODO: finally change this... what is the impact?
+  if (!rc) rc=ANALYSE_CurFitMethod(indexFenoColumn,
                                    spec1,                       // etalon reference spectrum
                                    NULL,                        // error on raw spectrum
                                    spec2,                       // reference spectrum
