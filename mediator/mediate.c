@@ -1816,6 +1816,9 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
      }  // for (indexFeno=0;(indexFeno<numberOfWindows+1) && !rc;indexFeno++)
    } // for (indexFenoColumn=0;(indexFenoColumn<ANALYSE_swathSize) && !rc;indexFenoColumn++)
 
+   if (rc)
+     goto handle_errors;
+
    int max_ndet = 0;
    for (int i=0; i<ANALYSE_swathSize; ++i) {
      if (NDET[i] > max_ndet)
@@ -1826,9 +1829,6 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
      lambdaMin=pEngineContext->buffers.lambda[0];
      lambdaMax=pEngineContext->buffers.lambda[max_ndet-1];
    }
-
-   if (rc)
-     goto handle_errors;
 
    // load slit function from project properties -> slit page?
    // calibration procedure with FWHM fit -> Kurucz (and xs) are convolved with the fitted slit function
