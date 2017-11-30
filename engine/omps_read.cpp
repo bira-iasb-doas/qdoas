@@ -5,13 +5,12 @@
 #include <stdexcept>
 
 #include <cmath>
+#include <cstring>
 
 #include <H5Cpp.h>
 
-#include <QDir>
-#include <QFileInfo>
-
 #include "omps_read.h"
+#include "dir_iter.h"
 
 extern "C" {
 #include "analyse.h"
@@ -64,7 +63,7 @@ namespace {
   template<typename T>
   H5::DataType getDataType(void);
 
-  set<QString> referenceFileNames; // set of files for which the current automatic reference spectrum is valid; this is also the set of files from which the spectrum was generated
+  set<string> referenceFileNames; // set of files for which the current automatic reference spectrum is valid; this is also the set of files from which the spectrum was generated
 
   template<>
   inline H5::DataType getDataType<float>() {
@@ -181,10 +180,10 @@ namespace {
   // geolocation matches the automatic reference criteria for one of
   // the analysis windows, add the spectrum to the list of refSpectra,
   // and store its offset in the list for that analysis window.
-  void find_matching_spectra(const QString& fileName, vector<Reference>& refSpectra,
+  void find_matching_spectra(const string& fileName, vector<Reference>& refSpectra,
                              vector<vector<vector<size_t> > >& offsets) {
 
-    H5File orbitFile = H5File(fileName.toLocal8Bit().constData(), H5F_ACC_RDONLY);
+    H5File orbitFile = H5File(fileName.c_str(), H5F_ACC_RDONLY);
 
     hsize_t nXTrack, nMeasurements;
 
@@ -283,7 +282,7 @@ namespace {
     return result;
   }
 
-  RC make_automatic_reference(ENGINE_CONTEXT *pEngineContext) {
+  RC make_automatic_reference(const ENGINE_CONTEXT *pEngineContext) {
     RC rc = ERROR_ID_NO;
 
     // vector of all used reference spectra:
@@ -297,14 +296,14 @@ namespace {
       offsets[i].resize(currentOrbit.nXTrack);
     }
 
-    QDir curFileDir = QDir(QFileInfo(pEngineContext->fileInfo.fileName).absolutePath(), "*.h5");
-    QStringList allFiles = curFileDir.entryList();
-    for (QStringList::const_iterator i = allFiles.constBegin();
-         i != allFiles.constEnd(); ++i) {
+    // Browse all files in the same directory as the current input file:
+    const char *pathsep = std::strrchr(pEngineContext->fileInfo.fileName, '/');
+    string directory = pathsep ? string(pEngineContext->fileInfo.fileName, pathsep) : ".";
+    for (auto& filename : dir_iter(directory)) {
       try {
-        find_matching_spectra(curFileDir.filePath(*i), refSpectra, offsets);
+        find_matching_spectra(directory + "/" + filename, refSpectra, offsets);
       } catch (H5::Exception &e) {
-        cerr << "invalid file " << i->toLatin1().constData() << ", " << e.getDetailMsg() << endl;
+        cerr << "invalid file '" << directory << "/" << filename << "', " << e.getDetailMsg() << endl;
       }
     }
 
