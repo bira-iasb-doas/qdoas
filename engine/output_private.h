@@ -691,7 +691,11 @@ static inline void get_chisquare_calib(struct output_field *this_field, double *
 }
 
 static inline void get_flux(struct output_field *this_field, double *flux, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn, int index_calib __attribute__ ((unused))) {
-  *flux = output_flux(pEngineContext, OUTPUT_fluxes[this_field->index_flux], indexFenoColumn);
+  if (pEngineContext->project.instrumental.use_row[indexFenoColumn] ) {
+    *flux = output_flux(pEngineContext, OUTPUT_fluxes[this_field->index_flux], indexFenoColumn);
+  } else {
+    *flux = QDOAS_FILL_DOUBLE;
+  }
 }
 
 static inline void get_cic(struct output_field *this_field, double *cic, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn, int index_calib __attribute__ ((unused))) {
