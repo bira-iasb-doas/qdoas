@@ -459,17 +459,17 @@ static vector<NetCDFFile> get_reference_orbits(const std::string& input_file, en
 }
 
 struct earth_ref {
-  const vector<double>& wavelength;
-  const vector<double>& spectrum;
-  const vector<double>& error;
+  const vector<float>& wavelength;
+  const vector<float>& spectrum;
+  const vector<float>& error;
   // Because fill values could, in principle, change between different
   // orbit files, we store the fill values together with the spectra.
-  const double fill_wavelength;
-  const double fill_spectrum;
-  const double fill_error;
-  earth_ref(const vector<double>& w,
-            const vector<double>& s,
-            const vector<double>& e, double fw, double fs, double fe) :
+  const float fill_wavelength;
+  const float fill_spectrum;
+  const float fill_error;
+  earth_ref(const vector<float>& w,
+            const vector<float>& s,
+            const vector<float>& e, float fw, float fs, float fe) :
     wavelength(w), spectrum(s), error(e),
     fill_wavelength(fw), fill_spectrum(fs), fill_error(fe) {};
 };
@@ -512,42 +512,42 @@ static bool use_as_reference(double lon, double lat, double sza, const FENO *pTa
 // analysis window.  We use std::set to store the cache, because
 // references to elements of a std::set stay valid as the set grows.
 static vector<std::array<vector<earth_ref>, MAX_GROUNDPIXEL>> find_matching_spectra(const vector<NetCDFFile>& orbit_files,
-                                                                             set<vector<double>>& cache) {
+                                                                             set<vector<float>>& cache) {
   assert(size_groundpixel <= MAX_GROUNDPIXEL);
   vector<std::array<vector<earth_ref>, MAX_GROUNDPIXEL>> result(NFeno);
   for (const auto & orbit : orbit_files) {
 
     // 1. read "nominal wavelength" for each row:
-    std::array<const vector<double>*, MAX_GROUNDPIXEL> nominal_wavelengths { nullptr };
+    std::array<const vector<float>*, MAX_GROUNDPIXEL> nominal_wavelengths { nullptr };
     NetCDFGroup instrGroup(orbit.getGroup(current_band + "_RADIANCE/STANDARD_MODE/INSTRUMENT"));
     NetCDFGroup obsGroup(orbit.getGroup(current_band + "_RADIANCE/STANDARD_MODE/OBSERVATIONS"));
 
     const size_t orbit_scanline = obsGroup.dimLen("scanline");
 
     for(size_t i=0; i<size_groundpixel; ++i) {
-      vector<double> wl(size_spectral);
+      vector<float> wl(size_spectral);
       const size_t start_wl[] = {0, i, 0};
       const size_t count_wl[] = {1, 1, size_spectral};
       instrGroup.getVar("nominal_wavelength", start_wl, count_wl, wl.data());
-      const vector<double>& wavelengths = *cache.insert(wl).first;
+      const auto& wavelengths = *cache.insert(wl).first;
       nominal_wavelengths[i] = &wavelengths;
     }
-    const double orbit_fill_wavelengths = instrGroup.getFillValue<double>("nominal_wavelength");
-    const double orbit_fill_spectra = obsGroup.getFillValue<double>("radiance");
-    const double orbit_fill_errors = obsGroup.getFillValue<double>("radiance_noise");
+    const auto orbit_fill_wavelengths = instrGroup.getFillValue<float>("nominal_wavelength");
+    const auto orbit_fill_spectra = obsGroup.getFillValue<float>("radiance");
+    const auto orbit_fill_errors = obsGroup.getFillValue<float>("radiance_noise");
 
     // 2. read geolocation data required to evaluate which spectra should be used for the reference.
     const size_t num_obs = orbit_scanline*size_groundpixel;
-    vector<double> lons(num_obs), lats(num_obs), szas(num_obs);
+    vector<float> lons(num_obs), lats(num_obs), szas(num_obs);
     const size_t start_geo[] = {0, 0, 0};
     const size_t count_geo[] = {1, orbit_scanline, size_groundpixel };
     NetCDFGroup geo_group(orbit.getGroup(current_band + "_RADIANCE/STANDARD_MODE/GEODATA"));
     geo_group.getVar("latitude", start_geo, count_geo, lats.data());
     geo_group.getVar("longitude", start_geo, count_geo, lons.data());
     geo_group.getVar("solar_zenith_angle", start_geo, count_geo, szas.data());
-    auto latitudes = reinterpret_cast<double (*)[size_groundpixel]>(lats.data());
-    auto longitudes = reinterpret_cast<double (*)[size_groundpixel]>(lons.data());
-    auto szangles = reinterpret_cast<double (*)[size_groundpixel]>(szas.data());
+    auto latitudes = reinterpret_cast<float (*)[size_groundpixel]>(lats.data());
+    auto longitudes = reinterpret_cast<float (*)[size_groundpixel]>(lons.data());
+    auto szangles = reinterpret_cast<float (*)[size_groundpixel]>(szas.data());
 
     // 3. read radiance & error for matching spectra
     for (size_t scan=0; scan != orbit_scanline; ++scan) {
@@ -579,7 +579,7 @@ static vector<std::array<vector<earth_ref>, MAX_GROUNDPIXEL>> find_matching_spec
              && use_as_reference(lon,lat,sza,pTabFeno)) {
             if (i_spec == cache.end()) {
               // spectrum was not yet read, so do that now:
-              vector<double> spec(size_spectral), err(size_spectral);
+              vector<float> spec(size_spectral), err(size_spectral);
               const size_t start[] = {0, scan, row, 0};
               const size_t count[] = {1, 1, 1, size_spectral };
               obsGroup.getVar("radiance", start, count, spec.data() );
@@ -615,9 +615,9 @@ static void sum_refs(vector<double>& sum, vector<double>& variance, const vector
 
     // copy non-fillvalued data to the temporary buffers
     for (size_t i=0; i!=ref.wavelength.size(); ++i) {
-      double li=ref.wavelength[i];
-      double si=ref.spectrum[i];
-      double ei=ref.error[i];
+      const auto li=ref.wavelength[i];
+      const auto si=ref.spectrum[i];
+      const auto ei=ref.error[i];
       if (li != ref.fill_wavelength && si != ref.fill_spectrum && ei != ref.fill_error) {
         templambda.push_back(li);
         tempspec.push_back(si);
@@ -647,7 +647,7 @@ int tropomi_prepare_automatic_reference(ENGINE_CONTEXT *pEngineContext, void *re
     return ERROR_ID_NO;
 
   try {
-    set<vector<double>> cache;
+    set<vector<float>> cache;
     auto earth_spectra = find_matching_spectra(get_reference_orbits(pEngineContext->fileInfo.fileName,
                                                                     pEngineContext->project.instrumental.tropomi.spectralBand), cache);
     vector<double> wavelength_grid, sum, variance;
