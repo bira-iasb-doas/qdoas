@@ -183,6 +183,20 @@ private:
     return nc_get_vara_float(groupid, varid, start, count, out); };
   inline int ncGetVar(int varid, const size_t start[], const size_t count[], double *out) const {
     return nc_get_vara_double(groupid, varid, start, count, out); };
+  inline int ncGetVar(int varid, const size_t start[], const size_t count[], int *out) const {
+    return nc_get_vara_int(groupid, varid, start, count, out); };
+  inline int ncGetVar(int varid, const size_t start[], const size_t count[], uint *out) const {
+    return nc_get_vara_uint(groupid, varid, start, count, out); };
+  inline int ncGetVar(int varid, const size_t start[], const size_t count[], long *out) const {
+    return nc_get_vara_long(groupid, varid, start, count, out); };
+  inline int ncGetVar(int varid, const size_t start[], const size_t count[], short *out) const {
+    return nc_get_vara_short(groupid, varid, start, count, out); };
+  inline int ncGetVar(int varid, const size_t start[], const size_t count[], unsigned short *out) const {
+    return nc_get_vara_ushort(groupid, varid, start, count, out); };
+  inline int ncGetVar(int varid, const size_t start[], const size_t count[], signed char *out) const {
+    return nc_get_vara_schar(groupid, varid, start, count, out); };
+  inline int ncGetVar(int varid, const size_t start[], const size_t count[], unsigned char *out) const {
+    return nc_get_vara_uchar(groupid, varid, start, count, out); };
 
   inline int ncPutVar(int varid, const size_t start[], const size_t count[], float const *in) {
     return nc_put_vara_float(groupid, varid, start, count, in); };
