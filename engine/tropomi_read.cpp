@@ -510,6 +510,36 @@ static bool use_as_reference(double lon, double lat, double sza, const FENO *pTa
     && ((sza_min <= sza && sza_max >= sza) || !use_sza);
 }
 
+// Get indices of the narrowest the interval in 'row_wavelengths'
+// containing the wavelength range of the analysis window defined in
+// pTabFeno.
+std::pair<size_t,size_t> get_window_limits(const FENO *pTabFeno, const vector<float>& row_wavelengths, size_t row) {
+  // Get outer limits of the analysis window:
+  const double lambda_min = pTabFeno->fit_properties.LFenetre[0][0];
+  const double lambda_max = pTabFeno->fit_properties.LFenetre[pTabFeno->fit_properties.Z-1][1];
+  // Get indices of start and end of the interval (lambda_min, lambda_max) in nominal_wavelengths
+  auto i_before = std::find_if(row_wavelengths.begin(), row_wavelengths.end(),
+                            [lambda_min] (float x) { return (x > lambda_min); });
+  auto i_after = std::find_if(i_before, row_wavelengths.end(),
+                            [lambda_max] (float x) { return (x > lambda_max); });
+  if (i_before == row_wavelengths.begin() || i_after == row_wavelengths.end()) {
+    std::stringstream ss;
+    ss << "Analysis window boundaries for window " << pTabFeno->windowName
+       << " outside of nominal_wavelength range of row " << row << ": ("
+       << lambda_min << ", " << lambda_max << ") <-> ("
+       << row_wavelengths.at(0) << ", " << row_wavelengths.back() << ")" ;
+    throw std::out_of_range(ss.str());
+  }
+  // Subtract 1 from "before" to get the index of the last wavelength
+  // just before our analysis window
+  --i_before;
+  // Add 1 to "after" to get the index just after the last wavelength,
+  // so we can use a half-open interval [i_before,i_after)
+  ++i_after;
+  return std::pair<size_t, size_t>(std::distance(row_wavelengths.begin(), i_before),
+                                   std::distance(row_wavelengths.begin(), i_after));
+}
+
 // for each of the 450 possible detector rows, and for each analysis
 // window, gather a list of spectra matching the search criteria.
 //
@@ -552,24 +582,45 @@ static vector<std::array<vector<earth_ref>, MAX_GROUNDPIXEL>> find_matching_spec
     const auto orbit_fill_spectra = obsGroup.getFillValue<float>("radiance");
     const auto orbit_fill_errors = obsGroup.getFillValue<float>("radiance_noise");
 
-    // 2. read geolocation data required to evaluate which spectra should be used for the reference.
+    // 2. read geolocation data and flags required to evaluate which
+    // spectra should be used for the reference.
     const size_t num_obs = orbit_scanline*size_groundpixel;
     vector<float> lons(num_obs), lats(num_obs), szas(num_obs);
-    const size_t start_geo[] = {0, 0, 0};
-    const size_t count_geo[] = {1, orbit_scanline, size_groundpixel };
+    vector<unsigned char> ground_pixel_quality(num_obs);
+    // start and  count arguments for variables with observation dimensions (i.e. scanline x row):
+    const size_t start_obs[] = {0, 0, 0};
+    const size_t count_obs[] = {1, orbit_scanline, size_groundpixel };
     NetCDFGroup geo_group(orbit.getGroup(current_band + "_RADIANCE/STANDARD_MODE/GEODATA"));
-    geo_group.getVar("latitude", start_geo, count_geo, lats.data());
-    geo_group.getVar("longitude", start_geo, count_geo, lons.data());
-    geo_group.getVar("solar_zenith_angle", start_geo, count_geo, szas.data());
+    geo_group.getVar("latitude", start_obs, count_obs, lats.data());
+    geo_group.getVar("longitude", start_obs, count_obs, lons.data());
+    geo_group.getVar("solar_zenith_angle", start_obs, count_obs, szas.data());
+    obsGroup.getVar("ground_pixel_quality", start_obs, count_obs, ground_pixel_quality.data());
+
     auto latitudes = reinterpret_cast<float (*)[size_groundpixel]>(lats.data());
     auto longitudes = reinterpret_cast<float (*)[size_groundpixel]>(lons.data());
     auto szangles = reinterpret_cast<float (*)[size_groundpixel]>(szas.data());
+    auto groundpixelqualityflags = reinterpret_cast<unsigned char (*)[size_groundpixel]>(ground_pixel_quality.data());
+
+    // Get indices of nominal_wavelengths corresponding to analysis window limits:
+    vector<std::array<std::pair<size_t,size_t>, MAX_GROUNDPIXEL>> window_limits(NFeno);
+    for (size_t row=0; row != size_groundpixel; ++row) {
+      for (int win=0; win!=NFeno; ++win) {
+        const FENO *pTabFeno = &TabFeno[row][win];
+        if (pTabFeno->hidden) continue; // skip Kurucz calibration windows
+        window_limits.at(win).at(row) = get_window_limits(pTabFeno, *nominal_wavelengths.at(row), row);
+      }
+    }
 
     // 3. read radiance & error for matching spectra
+    vector<unsigned char> spec_quality(size_spectral); // Temporary buffer for spectral_channel_quality flags
     for (size_t scan=0; scan != orbit_scanline; ++scan) {
       for (size_t row=0; row != size_groundpixel; ++row) {
+        // start and count indices to read along spectral dimension
+        // for one observation:
+        const size_t start[] = {0, scan, row, 0};
+        const size_t count[] = {1, 1, 1, size_spectral };
+
         // TODO: check use_row[row]?
-        // TODO: check L1B flagging?
         auto lat=latitudes[scan][row];
         auto lon=longitudes[scan][row];
         if (lon <= 0.0)
@@ -581,32 +632,52 @@ static vector<std::array<vector<earth_ref>, MAX_GROUNDPIXEL>> find_matching_spec
         // used as a reference for mutliple analysis windows.
         //
         // To keep track of this, i_spec is initialized to
-        // cache.end().  Once this spectrum is read and stored in, the
-        // cache, i_spec will point tot that element of the cache
-        // instead.
+        // cache.end().  Once the spectrum and errors for this
+        // scanline and row have been read and stored in the cache,
+        // i_spec will point tot that element of the cache instead.
         auto i_spec = cache.end();
         auto i_err = cache.end();
 
+        // We want to read spectral_channel_quality flags just once,
+        // for each spectrum that satisfies all other criteria
+        // (reading these flags for all spectra is *much* too slow).
+        // We use a bool to keep track of that:
+        bool read_quality_flags = true;
+
         for (int win=0; win!=NFeno; ++win) {
           const FENO *pTabFeno = &TabFeno[row][win];
-          if(!pTabFeno->hidden
-             && pTabFeno->useKurucz!=ANLYS_KURUCZ_SPEC
+          if (pTabFeno->hidden) continue;
+
+          if(pTabFeno->useKurucz!=ANLYS_KURUCZ_SPEC
              && pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC
+             && !groundpixelqualityflags[scan][row] // Skip spectra which are flagged in groundpixelqualityflags
              && use_as_reference(lon,lat,sza,pTabFeno)) {
-            if (i_spec == cache.end()) {
-              // spectrum was not yet read, so do that now:
-              vector<float> spec(size_spectral), err(size_spectral);
-              const size_t start[] = {0, scan, row, 0};
-              const size_t count[] = {1, 1, 1, size_spectral };
-              obsGroup.getVar("radiance", start, count, spec.data() );
-              obsGroup.getVar("radiance_noise", start, count, err.data() );
-              i_spec = cache.insert(std::move(spec)).first;
-              i_err = cache.insert(std::move(err)).first;
+
+            if (read_quality_flags) {
+              obsGroup.getVar("spectral_channel_quality", start, count, spec_quality.data() );
+              read_quality_flags = false;
             }
-            // At this point, i_spec and i_err must point to valid elements of our cache.
-            assert(i_spec != cache.end() && i_err != cache.end());
-            result[win][row].push_back(earth_ref( *(nominal_wavelengths[row]), *i_spec, *i_err,
-                                                  orbit_fill_wavelengths, orbit_fill_spectra, orbit_fill_errors));
+
+            // For spectra matching all criteria, check if wavelengths inside our analysis window are flagged:
+            auto window_start = window_limits.at(win).at(row).first;
+            auto window_end = window_limits.at(win).at(row).second;
+            // Check if all spectral channel flags inside the wavelength interval for this analysis window are zero:
+            if (std::all_of(spec_quality.begin() + window_start, spec_quality.begin() + window_end,
+                            [] (unsigned char flag) { return flag == 0; })) {
+
+              if (i_spec == cache.end()) {
+                // spectrum was not yet read, so do that now:
+                vector<float> spec(size_spectral), err(size_spectral);
+                obsGroup.getVar("radiance", start, count, spec.data() );
+                obsGroup.getVar("radiance_noise", start, count, err.data() );
+                i_spec = cache.insert(std::move(spec)).first;
+                i_err = cache.insert(std::move(err)).first;
+              }
+              // At this point, i_spec and i_err must point to valid elements of our cache.
+              assert(i_spec != cache.end() && i_err != cache.end());
+              result[win][row].push_back(earth_ref( *(nominal_wavelengths[row]), *i_spec, *i_err,
+                                                    orbit_fill_wavelengths, orbit_fill_spectra, orbit_fill_errors));
+            }
           }
         }
       }
@@ -682,8 +753,9 @@ int tropomi_prepare_automatic_reference(ENGINE_CONTEXT *pEngineContext, void *re
      // processing is in the list of orbits for which the current
      // earthshine ref is validK, we don't have to do anything.
      std::find(reference_orbit_files.begin(), reference_orbit_files.end(),
-               basename(pEngineContext->fileInfo.fileName)) != reference_orbit_files.end()))
+               basename(pEngineContext->fileInfo.fileName)) != reference_orbit_files.end())) {
     return ERROR_ID_NO;
+  }
 
   // We are here -> generate new reference
   try {
