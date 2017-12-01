@@ -1536,10 +1536,9 @@ static int register_calibration(int kurucz_index, int index_row, int index_feno)
 static int OutputRegisterParam(const ENGINE_CONTEXT *pEngineContext)
 {
   int indexFenoColumn = 0;
-  // if using OMI: increase indexFenoColumn until we find a used track, otherwise: use track 0
+  // For imagers: increase indexFenoColumn until we find a used track, otherwise: use track 0
   for(indexFenoColumn=0; indexFenoColumn<ANALYSE_swathSize; indexFenoColumn++) {
-    if ( pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI ||
-         pEngineContext->project.instrumental.use_row[indexFenoColumn] )
+    if (pEngineContext->project.instrumental.use_row[indexFenoColumn] )
       break;
   }
 
@@ -1819,8 +1818,7 @@ RC OUTPUT_RegisterData(const ENGINE_CONTEXT *pEngineContext)
 
           if (pResults->calibFlag) {
             for (indexFenoColumn=0;indexFenoColumn<ANALYSE_swathSize;indexFenoColumn++) {
-              if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) ||
-                  pEngineContext->project.instrumental.use_row[indexFenoColumn]) {
+              if (pEngineContext->project.instrumental.use_row[indexFenoColumn]) {
 
                 int indexFenoK=ITEM_NONE;
                 for (int indexFeno=0;indexFeno<NFeno && indexFenoK==ITEM_NONE; ++indexFeno) {
