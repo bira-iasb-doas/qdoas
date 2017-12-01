@@ -1180,6 +1180,15 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
 #undef EXPAND
       return postErrorMessage("No Tropomi spectral band configured.");
 
+    str = atts.value("reference_orbit_dir");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < sizeof(m_instrumental->tropomi.reference_orbit_dir))
+	strcpy(m_instrumental->tropomi.reference_orbit_dir, str.toLocal8Bit().data());
+      else
+	return postErrorMessage("Tropomi reference orbit directory name too long");
+    }
+
     str = atts.value("calib");
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);

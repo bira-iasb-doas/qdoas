@@ -22,6 +22,10 @@ enum tropomiSpectralBand {
 struct instrumental_tropomi {
   char calibrationFile[FILENAME_BUFFER_LENGTH];
   char instrFunctionFile[FILENAME_BUFFER_LENGTH];
+
+   // directory where we want to look for reference spectra.  If
+   // empty, QDOAS will look for orbits of the same day.
+  char reference_orbit_dir[FILENAME_BUFFER_LENGTH];
   enum tropomiSpectralBand spectralBand;
 };
 

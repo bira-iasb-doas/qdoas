@@ -964,13 +964,13 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
 #undef EXPAND
       }
   fprintf(fp, "      <tropomi band=\"%s\"", tropomiSpectralBand);
+  fprintf(fp, " reference_orbit_dir=\"%s\"", pathMgr->simplifyPath(QString(d->tropomi.reference_orbit_dir)).toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->tropomi.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
 
   tmpStr = pathMgr->simplifyPath(QString(d->tropomi.instrFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
-
 
   // gome2
   fprintf(fp, "      <gome2 type=");

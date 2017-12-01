@@ -439,27 +439,36 @@ static string basename(const string& filename) {
 }
 
 // Find all radiance files for the current band from the same day.
-static vector<NetCDFFile> get_reference_orbits(const std::string& input_file, enum tropomiSpectralBand band) {
-  reference_orbit_files.clear();
+static vector<NetCDFFile> get_reference_orbits(const std::string& input_file, enum tropomiSpectralBand band, const std::string& reference_dir = "") {
   vector<NetCDFFile> l1files;
+  reference_orbit_files.clear();
 
- // Find other radiance files for this day.  This code is specific
-  // for the way Tropomi files are stored at BIRA:
-  //
-  // L1B products are stored in a directory for each day, in a
-  // structure <daily_dir>/<orbit_dir>/L1B/L1B-RADIANCE/S5P...*.nc
-  // Therefore, we move three levels up from the current file
-  // ("/../../.."), and recursively search for files up to 3 levels
-  // deep (assuming the directories we traverse in this way contain no
-  // other files matching the pattern "S5P..L1B_RA_BD<n>")
-  auto pathsep = input_file.find_last_of('/');
-  const string daily_dir = ((pathsep != string::npos) ? input_file.substr(0, pathsep) : string(".")) + "/../../..";
+  dir_iter reference_orbit_iter;
+  if (!reference_dir.empty()) {
+    reference_orbit_iter = dir_iter(reference_dir);
+  } else {
+    // Find other radiance files for this day.  This code is specific
+    // for the way Tropomi files are stored at BIRA:
 
+    // L1B products are stored in a directory for each day, in a
+    // structure <daily_dir>/<orbit_dir>/L1B/L1B-RADIANCE/S5P...*.nc
+    // Therefore, we move three levels up from the current file
+    // ("/../../.."), and recursively search for files up to 3 levels
+    // deep.  We assume the directories we traverse in this way will
+    // contain no unwanted files matching our search pattern.
+    auto pathsep = input_file.find_last_of('/');
+    const string daily_dir = ((pathsep != string::npos) ? input_file.substr(0, pathsep) : string(".")) + "/../../..";
+    // recursively search daily_dir, three levels deep
+    reference_orbit_iter = dir_iter(daily_dir, 3);
+  }
+
+  // We want filenames matching "S5P*L1B_RA_BD<n>*.nc")
   string product("L1B_RA_BD");
   product.push_back('1' + band); // "BD1", "BD2", ... depending on spectralBand
-  // recursively search daily_dir for files matching "is_l1b", three
-  // levels deep, and store results in vector l1files, if dimensions agree
-  for (auto f : dir_iter(daily_dir, 3)) {
+  // look at files in reference_orbit_iter, store results in l1files,
+  // if the file is a L1B radiance file for this band, with correct
+  // dimensions
+  for (auto f : reference_orbit_iter) {
     if (!basename(f).compare(0,3,"S5P")
         && f.find(product) != string::npos
         && !f.compare(f.length() -3, 3, ".nc")) {
@@ -649,14 +658,39 @@ static void sum_refs(vector<double>& sum, vector<double>& variance, const vector
 }
 
 int tropomi_prepare_automatic_reference(ENGINE_CONTEXT *pEngineContext, void *responseHandle) {
-  // If current orbit is in the list of orbits for which the current earthshine ref is valid, we don't have to do anything.
-  if(std::find(reference_orbit_files.begin(), reference_orbit_files.end(), basename(pEngineContext->fileInfo.fileName)) != reference_orbit_files.end())
+
+  // A radiance reference for Tropomi is created, either
+  //
+  // - from the L1B radiance files found in the "reference orbit
+  //   directory" configured in the "instrumental" tab of projet
+  //   properties, or
+  //
+  // - if no directory is configured, from L1B radiance files found
+  //   for the same day as the file we are currently processing (based
+  //   on an assumed standard directory layout).
+
+  // First, check if we have already created the automatic reference
+  // (possible when processing multiple input files in one go).
+
+  if (// If we are using a manual reference directory, the reference
+      // is the same for all input files, and we can just check if a
+      // reference has been created (-> check if reference_orbit_files
+      // is not empty)
+    (strlen(pEngineContext->project.instrumental.tropomi.reference_orbit_dir)
+     && !reference_orbit_files.empty()) ||
+    (// If we are using daily references, check if the orbit we are
+     // processing is in the list of orbits for which the current
+     // earthshine ref is validK, we don't have to do anything.
+     std::find(reference_orbit_files.begin(), reference_orbit_files.end(),
+               basename(pEngineContext->fileInfo.fileName)) != reference_orbit_files.end()))
     return ERROR_ID_NO;
 
+  // We are here -> generate new reference
   try {
     set<vector<float>> cache;
     auto earth_spectra = find_matching_spectra(get_reference_orbits(pEngineContext->fileInfo.fileName,
-                                                                    pEngineContext->project.instrumental.tropomi.spectralBand), cache);
+                                                                    pEngineContext->project.instrumental.tropomi.spectralBand,
+                                                                    pEngineContext->project.instrumental.tropomi.reference_orbit_dir), cache);
     vector<double> wavelength_grid, sum, variance;
     for (size_t row = 0; row!=size_groundpixel; ++row) {
       if (!pEngineContext->project.instrumental.use_row[row]) continue;

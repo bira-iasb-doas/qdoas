@@ -469,13 +469,18 @@ public:
 
 class CWInstrTropomiEdit : public CWCalibInstrEdit
 {
+  Q_OBJECT
  public:
   CWInstrTropomiEdit(const struct instrumental_tropomi *d, QWidget *parent = 0);
 
   void apply(struct instrumental_tropomi *d) const;
 
+  public slots:
+    void slot_browse_reference_directory();
+
  private:
   QComboBox *m_spectralBandCombo;
+  QLineEdit *m_reference_directory_edit;
 };
 
 //--------------------------------------------------------------------------

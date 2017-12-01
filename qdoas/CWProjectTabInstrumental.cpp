@@ -26,6 +26,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QFontMetrics>
 #include <QFileDialog>
 
+#include <stdexcept>
+
 #include "CWProjectTabInstrumental.h"
 #include "CValidator.h"
 #include "CWSiteListCombo.h"
@@ -1981,6 +1983,16 @@ void CWInstrOmiEdit::apply(struct instrumental_omi *d) const
 
 //--------------------------------------------------------
 
+
+void CWInstrTropomiEdit::slot_browse_reference_directory()
+{
+  QString directory  = QFileDialog::getExistingDirectory(this, "Select directory for radiance reference spectra", QDir::currentPath());
+
+  if (!directory.isEmpty()) {
+    m_reference_directory_edit->setText(directory);
+  }
+}
+
 CWInstrTropomiEdit::CWInstrTropomiEdit(const struct instrumental_tropomi *pInstrTropomi, QWidget *parent) : CWCalibInstrEdit(parent) {
 
   QVBoxLayout *mainLayout = new QVBoxLayout(this);
@@ -2000,15 +2012,16 @@ CWInstrTropomiEdit::CWInstrTropomiEdit(const struct instrumental_tropomi *pInstr
   if (index != -1)
     m_spectralBandCombo->setCurrentIndex(index);
 
-
   gridLayout->addWidget(m_spectralBandCombo, row, 1);
+
   ++row;
+  helperConstructFileWidget(&m_reference_directory_edit,gridLayout,row, pInstrTropomi->reference_orbit_dir,
+                            sizeof(pInstrTropomi->reference_orbit_dir), "Reference orbit directory" , SLOT(slot_browse_reference_directory()));
+  ++row;
+
   helperConstructCalInsFileWidgets(gridLayout, row,
 				   pInstrTropomi->calibrationFile, sizeof(pInstrTropomi->calibrationFile),
 				   pInstrTropomi->instrFunctionFile, sizeof(pInstrTropomi->instrFunctionFile));
-
-
-
 }
 
 void CWInstrTropomiEdit::apply(struct instrumental_tropomi *pInstrTropomi) const
@@ -2017,6 +2030,11 @@ void CWInstrTropomiEdit::apply(struct instrumental_tropomi *pInstrTropomi) const
   strcpy(pInstrTropomi->instrFunctionFile, m_fileTwoEdit->text().toLocal8Bit().data());
   // spectral band
   pInstrTropomi->spectralBand = static_cast<tropomiSpectralBand>(m_spectralBandCombo->itemData(m_spectralBandCombo->currentIndex()).toInt());
+  // radiance reference directory
+  if(m_reference_directory_edit->text().size() < sizeof(pInstrTropomi->reference_orbit_dir))
+     strcpy(pInstrTropomi->reference_orbit_dir,m_reference_directory_edit->text().toLocal8Bit().data());
+  else
+    throw(std::runtime_error("Filename too long: " + m_reference_directory_edit->text().toStdString()));
 }
 
 //--------------------------------------------------------

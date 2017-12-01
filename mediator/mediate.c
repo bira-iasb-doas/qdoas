@@ -1185,6 +1185,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       }
 
       pEngineInstrumental->tropomi.spectralBand = pMediateInstrumental->tropomi.spectralBand;
+      strcpy(pEngineInstrumental->tropomi.reference_orbit_dir, pMediateInstrumental->tropomi.reference_orbit_dir);
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->tropomi.calibrationFile);     // calibration file
       strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->tropomi.instrFunctionFile);     // instrumental function file
