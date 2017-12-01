@@ -75,6 +75,8 @@ private:
           }
         }
         break;
+        // symbolic links and regular files are returned as entries:
+      case DT_LNK:
       case DT_REG:
         have_file = true;
         current = path + "/" + entry->d_name;
