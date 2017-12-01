@@ -64,12 +64,41 @@ const char* band_names[] = {
 
 static const size_t MAX_GROUNDPIXEL = 450;
 
-struct refspec {
-  refspec() : lambda(), irradiance(), sigma() {};
-  vector<double> lambda;
-  vector<double> irradiance;
-  vector<double> sigma;
-};
+namespace {
+  // The following struct types are for internal use only.
+
+  // irradiance reference
+  struct refspec {
+    refspec() : lambda(), irradiance(), sigma() {};
+    vector<double> lambda;
+    vector<double> irradiance;
+    vector<double> sigma;
+  };
+
+  // earthshine spectrum to be used in earthshine reference:
+  struct earth_ref {
+    const vector<float>& wavelength;
+    const vector<float>& spectrum;
+    const vector<float>& error;
+    // Because fill values could, in principle, change between different
+    // orbit files, we store the fill values together with the spectra.
+    const float fill_wavelength;
+    const float fill_spectrum;
+    const float fill_error;
+    earth_ref(const vector<float>& w,
+              const vector<float>& s,
+              const vector<float>& e, float fw, float fs, float fe) :
+      wavelength(w), spectrum(s), error(e),
+      fill_wavelength(fw), fill_spectrum(fs), fill_error(fe) {};
+  };
+
+  struct geodata {
+    vector<double> sza, vza, saa,  vaa,
+      lon, lat,
+      lon_bounds, lat_bounds,
+      sat_lon, sat_lat;
+  };
+}
 
 // irradiance spectra for each row:
 static vector<refspec> reference_spectra;
@@ -83,12 +112,6 @@ static string current_band;
 static vector< vector<double> > nominal_wavelengths; // L1B radiance wavelength calibration
 static double fill_nominal_wavelengths; // fill value for L1B radiance wavelength calibration
 
-struct geodata {
-  vector<double> sza, vza, saa,  vaa,
-    lon, lat,
-    lon_bounds, lat_bounds,
-    sat_lon, sat_lat;
-};
 static geodata current_geodata;
 
 static size_t size_spectral; // number of wavelengths per spectrum
@@ -457,22 +480,6 @@ static vector<NetCDFFile> get_reference_orbits(const std::string& input_file, en
   }
   return l1files;
 }
-
-struct earth_ref {
-  const vector<float>& wavelength;
-  const vector<float>& spectrum;
-  const vector<float>& error;
-  // Because fill values could, in principle, change between different
-  // orbit files, we store the fill values together with the spectra.
-  const float fill_wavelength;
-  const float fill_spectrum;
-  const float fill_error;
-  earth_ref(const vector<float>& w,
-            const vector<float>& s,
-            const vector<float>& e, float fw, float fs, float fe) :
-    wavelength(w), spectrum(s), error(e),
-    fill_wavelength(fw), fill_spectrum(fs), fill_error(fe) {};
-};
 
 // check if an earthshine observation matches selection criteria to
 // include it in the earthshine reference.
