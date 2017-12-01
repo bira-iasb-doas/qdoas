@@ -508,7 +508,7 @@ static bool valid_reference_file(char *spectrum_file)
   return false;
 }
 
-// Create the  of all orbit files in the same directory as the given file.
+// Create the list of all orbit files in the same directory as the given file.
 static RC read_reference_orbit_files(const char *spectrum_file) {
   RC rc = ERROR_ID_NO;
 
