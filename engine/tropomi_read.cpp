@@ -518,10 +518,8 @@ std::pair<size_t,size_t> get_window_limits(const FENO *pTabFeno, const vector<fl
   const double lambda_min = pTabFeno->fit_properties.LFenetre[0][0];
   const double lambda_max = pTabFeno->fit_properties.LFenetre[pTabFeno->fit_properties.Z-1][1];
   // Get indices of start and end of the interval (lambda_min, lambda_max) in nominal_wavelengths
-  auto i_before = std::find_if(row_wavelengths.begin(), row_wavelengths.end(),
-                            [lambda_min] (float x) { return (x > lambda_min); });
-  auto i_after = std::find_if(i_before, row_wavelengths.end(),
-                            [lambda_max] (float x) { return (x > lambda_max); });
+  auto i_before = std::lower_bound(row_wavelengths.begin(), row_wavelengths.end(), lambda_min);
+  auto i_after = std::upper_bound(i_before, row_wavelengths.end(), lambda_max);
   if (i_before == row_wavelengths.begin() || i_after == row_wavelengths.end()) {
     std::stringstream ss;
     ss << "Analysis window boundaries for window " << pTabFeno->windowName
@@ -530,12 +528,6 @@ std::pair<size_t,size_t> get_window_limits(const FENO *pTabFeno, const vector<fl
        << row_wavelengths.at(0) << ", " << row_wavelengths.back() << ")" ;
     throw std::out_of_range(ss.str());
   }
-  // Subtract 1 from "before" to get the index of the last wavelength
-  // just before our analysis window
-  --i_before;
-  // Add 1 to "after" to get the index just after the last wavelength,
-  // so we can use a half-open interval [i_before,i_after)
-  ++i_after;
   return std::pair<size_t, size_t>(std::distance(row_wavelengths.begin(), i_before),
                                    std::distance(row_wavelengths.begin(), i_after));
 }
