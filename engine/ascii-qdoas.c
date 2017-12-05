@@ -145,6 +145,8 @@ char *ascFieldsNames[PRJCT_RESULTS_MAX]=
   (char *)"Orbit Number",                                                       // PRJCT_RESULTS_ORBIT,
   (char *)"Longitude",                                                          // PRJCT_RESULTS_LONGIT,
   (char *)"Latitude",                                                           // PRJCT_RESULTS_LATIT,
+  (char *)"",                                                                   // PRJCT_RESULTS_LON_CORNERS
+  (char *)"",                                                                   // PRJCT_RESULTS_LAT_CORNERS
   (char *)"Altitude",                                                           // PRJCT_RESULTS_ALTIT,
   (char *)"",                                                                   // PRJCT_RESULTS_COVAR,
   (char *)"",                                                                   // PRJCT_RESULTS_CORR,

@@ -1613,7 +1613,7 @@ RC EngineSZASetRefIndexes(ENGINE_CONTEXT *pEngineContext,FENO *pTabFeno)
     // No reference spectrum found in SZA range
 
     if (ZmMax<pTabFeno->refSZA-pTabFeno->refSZADelta)
-     rc=ERROR_SetLast("EngineSetRefIndexesMFC",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"all the day",pEngineContext->fileInfo.fileName);
+     rc=ERROR_SetLast("EngineSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"all the day",pEngineContext->fileInfo.fileName);
 
     // Select record with SZA minimum
 
@@ -1648,18 +1648,18 @@ RC EngineSZASetRefIndexes(ENGINE_CONTEXT *pEngineContext,FENO *pTabFeno)
       // No record found for the morning OR the afternoon
 
       if ((pTabFeno->indexRefMorning==ITEM_NONE) && (pTabFeno->indexRefAfternoon==ITEM_NONE))
-       rc=ERROR_SetLast("EngineSetRefIndexesMFC",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"all the day",pEngineContext->fileInfo.fileName);
+       rc=ERROR_SetLast("EngineSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"all the day",pEngineContext->fileInfo.fileName);
       else
        {
         if (pTabFeno->indexRefMorning==ITEM_NONE)
          {
-          // rc=ERROR_SetLast("EngineSetRefIndexesMFC",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the morning",pEngineContext->fileInfo.fileName);
+          // rc=ERROR_SetLast("EngineSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the morning",pEngineContext->fileInfo.fileName);
           // Returning an error at this step makes stange behaviours of the program
           pTabFeno->indexRefMorning=pTabFeno->indexRefAfternoon;
          }
         else if (pTabFeno->indexRefAfternoon==ITEM_NONE)
          {
-          // rc=ERROR_SetLast("EngineSetRefIndexesMFC",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the afternoon",ENGINE_contextRef.fileInfo.fileName);
+          // rc=ERROR_SetLast("EngineSetRefIndexes",ERROR_TYPE_WARNING,ERROR_ID_NO_REF,"the afternoon",ENGINE_contextRef.fileInfo.fileName);
           // Returning an error at this step makes stange behaviours of the program
           pTabFeno->indexRefAfternoon=pTabFeno->indexRefMorning;
          }

@@ -815,6 +815,8 @@ static enum fieldtype get_fieldtype(enum _prjctResults output_field) {
   case PRJCT_RESULTS_ORBIT:
   case PRJCT_RESULTS_LONGIT:
   case PRJCT_RESULTS_LATIT:
+  case PRJCT_RESULTS_LON_CORNERS:
+  case PRJCT_RESULTS_LAT_CORNERS:
   case PRJCT_RESULTS_ALTIT:
   case PRJCT_RESULTS_CLOUD:
   case PRJCT_RESULTS_CLOUDTOPP:

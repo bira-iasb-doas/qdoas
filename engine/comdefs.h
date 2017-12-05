@@ -198,7 +198,8 @@ SHORT_DATE;
 #define ERROR_ID_XS_RING                        135                             // ring cross section does not contain 4 columns
 #define ERROR_ID_XS_FILENAME                    136                             // no file name for cross section
 #define ERROR_ID_REF_DATA                       137                             // For imager: reference for a column does not contain data (fill values)
-#define ERROR_ID_MISSING_INITIAL_CALIB                       138                             // Configuration doesn't provide an initial wavelength calibration (from reference spectrum or calibration file)
+#define ERROR_ID_MISSING_INITIAL_CALIB          138                             // Configuration doesn't provide an initial wavelength calibration (from reference spectrum or calibration file)
+#define ERROR_ID_REF_SOLAR_IDENTICAL            139                             // Reference spectrum and solar spectrum are identical
 
 // Debug
 
