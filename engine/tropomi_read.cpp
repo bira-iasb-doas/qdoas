@@ -100,6 +100,21 @@ namespace {
   };
 }
 
+// ground_pixel_quality flag meanings
+static const unsigned char SOLAR_ECLIPSE = 1,
+  SUN_GLINT_POSSIBLE = 2,
+  DESCENDING = 4,
+  NIGHT = 8,
+  GEO_BOUNDARY_CROSSING = 16,
+  GEOLOCATION_ERROR = 32;
+// spectral_channel_quality flag meanings
+static const unsigned char MISSING = 1,
+  BAD_PIXEL = 2,
+  PROCESSING_ERROR = 4,
+  SATURATED = 16,
+  TRANSIENT = 32,
+  RTS = 64;
+
 // irradiance spectra for each row:
 static vector<refspec> reference_spectra;
 
@@ -267,8 +282,8 @@ static void get_geodata(RECORD_INFO *pRecord, const geodata& geo, int record) {
   pRecord->azimuthViewAngle= geo.vaa[record-1];
 
   // ugly casting because we store the (num_records * 4) corner arrays as a flat array:
-  const double (*lon_bounds)[4] = reinterpret_cast<const double(*)[4]>(geo.lon_bounds.data());
-  const double (*lat_bounds)[4] = reinterpret_cast<const double(*)[4]>(geo.lat_bounds.data());
+  auto lon_bounds = reinterpret_cast<const double(*)[4]>(geo.lon_bounds.data());
+  auto lat_bounds = reinterpret_cast<const double(*)[4]>(geo.lat_bounds.data());
   for (int i=0; i!=4; ++i) {
     pRecord->satellite.cornerlons[i] = lon_bounds[record-1][i];
     pRecord->satellite.cornerlats[i] = lat_bounds[record-1][i];
@@ -592,6 +607,8 @@ static vector<std::array<vector<earth_ref>, MAX_GROUNDPIXEL>> find_matching_spec
     auto longitudes = reinterpret_cast<float (*)[size_groundpixel]>(lons.data());
     auto szangles = reinterpret_cast<float (*)[size_groundpixel]>(szas.data());
     auto groundpixelqualityflags = reinterpret_cast<unsigned char (*)[size_groundpixel]>(ground_pixel_quality.data());
+    const static unsigned char groundpixel_quality_mask = SOLAR_ECLIPSE | DESCENDING | NIGHT
+      | GEO_BOUNDARY_CROSSING | GEOLOCATION_ERROR; // filter everything except SUN_GLINT_POSSIBLE
 
     // Get indices of nominal_wavelengths corresponding to analysis window limits:
     vector<std::array<std::pair<size_t,size_t>, MAX_GROUNDPIXEL>> window_limits(NFeno);
@@ -642,7 +659,7 @@ static vector<std::array<vector<earth_ref>, MAX_GROUNDPIXEL>> find_matching_spec
 
           if(pTabFeno->useKurucz!=ANLYS_KURUCZ_SPEC
              && pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC
-             && !groundpixelqualityflags[scan][row] // Skip spectra which are flagged in groundpixelqualityflags
+             && !(groundpixelqualityflags[scan][row] & groundpixel_quality_mask) // Skip spectra which are flagged in groundpixelqualityflags
              && use_as_reference(lon,lat,sza,pTabFeno)) {
 
             if (read_quality_flags) {
@@ -743,13 +760,14 @@ int tropomi_prepare_automatic_reference(ENGINE_CONTEXT *pEngineContext, void *re
      && !reference_orbit_files.empty()) ||
     (// If we are using daily references, check if the orbit we are
      // processing is in the list of orbits for which the current
-     // earthshine ref is validK, we don't have to do anything.
+     // earthshine ref is valid.
      std::find(reference_orbit_files.begin(), reference_orbit_files.end(),
                basename(pEngineContext->fileInfo.fileName)) != reference_orbit_files.end())) {
+    // In these cases, we don't have to do anything
     return ERROR_ID_NO;
   }
 
-  // We are here -> generate new reference
+  // If we reach this point, we must create a new reference spectrum
   try {
     set<vector<float>> cache;
     auto earth_spectra = find_matching_spectra(get_reference_orbits(pEngineContext->fileInfo.fileName,
