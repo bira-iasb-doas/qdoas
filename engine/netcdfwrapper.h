@@ -10,6 +10,8 @@
 
 #include <netcdf.h>
 
+typedef unsigned int uint;
+
 struct free_nc_string {
   void operator() (char *string) {
     nc_free_string(1, &string);
@@ -22,7 +24,7 @@ template<typename T> T default_fillvalue();
 
 // simple wrapper class around NetCDF C API calls.
 class NetCDFGroup {
-  
+
 public:
   NetCDFGroup(int id=0, const std::string& groupName ="") :  groupid(id), name(groupName) {};
 
@@ -95,7 +97,7 @@ public:
       throw std::runtime_error("Cannot write NetCDF variable '"+name+"/"+varName(varid)+"'");
     } }
   template<typename T>
-  inline void putVar(const std::string& name, const size_t start[], const size_t count[], T *in) { 
+  inline void putVar(const std::string& name, const size_t start[], const size_t count[], T *in) {
     putVar(varID(name), start, count, in); }
   template<typename T>
   inline void putVar(int varid, T *in) {
@@ -103,7 +105,7 @@ public:
       throw std::runtime_error("Cannot write NetCDF variable '"+name+"/"+varName(varid)+"'");
     } }
   template<typename T>
-  inline void putVar(const std::string& name, T *in) { 
+  inline void putVar(const std::string& name, T *in) {
     putVar(varID(name), in); }
 
   template<typename T>
@@ -112,8 +114,8 @@ public:
 
     if (rc != NC_NOERR) {
       std::stringstream errstream;
-      errstream << "Cannot write NetCDF attribute '" << name << "'" 
-                << (varid == NC_GLOBAL 
+      errstream << "Cannot write NetCDF attribute '" << name << "'"
+                << (varid == NC_GLOBAL
                     ? ""
                     : " for variable '"+ varName(varid)) << ": ";
       switch (rc) {
