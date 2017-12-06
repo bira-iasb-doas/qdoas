@@ -31,14 +31,15 @@ LIBS += -lgsl -lgslcblas
 # Platform dependency ...
 #----------------------------------------------
 
-# portable executable for linux using Linux Standard Base (LSB)
-# requires static Qt and Qwt libraries compiled using LSB, as well as
-# static hdf/hdf5/coda... libraries
+# QDOAS linux package: uses own version of Qt, HDF, ... libraries,
+# with a wrapper script that ensures the correct libraries are used
+# when running the package on another system.
 #
-# to build, run 'qmake all.pro CONFIG+=linux_package CONFIG-=unix
+# to build, run
 #
-# lsbcc and lsbc++ must be on the PATH, and you must use the version
-# of qmake installed with the static Qt libraries
+#   /bira-iasb/projects/DOAS/Programmes/QDOAS-linux-package/bin/qmake all.pro CONFIG+=linux_package CONFIG-=unix
+#   make
+#
 linux_package {
   QMAKE_CXX = g++
   QMAKE_CC = gcc
@@ -52,8 +53,8 @@ linux_package {
   # cd /home/thomasd/Code/Qdoas-package/src/Qdoas/linux_package \
   #    && tar --exclude-vcs --exclude=.directory --exclude-backups \
   #    -czf ../qdoas_linux_x64.tar.gz .
-  INSTALL_PREFIX = /home/thomasd/Code/Qdoas-package/src/Qdoas/linux_package
-  PREFIX = /home/thomasd/Code/Qdoas-package
+  INSTALL_PREFIX = /bira-iasb/projects/DOAS/Programmes/QDOAS-linux-package/src/Qdoas/linux_package
+  PREFIX = /bira-iasb/projects/DOAS/Programmes/QDOAS-linux-package
   INCLUDEPATH += $$PREFIX/include
   INCLUDEPATH += $$PREFIX/include/hdf4
   INCLUDEPATH += $$PREFIX/include/qwt
@@ -247,7 +248,6 @@ unix {
   INCLUDEPATH += $$INSTALL_PREFIX/include/hdf4
   INCLUDEPATH += $$INSTALL_PREFIX/include/qwt
   QMAKE_LIBDIR += $$INSTALL_PREFIX/lib
-  QMAKE_RPATHDIR += $$INSTALL_PREFIX/lib
 }
 
 asan { # use 'CONFIG+=asan' to build with adress sanitizer support

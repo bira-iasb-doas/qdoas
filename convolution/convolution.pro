@@ -11,7 +11,7 @@ PRE_TARGETDEPS += ../common/libcommon.a ../engine/libengine.a ../mediator/libmed
 INCLUDEPATH  += ../mediator ../common ../engine
 
 CONFIG += qt thread $$CODE_GENERATION
-QT = core gui xml widgets printsupport
+QT = core gui svg xml widgets printsupport
 
 DEFINES += APP_CONV
 
