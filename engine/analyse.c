@@ -3072,24 +3072,22 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
     pRecord->BestShift=(double)0.;
 
-    if (THRD_id==THREAD_TYPE_ANALYSIS)
-     {
-
+    if (THRD_id==THREAD_TYPE_ANALYSIS) {
       // Browse analysis windows
-
       for (int WrkFeno=0;(WrkFeno<NFeno) && (rc!=THREAD_EVENT_STOP);WrkFeno++) {
        	indexPage=WrkFeno+plotPageAnalysis;
         Feno=&TabFeno[indexFenoColumn][WrkFeno];
 
-        if ( (!Feno->hidden && VECTOR_Equal(Spectre,Feno->Sref,n_wavel, 1.e-7)) ||
+        if (!Feno->hidden &&
+            (VECTOR_Equal(Spectre,Feno->Sref,n_wavel, 1.e-7) ||
              (!pEngineContext->satelliteFlag && Feno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC &&
-             (( Feno->refMaxdoasSelectionMode==ANLYS_MAXDOAS_REF_SZA &&             // Additional security (in principle, if one twilight is missing,
-               ((pRecord->localTimeDec<=12. && Feno->indexRefMorning==ITEM_NONE) || // use ref of the other twilight, if both twilights are missing, exit)
-                (pRecord->localTimeDec>12. && Feno->indexRefAfternoon==ITEM_NONE))) ||
+              (( Feno->refMaxdoasSelectionMode==ANLYS_MAXDOAS_REF_SZA &&             // Additional security (in principle, if one twilight is missing,
+                 ((pRecord->localTimeDec<=12. && Feno->indexRefMorning==ITEM_NONE) || // use ref of the other twilight, if both twilights are missing, exit)
+                  (pRecord->localTimeDec>12. && Feno->indexRefAfternoon==ITEM_NONE))) ||
 
-              (Feno->refMaxdoasSelectionMode==ANLYS_MAXDOAS_REF_SCAN &&
-               pRecord->elevationViewAngle>=pEngineContext->project.spectra.refAngle-pEngineContext->project.spectra.refTol &&
-               pRecord->elevationViewAngle<=pEngineContext->project.spectra.refAngle+pEngineContext->project.spectra.refTol)))) {
+               (Feno->refMaxdoasSelectionMode==ANLYS_MAXDOAS_REF_SCAN &&
+                pRecord->elevationViewAngle>=pEngineContext->project.spectra.refAngle-pEngineContext->project.spectra.refTol &&
+                pRecord->elevationViewAngle<=pEngineContext->project.spectra.refAngle+pEngineContext->project.spectra.refTol))))) {
           Feno->rc = -1;
         } else {
           Feno->rc = ERROR_ID_NO;
