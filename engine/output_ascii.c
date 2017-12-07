@@ -371,20 +371,18 @@ void ascii_write_spectra_data(const bool selected_records[], int num_records)
 static void write_automatic_reference_info(FILE *fp)
 {
   for(int analysiswindow = 0; analysiswindow < NFeno; analysiswindow++ ){
-    for(int row=0; row< OMI_TOTAL_ROWS; row++ )
-      {
-        FENO *pTabFeno = &TabFeno[row][analysiswindow];
-        if (!pTabFeno->hidden
-            && pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC
-            && pTabFeno->ref_description != NULL)
-          {
-            fprintf(fp, "%c %s, row %d: automatic reference:\n%s\n",
-                    COMMENT_CHAR,
-                    pTabFeno->windowName,
-                    row,
-                    pTabFeno->ref_description);
-          }
+    for(int row=0; row< ANALYSE_swathSize; ++row ) {
+      FENO *pTabFeno = &TabFeno[row][analysiswindow];
+      if (!pTabFeno->hidden
+          && pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC
+          && pTabFeno->ref_description != NULL) {
+        fprintf(fp, "%c %s, row %d: automatic reference:\n%s\n",
+                COMMENT_CHAR,
+                pTabFeno->windowName,
+                row,
+                pTabFeno->ref_description);
       }
+    }
   }
 }
 

@@ -774,7 +774,6 @@ int tropomi_prepare_automatic_reference(ENGINE_CONTEXT *pEngineContext, void *re
                                                                     pEngineContext->project.instrumental.tropomi.spectralBand,
                                                                     pEngineContext->project.instrumental.tropomi.reference_orbit_dir), cache);
     vector<double> wavelength_grid, sum, variance;
-    vector<vector<size_t>> failed_rows(NFeno); // per analysis window, rows for which no reference was found
     for (size_t row = 0; row!=size_groundpixel; ++row) {
       if (!pEngineContext->project.instrumental.use_row[row]) continue;
       const int n_wavel=NDET[row];
@@ -786,9 +785,7 @@ int tropomi_prepare_automatic_reference(ENGINE_CONTEXT *pEngineContext, void *re
         FENO *pTabFeno = &TabFeno[row][window];
         if (pTabFeno->hidden || !pTabFeno->refSpectrumSelectionMode == ANLYS_REF_SELECTION_MODE_AUTOMATIC) continue;
         const vector<earth_ref>& refs = earth_spectra[window][row];
-        if (!refs.size()) {
-          failed_rows.at(window).push_back(row);
-        } else {
+        if (refs.size()) {
           for (size_t i=0; i!=wavelength_grid.size(); ++i) {
             wavelength_grid[i] = pTabFeno->LambdaRef[i];
           }
@@ -801,15 +798,28 @@ int tropomi_prepare_automatic_reference(ENGINE_CONTEXT *pEngineContext, void *re
         }
       }
     }
+    // Create reference description string for output, and emit
+    // warning message for those rows/analysis windows for which no
+    // reference could be created:
     for(int window=0; window!= NFeno; ++ window) {
-      // For each analysis window, emit one warning message with the rows for which no reference was found.
-      const auto& rows = failed_rows.at(window);
-      if (!rows.empty()) {
+      vector<size_t> failed_rows; // per analysis window, rows for which no reference was found
+      for(size_t row=0; row!=size_groundpixel; ++row) {
+        const vector<earth_ref>& refs = earth_spectra[window][row];
+        std::stringstream desc;
+        desc << refs.size() << " radiances used";
+        FENO *pTabFeno = &TabFeno[row][window];
+        free(pTabFeno->ref_description);
+        pTabFeno->ref_description = strdup(desc.str().c_str());
+        if (!refs.size())
+          failed_rows.push_back(row);
+      }
+      if (!failed_rows.empty()) {
+        // For each analysis window, emit one warning message with the rows for which no reference was found.
         std::stringstream ss;
         ss << "Analysis window " << TabFeno[0][window].windowName << ": cannot find radiance reference spectra for rows ";
-        for (auto ir=rows.begin(); ir!=rows.end(); ++ir) {
+        for (auto ir=failed_rows.begin(); ir!=failed_rows.end(); ++ir) {
           ss << *ir;
-          if (ir != rows.end() -1)
+          if (ir != failed_rows.end() -1)
             ss << ", ";
         }
         mediateResponseErrorMessage(__func__, ss.str().c_str(), WarningEngineError, responseHandle);

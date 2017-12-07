@@ -3626,6 +3626,9 @@ void ANALYSE_ResetData(void)
 
       // Reference spectra and wavelength scale
 
+      free(pTabFeno->ref_description);
+      pTabFeno->ref_description = NULL;
+
       if (pTabFeno->SrefEtalon!=NULL)
        MEMORY_ReleaseDVector(__func__,"SrefEtalon",pTabFeno->SrefEtalon,0);
       if (pTabFeno->Sref!=NULL)

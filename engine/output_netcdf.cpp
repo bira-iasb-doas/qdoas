@@ -269,8 +269,9 @@ void write_automatic_reference_info(const ENGINE_CONTEXT *pEngineContext, NetCDF
        && pEngineContext->analysisRef.refAuto ) {
     switch(pEngineContext->project.instrumental.readOutFormat) {
     case PRJCT_INSTR_FORMAT_OMI:
+    case PRJCT_INSTR_FORMAT_TROPOMI:
       for(int analysiswindow=0; analysiswindow < NFeno; ++analysiswindow) {
-        for(int row=0; row< OMI_TOTAL_ROWS; row++ ) {
+        for(int row=0; row< ANALYSE_swathSize; row++ ) {
           const FENO *pTabFeno = &TabFeno[row][analysiswindow];
           if (!pTabFeno->hidden
               && pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC
