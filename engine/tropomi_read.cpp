@@ -804,10 +804,12 @@ int tropomi_prepare_automatic_reference(ENGINE_CONTEXT *pEngineContext, void *re
     for(int window=0; window!= NFeno; ++ window) {
       vector<size_t> failed_rows; // per analysis window, rows for which no reference was found
       for(size_t row=0; row!=size_groundpixel; ++row) {
+        FENO *pTabFeno = &TabFeno[row][window];
+        // Don't write error messages when automatic reference is not used:
+        if (pTabFeno->hidden || !pTabFeno->refSpectrumSelectionMode == ANLYS_REF_SELECTION_MODE_AUTOMATIC) continue;
         const vector<earth_ref>& refs = earth_spectra[window][row];
         std::stringstream desc;
         desc << refs.size() << " radiances used";
-        FENO *pTabFeno = &TabFeno[row][window];
         free(pTabFeno->ref_description);
         pTabFeno->ref_description = strdup(desc.str().c_str());
         if (!refs.size())
