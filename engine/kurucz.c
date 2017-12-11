@@ -754,14 +754,20 @@ RC KuruczConvolveSolarSpectrum(MATRIX_OBJECT *pSolar,double *newlambda,int n_wav
       for (i=0;i<nc;i++)
         memcpy(pSlitMatrix->matrix[i],KURUCZ_buffers[indexFenoColumn].slitFunction.matrix[i],sizeof(double)*nl);
 
-      // determine slit center wavelength
+      // determine slit center wavelength, defined as wavelength
+      // corresponding to the maximum value
+      //
+      // TODO: for low-sampled slit functions, lambda of maximum
+      // might not be a good measure of the center => perform an
+      // interpolation here and in KuruczConvolveSolarSpectrum.
       double lambda_center = 0.;
-      double slit_sum = 0.;
+      double slit_max = 0.;
       for (int i=shiftIndex; i<pSlitMatrix->nl; ++i) {
-        lambda_center += pSlitMatrix->matrix[0][i]*pSlitMatrix->matrix[1][i];
-        slit_sum += pSlitMatrix->matrix[1][i];
+        if (pSlitMatrix->matrix[1][i] > slit_max) {
+          slit_max = pSlitMatrix->matrix[1][i];
+          lambda_center = pSlitMatrix->matrix[0][i];
+        }
       }
-      lambda_center /= slit_sum;
 
       // Apply the stretch on the slit wavelength calibration
       for (i=shiftIndex;i<pSlitMatrix->nl;i++) {

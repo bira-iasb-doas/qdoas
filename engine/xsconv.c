@@ -1283,18 +1283,23 @@ RC XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLam
           slit_col1 += 1;
         }
 
-        // calculate center wavelength, using a weighted average:
+        // calculate center wavelength, defined as wavelength
+        // corresponding to the maximum value
         //
         // We always use slit_col1 here, to match what is done during
         // calibration (KuruczConvolveSolarSpectrum in kurucz.c).
         //
+        // TODO: for low-sampled slit functions, lambda of maximum
+        // might not be a good measure of the center => perform an
+        // interpolation here and in KuruczConvolveSolarSpectrum.
         double lambda_center = 0.;
-        double slit_sum = 0.;
+        double slit_max = 0.;
         for (int i=0; i<slitTmp.nl; ++i) {
-          lambda_center += slitVector[0][i]*lambda_orig[i];
-          slit_sum += slitVector[0][i];
+          if (slit_col1[i] > slit_max) {
+            slit_max = slit_col1[i];
+            lambda_center = lambda_orig[i];
+          }
         }
-        lambda_center /= slit_sum;
 
         for (i=0;i<slitTmp.nl;i++) {
           // stretch wavelength grid around the center wavelength,
