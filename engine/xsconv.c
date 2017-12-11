@@ -1110,7 +1110,7 @@ RC XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLam
           oldF,newF,oldIF,newIF,stepF,h,fwhm,
           slitCenter,
           stepXshr,slitStretch1,slitStretch2,
-          lambda,lambdaMin,lambdaMax,oldXshr,newXshr;
+          lambdaMin,lambdaMax,oldXshr,newXshr;
   INDEX   xshrPixMin,
           xsnewIndex,indexOld,indexNew,
           klo,khi,i;
@@ -1233,9 +1233,8 @@ RC XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLam
 
   // Browse wavelengths in the final calibration vector
 
-  for (xsnewIndex=max(0,indexLambdaMin);(xsnewIndex<xsnewNDET) && (xsnewIndex<indexLambdaMax) && !rc;xsnewIndex++)
-   {
-    lambda=xsnewLambda[xsnewIndex];
+  for (xsnewIndex=max(0,indexLambdaMin);(xsnewIndex<xsnewNDET) && (xsnewIndex<indexLambdaMax) && !rc;xsnewIndex++) {
+    double lambda=xsnewLambda[xsnewIndex];
     slitStretch1=slitStretch2=(double)1.;
 
     if ((slitType==SLIT_TYPE_FILE) && (slitMatrix[0].nc>2))
@@ -1248,7 +1247,9 @@ RC XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLam
        rc=XSCONV_GetFwhm(slitLambda[0],slitVector[0],slitDeriv2[0],slitNDET[0],SLIT_TYPE_FILE,&fwhm);
      }
 
+    // Interpolate wavelength dependent parameters at value lambda:
     if (wveDptFlag) {
+
       if ((slitType==SLIT_TYPE_SUPERGAUSS) && (slitLambda[2]!=NULL))
         SPLINE_Vector(slitLambda[2],slitVector[2],slitDeriv2[2],slitNDET[2],&lambda,&slitParam[2],1,SPLINE_CUBIC);
       else
@@ -1267,17 +1268,46 @@ RC XSCONV_TypeStandard(MATRIX_OBJECT *pXsnew,INDEX indexLambdaMin,INDEX indexLam
       }
 
       if (slitType==SLIT_TYPE_FILE) {
-       	if (slitMatrix[0].nc==2)
-       	 for (i=0;i<slitTmp.nl;i++)
-          slitLambda[0][i]=(slitMatrix[0].matrix[0][i]<(double)0.)?slitMatrix[0].matrix[0][i]*slitStretch1:slitMatrix[0].matrix[0][i]*slitStretch2;
-        else
-       	 for (i=0;i<slitTmp.nl;i++)
-          slitLambda[0][i]=(slitMatrix[0].matrix[0][i+1]<(double)0.)?slitMatrix[0].matrix[0][i+1]*slitStretch1:slitMatrix[0].matrix[0][i+1]*slitStretch2;
+        // Apply slitStretch1 or slitStretch2 depending on whether we
+        // are in the "left" or "right" wing of the slit function.  We
+        // do this by recalculating the wavelength grid
+
+        const double *lambda_orig = slitMatrix[0].matrix[0];
+        const double *slit_col1 = slitMatrix[0].matrix[1];
+        if (slitMatrix[0].nc>2) {
+          // If we have a matrix of slit functions for different
+          // central wavelengths, the matrix[0:ncols][0] contains the
+          // central wavelenghts -> shift lambda_orig and slit_col1 by
+          // one position:
+          lambda_orig += 1;
+          slit_col1 += 1;
+        }
+
+        // calculate center wavelength, using a weighted average:
+        //
+        // We always use slit_col1 here, to match what is done during
+        // calibration (KuruczConvolveSolarSpectrum in kurucz.c).
+        //
+        double lambda_center = 0.;
+        double slit_sum = 0.;
+        for (int i=0; i<slitTmp.nl; ++i) {
+          lambda_center += slitVector[0][i]*lambda_orig[i];
+          slit_sum += slitVector[0][i];
+        }
+        lambda_center /= slit_sum;
+
+        for (i=0;i<slitTmp.nl;i++) {
+          // stretch wavelength grid around the center wavelength,
+          // using slitStretch1 on the left, and slitStretch2 on the
+          // right:
+          double delta_lambda = lambda_orig[i] - lambda_center;
+          delta_lambda *= (delta_lambda < 0.) ? slitStretch1 : slitStretch2;
+          slitLambda[0][i] = lambda_center + delta_lambda;
+        }
 
         // Recalculate second derivatives and the FWHM
-
         if (!(rc=SPLINE_Deriv2(slitLambda[0],slitVector[0],slitDeriv2[0],slitNDET[0],"XSCONV_TypeStandard ")))
-         rc=XSCONV_GetFwhm(slitLambda[0],slitVector[0],slitDeriv2[0],slitNDET[0],SLIT_TYPE_FILE,&slitParam[0]);
+          rc=XSCONV_GetFwhm(slitLambda[0],slitVector[0],slitDeriv2[0],slitNDET[0],SLIT_TYPE_FILE,&slitParam[0]);
       }
       else if (slitLambda[0]!=NULL)
         SPLINE_Vector(slitLambda[0],slitVector[0],slitDeriv2[0],slitNDET[0],&lambda,&slitParam[0],1,SPLINE_CUBIC);

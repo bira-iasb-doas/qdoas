@@ -747,23 +747,34 @@ RC KuruczConvolveSolarSpectrum(MATRIX_OBJECT *pSolar,double *newlambda,int n_wav
 
     pSlitMatrix=&slitMatrix[0];
 
- 	  if (MATRIX_Allocate(pSlitMatrix,nl,nc,0,0,1,__func__))
- 	   rc=ERROR_ID_ALLOC;
-    else
-     {
+    if (MATRIX_Allocate(pSlitMatrix,nl,nc,0,0,1,__func__))
+      rc=ERROR_ID_ALLOC;
+    else {
       // make a backup of the matrix
-
       for (i=0;i<nc;i++)
         memcpy(pSlitMatrix->matrix[i],KURUCZ_buffers[indexFenoColumn].slitFunction.matrix[i],sizeof(double)*nl);
 
- 	    // Apply the stretch on the slit wavelength calibration
+      // determine slit center wavelength
+      double lambda_center = 0.;
+      double slit_sum = 0.;
+      for (int i=shiftIndex; i<pSlitMatrix->nl; ++i) {
+        lambda_center += pSlitMatrix->matrix[0][i]*pSlitMatrix->matrix[1][i];
+        slit_sum += pSlitMatrix->matrix[1][i];
+      }
+      lambda_center /= slit_sum;
 
- 	    for (i=shiftIndex;i<pSlitMatrix->nl;i++)
-        pSlitMatrix->matrix[0][i]=(pSlitMatrix->matrix[0][i]<(double)0.)?fwhmStretch1*KURUCZ_buffers[indexFenoColumn].slitFunction.matrix[0][i]:fwhmStretch2*KURUCZ_buffers[indexFenoColumn].slitFunction.matrix[0][i];
+      // Apply the stretch on the slit wavelength calibration
+      for (i=shiftIndex;i<pSlitMatrix->nl;i++) {
+        // stretch wavelength grid around the center wavelength,
+        // using fwhmStretch1 on the left, and fwhmStretch2 on the
+        // right:
+        double delta_lambda = pSlitMatrix->matrix[0][i] - lambda_center;
+        delta_lambda *= (delta_lambda < 0.) ? fwhmStretch1 : fwhmStretch2;
+        pSlitMatrix->matrix[0][i]= lambda_center + delta_lambda;
+      }
 
- 	    // Recalculate second derivatives and the FWHM
-
- 	    for (i=1;i<pSlitMatrix->nc;i++)
+      // Recalculate second derivatives and the FWHM
+      for (i=1;i<pSlitMatrix->nc;i++)
         rc=SPLINE_Deriv2(pSlitMatrix->matrix[0]+shiftIndex,pSlitMatrix->matrix[1]+shiftIndex,pSlitMatrix->deriv2[i]+shiftIndex,pSlitMatrix->nl-shiftIndex,__func__);
      }
    }
