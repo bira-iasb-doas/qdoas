@@ -775,7 +775,7 @@ RC KuruczConvolveSolarSpectrum(MATRIX_OBJECT *pSolar,double *newlambda,int n_wav
 
       // Recalculate second derivatives and the FWHM
       for (i=1;i<pSlitMatrix->nc;i++)
-        rc=SPLINE_Deriv2(pSlitMatrix->matrix[0]+shiftIndex,pSlitMatrix->matrix[1]+shiftIndex,pSlitMatrix->deriv2[i]+shiftIndex,pSlitMatrix->nl-shiftIndex,__func__);
+        rc=SPLINE_Deriv2(pSlitMatrix->matrix[0]+shiftIndex,pSlitMatrix->matrix[i]+shiftIndex,pSlitMatrix->deriv2[i]+shiftIndex,pSlitMatrix->nl-shiftIndex,__func__);
      }
    }
   else
