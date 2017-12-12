@@ -40,7 +40,7 @@
 //  =================
 //
 //  FNPixel - get a pixel from a wavelength;
-//  ShiftVector - apply shift and stretch on vector;
+//  ShiftVector - apply shift and stretch on vector; convolve when fitting SFP during Kurucz 
 //  Norm - vector norm computation
 //  OrthogonalizeVector - orthogonalize a column in A matrix to a set of other columns of A;
 //  Orthogonalization - orthogonalization of matrix A processing;
@@ -601,7 +601,7 @@ RC TemperatureCorrection(double *xs,double *A,double *B,double *C,double *newXs,
 }
 
 // -----------------------------------------------
-// ShiftVector : Apply shift and stretch on vector
+// ShiftVector : Apply shift and stretch on vector; convolve reference when fitting SFP in Kurucz
 // -----------------------------------------------
 
 RC ShiftVector(const double *lambda, double *source, const double *deriv, double *target, const int n_wavel,
@@ -790,15 +790,34 @@ RC ShiftVector(const double *lambda, double *source, const double *deriv, double
               for (int i=0;i<nc;i++)
                 memcpy(slitMatrix[0].matrix[i],KURUCZ_buffers[indexFenoColumn].slitFunction.matrix[i],sizeof(double)*nl);
 
-       	      // Apply the stretch on the slit wavelength calibration
+              // determine slit center wavelength, defined as wavelength
+              // corresponding to the maximum value
+              //
+              // TODO: for low-sampled slit functions, lambda of maximum
+              // might not be a good measure of the center => perform an
+              // interpolation here and in KuruczConvolveSolarSpectrum.
+              double lambda_center = 0.;
+              double slit_max = 0.;
+              for (int i=shiftIndex; i<slitMatrix[0].nl; ++i) {
+                if (slitMatrix[0].matrix[1][i] > slit_max) {
+                  slit_max = slitMatrix[0].matrix[1][i];
+                  lambda_center = slitMatrix[0].matrix[0][i];
+                }
+              }
 
-       	      for (int i=shiftIndex;i<slitMatrix[0].nl;i++)
-                slitMatrix[0].matrix[0][i]=(slitMatrix[0].matrix[0][i]<(double)0.)?fwhmStretch1*KURUCZ_buffers[indexFenoColumn].slitFunction.matrix[0][i]:fwhmStretch2*KURUCZ_buffers[indexFenoColumn].slitFunction.matrix[0][i];
+       	      // Apply the stretch on the slit wavelength calibration
+              for (int i=shiftIndex;i<slitMatrix[0].nl;i++) {
+                // stretch wavelength grid around the center wavelength,
+                // using fwhmStretch1 on the left, and fwhmStretch2 on the
+                // right:
+                double delta_lambda = slitMatrix[0].matrix[0][i] - lambda_center;
+                delta_lambda *= (delta_lambda < 0.) ? fwhmStretch1 : fwhmStretch2;
+                slitMatrix[0].matrix[0][i]= lambda_center + delta_lambda;
+              }
 
        	      // Recalculate second derivatives and the FWHM
-
        	      for (int i=1;i<slitMatrix[0].nc;i++)
-                rc=SPLINE_Deriv2(slitMatrix[0].matrix[0]+shiftIndex,slitMatrix[0].matrix[1]+shiftIndex,slitMatrix[0].deriv2[i]+shiftIndex,slitMatrix[0].nl-shiftIndex,__func__);
+                rc=SPLINE_Deriv2(slitMatrix[0].matrix[0]+shiftIndex,slitMatrix[0].matrix[i]+shiftIndex,slitMatrix[0].deriv2[i]+shiftIndex,slitMatrix[0].nl-shiftIndex,__func__);
              }
            }
           else if ((slitType==SLIT_TYPE_VOIGT) || (slitType==SLIT_TYPE_AGAUSS) || (pKuruczOptions->fwhmType==SLIT_TYPE_SUPERGAUSS) || (slitType==SLIT_TYPE_INVPOLY))
@@ -1967,8 +1986,7 @@ RC ANALYSE_Function(double *spectrum_orig, double *reference, const double *Sigm
    // Filter real time only when fitting difference of resolution between spectrum and reference
 
    if ((Feno->analysisType==ANALYSIS_TYPE_FWHM_NLFIT) && (ANALYSE_plFilter->filterFunction!=NULL) &&
-       ((rc=FILTER_Vector(ANALYSE_plFilter,&spectrum_interpolated[LimMin],&spectrum_interpolated[LimMin],LimN,PRJCT_FILTER_OUTPUT_LOW))!=0))
-    {
+       ((rc=FILTER_Vector(ANALYSE_plFilter,&spectrum_interpolated[LimMin],&spectrum_interpolated[LimMin],LimN,PRJCT_FILTER_OUTPUT_LOW))!=0)) {
      rc=ERROR_SetLast("EndFunction",ERROR_TYPE_WARNING,ERROR_ID_ANALYSIS,analyseIndexRecord,"Filter");
      goto EndFunction;
     }
@@ -2611,16 +2629,15 @@ RC ANALYSE_CurFitMethod(INDEX indexFenoColumn,  // for OMI
     // Fwhm adjustment between spectrum and reference
     // ----------------------------------------------
 
-    if (!Feno->hidden && (Feno->useKurucz!=ANLYS_KURUCZ_SPEC))
-     {
+    if (!Feno->hidden && (Feno->useKurucz!=ANLYS_KURUCZ_SPEC)) {
       // Resolution adjustment using fwhm(lambda) found by Kurucz procedure for spectrum and reference
 
       if (pKuruczOptions->fwhmFit && (Feno->useKurucz==ANLYS_KURUCZ_REF_AND_SPEC))
         rc=AnalyseFwhmCorrectionK(Spectre,Sref,SpecTrav,RefTrav,n_wavel,indexFenoColumn);
 
       if (rc)
-       goto EndCurFitMethod;
-     }
+        goto EndCurFitMethod;
+    }
 
     // -----------------------------
     // Filter spectrum and reference
