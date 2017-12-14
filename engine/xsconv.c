@@ -999,9 +999,9 @@ RC XSCONV_TypeStandardFFT(FFT *pFFT,int fwhmType,double slitParam,double slitPar
 
 RC GetNewF(double *pNewF,
            int     slitType,
-           double *slitLambda,
-           double *slitVector,
-           double *slitDeriv2,
+           const double *slitLambda,
+           const double *slitVector,
+           const double *slitDeriv2,
            int     slitNDET,
            double  dist,
            double  slitParam,
