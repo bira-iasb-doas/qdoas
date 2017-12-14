@@ -116,7 +116,7 @@ static const unsigned char MISSING = 1,
   RTS = 64;
 
 // irradiance spectra for each row:
-static vector<refspec> reference_spectra;
+static vector<refspec> irradiance_reference;
 
 // filenames of the orbits for which the current earthshine reference
 // is valid (i.e. orbits of the same day)
@@ -305,10 +305,10 @@ int tropomi_read(ENGINE_CONTEXT *pEngineContext,int record) {
 
   if (THRD_id==THREAD_TYPE_ANALYSIS) {
      // in analysis mode, variables must have been initialized by tropomi_init()
-    assert(reference_spectra.size() == ANALYSE_swathSize);
+    assert(irradiance_reference.size() == ANALYSE_swathSize);
     n_wavel = NDET[indexPixel];
 
-    const refspec& ref = reference_spectra.at(indexPixel);
+    const refspec& ref = irradiance_reference.at(indexPixel);
     for (size_t i=0; i<ref.lambda.size(); ++i) {
       pEngineContext->buffers.lambda_irrad[i] = ref.lambda[i];
       pEngineContext->buffers.irrad[i] = ref.irradiance[i];
@@ -426,16 +426,16 @@ int tropomi_init(const char *ref_filename, ENGINE_CONTEXT *pEngineContext) {
 
   RC rc = ERROR_ID_NO;
   try {
-    reference_spectra = loadReference(ref_filename, 
+    irradiance_reference = loadReference(ref_filename,
                                       band_names[pEngineContext->project.instrumental.tropomi.spectralBand]);
   } catch(std::runtime_error& e) {
     rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, e.what());
   }
 
-  ANALYSE_swathSize = reference_spectra.size();
+  ANALYSE_swathSize = irradiance_reference.size();
 
   for(int i=0; i<ANALYSE_swathSize; ++i) {
-    NDET[i] = reference_spectra[i].lambda.size();
+    NDET[i] = irradiance_reference[i].lambda.size();
     if (NDET[i] != 0) {
       pEngineContext->project.instrumental.use_row[i] = true;
     }
@@ -603,10 +603,10 @@ static vector<std::array<vector<earth_ref>, MAX_GROUNDPIXEL>> find_matching_spec
     geo_group.getVar("solar_zenith_angle", start_obs, count_obs, szas.data());
     obsGroup.getVar("ground_pixel_quality", start_obs, count_obs, ground_pixel_quality.data());
 
-    auto latitudes = reinterpret_cast<float (*)[size_groundpixel]>(lats.data());
-    auto longitudes = reinterpret_cast<float (*)[size_groundpixel]>(lons.data());
-    auto szangles = reinterpret_cast<float (*)[size_groundpixel]>(szas.data());
-    auto groundpixelqualityflags = reinterpret_cast<unsigned char (*)[size_groundpixel]>(ground_pixel_quality.data());
+    auto latitudes = reinterpret_cast<const float (*)[size_groundpixel]>(lats.data());
+    auto longitudes = reinterpret_cast<const float (*)[size_groundpixel]>(lons.data());
+    auto szangles = reinterpret_cast<const float (*)[size_groundpixel]>(szas.data());
+    auto groundpixelqualityflags = reinterpret_cast<const unsigned char (*)[size_groundpixel]>(ground_pixel_quality.data());
     const static unsigned char groundpixel_quality_mask = SOLAR_ECLIPSE | DESCENDING | NIGHT
       | GEO_BOUNDARY_CROSSING | GEOLOCATION_ERROR; // filter everything except SUN_GLINT_POSSIBLE
 
@@ -684,7 +684,7 @@ static vector<std::array<vector<earth_ref>, MAX_GROUNDPIXEL>> find_matching_spec
               }
               // At this point, i_spec and i_err must point to valid elements of our cache.
               assert(i_spec != cache.end() && i_err != cache.end());
-              result[win][row].push_back(earth_ref( *(nominal_wavelengths[row]), *i_spec, *i_err,
+              result[win][row].push_back(earth_ref( *nominal_wavelengths.at(row), *i_spec, *i_err,
                                                     orbit_fill_wavelengths, orbit_fill_spectra, orbit_fill_errors));
             }
           }
@@ -773,27 +773,27 @@ int tropomi_prepare_automatic_reference(ENGINE_CONTEXT *pEngineContext, void *re
     auto earth_spectra = find_matching_spectra(get_reference_orbits(pEngineContext->fileInfo.fileName,
                                                                     pEngineContext->project.instrumental.tropomi.spectralBand,
                                                                     pEngineContext->project.instrumental.tropomi.reference_orbit_dir), cache);
-    vector<double> wavelength_grid, sum, variance;
+    vector<double> sum, variance;
     for (size_t row = 0; row!=size_groundpixel; ++row) {
       if (!pEngineContext->project.instrumental.use_row[row]) continue;
       const int n_wavel=NDET[row];
-      wavelength_grid.resize(n_wavel);
-      sum.resize(wavelength_grid.size());
-      variance.resize(wavelength_grid.size());
+      sum.resize(n_wavel);
+      variance.resize(n_wavel);
 
       for(int window=0; window < NFeno; ++window) {
         FENO *pTabFeno = &TabFeno[row][window];
         if (pTabFeno->hidden || !pTabFeno->refSpectrumSelectionMode == ANLYS_REF_SELECTION_MODE_AUTOMATIC) continue;
         const vector<earth_ref>& refs = earth_spectra[window][row];
         if (refs.size()) {
-          for (size_t i=0; i!=wavelength_grid.size(); ++i) {
-            wavelength_grid[i] = pTabFeno->LambdaRef[i];
-          }
+          // interpolate all refs onto the irradiance reference grid for this row, and sum them:
+          const auto& wavelength_grid = irradiance_reference.at(row).lambda;
+          assert(n_wavel == wavelength_grid.size() &&
+                 std::equal(wavelength_grid.begin(), wavelength_grid.end(), pTabFeno->LambdaRef));
           sum_refs(sum, variance, refs, wavelength_grid);
           for (size_t i=0; i!=sum.size(); ++i) {
             pTabFeno->Sref[i]=sum[i]/refs.size();
             pTabFeno->SrefSigma[i]=std::sqrt(variance[i])/refs.size();
-            VECTOR_NormalizeVector(pTabFeno->Sref-1,n_wavel,&pTabFeno->refNormFact, __func__);
+            VECTOR_NormalizeVector(pTabFeno->Sref-1,n_wavel,&pTabFeno->refNormFact, __func__); // TODO: check if SrefSigma should be divided by same factor, or if this normalization is accounted for everywhere.
           }
         }
       }
@@ -843,7 +843,7 @@ int tropomi_get_reference(const char *filename, int pixel,
   int rc = ERROR_ID_NO;
 
   try {
-    const refspec& r = reference_spectra.at(pixel);
+    const refspec& r = irradiance_reference.at(pixel);
 
     if (!r.irradiance.size() )
       return ERROR_SetLast(__func__, ERROR_TYPE_WARNING, ERROR_ID_REF_DATA, pixel);
@@ -881,6 +881,6 @@ void tropomi_cleanup(void) {
 
   nominal_wavelengths.clear();
   delta_time.clear();
-  reference_spectra.clear();
+  irradiance_reference.clear();
   reference_orbit_files.clear();
 }
