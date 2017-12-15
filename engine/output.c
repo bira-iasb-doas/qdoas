@@ -2411,11 +2411,11 @@ RC OUTPUT_SaveResults(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
 
   // Rebuild spectrum for fluxes and color indexes computation
 
-  if ((pRecordInfo->NSomme!=0) && (pRecordInfo->TotalExpTime!=(double)0.)) {
+  if ((pRecordInfo->NSomme!=0) && (pRecordInfo->Tint!=(double)0.)) {
     double *Spectrum= pEngineContext->buffers.spectrum;
 
     for (int i=0;i<n_wavel;i++)
-      Spectrum[i]*=(double)pRecordInfo->NSomme/pRecordInfo->TotalExpTime;
+      Spectrum[i]/=(double)pRecordInfo->Tint;
   }
 
   if (outputNbRecords<pEngineContext->recordNumber)

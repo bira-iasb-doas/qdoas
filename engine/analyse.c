@@ -3095,6 +3095,9 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
        	indexPage=WrkFeno+plotPageAnalysis;
         Feno=&TabFeno[indexFenoColumn][WrkFeno];
 
+        // MAXDOAS measurements : Thomas Wagner request -> add the possibility to select a reference spectrum with an elevation angle different from zenith.
+        // This should be improved and move to engine.c in one of the functions dedicated to the selection of the reference spectrum
+
         if (!Feno->hidden &&
             (VECTOR_Equal(Spectre,Feno->Sref,n_wavel, 1.e-7) ||
              (!pEngineContext->satelliteFlag && Feno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC &&

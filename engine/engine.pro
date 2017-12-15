@@ -4,7 +4,7 @@ include( ../config.pri )
 
 CONFIG += staticlib $$CODE_GENERATION
 
-QMAKE_CXXFLAGS += -std=c++0x
+QMAKE_CXXFLAGS += -std=gnu++0x
 
 SOURCES += *.c *.cpp
 HEADERS += *.h
