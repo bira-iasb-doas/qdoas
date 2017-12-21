@@ -496,7 +496,8 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
      // satellite formats have an irradiance spectrum
      if (pBuffers->irrad!=NULL
          && ( !(pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI || // for OMI and Tropomi, irradiance is stored in separate file, which is only read during analysis
-                pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_TROPOMI)
+                pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_TROPOMI ||
+                pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF)
               || THRD_id==THREAD_TYPE_ANALYSIS) ) {
 
        mediateAllocateAndSetPlotData(&spectrumData, "Irradiance spectrum", pBuffers->lambda_irrad, pBuffers->irrad, n_wavel, Line);
@@ -1197,6 +1198,19 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       for (int i=0; i<MAX_SWATHSIZE; ++i) {
         NDET[i]=512;
       }
+
+      break;
+      // ----------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF:
+
+      NDET[0]=pMediateInstrumental->frm4doas.detectorSize;
+
+      pEngineInstrumental->offsetFlag=pMediateInstrumental->frm4doas.straylight;
+      pEngineInstrumental->lambdaMin=pMediateInstrumental->frm4doas.lambdaMin;
+      pEngineInstrumental->lambdaMax=pMediateInstrumental->frm4doas.lambdaMax;
+
+      strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->frm4doas.calibrationFile); // calibration file
+      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->frm4doas.transmissionFunctionFile); // instrumental function file
 
       break;
     }

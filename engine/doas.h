@@ -125,7 +125,8 @@ static inline bool is_maxdoas(enum _prjctInstrFormat format) {
           format==PRJCT_INSTR_FORMAT_MFC_BIRA ||                                                // 14 MFC BIRA-IASB
           format==PRJCT_INSTR_FORMAT_CCD_EEV ||                                                 // 18 CCD EEV
           format==PRJCT_INSTR_FORMAT_UOFT ||                                                    // 23 University of Toronto
-          format==PRJCT_INSTR_FORMAT_NOAA);                                                     // 24 NOAA
+          format==PRJCT_INSTR_FORMAT_NOAA ||                                                    // 24 NOAA
+          format==PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF);                                          // 34 netCDF format for FRM4DOAS
 }
 
 #if defined(_cplusplus) || defined(__cplusplus)

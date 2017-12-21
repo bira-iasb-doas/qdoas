@@ -248,6 +248,11 @@ CWProjectTabInstrumental::CWProjectTabInstrumental(const mediate_project_instrum
   index = m_formatStack->addWidget(m_oceanOpticsEdit);
   m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_OCEAN_OPTICS	, index));
 
+  // frm4doas
+  m_frm4doasEdit = new CWInstrFrm4doasEdit(&(instr->frm4doas));
+  index = m_formatStack->addWidget(m_frm4doasEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF, index));
+
   // Site
   m_siteCombo = new CWSiteListCombo(this); // automatically populated
 
@@ -305,6 +310,7 @@ void CWProjectTabInstrumental::apply(mediate_project_instrumental_t *instr) cons
   m_biraairborneEdit->apply(&(instr->biraairborne));
   m_biramobileEdit->apply(&(instr->biramobile));
   m_oceanOpticsEdit->apply(&(instr->oceanoptics));
+  m_frm4doasEdit->apply(&(instr->frm4doas));
 }
 
 void CWProjectTabInstrumental::slotInstrumentChanged(int instrument)
@@ -1173,6 +1179,63 @@ CWInstrMfcbiraEdit::CWInstrMfcbiraEdit(const struct instrumental_mfcbira *d, QWi
 }
 
 void CWInstrMfcbiraEdit::apply(struct instrumental_mfcbira *d) const
+{
+  // detector size
+  d->detectorSize = m_detSizeEdit->text().toInt();
+
+  // files
+  strcpy(d->calibrationFile, m_fileOneEdit->text().toLocal8Bit().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLocal8Bit().data());
+
+  d->straylight = m_strayLightConfig->isChecked() ? 1 : 0;
+  d->lambdaMin = m_strayLightConfig->getLambdaMin();
+  d->lambdaMax = m_strayLightConfig->getLambdaMax();
+}
+
+//--------------------------------------------------------------------------
+
+CWInstrFrm4doasEdit::CWInstrFrm4doasEdit(const struct instrumental_frm4doas *d, QWidget *parent) :
+  CWAllFilesEdit(parent),
+  m_strayLightConfig(new StrayLightConfig(Qt::Horizontal, this))
+{
+  QString tmpStr;
+  int row = 0;
+  QVBoxLayout *mainLayout = new QVBoxLayout(this);
+  //  QHBoxLayout *groupLayout = new QHBoxLayout;
+  QGridLayout *gridLayout = new QGridLayout;
+
+  mainLayout->addWidget(m_strayLightConfig);
+
+  gridLayout->addWidget(new QLabel("Detector Size", this), row, 0, Qt::AlignRight);             // detector size label
+  m_detSizeEdit = new QLineEdit(this);
+  m_detSizeEdit->setFixedWidth(cStandardEditWidth);
+  m_detSizeEdit->setValidator(new QIntValidator(0, 8192, m_detSizeEdit));
+  gridLayout->addWidget(m_detSizeEdit, row, 1, Qt::AlignLeft);
+
+  ++row;
+
+  // files
+  helperConstructCalInsFileWidgets(gridLayout, row,
+				   d->calibrationFile, sizeof(d->calibrationFile),
+				   d->transmissionFunctionFile, sizeof(d->transmissionFunctionFile));
+
+  mainLayout->addLayout(gridLayout);
+  mainLayout->addStretch(1);
+
+  // initialise the values
+
+  // detector size
+  tmpStr.setNum(d->detectorSize);
+  m_detSizeEdit->validator()->fixup(tmpStr);
+  m_detSizeEdit->setText(tmpStr);
+
+  // straylight bias
+  m_strayLightConfig->setChecked(d->straylight ? true : false);
+  m_strayLightConfig->setLambdaMin(d->lambdaMin);
+  m_strayLightConfig->setLambdaMax(d->lambdaMax);
+}
+
+void CWInstrFrm4doasEdit::apply(struct instrumental_frm4doas *d) const
 {
   // detector size
   d->detectorSize = m_detSizeEdit->text().toInt();

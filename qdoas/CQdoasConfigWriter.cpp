@@ -443,6 +443,9 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   case PRJCT_INSTR_FORMAT_OCEAN_OPTICS:
     fprintf(fp, "\"oceanoptics\"");
     break;
+  case PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF:
+    fprintf(fp, "\"frm4doas\"");
+    break;
   default:
     fprintf(fp, "\"invalid\"");
   }
@@ -1039,7 +1042,21 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->oceanoptics.transmissionFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
 
+  // frm4doas
+
+  fprintf(fp, "      <frm4doas size=\"%d\" straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"",d->frm4doas.detectorSize,
+  (d->frm4doas.straylight ? sTrue : sFalse),d->frm4doas.lambdaMin,d->frm4doas.lambdaMax);
+  tmpStr = pathMgr->simplifyPath(QString(d->frm4doas.calibrationFile));
+  fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
+  tmpStr = pathMgr->simplifyPath(QString(d->frm4doas.transmissionFunctionFile));
+  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
+
   fprintf(fp, "    </instrumental>\n");
+
+  tmpStr = pathMgr->simplifyPath(QString(d->frm4doas.calibrationFile));
+  fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
+  tmpStr = pathMgr->simplifyPath(QString(d->frm4doas.transmissionFunctionFile));
+  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
 }
 
 void CQdoasConfigWriter::writePropertiesSlit(FILE *fp, const mediate_project_slit_t *d)

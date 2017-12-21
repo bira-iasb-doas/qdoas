@@ -705,6 +705,20 @@ void getValidFieldFlags(int *validFlags, int instrument,int selectorOrigin)
        validFlags[PRJCT_RESULTS_VIEW_AZIMUTH]=1;
      }
      break;
+
+ // ----------------------------------------------------------------------------
+
+   case PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF :
+     {
+      validFlags[PRJCT_RESULTS_VIEW_ELEVATION]=1;
+      validFlags[PRJCT_RESULTS_VIEW_AZIMUTH]=1;                                 // not present in all measurements]=1; but could be in the next future
+      validFlags[PRJCT_RESULTS_STARTTIME]=1;
+      validFlags[PRJCT_RESULTS_ENDTIME]=1;
+     }
+     break;
+
+ // ----------------------------------------------------------------------------
+
    default:
      break;
  // ----------------------------------------------------------------------------

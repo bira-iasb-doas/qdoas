@@ -738,6 +738,8 @@ bool CProjectInstrumentalSubHandler::start(const QXmlAttributes &atts)
     m_instrumental->format = PRJCT_INSTR_FORMAT_MKZY;
   else if (str == "oceanoptics")
     m_instrumental->format = PRJCT_INSTR_FORMAT_OCEAN_OPTICS;
+  else if (str == "frm4doas")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF;
   else
     return postErrorMessage("Invalid instrumental format");
 
@@ -1239,21 +1241,45 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     str = atts.value("calib");
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
-      if (str.length() < (int)sizeof(m_instrumental->oceanoptics.calibrationFile))
+      if (str.length() < sizeof(m_instrumental->oceanoptics.calibrationFile))
 	strcpy(m_instrumental->oceanoptics.calibrationFile, str.toLocal8Bit().data());
       else
-	return postErrorMessage(CALIBRATION_FILENAME_ERR);
+	return postErrorMessage("Calibration Filename too long");
     }
 
-    str = atts.value("transmission");
-    if (str.isEmpty())
-      str = atts.value("instr"); // check for old config files
+    str = atts.value("instr");
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);
-      if (str.length() < (int)sizeof(m_instrumental->oceanoptics.transmissionFunctionFile))
+      if (str.length() < sizeof(m_instrumental->oceanoptics.transmissionFunctionFile))
 	strcpy(m_instrumental->oceanoptics.transmissionFunctionFile, str.toLocal8Bit().data());
       else
-	return postErrorMessage(TRANSMISSION_FILENAME_ERR);
+	return postErrorMessage("Instrument Function  Filename too long");
+    }
+  }
+  else if (element == "frm4doas") { // FRM4DOAS netCDF
+    QString str;
+
+    m_instrumental->frm4doas.detectorSize = atts.value("size").toInt();
+    m_instrumental->frm4doas.straylight = (atts.value("straylight") == "true") ? 1 : 0;
+    m_instrumental->frm4doas.lambdaMin = atts.value("lambda_min").toDouble();
+    m_instrumental->frm4doas.lambdaMax = atts.value("lambda_max").toDouble();
+
+    str = atts.value("calib");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < sizeof(m_instrumental->frm4doas.calibrationFile))
+	strcpy(m_instrumental->frm4doas.calibrationFile, str.toLocal8Bit().data());
+      else
+	return postErrorMessage("Calibration Filename too long");
+    }
+
+    str = atts.value("instr");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < sizeof(m_instrumental->frm4doas.transmissionFunctionFile))
+	strcpy(m_instrumental->frm4doas.transmissionFunctionFile, str.toLocal8Bit().data());
+      else
+	return postErrorMessage("Instrument Function  Filename too long");
     }
   }
 

@@ -151,7 +151,7 @@ static void getDate(int delta_t, struct datetime *date_time, int *pMs) {
   struct tm *time = gmtime(&thetime);
   thedate = *time;
 #endif
-  
+
   pDate->da_year = thedate.tm_year + 1900;
   pDate->da_mon = thedate.tm_mon + 1; // month, from 1 to 12
   pDate->da_day = thedate.tm_mday;
@@ -212,7 +212,7 @@ static geodata read_geodata(const NetCDFGroup& geo_group, size_t n_scanline, siz
       make_tuple("latitude_bounds", ref(result.lat_bounds), 4),
       make_tuple("satellite_longitude", ref(result.sat_lon), 1),
       make_tuple("satellite_latitude", ref(result.sat_lat), 1)};
-  
+
   for (auto& var : geovars) {
     const string& name =std::get<0>(var);
     auto& target = std::get<1>(var);
@@ -331,7 +331,7 @@ int tropomi_read(ENGINE_CONTEXT *pEngineContext,int record) {
     const double fill_rad = obsGroup.getFillValue<double>("radiance");
     const double fill_noise = obsGroup.getFillValue<double>("radiance_noise");
     const vector<double>& lambda = nominal_wavelengths.at(indexPixel);
-    
+
     // copy non-fill values to buffers:
     size_t j=0;
     for (size_t i=0; i<rad.size() && j<n_wavel; ++i) {
@@ -872,10 +872,10 @@ int tropomi_get_orbit_date(int *orbit_year, int *orbit_month, int *orbit_day) {
 
 void tropomi_cleanup(void) {
   current_file.close();
-  
+
   current_geodata = geodata();
   current_band = "";
-  
+
   size_spectral = size_scanline = size_groundpixel = 0;
   reference_time = 0;
 

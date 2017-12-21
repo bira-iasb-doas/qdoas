@@ -405,6 +405,15 @@ extern "C" {
     char transmissionFunctionFile[FILENAME_BUFFER_LENGTH];
   };
 
+  struct instrumental_frm4doas
+  {
+    int  detectorSize;
+    int  straylight;
+    double lambdaMin,lambdaMax;
+    char calibrationFile[FILENAME_BUFFER_LENGTH];
+    char transmissionFunctionFile[FILENAME_BUFFER_LENGTH];
+  };
+
   typedef struct mediate_project_instrumental
    {
     int format;
@@ -437,6 +446,7 @@ extern "C" {
     struct instrumental_minimum biramobile;
     struct instrumental_minimum apex;
     struct instrumental_oceanoptics oceanoptics;
+    struct instrumental_frm4doas frm4doas;
    }
   mediate_project_instrumental_t;
 

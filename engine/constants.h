@@ -373,6 +373,7 @@ enum _prjctInstrFormat {
   PRJCT_INSTR_FORMAT_APEX,                                                      // 31 APEX NetCDF files (BIRA-IASB/VITO)
   PRJCT_INSTR_FORMAT_OCEAN_OPTICS,                                              // 32 Ocean optics
   PRJCT_INSTR_FORMAT_OMPS,                                                      // 33 OMPS
+  PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF,                                           // 34 netCDF format for FRM4DOAS
   PRJCT_INSTR_FORMAT_MAX
 };
 

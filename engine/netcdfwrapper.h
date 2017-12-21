@@ -10,6 +10,17 @@
 
 #include <netcdf.h>
 
+extern "C" {
+#include "winthrd.h"
+#include "comdefs.h"
+#include "stdfunc.h"
+#include "engine_context.h"
+#include "mediate.h"
+#include "analyse.h"
+#include "spline.h"
+#include "vector.h"
+}
+
 typedef unsigned int uint;
 
 struct free_nc_string {
@@ -85,11 +96,49 @@ public:
   template<typename T>
   inline void getVar(int varid, const size_t start[], const size_t count[], T *out) const {
     if (ncGetVar(varid, start, count, out) != NC_NOERR) {
-      throw std::runtime_error("Cannot read NetCDF variable '"+name+"/"+varName(varid)+"'");
+     {
+      FILE *fp;
+      fp=fopen("toto.dat","a+t");
+      fprintf(fp,"Error %d\n",varid);
+      fclose(fp);
+     }
+
+      // throw std::runtime_error("Cannot read NetCDF variable '"+name+"/"+varName(varid)+"'");
     } }
   template<typename T>
   inline void getVar(const std::string& name, const size_t start[], const size_t count[], T *out) const {
-    getVar(varID(name), start, count, out);  }
+    getVar(varID(name), start, count, out);
+    }
+
+  // This function allocate the vector, initialize it to the default value and if the requested variable exists, retrieves the values
+
+  template<typename T>
+  inline void getVar(const std::string& name, const size_t start[], const size_t count[], int num_dims, T fill_value,std::vector<T>& out) const
+   {
+    // Declarations
+
+    int idim,                                                                     // browse dimensions
+        max_dim,                                                                  // number of dimensions (should be the size of start and count vectors
+        i;                                                                        // browse elements of vector var
+
+    // Get the number of elements  to allocate
+
+    for (max_dim=1,idim=0;idim<num_dims;idim++)
+     max_dim*=count[idim];
+
+    // Allocate the vector
+
+    out.resize(max_dim);
+
+    // Initialize the vector to fill value
+
+    for (i=0;i<max_dim;i++)
+     out[i]=fill_value;
+
+    if (hasVar(name))
+     getVar(name,start,count,out.data());
+   }
+
 
   template<typename T>
   inline void putVar(int varid, const size_t start[], const size_t count[], T *in) {

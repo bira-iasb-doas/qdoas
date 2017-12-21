@@ -55,6 +55,7 @@ class CWInstrMfcEdit;
 class CWInstrMfcStdEdit;
 class CWInstrMfcbiraEdit;
 class CWInstrOceanOpticsEdit;
+class CWInstrFrm4doasEdit;
 
 //--------------------------------------------------------------------------
 class CWProjectTabInstrumental : public QFrame
@@ -108,6 +109,7 @@ Q_OBJECT
   CWInstrMinimumEdit *m_biramobileEdit;
   CWInstrMinimumEdit *m_apexEdit;
   CWInstrOceanOpticsEdit *m_oceanOpticsEdit;
+  CWInstrFrm4doasEdit *m_frm4doasEdit;
   std::map<int,int> m_instrumentToStackIndexMap;
 };
 
@@ -491,6 +493,21 @@ class CWInstrOceanOpticsEdit : public CWCalibInstrEdit
   CWInstrOceanOpticsEdit(const struct instrumental_oceanoptics *d, QWidget *parent = 0);
 
   void apply(struct instrumental_oceanoptics *d) const;
+
+ private:
+  QLineEdit *m_detSizeEdit;
+  StrayLightConfig *m_strayLightConfig;
+};
+
+//--------------------------------------------------------------------------
+
+class CWInstrFrm4doasEdit : public CWAllFilesEdit
+{
+ public:
+
+  CWInstrFrm4doasEdit(const struct instrumental_frm4doas *d, QWidget *parent = 0);
+
+  void apply(struct instrumental_frm4doas *d) const;
 
  private:
   QLineEdit *m_detSizeEdit;

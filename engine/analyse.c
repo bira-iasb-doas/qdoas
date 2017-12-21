@@ -40,7 +40,7 @@
 //  =================
 //
 //  FNPixel - get a pixel from a wavelength;
-//  ShiftVector - apply shift and stretch on vector; convolve when fitting SFP during Kurucz 
+//  ShiftVector - apply shift and stretch on vector; convolve when fitting SFP during Kurucz
 //  Norm - vector norm computation
 //  OrthogonalizeVector - orthogonalize a column in A matrix to a set of other columns of A;
 //  Orthogonalization - orthogonalization of matrix A processing;
@@ -3112,7 +3112,6 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
         } else {
           Feno->rc = ERROR_ID_NO;
         }
-
         sprintf(windowTitle,"Analysis results for %s window",Feno->windowName);
 
         switch (pEngineContext->project.instrumental.readOutFormat) {

@@ -65,6 +65,7 @@
 #include "stdfunc.h"
 #include "zenithal.h"
 #include "output.h"
+#include "frm4doas_read.h"
 #include "gome2_read.h"
 #include "scia-read.h"
 #include "tropomi_read.h"
@@ -399,7 +400,7 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
 
         (((pBuffers->specMaxx=(double *)MEMORY_AllocDVector(__func__,"specMaxx",0,MAX_SPECMAX-1))==NULL) ||
         ((pBuffers->specMax=(double *)MEMORY_AllocDVector(__func__,"specMax",0,MAX_SPECMAX-1))==NULL))) ||
-         (pEngineContext->satelliteFlag &&
+        ((pEngineContext->satelliteFlag || (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF)) &&
         ((pBuffers->sigmaSpec=MEMORY_AllocDVector(__func__,"sigmaSpec",0,max_ndet-1))==NULL ||
          (pBuffers->lambda_irrad=MEMORY_AllocDVector(__func__,"lambda_irrad",0,max_ndet-1))==NULL ||
          (pBuffers->irrad=MEMORY_AllocDVector(__func__,"irrad",0,max_ndet-1))==NULL
@@ -753,6 +754,13 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
         rc=MKZY_LoadAnalysis(pEngineContext,responseHandle);
        break;
        // ---------------------------------------------------------------------------
+     case PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF :
+       rc=frm4doas_set(pEngineContext); // do not need specFp because the file is open with netCDF
+
+      // if (!(rc=MKZY_Set(pEngineContext,pFile->specFp)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_EXPORT) && (THRD_id!=THREAD_TYPE_NONE))
+      //  rc=MKZY_LoadAnalysis(pEngineContext,responseHandle);
+       break;
+       // ---------------------------------------------------------------------------
      default :
        rc=ERROR_ID_FILE_FORMAT;
        break;
@@ -936,6 +944,13 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
       rc=MKZY_Reli(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
       break;
       // ---------------------------------------------------------------------------
+     case PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF :
+       rc=frm4doas_read(pEngineContext,indexRecord,dateFlag,localCalDay); // do not need specFp because the file is open with netCDF
+
+      // if (!(rc=MKZY_Set(pEngineContext,pFile->specFp)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_EXPORT) && (THRD_id!=THREAD_TYPE_NONE))
+      //  rc=MKZY_LoadAnalysis(pEngineContext,responseHandle);
+       break;
+       // ---------------------------------------------------------------------------
     default :
       rc=ERROR_ID_FILE_BAD_FORMAT;
       break;
@@ -1166,6 +1181,7 @@ RC EngineEndCurrentSession(ENGINE_CONTEXT *pEngineContext)
      GOME2_ReleaseBuffers();
      OMI_ReleaseBuffers();
      tropomi_cleanup();
+     frm4doas_cleanup();
      SCIA_ReleaseBuffers(pEngineContext->project.instrumental.readOutFormat);
      apex_clean();
 
@@ -1312,111 +1328,114 @@ RC EngineBuildScanIndex(ENGINE_CONTEXT *pEngineContext)
   strcpy(fileName,pEngineContext->fileInfo.fileName);
   rc=ERROR_ID_NO;
 
-  // Disable temporarily maxdoasScanIndexFlag (useful to avoid unuseful MFC_SearchForCurrentFileIndex)
-
-  pEngineContext->maxdoasScanIndexFlag=0;
-
-
-  // The buffers is released/re-allocated for each new file to read
-  // It is possible to avoid this step by saving the size of the buffer and reallocated it
-  // only if the size of the new file is larger
-
-  if (pBuffers->scanIndexes!=NULL)
+  if (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF)  // for this format, the scan index should be in the file
    {
-    MEMORY_ReleaseBuffer("EngineBuildScanIndex","scanIndexes",pBuffers->scanIndexes);
-    pBuffers->scanIndexes=NULL;
-   }
+    // Disable temporarily maxdoasScanIndexFlag (useful to avoid unuseful MFC_SearchForCurrentFileIndex)
 
-  if (!recordNumber ||
-     ((pBuffers->scanIndexes=(INDEX *)MEMORY_AllocBuffer(__func__,"scanIndexes",recordNumber,sizeof(INDEX),0,MEMORY_TYPE_INT))==NULL))
+    pEngineContext->maxdoasScanIndexFlag=0;
 
-   rc=ERROR_ID_ALLOC;
 
-  else
-   {
-    scanIndexes=pEngineContext->buffers.scanIndexes;
+    // The buffers is released/re-allocated for each new file to read
+    // It is possible to avoid this step by saving the size of the buffer and reallocated it
+    // only if the size of the new file is larger
 
-    // Browse records in the file
-
-    for (indexRecord=0;(indexRecord<recordNumber) && !rc;indexRecord++)
+    if (pBuffers->scanIndexes!=NULL)
      {
-      // Default value
+      MEMORY_ReleaseBuffer("EngineBuildScanIndex","scanIndexes",pBuffers->scanIndexes);
+      pBuffers->scanIndexes=NULL;
+     }
 
-      scanIndexes[indexRecord]=ITEM_NONE;
+    if (!recordNumber ||
+       ((pBuffers->scanIndexes=(INDEX *)MEMORY_AllocBuffer(__func__,"scanIndexes",recordNumber,sizeof(INDEX),0,MEMORY_TYPE_INT))==NULL))
 
-      // For MFC format, get filename
+     rc=ERROR_ID_ALLOC;
 
-      if (pEngineContext->mfcDoasisFlag)
-       sprintf(pEngineContext->fileInfo.fileName,"%s%c%s",pMfc->filePath,PATH_SEP,&pMfc->fileNames[indexRecord*(DOAS_MAX_PATH_LEN+1)]);
+    else
+     {
+      scanIndexes=pEngineContext->buffers.scanIndexes;
 
-      // Read the next record
+      // Browse records in the file
 
-      if (!(rc=EngineReadFile(pEngineContext,(!pEngineContext->mfcDoasisFlag)?indexRecord+1:1,0,0)))
+      for (indexRecord=0;(indexRecord<recordNumber) && !rc;indexRecord++)
        {
-        // Get the local time of the current record
+        // Default value
 
-        tmLocal=pRecord->Tm+THRD_localShift*3600.;
+        scanIndexes[indexRecord]=ITEM_NONE;
 
-        // Zenith following a off-axis increasing sequence are assigned a scan index
+        // For MFC format, get filename
 
-        if (pRecord->maxdoas.measurementType==PRJCT_INSTR_MAXDOAS_TYPE_ZENITH)
+        if (pEngineContext->mfcDoasisFlag)
+         sprintf(pEngineContext->fileInfo.fileName,"%s%c%s",pMfc->filePath,PATH_SEP,&pMfc->fileNames[indexRecord*(DOAS_MAX_PATH_LEN+1)]);
+
+        // Read the next record
+
+        if (!(rc=EngineReadFile(pEngineContext,(!pEngineContext->mfcDoasisFlag)?indexRecord+1:1,0,0)))
          {
-          lastZenith=indexRecord;
+          // Get the local time of the current record
 
-          if ((upFlag==1) &&                                                    // increasing sequence of off axis measurements
-              (lastMeasurementType==PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) &&        // last measurement was an off-axis one; the current one is a zenith one
-              (tmLocal-lastTime<(double)900.))                                  // no more than 15 minutes between the last off axis measurement and the current zenith one
+          tmLocal=pRecord->Tm+THRD_localShift*3600.;
 
-           scanIndexes[indexRecord]=scanIndex;                                  // same scan index as the last off axis measurement
+          // Zenith following a off-axis increasing sequence are assigned a scan index
+
+          if (pRecord->maxdoas.measurementType==PRJCT_INSTR_MAXDOAS_TYPE_ZENITH)
+           {
+            lastZenith=indexRecord;
+
+            if ((upFlag==1) &&                                                    // increasing sequence of off axis measurements
+                (lastMeasurementType==PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) &&        // last measurement was an off-axis one; the current one is a zenith one
+                (tmLocal-lastTime<(double)900.))                                  // no more than 15 minutes between the last off axis measurement and the current zenith one
+
+             scanIndexes[indexRecord]=scanIndex;                                  // same scan index as the last off axis measurement
+           }
+
+          // Current record is an off-axis measurement
+
+          if (pRecord->maxdoas.measurementType==PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS)
+           {
+            // if there is more than 15 minutes with the last off-axis measurement, increase the scan index
+
+            if (tmLocal-lastTime>(double)900.)   // 900 sec -> 15 min
+             scanIndex++;
+
+            // use the two first off axis measurements, to determine if the sequences are increasing or decreasing
+
+            else if ((upFlag==-1) && (lastMeasurementType==PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) && (fabs(pRecord->elevationViewAngle-lastElevationAngle)>EPSILON))
+             upFlag=(pRecord->elevationViewAngle<lastElevationAngle)?0:1;
+
+            // Check discontinuities in elevation angles to increase the scan index
+
+            else if (((upFlag==0) && (pRecord->elevationViewAngle>lastElevationAngle+EPSILON)) ||
+                     ((upFlag==1) && (pRecord->elevationViewAngle<lastElevationAngle-EPSILON)))
+             scanIndex++;
+
+             // For decreasing sequences, the scan index of the last preceding zenith measurement is assigned
+
+            if ((upFlag==0) && (lastZenith!=ITEM_NONE) && (scanIndexes[lastZenith]==ITEM_NONE))
+             scanIndexes[lastZenith]=scanIndex;
+
+            // Update
+
+            scanIndexes[indexRecord]=scanIndex;                                   // the scan index of the current off axis measurement
+            lastElevationAngle=pRecord->elevationViewAngle;                       // keep the elevation angle of the last off axis record
+            lastTime=tmLocal;                                                     // keep the local measurement time of the last off axis record
+           }
+
+          // Update the measurement type of the last record
+
+          lastMeasurementType=pRecord->maxdoas.measurementType;
          }
-
-        // Current record is an off-axis measurement
-
-        if (pRecord->maxdoas.measurementType==PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS)
-         {
-          // if there is more than 15 minutes with the last off-axis measurement, increase the scan index
-
-          if (tmLocal-lastTime>(double)900.)   // 900 sec -> 15 min
-           scanIndex++;
-
-          // use the two first off axis measurements, to determine if the sequences are increasing or decreasing
-
-          else if ((upFlag==-1) && (lastMeasurementType==PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) && (fabs(pRecord->elevationViewAngle-lastElevationAngle)>EPSILON))
-           upFlag=(pRecord->elevationViewAngle<lastElevationAngle)?0:1;
-
-          // Check discontinuities in elevation angles to increase the scan index
-
-          else if (((upFlag==0) && (pRecord->elevationViewAngle>lastElevationAngle+EPSILON)) ||
-                   ((upFlag==1) && (pRecord->elevationViewAngle<lastElevationAngle-EPSILON)))
-           scanIndex++;
-
-           // For decreasing sequences, the scan index of the last preceding zenith measurement is assigned
-
-          if ((upFlag==0) && (lastZenith!=ITEM_NONE) && (scanIndexes[lastZenith]==ITEM_NONE))
-           scanIndexes[lastZenith]=scanIndex;
-
-          // Update
-
-          scanIndexes[indexRecord]=scanIndex;                                   // the scan index of the current off axis measurement
-          lastElevationAngle=pRecord->elevationViewAngle;                       // keep the elevation angle of the last off axis record
-          lastTime=tmLocal;                                                     // keep the local measurement time of the last off axis record
-         }
-
-        // Update the measurement type of the last record
-
-        lastMeasurementType=pRecord->maxdoas.measurementType;
        }
      }
+
+    // For MFC, restore the original file name
+
+    if (pEngineContext->mfcDoasisFlag)
+     strcpy(pEngineContext->fileInfo.fileName,fileName);
+
+    // Enable maxdoasScanIndexFlag again
+
+    pEngineContext->maxdoasScanIndexFlag=1;
    }
-
-  // For MFC, restore the original file name
-
-  if (pEngineContext->mfcDoasisFlag)
-   strcpy(pEngineContext->fileInfo.fileName,fileName);
-
-  // Enable maxdoasScanIndexFlag again
-
-  pEngineContext->maxdoasScanIndexFlag=1;
 
   // Return
 

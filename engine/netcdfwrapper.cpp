@@ -1,5 +1,9 @@
 #include "netcdfwrapper.h"
 
+#ifdef USE_NETCDF4
+#include "nc4internal.h" /* to get name of the special properties file */
+#endif
+
 #include <stdexcept>
 #include <cassert>
 #include <iostream>
@@ -41,10 +45,11 @@ bool NetCDFGroup::hasAttr(const string& attrName, int varid) const {
 int NetCDFGroup::varID(const string& varName) const {
   int id;
   int rc = nc_inq_varid(groupid, varName.c_str(), &id);
+
   if(rc == NC_NOERR) {
     return id;
   } else {
-    throw std::runtime_error("Cannot find netCDF variable '"+name+"/"+varName+"'");
+    return -1;
   }
 }
 
@@ -53,7 +58,7 @@ int NetCDFGroup::numDims(int varid) const {
   if (nc_inq_varndims(groupid, varid, &ndims) == NC_NOERR) {
     return ndims;
   } else {
-    throw std::runtime_error("Cannot get number of dimensions for variable '" + varName(varid) + "'");
+    return -1;
   }
 }
 
