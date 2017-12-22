@@ -1,8 +1,5 @@
 #include "netcdfwrapper.h"
 
-#ifdef USE_NETCDF4
-#include "nc4internal.h" /* to get name of the special properties file */
-#endif
 
 #include <stdexcept>
 #include <cassert>

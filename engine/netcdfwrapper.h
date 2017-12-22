@@ -9,6 +9,7 @@
 #include <memory>
 
 #include <netcdf.h>
+// #include "nc4internal.h" /* to get name of the special properties file */
 
 extern "C" {
 #include "winthrd.h"
@@ -96,12 +97,7 @@ public:
   template<typename T>
   inline void getVar(int varid, const size_t start[], const size_t count[], T *out) const {
     if (ncGetVar(varid, start, count, out) != NC_NOERR) {
-     {
-      FILE *fp;
-      fp=fopen("toto.dat","a+t");
-      fprintf(fp,"Error %d\n",varid);
-      fclose(fp);
-     }
+       // return error !!!
 
       // throw std::runtime_error("Cannot read NetCDF variable '"+name+"/"+varName(varid)+"'");
     } }

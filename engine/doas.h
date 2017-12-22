@@ -63,7 +63,7 @@ extern "C" {
 #define MAX_SYMB              150    // maximum number of different symbols in a project
 #define MAX_SPECMAX          5000    // maximum number of items in SpecMax
 
-#define DIM                    10    // default number of security pixels for border effects
+// NOT USED ANYMORE ? CONFLICT WITH NETCDF #define DIM                    10    // default number of security pixels for border effects
 
 #define MAX_KURUCZ_FWHM_PARAM   4    // maximum number of non linear parameters for fitting fwhm with Kurucz
 

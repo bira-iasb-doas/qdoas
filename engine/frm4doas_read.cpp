@@ -416,14 +416,6 @@ int frm4doas_read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int l
 
   // Initializations
 
-  {
-   FILE *fp;
-   fp=fopen("toto.dat","a+t");
-   fprintf(fp,"Begin frm4doas_read %d\n",recordNo);
-   fclose(fp);
-  }
-
-
   pRecordInfo=&pEngineContext->recordInfo;
   rc = ERROR_ID_NO;
 
@@ -432,31 +424,14 @@ int frm4doas_read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int l
   else
    {
     const size_t start[] = {(size_t)(recordNo-1), 0};
-    const size_t count[] = {(size_t)recordNo, det_size};
+    const size_t count[] = {(size_t)1, det_size};
 
     // Spectra
 
     measurements_group=current_file.getGroup(root_name+"/measurements");
-
-    {
-     FILE *fp;
-     fp=fopen("toto.dat","a+t");
-     fprintf(fp,"OK2\n");
-     fclose(fp);
-    }
-
     measurements_group.getVar("wavelengths",start,count,2,(float)0.,wve);
-    {
-     FILE *fp;
-     fp=fopen("toto.dat","a+t");
-     fprintf(fp,"OK3\n");
-     fclose(fp);
-    }
-
     measurements_group.getVar("radiances",start,count,2,(float)0.,spe);
-
     measurements_group.getVar("radiances_errors",start,count,2,(float)1.,err);
-
     measurements_group.getVar("quality_flags",start,count,2,(short)1,qf);
 
     for (i=0;i<det_size;i++)
@@ -515,13 +490,6 @@ int frm4doas_read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int l
     pRecordInfo->maxdoas.measurementType=current_metadata.mt[recordNo-1];
     pRecordInfo->maxdoas.scanIndex=current_metadata.sci[recordNo-1];
    }
-
-  {
-   FILE *fp;
-   fp=fopen("toto.dat","a+t");
-   fprintf(fp,"rc %d\n",rc);
-   fclose(fp);
-  }
 
   return rc;
  }
