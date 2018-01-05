@@ -96,7 +96,7 @@ namespace {
     vector<double> sza, vza, saa,  vaa,
       lon, lat,
       lon_bounds, lat_bounds,
-      sat_lon, sat_lat;
+      sat_lon, sat_lat, sat_alt;
   };
 }
 
@@ -201,7 +201,7 @@ static geodata read_geodata(const NetCDFGroup& geo_group, size_t n_scanline, siz
   // variable, the vector in which we want to store the data, and the
   // size of each element
   using std::ref;
-  std::array<std::tuple<const string, vector<double>&, size_t>, 10> geovars {
+  std::array<std::tuple<const string, vector<double>&, size_t>, 8> geovars {
     make_tuple("solar_zenith_angle", ref(result.sza), 1),
       make_tuple("viewing_zenith_angle", ref(result.vza), 1),
       make_tuple("solar_azimuth_angle", ref(result.saa), 1),
@@ -209,9 +209,7 @@ static geodata read_geodata(const NetCDFGroup& geo_group, size_t n_scanline, siz
       make_tuple("latitude", ref(result.lat), 1),
       make_tuple("longitude", ref(result.lon), 1),
       make_tuple("longitude_bounds", ref(result.lon_bounds), 4),
-      make_tuple("latitude_bounds", ref(result.lat_bounds), 4),
-      make_tuple("satellite_longitude", ref(result.sat_lon), 1),
-      make_tuple("satellite_latitude", ref(result.sat_lat), 1)};
+      make_tuple("latitude_bounds", ref(result.lat_bounds), 4)};
 
   for (auto& var : geovars) {
     const string& name =std::get<0>(var);
@@ -223,6 +221,13 @@ static geodata read_geodata(const NetCDFGroup& geo_group, size_t n_scanline, siz
     const size_t count[] = {1, n_scanline, n_groundpixel, elem_size};
     geo_group.getVar(name, start, count, target.data() );
   }
+
+  const size_t start[] = {0, 0 };
+  const size_t count[] = {1, n_scanline };
+
+  geo_group.getVar("satellite_longitude",start,count,2,(double)0.,result.sat_lon);
+  geo_group.getVar("satellite_latitude",start,count,2,(double)0.,result.sat_lat);
+  geo_group.getVar("satellite_altitude",start,count,2,(double)0.,result.sat_alt);
 
   return result;
 }
@@ -264,6 +269,7 @@ int tropomi_set(ENGINE_CONTEXT *pEngineContext) {
     }
     fill_nominal_wavelengths = instrGroup.getFillValue<double>("nominal_wavelength");
 
+
     const auto geo_group = current_file.getGroup(current_band + "_RADIANCE/STANDARD_MODE/GEODATA");
     current_geodata = read_geodata(geo_group, size_scanline, size_groundpixel);
 
@@ -288,8 +294,12 @@ static void get_geodata(RECORD_INFO *pRecord, const geodata& geo, int record) {
     pRecord->satellite.cornerlons[i] = lon_bounds[record-1][i];
     pRecord->satellite.cornerlats[i] = lat_bounds[record-1][i];
   }
-  pRecord->satellite.longitude = geo.sat_lon[record-1];
-  pRecord->satellite.latitude = geo.sat_lat[record-1];
+
+  const size_t indexScanline = (record - 1) / size_groundpixel;
+
+  pRecord->satellite.longitude = geo.sat_lon[indexScanline];
+  pRecord->satellite.latitude = geo.sat_lat[indexScanline];
+  pRecord->satellite.altitude = geo.sat_lat[indexScanline];
 }
 
 int tropomi_read(ENGINE_CONTEXT *pEngineContext,int record) {
@@ -319,7 +329,7 @@ int tropomi_read(ENGINE_CONTEXT *pEngineContext,int record) {
 
   // dimensions of radiance & error are
   // ('time','scanline','ground_pixel','spectral_channel')
-  const size_t start[] = {0, indexScanline, indexPixel, 0};
+  const size_t start[] = {0,indexScanline, indexPixel, 0};
   const size_t count[] = {1, 1, 1, size_spectral};
 
   vector<double> rad(size_spectral);
@@ -345,17 +355,19 @@ int tropomi_read(ENGINE_CONTEXT *pEngineContext,int record) {
         ++j;
       }
     }
+
     if (j == 0) {
       // All fill values, can't use this spectrum:
       return ERROR_ID_FILE_RECORD;
     }
     // check if the earthshine spectrum is shorter than the reference
     // spectrum (e.g.due to different number of fill values).
-    if (j<n_wavel) {
+    // if (j<n_wavel) {
       // This is not a very clean solution, but we assume that
       // reducing NDET[i] is always safe:
       NDET[indexPixel] = j;
-    }
+    // }
+
   } catch(std::runtime_error& e) {
     rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, e.what());
   }
@@ -364,6 +376,7 @@ int tropomi_read(ENGINE_CONTEXT *pEngineContext,int record) {
 
   pRecord->i_alongtrack = indexScanline;
   pRecord->i_crosstrack = indexPixel;
+
   pRecord->useErrors = 1;
   get_geodata(pRecord, current_geodata, record);
 

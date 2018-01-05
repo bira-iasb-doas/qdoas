@@ -33,8 +33,7 @@ RC   ReliEASOE(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loca
 
 RC   SetSAOZ(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 RC   ReliSAOZ(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp,FILE *namesFp);
-RC   MKZY_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
-RC   MKZY_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp);
+
 RC   AIRBORNE_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
 RC   AIRBORNE_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp);
 RC   SetSAOZEfm(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
@@ -58,8 +57,10 @@ RC   CCD_LoadInstrumental(ENGINE_CONTEXT *pEngineContext);
 void CCD_ResetInstrumental(CCD *pCCD);
 char *CCD_GetImageFile(INDEX indexImage);
 
-RC MKZY_SearchForSky(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
-RC MKZY_SearchForOffset(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
+// MKZY format (used within the NOVAC network)
+
+RC MKZY_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp);
+RC MKZY_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp);
 RC MKZY_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle);
 
 void GDP_BIN_ReleaseBuffers(void);

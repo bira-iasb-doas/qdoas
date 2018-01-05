@@ -2,7 +2,7 @@
 //  ----------------------------------------------------------------------------
 //
 //  Product/Project   :  QDOAS/FRM4DOAS
-//  Module purpose    :  READ NETCDF FILES for FRM4DOAS PROJECT
+//  Module purpose    :  READ NETCDF FILES FOR FRM4DOAS PROJECT
 //  Name of module    :  FRM4DOAS_READ.H
 //
 //  QDOAS is a cross-platform application developed in QT for DOAS retrieval
@@ -40,18 +40,9 @@
 extern "C" {
 #endif
 
-  // int frm4doas_init(const char *ref_filename, ENGINE_CONTEXT *pEngineContext);
-  //
-  // int frm4doas_prepare_automatic_reference(ENGINE_CONTEXT *pEngineContext, void *responseHandle);
-  //
-  int frm4doas_set(ENGINE_CONTEXT *pEngineContext);
-  int frm4doas_read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay);
-
-  // int frm4doas_get_reference(const char* filename, int pixel, double *lambda, double *spectrum, double *sigma, int *n_wavel);
-  //
-  // int frm4doas_get_orbit_date(int *orbit_year, int *orbit_month, int *orbit_day);
-
-  void frm4doas_cleanup(void);
+  RC   FRM4DOAS_Set(ENGINE_CONTEXT *pEngineContext);
+  RC   FRM4DOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay);
+  void FRM4DOAS_Cleanup(void);
 
 #ifdef __cplusplus
 }

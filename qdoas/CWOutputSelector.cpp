@@ -714,6 +714,9 @@ void getValidFieldFlags(int *validFlags, int instrument,int selectorOrigin)
       validFlags[PRJCT_RESULTS_VIEW_AZIMUTH]=1;                                 // not present in all measurements]=1; but could be in the next future
       validFlags[PRJCT_RESULTS_STARTTIME]=1;
       validFlags[PRJCT_RESULTS_ENDTIME]=1;
+      validFlags[PRJCT_RESULTS_LONGIT]=1;
+      validFlags[PRJCT_RESULTS_LATIT]=1;
+      validFlags[PRJCT_RESULTS_ALTIT]=1;
      }
      break;
 

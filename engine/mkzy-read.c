@@ -1,30 +1,50 @@
 
+
 //  ----------------------------------------------------------------------------
-/*!
-    \file    mkzy-read.c
-    \brief   MKZY (Manne Kihlman and Zhang Yan) read out routines.
-    \details This module contains the routines needed to read data from PAK files written
-             in a compressed file format created by MANNE Kihlman and ZHANG Yan, Chalmers,
-             Goteborg, Sweden.  This file format is used by the NOVAC network.
-    \authors Kihlman MANNE and Yan ZHANG, Chalmers, Goteborg, Sweden\n
-             Adapted for QDOAS by Caroline FAYT (caroline.fayt@aeronomie.be)
-    \date    14 January 2009
-*/
+//! \addtogroup Format
+//! All the modules to read spectra in the various formats supported by QDOAS
+//! @{
+//!
+//! \file      mkzy-read.c
+//! \brief     Routines to read data in the MKZY format implemented by Manne Kihlman and Zhang Yan.
+//! \details   This module contains the routines needed to read data from PAK files written
+//!            in a compressed file format created by MANNE Kihlman and ZHANG Yan, Chalmers,
+//!            Goteborg, Sweden.  This file format is used within the NOVAC network.
+//! \authors   Kihlman MANNE and Yan ZHANG, Chalmers, Goteborg, Sweden\n
+//!            Adapted for QDOAS by Caroline FAYT
+//! \date      14 January 2009
+//! \copyright QDOAS is distributed under GNU General Public License
+//!
+//! @}
+//  ----------------------------------------------------------------------------
+//
+//  =========
+//  FUNCTIONS
+//  =========
+//
+//  MKZY_UnPack - decompresses a spectrum record in the MKZY file format;
+//  MKZY_ParseDate - decompose a date in the MKZY file format;
+//  MKZY_ParseTime - decompose a time in the MKZY file format;
+//
+//  MKZY_ReadRecord - read a specified record from a file in MKZY format.
+//  MKZY_SearchForOffset - extract the dark current spectrum and the offset (resp. called dark and offset) from the file and remove offset from dark current.
+//  MKZY_SearchForSky - extract the reference spectrum (called sky) from the file and correct it by offset and dark current
+//
+//  MKZY_Set - calculate the number of records in a file in MKZY format;
+//  MKZY_Read - call MKZY_ReadRecord to read a specified record from a file in MKZY format and check that it is a spectrum to analyze (spectrum name should be 'other').
+//  MKZY_LoadAnalysis - as the reference spectrum is retrieved from spectra files, calibration has to be applied on each file
+//
 //  ----------------------------------------------------------------------------
 //
 //  QDOAS is a cross-platform application developed in QT for DOAS retrieval
 //  (Differential Optical Absorption Spectroscopy).
 //
-//  The QT version of the program has been developed jointly by the Belgian
-//  Institute for Space Aeronomy (BIRA-IASB) and the Science and Technology
-//  company (S[&]T) - Copyright (C) 2007
-//
-//      BIRA-IASB                                   S[&]T
-//      Belgian Institute for Space Aeronomy        Science [&] Technology
-//      Avenue Circulaire, 3                        Postbus 608
-//      1180     UCCLE                              2600 AP Delft
-//      BELGIUM                                     THE NETHERLANDS
-//      caroline.fayt@aeronomie.be                  info@stcorp.nl
+//        BIRA-IASB
+//        Belgian Institute for Space Aeronomy
+//        Ringlaan 3 Avenue Circulaire
+//        1180     UCCLE
+//        BELGIUM
+//        qdoas@aeronomie.be
 //
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License
@@ -39,17 +59,6 @@
 //  You should have received a copy of the GNU General Public License
 //  along with this program; if not, write to the Free Software Foundation,
 //  Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-//
-//  ----------------------------------------------------------------------------
-//
-//  =========
-//  FUNCTIONS
-//  =========
-//
-//  MKZY_UnPack - decompresses a spectrum record in the MKZY file format;
-//  MKZY_ParseDate - decompose a date in the MKZY file format;
-//  MKZY_ParseTime - decompose a time in the MKZY file format;
-//  MKZY_Set - calculate the number of records in a file in MKZY format;
 //
 //  ----------------------------------------------------------------------------
 
@@ -83,12 +92,15 @@
 
 #pragma pack(push, 1)
 
-typedef struct MKZYhdr
+//! \struct MKZYhdr
+//! \brief MKZY file header.
+
+typedef struct MKZY_HEADER
  {
-  char           ident[4];                                                      // "MKZY"
-  unsigned short hdrsize;                                                       // this is the size in bytes of the header
-  unsigned short hdrversion;                                                    // version of the header
-  unsigned short size;                                                          // the number of bytes with compressed data
+  char           ident[4];                                                      //!< should be "MKZY"
+  unsigned short hdrsize;                                                       //!< this is the size in bytes of the header
+  unsigned short hdrversion;                                                    //!< version of the header
+  unsigned short size;                                                          //!< the number of bytes with compressed data
  }
 MKZY_HEADER;
 
@@ -176,14 +188,14 @@ MKZY_RECORDINFO;
 // -----------------------------------------------------------------------------
 // FUNCTION MKZY_UnPack
 // -----------------------------------------------------------------------------
-/*!
-   \fn      long MKZY_UnPack(unsigned char *inpek,long kvar,long *ut)
-   \details This function decompresses a spectrum record in the MKZY file format
-   \param   [in]  inpek buffer with the compressed spectrum
-   \param   [in]  kvar  the length of the uncompressed spectrum
-   \param   [out] ut    buffer to which the data will be uncompressed
-   \return  the number of bytes in the output buffer \a ut
-*/
+//!
+//! \fn      int MKZY_UnPack(unsigned char *inpek,int kvar,int *ut)
+//! \details This function decompresses a spectrum record in the MKZY file format
+//! \param   [in]  inpek buffer with the compressed spectrum
+//! \param   [in]  kvar  the length of the uncompressed spectrum
+//! \param   [out] ut    buffer to which the data will be uncompressed
+//! \return  the number of bytes in the output buffer \a ut
+//!
 // -----------------------------------------------------------------------------
 
 int MKZY_UnPack(unsigned char *inpek,int kvar,int *ut)
@@ -263,16 +275,16 @@ int MKZY_UnPack(unsigned char *inpek,int kvar,int *ut)
 // -----------------------------------------------------------------------------
 // FUNCTION MKZY_ParseDate
 // -----------------------------------------------------------------------------
-/*!
-   \fn      void MKZY_ParseDate(uint32_t d,SHORT_DATE *pDate)
-   \details Decompose a date in the MKZY file format.\n
-            The date field in the header \ref MKZY_RECORDINFO::date is an unsigned long.\n
-            Dates are represented on 6 digits in the \a DDMMYY file format.\n\n
-   \par     Example:
-            To represent 29 November 2005, the date field will have the decimal value 291105.
-   \param   [in]    d  the date in DDMMYY format
-   \param   [out]   pDate pointer to the SHORT_DATE structure with separate year, month and day fields
-*/
+//!
+//! \fn      void MKZY_ParseDate(uint32_t d, struct date *pDate)
+//! \details Decompose a date in the MKZY file format.\n
+//!          The date field in the header \ref MKZY_RECORDINFO::date is an unsigned long.\n
+//!          Dates are represented on 6 digits in the \a DDMMYY file format.\n
+//! \par     Example:
+//!          To represent 29 November 2005, the date field will have the decimal value 291105.
+//! \param   [in]    d  the date in DDMMYY format
+//! \param   [out]   pDate pointer to the SHORT_DATE structure with separate year, month and day fields
+//!
 // -----------------------------------------------------------------------------
 
 void MKZY_ParseDate(uint32_t d, struct date *pDate)
@@ -288,16 +300,16 @@ void MKZY_ParseDate(uint32_t d, struct date *pDate)
 // -----------------------------------------------------------------------------
 // FUNCTION MKZY_ParseTime
 // -----------------------------------------------------------------------------
-/*!
-   \fn      void MKZY_ParseTime(uint32_t t,struct time *pTime)
-   \details Decompose a time in the MKZY file format.\n
-            Time fields in the header are unsigned long numbers.\n
-            They are represented on 8 digits in the \a hhmmssdd file format where \a dd are the decimal milliseconds.\n\n
-   \par     Example:
-            The decimal value 09350067 represents the time 09:35:00, 670 milliseconds in the morning.
-   \param   [in]    t  the time in \a hhmmssdd (where \a dd are the decimal milliseconds)
-   \param   [out]   pTime pointer to a \a struct \a time structure with separate hour, min and sec fields
-*/
+//!
+//! \fn      void MKZY_ParseTime(uint32_t t,struct time *pTime)
+//! \details Decompose a time in the MKZY file format.\n
+//!          Time fields in the header are unsigned long numbers.\n
+//!          They are represented on 8 digits in the \a hhmmssdd file format where \a dd are the decimal milliseconds.\n
+//! \par     Example:
+//!          The decimal value 09350067 represents the time 09:35:00, 670 milliseconds in the morning.
+//! \param   [in]    t  the time in \a hhmmssdd (where \a dd are the decimal milliseconds)
+//! \param   [out]   pTime pointer to a \a struct \a time structure with separate hour, min and sec fields
+//!
 // -----------------------------------------------------------------------------
 
 void MKZY_ParseTime(uint32_t t,struct time *pTime)
@@ -310,19 +322,19 @@ void MKZY_ParseTime(uint32_t t,struct time *pTime)
 // -----------------------------------------------------------------------------
 // FUNCTION MKZY_ReadRecord
 // -----------------------------------------------------------------------------
-/*!
-   \fn      RC MKZY_ReadRecord(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp)
-   \details read a specified record from a file in MKZY format.\n
-   \param   [in]  pEngineContext  pointer to the engine context; some fields are affected by this function.
-   \param   [in]  recordNo        the index of the record to read
-   \param   [in]  specFp          pointer to the spectra file to read
-   \return  ERROR_ID_FILE_NOT_FOUND if the input file pointer \a specFp is NULL \n
-            ERROR_ID_FILE_END if the end of the file is reached\n
-            ERROR_ID_ALLOC if the allocation of a buffer failed\n
-            ERROR_ID_BUFFER_FULL if the retrieved data are larger than the allocated buffers\n
-            ERROR_ID_FILE_RECORD if the record doesn't satisfy user criteria\n
-            ERROR_ID_NO on success
-*/
+//!
+//! \fn      RC MKZY_ReadRecord(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp)
+//! \details read a specified record from a file in MKZY format.\n
+//! \param   [in]  pEngineContext  pointer to the engine context; some fields are affected by this function.
+//! \param   [in]  recordNo        the index of the record to read
+//! \param   [in]  specFp          pointer to the spectra file to read
+//! \return  ERROR_ID_FILE_NOT_FOUND if the input file pointer \a specFp is NULL \n
+//!          ERROR_ID_FILE_END if the end of the file is reached\n
+//!          ERROR_ID_ALLOC if the allocation of a buffer failed\n
+//!          ERROR_ID_BUFFER_FULL if the retrieved data are larger than the allocated buffers\n
+//!          ERROR_ID_FILE_RECORD if the record doesn't satisfy user criteria\n
+//!          ERROR_ID_NO on success
+//!
 // -----------------------------------------------------------------------------
 
 RC MKZY_ReadRecord(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp)
@@ -500,6 +512,19 @@ RC MKZY_ReadRecord(ENGINE_CONTEXT *pEngineContext,int recordNo,FILE *specFp)
   return rc;
  }
 
+// -----------------------------------------------------------------------------
+// FUNCTION MKZY_SearchForOffset
+// -----------------------------------------------------------------------------
+//!
+//! \fn      RC MKZY_SearchForOffset(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
+//! \details Extract the dark current spectrum and the offset (resp. called dark and offset) from the file and remove offset from dark current.\n
+//! \param   [in]  pEngineContext  pointer to the engine context; some fields are affected by this function.
+//! \param   [in]  specFp pointer to the spectra file to read
+//! \return  the code returned by \ref MKZY_ReadRecord \n
+//!          ERROR_ID_NO on success
+//!
+// -----------------------------------------------------------------------------
+
 RC MKZY_SearchForOffset(ENGINE_CONTEXT *pEngineContext,FILE *specFp) {
   // Declarations
 
@@ -550,6 +575,19 @@ RC MKZY_SearchForOffset(ENGINE_CONTEXT *pEngineContext,FILE *specFp) {
  	return rc;
  }
 
+// -----------------------------------------------------------------------------
+// FUNCTION MKZY_SearchForSky
+// -----------------------------------------------------------------------------
+//!
+//! \fn      RC MKZY_SearchForSky(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
+//! \details Extract the reference spectrum (called sky) from the file and correct it by offset and dark current.\n
+//! \param   [in]  pEngineContext  pointer to the engine context; some fields are affected by this function.
+//! \param   [in]  specFp pointer to the spectra file to read
+//! \return  the code returned by \ref MKZY_ReadRecord \n
+//!          ERROR_ID_NO on success
+//!
+// -----------------------------------------------------------------------------
+
 RC MKZY_SearchForSky(ENGINE_CONTEXT *pEngineContext,FILE *specFp) {
   // Declarations
 
@@ -595,16 +633,16 @@ RC MKZY_SearchForSky(ENGINE_CONTEXT *pEngineContext,FILE *specFp) {
 // -----------------------------------------------------------------------------
 // FUNCTION MKZY_Set
 // -----------------------------------------------------------------------------
-/*!
-   \fn      RC MKZY_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
-   \details calculate the number of records in a file in MKZY format.\n
-   \param   [in]  pEngineContext  pointer to the engine context; some fields are affected by this function.
-   \param   [in]  specFp pointer to the spectra file to read
-   \return  ERROR_ID_FILE_NOT_FOUND if the input file pointer \a specFp is NULL \n
-            ERROR_ID_FILE_EMPTY if the file is empty\n
-            ERROR_ID_ALLOC if the allocation of a buffer failed\n
-            ERROR_ID_NO on success
-*/
+//!
+//! \fn      RC MKZY_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
+//! \details Calculate the number of records in a file in MKZY format.\n
+//! \param   [in]  pEngineContext  pointer to the engine context; some fields are affected by this function.
+//! \param   [in]  specFp pointer to the spectra file to read
+//! \return  ERROR_ID_FILE_NOT_FOUND if the input file pointer \a specFp is NULL \n
+//!          ERROR_ID_FILE_EMPTY if the file is empty\n
+//!          ERROR_ID_ALLOC if the allocation of a buffer failed\n
+//!          ERROR_ID_NO on success
+//!
 // -----------------------------------------------------------------------------
 
 RC MKZY_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
@@ -658,7 +696,7 @@ RC MKZY_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
 
   	 recordIndexes[pEngineContext->recordInfo.mkzy.recordNumber]=fileLength;
 
-  	 pEngineContext->recordNumber=pEngineContext->recordInfo.mkzy.recordNumber; // !!!
+  	 pEngineContext->recordNumber=pEngineContext->recordInfo.mkzy.recordNumber;  // !!!
 
     if (!(rc=MKZY_SearchForOffset(pEngineContext,specFp)))
   	  rc=MKZY_SearchForSky(pEngineContext,specFp);
@@ -675,23 +713,23 @@ RC MKZY_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
  }
 
 // -----------------------------------------------------------------------------
-// FUNCTION MKZY_Reli
+// FUNCTION MKZY_Read
 // -----------------------------------------------------------------------------
-/*!
-   \fn      RC MKZY_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp)
-   \details call \ref MKZY_ReadRecord to read a specified record from a file in MKZY format and check that it is a spectrum to analyze (spectrum name should be 'other').\n
-   \param   [in]  pEngineContext  pointer to the engine context; some fields are affected by this function.
-   \param   [in]  recordNo        the index of the record to read
-   \param   [in]  dateFlag        1 to search for a reference spectrum; 0 otherwise
-   \param   [in]  localDay        if \a dateFlag is 1, the calendar day for the reference spectrum to search for
-   \param   [in]  specFp          pointer to the spectra file to read
-   \return  the code returned by \ref MKZY_ReadRecord \n
-            ERROR_ID_FILE_RECORD if the record is the spectrum is not a spectrum to analyze (sky or dark spectrum)\n
-            ERROR_ID_NO on success
-*/
+//!
+//! \fn      RC MKZY_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp)
+//! \details Call \ref MKZY_ReadRecord to read a specified record from a file in MKZY format and check that it is a spectrum to analyze (spectrum name should be 'other').\n
+//! \param   [in]  pEngineContext  pointer to the engine context; some fields are affected by this function.
+//! \param   [in]  recordNo        the index of the record to read
+//! \param   [in]  dateFlag        1 to search for a reference spectrum; 0 otherwise
+//! \param   [in]  localDay        if \a dateFlag is 1, the calendar day for the reference spectrum to search for
+//! \param   [in]  specFp          pointer to the spectra file to read
+//! \return  the code returned by \ref MKZY_ReadRecord \n
+//!          ERROR_ID_FILE_RECORD if the record is the spectrum is not a spectrum to analyze (sky or dark spectrum)\n
+//!          ERROR_ID_NO on success
+//!
 // -----------------------------------------------------------------------------
 
-RC MKZY_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp)
+RC MKZY_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay,FILE *specFp)
  {
   // Declarations
 
@@ -706,7 +744,7 @@ RC MKZY_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
   offset=pEngineContext->buffers.offset;
   dark=pEngineContext->buffers.darkCurrent;
 
-  if ((cumSpectrum=(double *)MEMORY_AllocDVector("MKZY_Reli ","cumSpectrum",0,n_wavel-1))==NULL)
+  if ((cumSpectrum=(double *)MEMORY_AllocDVector("MKZY_Read ","cumSpectrum",0,n_wavel-1))==NULL)
    rc=ERROR_ID_ALLOC;
   else
    {
@@ -762,7 +800,7 @@ RC MKZY_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
      }
 
     if (cumSpectrum!=NULL)
-     MEMORY_ReleaseDVector("MKZY_Reli ","cumSpectrum",cumSpectrum,0);
+     MEMORY_ReleaseDVector("MKZY_Read ","cumSpectrum",cumSpectrum,0);
    }
 
   // Return
@@ -773,14 +811,14 @@ RC MKZY_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localD
 // -----------------------------------------------------------------------------
 // FUNCTION MKZY_LoadAnalysis
 // -----------------------------------------------------------------------------
-/*!
-   \fn      RC MKZY_LoadAnalysis(ENGINE_CONTEXT *pEngineContext)
-   \details as the reference spectrum is retrieved from spectra files, calibration
-            has to be applied on each file\n
-   \param   [in]  pEngineContext  pointer to the engine context
-   \return  error code returned by one of the child function on error\n
-            ERROR_ID_NO on success
-*/
+//!
+//! \fn      RC MKZY_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
+//! \details As the reference spectrum is retrieved from spectra files, calibration
+//!          has to be applied on each file\n
+//! \param   [in]  pEngineContext  pointer to the engine context
+//! \return  error code returned by one of the child function on error\n
+//!          ERROR_ID_NO on success
+//!
 // -----------------------------------------------------------------------------
 
 RC MKZY_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)

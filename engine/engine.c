@@ -755,7 +755,7 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
        break;
        // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF :
-       rc=frm4doas_set(pEngineContext); // do not need specFp because the file is open with netCDF
+       rc=FRM4DOAS_Set(pEngineContext); // do not need specFp because the file is open with netCDF
 
       // if (!(rc=MKZY_Set(pEngineContext,pFile->specFp)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_EXPORT) && (THRD_id!=THREAD_TYPE_NONE))
       //  rc=MKZY_LoadAnalysis(pEngineContext,responseHandle);
@@ -941,11 +941,11 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_MKZY :
-      rc=MKZY_Reli(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
+      rc=MKZY_Read(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
       break;
       // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF :
-       rc=frm4doas_read(pEngineContext,indexRecord,dateFlag,localCalDay); // do not need specFp because the file is open with netCDF
+       rc=FRM4DOAS_Read(pEngineContext,indexRecord,dateFlag,localCalDay); // do not need specFp because the file is open with netCDF
 
       // if (!(rc=MKZY_Set(pEngineContext,pFile->specFp)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_EXPORT) && (THRD_id!=THREAD_TYPE_NONE))
       //  rc=MKZY_LoadAnalysis(pEngineContext,responseHandle);
@@ -1181,7 +1181,7 @@ RC EngineEndCurrentSession(ENGINE_CONTEXT *pEngineContext)
      GOME2_ReleaseBuffers();
      OMI_ReleaseBuffers();
      tropomi_cleanup();
-     frm4doas_cleanup();
+     FRM4DOAS_Cleanup();
      SCIA_ReleaseBuffers(pEngineContext->project.instrumental.readOutFormat);
      apex_clean();
 
@@ -1763,7 +1763,6 @@ void EngineScanSetRefIndexes(ENGINE_CONTEXT *pEngineContext,INDEX indexRecord)
 
   pRef->indexScanBefore=indexScanBefore;
   pRef->indexScanAfter=indexScanAfter;
-
  }
 
 RC EngineLoadRefMFC(ENGINE_CONTEXT *pEngineContextRef,ENGINE_CONTEXT *pEngineContext,INDEX indexRefRecord)

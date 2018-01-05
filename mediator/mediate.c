@@ -343,6 +343,12 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
 
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_SCANINDEX])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Scan index","%d",pRecord->maxdoas.scanIndex);
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_SAT_LON])
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Satellite longitude","%g",pRecord->satellite.longitude);
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_SAT_LAT])
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Satellite latitude","%g",pRecord->satellite.latitude);
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_SAT_HEIGHT])
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Satellite height","%g",pRecord->satellite.altitude);
 
   // Return
 
@@ -1693,9 +1699,12 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
            pTabFeno->resolFwhm=pAnalysisWindows->resolFwhm;
 
            if ((pTabFeno->refSpectrumSelectionMode=pAnalysisWindows->refSpectrumSelection)==ANLYS_REF_SELECTION_MODE_AUTOMATIC) {
-             if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV) || (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC) || (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) || (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA) ||
-                 (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_BIRA_MOBILE) || (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_BIRA_AIRBORNE) ||
-                ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_ASCII) && (pEngineContext->project.instrumental.ascii.elevSaveFlag || (pEngineContext->project.instrumental.ascii.format==PRJCT_INSTR_ASCII_FORMAT_COLUMN_EXTENDED)))) {
+               if (((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_ASCII) && is_maxdoas(pEngineContext->project.instrumental.readOutFormat)) ||
+                   ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_ASCII) && (pEngineContext->project.instrumental.ascii.elevSaveFlag || (pEngineContext->project.instrumental.ascii.format==PRJCT_INSTR_ASCII_FORMAT_COLUMN_EXTENDED)))) {
+
+             //if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_CCD_EEV) || (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC) || (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_STD) || (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_MFC_BIRA) ||
+             //    (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_BIRA_MOBILE) || (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_BIRA_AIRBORNE) || (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF) ||
+             //   ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_ASCII) && (pEngineContext->project.instrumental.ascii.elevSaveFlag || (pEngineContext->project.instrumental.ascii.format==PRJCT_INSTR_ASCII_FORMAT_COLUMN_EXTENDED)))) {
 
                if ((pTabFeno->refMaxdoasSelectionMode=pAnalysisWindows->refMaxdoasSelection)==ANLYS_MAXDOAS_REF_SCAN)
                  pEngineContext->analysisRef.refScan++;

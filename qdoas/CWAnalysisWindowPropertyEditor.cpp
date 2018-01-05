@@ -37,7 +37,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CHelpSystem.h"
 
 #include "constants.h"
-
+#include "doas.h"
 #include "debugutil.h"
 
 CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &projectName,
@@ -329,9 +329,9 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   m_refTwoStack = new QStackedLayout;
   m_refTwoStack->setMargin(0);
 
-  if ((p->instrumental.format==PRJCT_INSTR_FORMAT_CCD_EEV) || (p->instrumental.format==PRJCT_INSTR_FORMAT_MFC) || (p->instrumental.format==PRJCT_INSTR_FORMAT_MFC_STD) || (p->instrumental.format==PRJCT_INSTR_FORMAT_MFC_BIRA) ||
-      (p->instrumental.format==PRJCT_INSTR_FORMAT_BIRA_MOBILE) || (p->instrumental.format==PRJCT_INSTR_FORMAT_BIRA_AIRBORNE) ||
-     ((p->instrumental.format==PRJCT_INSTR_FORMAT_ASCII) && ((p->instrumental.ascii.flagElevationAngle) || (p->instrumental.ascii.format==PRJCT_INSTR_ASCII_FORMAT_COLUMN_EXTENDED))))
+  if (((p->instrumental.format!=PRJCT_INSTR_FORMAT_ASCII) && is_maxdoas((_prjctInstrFormat)p->instrumental.format)) ||
+      ((p->instrumental.format==PRJCT_INSTR_FORMAT_ASCII) && ((p->instrumental.ascii.flagElevationAngle) || (p->instrumental.ascii.format==PRJCT_INSTR_ASCII_FORMAT_COLUMN_EXTENDED))))
+
    m_refTwoStack->addWidget(m_maxdoasFrame);  // automatic - takes index 0
   else
    m_refTwoStack->addWidget(m_refTwoSzaFrame);  // automatic - takes index 0
@@ -510,9 +510,8 @@ bool CWAnalysisWindowPropertyEditor::actionOk(void)
     strcpy(d->refTwoFile, m_refTwoEdit->text().toLocal8Bit().data());
     strcpy(d->residualFile, m_residualEdit->text().toLocal8Bit().data());
 
-    if ((p->instrumental.format==PRJCT_INSTR_FORMAT_CCD_EEV) || (p->instrumental.format==PRJCT_INSTR_FORMAT_MFC) || (p->instrumental.format==PRJCT_INSTR_FORMAT_MFC_STD) || (p->instrumental.format==PRJCT_INSTR_FORMAT_MFC_BIRA) ||
-        (p->instrumental.format==PRJCT_INSTR_FORMAT_BIRA_MOBILE) || (p->instrumental.format==PRJCT_INSTR_FORMAT_BIRA_AIRBORNE) ||
-       ((p->instrumental.format==PRJCT_INSTR_FORMAT_ASCII) && ((p->instrumental.ascii.flagElevationAngle) || (p->instrumental.ascii.format==PRJCT_INSTR_ASCII_FORMAT_COLUMN_EXTENDED))))
+    if (((p->instrumental.format!=PRJCT_INSTR_FORMAT_ASCII) && is_maxdoas((_prjctInstrFormat)p->instrumental.format)) ||
+        ((p->instrumental.format==PRJCT_INSTR_FORMAT_ASCII) && ((p->instrumental.ascii.flagElevationAngle) || (p->instrumental.ascii.format==PRJCT_INSTR_ASCII_FORMAT_COLUMN_EXTENDED))))
      {
       d->refSzaCenter = m_maxdoasSzaCenterEdit->text().toDouble();
       d->refSzaDelta = m_maxdoasSzaDeltaEdit->text().toDouble();
@@ -607,9 +606,8 @@ void CWAnalysisWindowPropertyEditor::projectPropertiesChanged()
      {
       // MAXDOAS measurements
 
-      if ((d->instrumental.format==PRJCT_INSTR_FORMAT_CCD_EEV) || (d->instrumental.format==PRJCT_INSTR_FORMAT_MFC) || (d->instrumental.format==PRJCT_INSTR_FORMAT_MFC_STD) ||  (d->instrumental.format==PRJCT_INSTR_FORMAT_MFC_BIRA) ||
-          (d->instrumental.format==PRJCT_INSTR_FORMAT_BIRA_MOBILE) || (d->instrumental.format==PRJCT_INSTR_FORMAT_BIRA_AIRBORNE) ||
-         ((d->instrumental.format==PRJCT_INSTR_FORMAT_ASCII) && ((d->instrumental.ascii.flagElevationAngle) || (d->instrumental.ascii.format==PRJCT_INSTR_ASCII_FORMAT_COLUMN_EXTENDED))))
+      if (((d->instrumental.format!=PRJCT_INSTR_FORMAT_ASCII) && is_maxdoas((_prjctInstrFormat)d->instrumental.format)) ||
+          ((d->instrumental.format==PRJCT_INSTR_FORMAT_ASCII) && ((d->instrumental.ascii.flagElevationAngle) || (d->instrumental.ascii.format==PRJCT_INSTR_ASCII_FORMAT_COLUMN_EXTENDED))))
        {
         m_maxdoasFrame->show();
         m_refTwoSzaFrame->hide();
