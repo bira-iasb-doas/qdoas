@@ -9,7 +9,7 @@ extern unsigned int THRD_id;                   // thread identification number
 extern int       THRD_levelMax;                // level of thread
 extern int       THRD_lastEvent;               // last event
 extern unsigned long THRD_delay;               // wait for next event
-extern int       THRD_localShift;
+extern double    THRD_localShift;
 extern int       THRD_correction;
 extern int       THRD_browseType;
 extern int       THRD_treeCallFlag;

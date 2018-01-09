@@ -1677,3 +1677,5 @@ GENERATE_LEGEND        = YES
 # the various graphs.
 
 DOT_CLEANUP            = YES
+
+CITE_BIB_FILES         = D:/My_Applications/QDOAS/trunk/Doc_IASB/QDOAS_manual-tex/QDOAS_biblio.bib

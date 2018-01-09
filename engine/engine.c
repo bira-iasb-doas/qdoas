@@ -371,8 +371,8 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
 
    ENGINE_localNoon=(double)12.;
 
-   THRD_localShift=(int)(((indexSite=SITES_GetIndex(pInstrumental->observationSite))!=ITEM_NONE)?
-                         floor(SITES_itemList[indexSite].longitude/15.):0); // 24./360.
+   THRD_localShift=(double)(((indexSite=SITES_GetIndex(pInstrumental->observationSite))!=ITEM_NONE)?
+                         SITES_itemList[indexSite].longitude/15.:0.); // 24./360.
 
    rc=ERROR_ID_NO;
 

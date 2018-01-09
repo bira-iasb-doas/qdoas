@@ -734,7 +734,7 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
 
         MFC_header.longitude=-MFC_header.longitude;
 
-        timeshift=(fabs(THRD_localShift)>EPSILON)?THRD_localShift:floor(pRecord->longitude/15.);
+        timeshift=(fabs(THRD_localShift)>EPSILON)?THRD_localShift:pRecord->longitude/15.;
 
         pRecord->Tm=(double)ZEN_NbSec(&pRecord->present_datetime.thedate,&pRecord->present_datetime.thetime,0);
         pRecord->Zm=ZEN_FNTdiz(ZEN_FNCrtjul(&pRecord->Tm),&pRecord->longitude,&pRecord->latitude,&pRecord->Azimuth);
@@ -1074,7 +1074,7 @@ RC ReliMFCStd(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int local
 
       pRecord->altitude=(double)0.;
 
-      timeshift=(fabs(THRD_localShift)>EPSILON)?THRD_localShift:floor(pRecord->longitude/15.);
+      timeshift=(fabs(THRD_localShift)>EPSILON)?THRD_localShift:pRecord->longitude/15.;
 
       tmLocal=pRecord->Tm+timeshift*3600.;
 
@@ -1392,7 +1392,7 @@ RC MFCBIRA_Reli(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int loc
 
     pRecord->TimeDec=(double)pRecord->present_datetime.thetime.ti_hour+pRecord->present_datetime.thetime.ti_min/60.+pRecord->present_datetime.thetime.ti_sec/3600.;
 
-    timeshift=(fabs(THRD_localShift)>EPSILON)?THRD_localShift:floor(header.longitude/15.);
+    timeshift=(fabs(THRD_localShift)>EPSILON)?THRD_localShift:header.longitude/15.;
 
     tmLocal=pRecord->Tm+timeshift*3600.;
     pRecord->localCalDay=ZEN_FNCaljda(&tmLocal);

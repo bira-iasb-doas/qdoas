@@ -1,47 +1,22 @@
 
 //  ----------------------------------------------------------------------------
-//
-//  Product/Project   :  QDOAS
-//  Module purpose    :  NON-LINEAR LEAST-SQUARES FIT
-//  Name of module    :  CURFIT.C
-//  Creation date     :  These routines were existing in the DOS version and
-//                       have been completed and improved for WinDOAS
-//
-//  Reference
-//
-//         Data Reduction and Error Analysis for the Physical Sciences
-//         Philip R. Bevington
-//         Associate professor of physics - Case Western Reserve University
-//         McGraw-Hill Book Company
-//
-//  QDOAS is a cross-platform application developed in QT for DOAS retrieval
-//  (Differential Optical Absorption Spectroscopy).
-//
-//  The QT version of the program has been developed jointly by the Belgian
-//  Institute for Space Aeronomy (BIRA-IASB) and the Science and Technology
-//  company (S[&]T) - Copyright (C) 2007
-//
-//      BIRA-IASB                                   S[&]T
-//      Belgian Institute for Space Aeronomy        Science [&] Technology
-//      Avenue Circulaire, 3                        Postbus 608
-//      1180     UCCLE                              2600 AP Delft
-//      BELGIUM                                     THE NETHERLANDS
-//      caroline.fayt@aeronomie.be                  info@stcorp.nl
-//
-//  This program is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU General Public License
-//  as published by the Free Software Foundation; either version 2
-//  of the License, or (at your option) any later version.
-//
-//  This program is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-//
-//  You should have received a copy of the GNU General Public License
-//  along with this program; if not, write to the Free Software Foundation,
-//  Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-//
+//! \addtogroup DOAS
+//! Mathematical functions of the DOAS engine
+//! @{
+//!
+//! \file      curfit.c
+//! \brief     Marquardt-Levenberg algorithm used to solve the DOAS equation.
+//! \details   The method is retrieved from the Bevington [\cite Bevington1969].\n
+//!            Starting from given initial values, this algorithm searches the parameter space
+//!            using a combination of Gauss-Newton and gradient descent steps. The M-L algorithm is an efficient minimization
+//!            algorithm for a wide range of non-linear functions, but it may converge to a
+//!            local minimum if the initial values are too far from the global minimum.
+//! \cite Bevington1969
+//! \authors   Caroline FAYT (qdoas@aeronomie.be)
+//! \date      These routines were existing in the DOS version (before 1995) and have been completed and improved for WinDOAS
+//! \copyright QDOAS is distributed under GNU General Public License
+//!
+//! @}
 //  ----------------------------------------------------------------------------
 //
 //  FUNCTIONS :
@@ -68,6 +43,33 @@
 //           linearization of the fitting function
 //
 //  ----------------------------------------------------------------------------
+//
+//  QDOAS is a cross-platform application developed in QT for DOAS retrieval
+//  (Differential Optical Absorption Spectroscopy).
+//
+//        BIRA-IASB
+//        Belgian Institute for Space Aeronomy
+//        Ringlaan 3 Avenue Circulaire
+//        1180     UCCLE
+//        BELGIUM
+//        qdoas@aeronomie.be
+//
+//  This program is free software; you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation; either version 2 of the License, or (at
+//  your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful, but
+//  WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//  General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program; if not, write to the Free Software
+//  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+//
+//  ----------------------------------------------------------------------------
+
 #include <math.h>
 #include <string.h>
 #include <stdio.h>
@@ -421,7 +423,7 @@ static RC CurfitNumDeriv(double *specX, double *srefX, const double *sigmaY, int
 
   // Buffers allocation
 
-  if ((Yfit2=MEMORY_AllocDVector(__func__,"Yfit2",0,nY-1))==NULL) { 
+  if ((Yfit2=MEMORY_AllocDVector(__func__,"Yfit2",0,nY-1))==NULL) {
     rc = ERROR_ID_ALLOC;
   } else {
 
@@ -430,7 +432,7 @@ static RC CurfitNumDeriv(double *specX, double *srefX, const double *sigmaY, int
     // Get the selected non linear parameter & increment
 
     double Aj = A[indexA];
-    double Dj = deltaA[indexA]; 
+    double Dj = deltaA[indexA];
 
     // Evaluate function for Aj+Dj
 
