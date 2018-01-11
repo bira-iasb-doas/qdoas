@@ -751,97 +751,44 @@ static void sum_refs(vector<double>& sum, vector<double>& variance, const vector
 }
 
 int tropomi_prepare_automatic_reference(ENGINE_CONTEXT *pEngineContext, void *responseHandle) {
+  std::cout << __func__ << ", with DLR reference file" << std::endl;
 
-  // A radiance reference for Tropomi is created, either
-  //
-  // - from the L1B radiance files found in the "reference orbit
-  //   directory" configured in the "instrumental" tab of projet
-  //   properties, or
-  //
-  // - if no directory is configured, from L1B radiance files found
-  //   for the same day as the file we are currently processing (based
-  //   on an assumed standard directory layout).
+  NetCDFFile dlr_ref("/bira-iasb/projects/DOAS/Projects/TROPOMI/fromDLR/20171215/20171212-20171213_newHCHOxs2_onlyearthshine/AUX_BGXXXX/NRTI/2017/12/S5P_NRTI_AUX_BGHCHO_20171212T090530_20171214T005819_20171214T163345.nc");
+  auto product = dlr_ref.getGroup("PRODUCT");
 
-  // First, check if we have already created the automatic reference
-  // (possible when processing multiple input files in one go).
+  vector<double> dlr_ref_radiance(9000);
+  vector<double> dlr_ref_lambda(9000);
+  vector<double> dlr_ref_derivs(9000);
+  size_t start_dlr[] = {0,0};
+  size_t count_dlr_wavel[] = {9000};
+  size_t count_dlr_ref[] = {1, 9000};
+  product.getVar("earthshine_reference_wavelength", start_dlr,  count_dlr_wavel, dlr_ref_lambda.data());
+  for (size_t row = 0; row!=size_groundpixel; ++row) {
+    if (!pEngineContext->project.instrumental.use_row[row]) continue;
+    const int n_wavel = NDET[row];
+    vector<double> reference(n_wavel);
+    start_dlr[0] = row;
+    product.getVar("earthshine_reference_radiance", start_dlr, count_dlr_ref, dlr_ref_radiance.data());
 
-  if (// If we are using a manual reference directory, the reference
-      // is the same for all input files, and we can just check if a
-      // reference has been created (-> check if reference_orbit_files
-      // is not empty)
-    (strlen(pEngineContext->project.instrumental.tropomi.reference_orbit_dir)
-     && !reference_orbit_files.empty()) ||
-    (// If we are using daily references, check if the orbit we are
-     // processing is in the list of orbits for which the current
-     // earthshine ref is valid.
-     std::find(reference_orbit_files.begin(), reference_orbit_files.end(),
-               basename(pEngineContext->fileInfo.fileName)) != reference_orbit_files.end())) {
-    // In these cases, we don't have to do anything
-    return ERROR_ID_NO;
-  }
+    int rc = SPLINE_Deriv2(dlr_ref_lambda.data(), dlr_ref_radiance.data(), dlr_ref_derivs.data(), 9000, __func__);
+    if (rc) throw(std::runtime_error("Error interpolating DLR earthshine reference spectrum."));
 
-  // If we reach this point, we must create a new reference spectrum
-  try {
-    set<vector<float>> cache;
-    auto earth_spectra = find_matching_spectra(get_reference_orbits(pEngineContext->fileInfo.fileName,
-                                                                    pEngineContext->project.instrumental.tropomi.spectralBand,
-                                                                    pEngineContext->project.instrumental.tropomi.reference_orbit_dir), cache);
-    vector<double> sum, variance;
-    for (size_t row = 0; row!=size_groundpixel; ++row) {
-      if (!pEngineContext->project.instrumental.use_row[row]) continue;
-      const int n_wavel=NDET[row];
-      sum.resize(n_wavel);
-      variance.resize(n_wavel);
+    const auto& wavelength_grid = irradiance_reference.at(row).lambda;
+    assert(n_wavel == wavelength_grid.size());
+    SPLINE_Vector(dlr_ref_lambda.data(), dlr_ref_radiance.data(), dlr_ref_derivs.data(), 9000,
+                  wavelength_grid.data(), reference.data(), wavelength_grid.size(), SPLINE_CUBIC);
 
-      for(int window=0; window < NFeno; ++window) {
-        FENO *pTabFeno = &TabFeno[row][window];
-        if (pTabFeno->hidden || !pTabFeno->refSpectrumSelectionMode == ANLYS_REF_SELECTION_MODE_AUTOMATIC) continue;
-        const vector<earth_ref>& refs = earth_spectra[window][row];
-        if (refs.size()) {
-          // interpolate all refs onto the irradiance reference grid for this row, and sum them:
-          const auto& wavelength_grid = irradiance_reference.at(row).lambda;
-          assert(n_wavel == wavelength_grid.size() &&
-                 std::equal(wavelength_grid.begin(), wavelength_grid.end(), pTabFeno->LambdaRef));
-          sum_refs(sum, variance, refs, wavelength_grid);
-          for (size_t i=0; i!=sum.size(); ++i) {
-            pTabFeno->Sref[i]=sum[i]/refs.size();
-            pTabFeno->SrefSigma[i]=std::sqrt(variance[i])/refs.size();
-            VECTOR_NormalizeVector(pTabFeno->Sref-1,n_wavel,&pTabFeno->refNormFact, __func__); // TODO: check if SrefSigma should be divided by same factor, or if this normalization is accounted for everywhere.
-          }
-        }
+    for(int window=0; window < NFeno; ++window) {
+      FENO *pTabFeno = &TabFeno[row][window];
+      if (pTabFeno->hidden || !pTabFeno->refSpectrumSelectionMode == ANLYS_REF_SELECTION_MODE_AUTOMATIC) continue;
+
+      assert(std::equal(wavelength_grid.begin(), wavelength_grid.end(), pTabFeno->LambdaRef));
+      for (size_t i=0; i!=reference.size(); ++i) {
+        pTabFeno->Sref[i]=reference[i];
+        pTabFeno->SrefSigma[i]=1;
+        VECTOR_NormalizeVector(pTabFeno->Sref-1,n_wavel,&pTabFeno->refNormFact, __func__); // TODO: check if SrefSigma should be divided by same factor, or if this normalization is accounted for everywhere.
       }
     }
-    // Create reference description string for output, and emit
-    // warning message for those rows/analysis windows for which no
-    // reference could be created:
-    for(int window=0; window!= NFeno; ++ window) {
-      vector<size_t> failed_rows; // per analysis window, rows for which no reference was found
-      for(size_t row=0; row!=size_groundpixel; ++row) {
-        FENO *pTabFeno = &TabFeno[row][window];
-        // Don't write error messages when automatic reference is not used:
-        if (pTabFeno->hidden || !pTabFeno->refSpectrumSelectionMode == ANLYS_REF_SELECTION_MODE_AUTOMATIC) continue;
-        const vector<earth_ref>& refs = earth_spectra[window][row];
-        std::stringstream desc;
-        desc << refs.size() << " radiances used";
-        free(pTabFeno->ref_description);
-        pTabFeno->ref_description = strdup(desc.str().c_str());
-        if (!refs.size())
-          failed_rows.push_back(row);
-      }
-      if (!failed_rows.empty()) {
-        // For each analysis window, emit one warning message with the rows for which no reference was found.
-        std::stringstream ss;
-        ss << "Analysis window " << TabFeno[0][window].windowName << ": cannot find radiance reference spectra for rows ";
-        for (auto ir=failed_rows.begin(); ir!=failed_rows.end(); ++ir) {
-          ss << *ir;
-          if (ir != failed_rows.end() -1)
-            ss << ", ";
-        }
-        mediateResponseErrorMessage(__func__, ss.str().c_str(), WarningEngineError, responseHandle);
-      }
-    }
-  } catch (std::runtime_error e) {
-    return ERROR_SetLast(__func__, ERROR_TYPE_WARNING, ERROR_ID_TROPOMI_REF, pEngineContext->fileInfo.fileName, 0, e.what()); // TODO: more specific error message
   }
   for (size_t row = 0; row!= size_groundpixel; ++row) {
     if (!pEngineContext->project.instrumental.use_row[row]) continue;

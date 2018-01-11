@@ -116,7 +116,7 @@ using std::set;
 //!          \li <strong>instrument_location</strong> (name of the station, latitude, longitude and altitude of the instrument)\n
 //!          \li <strong>keydata</strong> (reference spectrum, measured slit function(s))\n
 //!          \li <strong>measurements</strong> : radiances, instrumental errors if known, scan index and wavelength calibration\n
-//!          \li <strong>metadata</strong> : currently limited to data present in ASCII files proposed for CINDI-2 reprocessing but could be extended to any data relevant for ground-based measurements (for example, temperature of the detector, …)\n
+//!          \li <strong>metadata</strong> : currently limited to data present in ASCII files proposed for CINDI-2 reprocessing but could be extended to any data relevant for ground-based measurements (for example, temperature of the detector, ï¿½)\n
 //! \details <strong>metadata</strong> group contains information useful to QDOAS to describe the records.
 
   struct metadata
@@ -197,12 +197,7 @@ static metadata FRM4DOAS_Read_Metadata(size_t num_rec)
   metadata_group.getVar("datetime",datetime_start,datetime_count,2,(short)0,result.dt);
   metadata_group.getVar("datetime_start",datetime_start,datetime_count,2,(short)0,result.dts);
   metadata_group.getVar("datetime_end",datetime_start,datetime_count,2,(short)0,result.dte);
-
-  // Scan index is retrieved from the "measurements" group
-
-  NetCDFGroup measurements_group = current_file.getGroup(root_name+"/measurements");
-
-  measurements_group.getVar("scan_index",start,count,1,(short)-1,result.sci);
+  metadata_group.getVar("scan_index",start,count,1,(short)-1,result.sci);
 
   // Return
 
