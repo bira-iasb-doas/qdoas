@@ -578,13 +578,6 @@ void getValidFieldFlags(int *validFlags, int instrument,int selectorOrigin)
      }
     break;
  // ----------------------------------------------------------------------------
-    case PRJCT_INSTR_FORMAT_GDP_ASCII :
-     {
-      validFlags[PRJCT_RESULTS_PIXEL]=1;
-      validFlags[PRJCT_RESULTS_PIXEL_TYPE]=1;
-     }
-    break;
- // ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_GDP_BIN :
      {
       validFlags[PRJCT_RESULTS_PIXEL]=1;

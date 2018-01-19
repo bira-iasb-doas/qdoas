@@ -77,9 +77,7 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
 
    if (strlen(pInstrumental->instrFunction))
     {
-     if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_PDAEGG_ULB)
-      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Dark Current","%s",pInstrumental->instrFunction);
-     else if (pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_MFC)
+     if (pInstrumental->readOutFormat!=PRJCT_INSTR_FORMAT_MFC)
       mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Transmission file","%s",pInstrumental->instrFunction);
      else if (((pInstrumental->mfc.mfcMaskSpec!=0) && ((unsigned int)MFC_header.ty==pInstrumental->mfc.mfcMaskSpec)) ||
               ((pInstrumental->mfc.mfcMaskSpec==0) &&
@@ -406,8 +404,8 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
      const char* y_units;
      switch (pInstrumental->readOutFormat) {
        // satellite formats have calibrated radiances:
-     case PRJCT_INSTR_FORMAT_GDP_ASCII:
      case PRJCT_INSTR_FORMAT_GDP_BIN:
+     case PRJCT_INSTR_FORMAT_GOME1_NETCDF :
      case PRJCT_INSTR_FORMAT_SCIA_PDS:
      case PRJCT_INSTR_FORMAT_GOME2:
      case PRJCT_INSTR_FORMAT_OMI:
@@ -1031,18 +1029,6 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 
       break;
       // ----------------------------------------------------------------------------
-    case PRJCT_INSTR_FORMAT_GDP_ASCII :                                                               // GOME ASCII format
-
-      NDET[0]=1024;                                                                                     // Could be reduced by Set function
-
-      strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->gdpascii.calibrationFile);     // calibration file
-      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->gdpascii.transmissionFunctionFile);     // instrumental function file
-
-      pEngineInstrumental->gome.bandType=pMediateInstrumental->gdpascii.bandType;
-      pEngineInstrumental->gome.pixelType=pMediateInstrumental->gdpascii.pixelType-1;
-
-      break;
-      // ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_GDP_BIN :                                                               // GOME WinDOAS BINARY format
 
       NDET[0]=1024;                                                                                     // Could be reduced by Set function
@@ -1052,6 +1038,18 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 
       pEngineInstrumental->gome.bandType=pMediateInstrumental->gdpbin.bandType;
       pEngineInstrumental->gome.pixelType=pMediateInstrumental->gdpbin.pixelType-1;
+
+      break;
+      // ---------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_GOME1_NETCDF :                                                               // GOME ERS2 netCDF format
+
+      NDET[0]=1024;                                                                                     // Could be reduced by Set function
+
+      strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->gdpnetcdf.calibrationFile);     // calibration file
+      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->gdpnetcdf.transmissionFunctionFile);     // instrumental function file
+
+      pEngineInstrumental->gome.bandType=pMediateInstrumental->gdpnetcdf.bandType;
+      pEngineInstrumental->gome.pixelType=pMediateInstrumental->gdpnetcdf.pixelType-1;
 
       break;
       // ---------------------------------------------------------------------------

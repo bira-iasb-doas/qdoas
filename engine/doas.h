@@ -110,7 +110,7 @@ extern PRJCT_USAMP  *pUsamp;
 
 static inline bool is_satellite(enum _prjctInstrFormat format) {
   return (format==PRJCT_INSTR_FORMAT_GDP_BIN ||
-          format==PRJCT_INSTR_FORMAT_GDP_ASCII ||
+          format==PRJCT_INSTR_FORMAT_GOME1_NETCDF ||
           format==PRJCT_INSTR_FORMAT_SCIA_PDS ||
           format==PRJCT_INSTR_FORMAT_OMI ||
           format==PRJCT_INSTR_FORMAT_OMPS ||

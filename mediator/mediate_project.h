@@ -308,23 +308,6 @@ extern "C" {
     char detectorNonLinearityFile[FILENAME_BUFFER_LENGTH];
   };
 
-  struct instrumental_ccdulb {
-    int grating;
-    int centralWavelength;
-    char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char offsetFile[FILENAME_BUFFER_LENGTH];
-    char interPixelVariabilityFile[FILENAME_BUFFER_LENGTH];
-    char detectorNonLinearityFile[FILENAME_BUFFER_LENGTH];
-  };
-
-  struct instrumental_pdaeggulb {
-    int curveType;
-    char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char transmissionFunctionFile[FILENAME_BUFFER_LENGTH];
-    char interPixelVariabilityFile[FILENAME_BUFFER_LENGTH];
-    char detectorNonLinearityFile[FILENAME_BUFFER_LENGTH];
-  };
-
   struct instrumental_ccdeev {
     int  detectorSize;
     int  spectralType;
@@ -335,14 +318,6 @@ extern "C" {
     char detectorNonLinearityFile[FILENAME_BUFFER_LENGTH];
     int  straylight;
     double lambdaMin,lambdaMax;
-  };
-
-  struct instrumental_opus {
-    int detectorSize;
-    double timeShift;
-    int flagTransmittance;
-    char calibrationFile[FILENAME_BUFFER_LENGTH];
-    char transmissionFunctionFile[FILENAME_BUFFER_LENGTH];
   };
 
   struct instrumental_gdp {
@@ -433,8 +408,8 @@ extern "C" {
     struct instrumental_minimum rasas;
     struct instrumental_minimum pdasieasoe;
     struct instrumental_ccdeev ccdeev;
-    struct instrumental_gdp gdpascii;
     struct instrumental_gdp gdpbin;
+    struct instrumental_gdp gdpnetcdf;
     struct instrumental_scia sciapds;
     struct instrumental_minimum uoft;
     struct instrumental_minimum noaa;

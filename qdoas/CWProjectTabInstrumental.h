@@ -41,10 +41,7 @@ class CWInstrActonEdit;
 class CWInstrSaozEdit;
 class CWInstrMinimumEdit;
 class CWInstrCcdEdit;
-class CWInstrCcdUlbEdit;
-class CWInstrPdaEggUlbEdit;
 class CWInstrCcdEevEdit;
-class CWInstrOpusEdit;
 class CWInstrGdpEdit;
 class CWInstrGome2Edit;
 class CWInstrSciaEdit;
@@ -79,10 +76,8 @@ Q_OBJECT
   CWInstrActonEdit *m_actonEdit;
   CWInstrLoggerEdit *m_pdaEggEdit;
   CWInstrLoggerEdit *m_pdaEggOldEdit;
-  CWInstrPdaEggUlbEdit *m_pdaEggUlbEdit;
   CWInstrCcdEdit *m_ccdOhp96Edit;
   CWInstrCcdEdit *m_ccdHa94Edit;
-  CWInstrCcdUlbEdit *m_ccdUlbEdit;
   CWInstrSaozEdit *m_saozVisEdit;
   CWInstrSaozEdit *m_saozUvEdit;
   CWInstrMfcEdit *m_mfcEdit;
@@ -91,10 +86,8 @@ Q_OBJECT
   CWInstrMinimumEdit *m_saozEfmEdit;
   CWInstrMinimumEdit *m_rasasEdit;
   CWInstrMinimumEdit *m_pdasiEasoeEdit;
-  CWInstrLoggerEdit *m_pdasiOsmaEdit;
   CWInstrCcdEevEdit *m_ccdEevEdit;
-  CWInstrOpusEdit *m_opusEdit;
-  CWInstrGdpEdit *m_gdpAsciiEdit;
+  CWInstrGdpEdit *m_gdpNetcdfEdit;
   CWInstrGdpEdit *m_gdpBinEdit;
   CWInstrSciaEdit *m_sciaHdfEdit;
   CWInstrSciaEdit *m_sciaPdsEdit;
@@ -327,33 +320,6 @@ class CWInstrCcdEdit : public CWAllFilesEdit
 
 //--------------------------------------------------------------------------
 
-class CWInstrCcdUlbEdit : public CWAllFilesEdit
-{
- public:
-  CWInstrCcdUlbEdit(const struct instrumental_ccdulb *d, QWidget *parent = 0);
-
-  void apply(struct instrumental_ccdulb *d) const;
-
- private:
-  QLineEdit *m_gratingEdit, *m_cenLambdaEdit;
-  StrayLightConfig *m_strayLightConfig;
-};
-
-//--------------------------------------------------------------------------
-
-class CWInstrPdaEggUlbEdit : public CWAllFilesEdit
-{
- public:
-  CWInstrPdaEggUlbEdit(const struct instrumental_pdaeggulb *d, QWidget *parent = 0);
-
-  void apply(struct instrumental_pdaeggulb *d) const;
-
- private:
-  QComboBox *m_curveTypeCombo;
-};
-
-//--------------------------------------------------------------------------
-
 class CWInstrCcdEevEdit : public CWAllFilesEdit
 {
  public:
@@ -364,21 +330,6 @@ class CWInstrCcdEevEdit : public CWAllFilesEdit
  private:
   QLineEdit *m_detSizeEdit;
   QComboBox *m_spectralTypeCombo;
-  StrayLightConfig *m_strayLightConfig;
-};
-
-//--------------------------------------------------------------------------
-
-class CWInstrOpusEdit : public CWCalibInstrEdit
-{
- public:
-  CWInstrOpusEdit(const struct instrumental_opus *d, QWidget *parent = 0);
-
-  void apply(struct instrumental_opus *d) const;
-
- private:
-  QLineEdit *m_detSizeEdit, *m_timeShiftEdit;
-  QCheckBox *m_transmittanceCheck;
   StrayLightConfig *m_strayLightConfig;
 };
 

@@ -5102,11 +5102,14 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
   pEngineContext->refFlag=0;
   pTabFeno->longPathFlag=ANALYSE_LONGPATH;                                      // !!! Anoop
 
-  pTabFeno->gomeRefFlag=((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GDP_ASCII)&&
-                         (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GDP_BIN) &&
-                         (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_SCIA_PDS) &&
-                         (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GOME2) &&
-                         (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMPS) )?1:0;
+  pTabFeno->gomeRefFlag=(!is_satellite(pEngineContext->project.instrumental.readOutFormat))?1:0;
+
+                     //   ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_TROPOMI) &&
+                     //    (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GOME1_NETCDF) &&
+                     //    (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GDP_BIN) &&
+                     //    (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_SCIA_PDS) &&
+                     //    (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GOME2) &&
+                     //    (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMPS) )?1:0;
 
   //
   // in the case of satellites measurements :
@@ -5126,12 +5129,8 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
   if (((Sref=pTabFeno->Sref=(double *)MEMORY_AllocDVector(__func__,"Sref",0,n_wavel-1))==NULL) ||
       ((SrefEtalon=pTabFeno->SrefEtalon=(double *)MEMORY_AllocDVector(__func__,"SrefEtalon",0,n_wavel))==NULL) ||
 
-      (((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_ASCII) ||
-        (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GDP_BIN) ||
-        (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) ||
-        (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_TROPOMI) ||
-        (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMPS)
-        ) &&
+      (is_satellite(pEngineContext->project.instrumental.readOutFormat)
+        &&
        ((pTabFeno->SrefSigma=(double *)MEMORY_AllocDVector(__func__,"SrefSigma",0,n_wavel))==NULL)) ||
 
       ((lambdaRef=(double *)MEMORY_AllocDVector(__func__,"lambdaRef",0,n_wavel))==NULL) ||

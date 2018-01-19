@@ -401,9 +401,6 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   case PRJCT_INSTR_FORMAT_CCD_EEV:
     fprintf(fp, "\"ccdeev\"");
     break;
-  case PRJCT_INSTR_FORMAT_GDP_ASCII:
-    fprintf(fp, "\"gdpascii\"");
-    break;
   case PRJCT_INSTR_FORMAT_GDP_BIN:
     fprintf(fp, "\"gdpbin\"");
     break;
@@ -735,8 +732,8 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   fprintf(fp," />\n");
 
   // gdpascii
-  fprintf(fp, "      <gdpascii type=");
-  switch (d->gdpascii.bandType) {
+  fprintf(fp, "      <gdpnetcdf type=");
+  switch (d->gdpnetcdf.bandType) {
   case PRJCT_INSTR_GDP_BAND_1A:
     fprintf(fp, "\"1a\"");
     break;
@@ -760,7 +757,7 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   }
 
   fprintf(fp," pixel=");
-  switch(d->gdpascii.pixelType)
+  switch(d->gdpnetcdf.pixelType)
    {
    	case PRJCT_INSTR_GDP_PIXEL_ALL :
    	 fprintf(fp,"\"all\"");
@@ -787,10 +784,10 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
    	break;
    };
 
-  tmpStr = pathMgr->simplifyPath(QString(d->gdpascii.calibrationFile));
+  tmpStr = pathMgr->simplifyPath(QString(d->gdpnetcdf.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
 
-  tmpStr = pathMgr->simplifyPath(QString(d->gdpascii.transmissionFunctionFile));
+  tmpStr = pathMgr->simplifyPath(QString(d->gdpnetcdf.transmissionFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
 
   // gdpbin

@@ -339,41 +339,36 @@ enum _prjctUsampMethod {
 // -----------------------
 
 enum _prjctInstrFormat {
-  PRJCT_INSTR_FORMAT_ASCII,                                                     //  0 ASCII
-  PRJCT_INSTR_FORMAT_LOGGER,                                                    //  1 Logger (PDA,CCD or HAMAMATSU)
-  PRJCT_INSTR_FORMAT_ACTON,                                                     //  2 Acton (NILU)
-  PRJCT_INSTR_FORMAT_PDAEGG,                                                    //  3 PDA EG&G (sept. 94 until now)
-  PRJCT_INSTR_FORMAT_PDAEGG_OLD,                                                //  4 PDA EG&G (spring 94)
-  PRJCT_INSTR_FORMAT_PDAEGG_ULB,                                                //  5 PDA EG&G (ULB)
+  PRJCT_INSTR_FORMAT_ASCII,                                                     //  1 ASCII
+  PRJCT_INSTR_FORMAT_LOGGER,                                                    //  2 Logger (PDA,CCD or HAMAMATSU)
+  PRJCT_INSTR_FORMAT_ACTON,                                                     //  3 Acton (NILU)
+  PRJCT_INSTR_FORMAT_PDAEGG,                                                    //  4 PDA EG&G (sept. 94 until now)
+  PRJCT_INSTR_FORMAT_PDAEGG_OLD,                                                //  5 PDA EG&G (spring 94)
   PRJCT_INSTR_FORMAT_CCD_OHP_96,                                                //  6 CCD (OHP 96)
   PRJCT_INSTR_FORMAT_CCD_HA_94,                                                 //  7 CCD (HARESTUA 94)
-  PRJCT_INSTR_FORMAT_CCD_ULB,                                                   //  8 CCD (ULB)
-  PRJCT_INSTR_FORMAT_SAOZ_VIS,                                                  //  9 SAOZ visible
-  PRJCT_INSTR_FORMAT_SAOZ_UV,                                                   // 10 SAOZ UV
-  PRJCT_INSTR_FORMAT_SAOZ_EFM,                                                  // 11 SAOZ EFM (1024)
-  PRJCT_INSTR_FORMAT_MFC,                                                       // 12 MFC Heidelberg
-  PRJCT_INSTR_FORMAT_MFC_STD,                                                   // 13 MFC Heidelberg
-  PRJCT_INSTR_FORMAT_MFC_BIRA,                                                  // 14 MFC BIRA-IASB
-  PRJCT_INSTR_FORMAT_RASAS,                                                     // 15 RASAS (INTA)
-  PRJCT_INSTR_FORMAT_PDASI_EASOE,                                               // 16 EASOE
-  PRJCT_INSTR_FORMAT_PDASI_OSMA,                                                // 17 PDA SI (OSMA)
-  PRJCT_INSTR_FORMAT_CCD_EEV,                                                   // 18 CCD EEV
-  PRJCT_INSTR_FORMAT_OPUS,                                                      // 19 FOURIER,OPUS format
-  PRJCT_INSTR_FORMAT_GDP_ASCII,                                                 // 20 GOME GDP ASCII format
-  PRJCT_INSTR_FORMAT_GDP_BIN,                                                   // 21 GOME GDP BINARY format
-  PRJCT_INSTR_FORMAT_SCIA_PDS,                                                  // 22 SCIAMACHY Calibrated Level 1 data in PDS format
-  PRJCT_INSTR_FORMAT_UOFT,                                                      // 23 University of Toronto
-  PRJCT_INSTR_FORMAT_NOAA,                                                      // 24 NOAA
-  PRJCT_INSTR_FORMAT_OMI,                                                       // 25 OMI
-  PRJCT_INSTR_FORMAT_TROPOMI,                                                   // 26 Tropomi
-  PRJCT_INSTR_FORMAT_GOME2,                                                     // 27 GOME2
-  PRJCT_INSTR_FORMAT_MKZY,                                                      // 28 MANNE Kihlman and ZHANG Yan pak format
-  PRJCT_INSTR_FORMAT_BIRA_AIRBORNE,                                             // 29 ULMDOAS (BIRA-IASB)
-  PRJCT_INSTR_FORMAT_BIRA_MOBILE,                                               // 30 MOBILEDOAS (BIRA-IASB)
-  PRJCT_INSTR_FORMAT_APEX,                                                      // 31 APEX NetCDF files (BIRA-IASB/VITO)
-  PRJCT_INSTR_FORMAT_OCEAN_OPTICS,                                              // 32 Ocean optics
-  PRJCT_INSTR_FORMAT_OMPS,                                                      // 33 OMPS
-  PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF,                                           // 34 netCDF format for FRM4DOAS
+  PRJCT_INSTR_FORMAT_SAOZ_VIS,                                                  //  8 SAOZ visible
+  PRJCT_INSTR_FORMAT_SAOZ_EFM,                                                  //  9 SAOZ EFM (1024)
+  PRJCT_INSTR_FORMAT_MFC,                                                       // 10 MFC Heidelberg
+  PRJCT_INSTR_FORMAT_MFC_STD,                                                   // 11 MFC Heidelberg
+  PRJCT_INSTR_FORMAT_MFC_BIRA,                                                  // 12 MFC BIRA-IASB
+  PRJCT_INSTR_FORMAT_RASAS,                                                     // 13 RASAS (INTA)
+  PRJCT_INSTR_FORMAT_PDASI_EASOE,                                               // 14 EASOE
+  PRJCT_INSTR_FORMAT_CCD_EEV,                                                   // 15 CCD EEV
+  PRJCT_INSTR_FORMAT_GDP_BIN,                                                   // 16 GOME GDP BINARY format
+  PRJCT_INSTR_FORMAT_SCIA_PDS,                                                  // 17 SCIAMACHY Calibrated Level 1 data in PDS format
+  PRJCT_INSTR_FORMAT_UOFT,                                                      // 18 University of Toronto
+  PRJCT_INSTR_FORMAT_NOAA,                                                      // 19 NOAA
+  PRJCT_INSTR_FORMAT_OMI,                                                       // 20 OMI
+  PRJCT_INSTR_FORMAT_TROPOMI,                                                   // 21 Tropomi
+  PRJCT_INSTR_FORMAT_GOME2,                                                     // 22 GOME2
+  PRJCT_INSTR_FORMAT_MKZY,                                                      // 23 MANNE Kihlman and ZHANG Yan pak format
+  PRJCT_INSTR_FORMAT_BIRA_AIRBORNE,                                             // 24 ULMDOAS (BIRA-IASB)
+  PRJCT_INSTR_FORMAT_BIRA_MOBILE,                                               // 25 MOBILEDOAS (BIRA-IASB)
+  PRJCT_INSTR_FORMAT_APEX,                                                      // 26 APEX NetCDF files (BIRA-IASB/VITO)
+  PRJCT_INSTR_FORMAT_OCEAN_OPTICS,                                              // 27 Ocean optics
+  PRJCT_INSTR_FORMAT_OMPS,                                                      // 28 OMPS
+  PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF,                                           // 29 netCDF format for FRM4DOAS
+  PRJCT_INSTR_FORMAT_GOME1_NETCDF,                                              // 30 netCDF format for GOME1
   PRJCT_INSTR_FORMAT_MAX
 };
 

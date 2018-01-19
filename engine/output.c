@@ -745,7 +745,6 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
   case PRJCT_INSTR_FORMAT_SCIA_PDS:
   case PRJCT_INSTR_FORMAT_GOME2:
   case PRJCT_INSTR_FORMAT_GDP_BIN:
-  case PRJCT_INSTR_FORMAT_GDP_ASCII:
     num_sza = num_azimuth = num_los_zenith = num_los_azimuth = 3;
     break;
   }
@@ -1109,7 +1108,6 @@ static void OutputRegisterFieldsToExport(const ENGINE_CONTEXT *pEngineContext, c
   case PRJCT_INSTR_FORMAT_SCIA_PDS:
   case PRJCT_INSTR_FORMAT_GOME2:
   case PRJCT_INSTR_FORMAT_GDP_BIN:
-  case PRJCT_INSTR_FORMAT_GDP_ASCII:
     num_sza = num_azimuth = num_los_zenith = num_los_azimuth = 3;
     break;
   }

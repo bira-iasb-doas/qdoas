@@ -716,8 +716,6 @@ bool CProjectInstrumentalSubHandler::start(const QXmlAttributes &atts)
     m_instrumental->format = PRJCT_INSTR_FORMAT_PDASI_EASOE;
   else if (str == "ccdeev")
     m_instrumental->format = PRJCT_INSTR_FORMAT_CCD_EEV;
-  else if (str == "gdpascii")
-    m_instrumental->format = PRJCT_INSTR_FORMAT_GDP_ASCII;
   else if (str == "gdpbin")
     m_instrumental->format = PRJCT_INSTR_FORMAT_GDP_BIN;
   else if (str == "sciapds")
@@ -1091,8 +1089,9 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
         return postErrorMessage("Invalid ccdeev Type");
      }
   }
-  else if (element == "gdpascii") { // GDP ASCII
-    helperLoadGdp(atts, &(m_instrumental->gdpascii));
+  else if (element == "gdpnetcdf") { // GDP netCDF
+    helperLoadGdp(atts, &(m_instrumental->gdpnetcdf));
+
   }
   else if (element == "gdpbin") { // GDP BIN
     helperLoadGdp(atts, &(m_instrumental->gdpbin));

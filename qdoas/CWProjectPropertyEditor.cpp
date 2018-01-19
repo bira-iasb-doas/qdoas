@@ -60,14 +60,11 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
 
   // create and populate ground based
   m_groundFormatCombo = new QComboBox(this);
-  m_groundFormatCombo->addItem("Acton (NILU)", QVariant(PRJCT_INSTR_FORMAT_ACTON));
   m_groundFormatCombo->addItem("ASCII", QVariant(PRJCT_INSTR_FORMAT_ASCII));
-  m_groundFormatCombo->addItem("CCD all tracks", QVariant(PRJCT_INSTR_FORMAT_CCD_OHP_96));
+  m_groundFormatCombo->addItem("FRM4DOAS netCDF", QVariant(PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF));
+  m_groundFormatCombo->addItem("BIRA Mobile", QVariant(PRJCT_INSTR_FORMAT_BIRA_MOBILE));
   m_groundFormatCombo->addItem("CCD EEV (BIRA-IASB, NILU)", QVariant(PRJCT_INSTR_FORMAT_CCD_EEV));
-  m_groundFormatCombo->addItem("CCD Sesame I", QVariant(PRJCT_INSTR_FORMAT_CCD_HA_94));
   m_groundFormatCombo->addItem("CCD (University of Toronto)", QVariant(PRJCT_INSTR_FORMAT_UOFT));
-  m_groundFormatCombo->addItem("EASOE", QVariant(PRJCT_INSTR_FORMAT_PDASI_EASOE));
-  m_groundFormatCombo->addItem("Logger (PDA, CCD or HAMAMATSU)", QVariant(PRJCT_INSTR_FORMAT_LOGGER));
   m_groundFormatCombo->addItem("MFC (BIN, DOASIS)", QVariant(PRJCT_INSTR_FORMAT_MFC));
   m_groundFormatCombo->addItem("MFC (STD, DOASIS)", QVariant(PRJCT_INSTR_FORMAT_MFC_STD));
   m_groundFormatCombo->addItem("MFC (BIN, BIRA-IASB)", QVariant(PRJCT_INSTR_FORMAT_MFC_BIRA));
@@ -79,18 +76,23 @@ CWProjectPropertyEditor::CWProjectPropertyEditor(const QString &projectName, QWi
   m_groundFormatCombo->addItem("RASAS (INTA)", QVariant(PRJCT_INSTR_FORMAT_RASAS));
   m_groundFormatCombo->addItem("SAOZ EFM (1024)", QVariant(PRJCT_INSTR_FORMAT_SAOZ_EFM));
   m_groundFormatCombo->addItem("SAOZ PCD/NMOS (512)", QVariant(PRJCT_INSTR_FORMAT_SAOZ_VIS));
-  m_groundFormatCombo->addItem("BIRA Mobile", QVariant(PRJCT_INSTR_FORMAT_BIRA_MOBILE));
-  m_groundFormatCombo->addItem("FRM4DOAS netCDF", QVariant(PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF));
+  m_groundFormatCombo->addItem("Acton (NILU)", QVariant(PRJCT_INSTR_FORMAT_ACTON));
+  m_groundFormatCombo->addItem("CCD all tracks", QVariant(PRJCT_INSTR_FORMAT_CCD_OHP_96));
+  m_groundFormatCombo->addItem("CCD Sesame I", QVariant(PRJCT_INSTR_FORMAT_CCD_HA_94));
+  m_groundFormatCombo->addItem("PDA EG&G (Sept. 94 until now)", QVariant(PRJCT_INSTR_FORMAT_PDAEGG));
+  m_groundFormatCombo->addItem("PDA EG&G (Spring 94)", QVariant(PRJCT_INSTR_FORMAT_PDAEGG_OLD));
+  m_groundFormatCombo->addItem("EASOE", QVariant(PRJCT_INSTR_FORMAT_PDASI_EASOE));
+  m_groundFormatCombo->addItem("Logger (PDA, CCD or HAMAMATSU)", QVariant(PRJCT_INSTR_FORMAT_LOGGER));
   m_groundFormatCombo->hide();
   // create and populate satellite
   m_satelliteFormatCombo = new QComboBox(this);
-  // m_satelliteFormatCombo->addItem("GDP (ASCII)", QVariant(PRJCT_INSTR_FORMAT_GDP_ASCII));   23/11/2015 not supported anymore
-  m_satelliteFormatCombo->addItem("GDP (Binary)", QVariant(PRJCT_INSTR_FORMAT_GDP_BIN));
-  m_satelliteFormatCombo->addItem("GOME2", QVariant(PRJCT_INSTR_FORMAT_GOME2));
-  m_satelliteFormatCombo->addItem("OMI", QVariant(PRJCT_INSTR_FORMAT_OMI));
   m_satelliteFormatCombo->addItem("Tropomi", QVariant(PRJCT_INSTR_FORMAT_TROPOMI));
   m_satelliteFormatCombo->addItem("OMPS", QVariant(PRJCT_INSTR_FORMAT_OMPS));
+  m_satelliteFormatCombo->addItem("OMI", QVariant(PRJCT_INSTR_FORMAT_OMI));
+  m_satelliteFormatCombo->addItem("GOME1 (netCDF)", QVariant(PRJCT_INSTR_FORMAT_GOME1_NETCDF));
+  m_satelliteFormatCombo->addItem("GOME2", QVariant(PRJCT_INSTR_FORMAT_GOME2));
   m_satelliteFormatCombo->addItem("SCIAMACHY L1C (PDS format)", QVariant(PRJCT_INSTR_FORMAT_SCIA_PDS));
+  m_satelliteFormatCombo->addItem("GDP (Binary)", QVariant(PRJCT_INSTR_FORMAT_GDP_BIN));
   m_satelliteFormatCombo->hide();
   // create and populate airborne
   m_airborneFormatCombo = new QComboBox(this);
