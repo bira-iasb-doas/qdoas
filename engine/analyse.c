@@ -3115,11 +3115,12 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
         }
         sprintf(windowTitle,"Analysis results for %s window",Feno->windowName);
 
+        // OMI/OMPS/TROPOMI : at this step, the irradiance is not available yet (in separate files)
+
         switch (pEngineContext->project.instrumental.readOutFormat) {
         case PRJCT_INSTR_FORMAT_OMI:
         case PRJCT_INSTR_FORMAT_OMPS:
         case PRJCT_INSTR_FORMAT_TROPOMI:
-        case PRJCT_INSTR_FORMAT_GOME1_NETCDF:
           memcpy(Feno->Lambda,pBuffers->lambda,sizeof(double)*n_wavel);
           break;
         default:
@@ -3173,7 +3174,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
               rc=ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, "Automatic reference selection not implemented for this file format");
               goto EndAnalysis;
               break;
-            case PRJCT_INSTR_FORMAT_GDP_BIN:
+            case PRJCT_INSTR_FORMAT_GDP_BIN:                                          // GOME1NETCDF !!!!!!
               rc = GDP_BIN_get_vza_ref(pRecord->gome.pixelType, WrkFeno, Feno);
               break;
             case PRJCT_INSTR_FORMAT_GOME2:
@@ -3195,10 +3196,12 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           // For OMI, OMPS, Tropomi and GOME-2, interpolate earthshine          // FRM4DOAS : check with Michel what to do with ASCII spectra
           // spectrum onto the solar reference wavelength grid
+          // to replace by is_satellite !!!!
+
           if (pInstrumental->readOutFormat == PRJCT_INSTR_FORMAT_OMI
               || pInstrumental->readOutFormat == PRJCT_INSTR_FORMAT_OMPS
               || pInstrumental->readOutFormat == PRJCT_INSTR_FORMAT_TROPOMI
-              || pInstrumental->readOutFormat == PRJCT_INSTR_FORMAT_GOME1_NETCDF
+              || pInstrumental->readOutFormat == PRJCT_INSTR_FORMAT_GOME1_NETCDF          // ??????????????????????????????
               || pInstrumental->readOutFormat == PRJCT_INSTR_FORMAT_GOME2 ) {
 
             double *spec_deriv2 = malloc(n_wavel * sizeof(*spec_deriv2));
@@ -5107,7 +5110,7 @@ RC ANALYSE_LoadRef(ENGINE_CONTEXT *pEngineContext,INDEX indexFenoColumn)
 
   pTabFeno->gomeRefFlag=(!is_satellite(pEngineContext->project.instrumental.readOutFormat))?1:0;
 
-                     //   ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_TROPOMI) &&
+                     //   ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_TROPOMI) &&   ?????
                      //    (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GOME1_NETCDF) &&
                      //    (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GDP_BIN) &&
                      //    (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_SCIA_PDS) &&
