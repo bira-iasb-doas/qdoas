@@ -383,9 +383,10 @@ static calib GOME1NETCDF_Read_Calib(NetCDFGroup calib_group)
 
   // Get dimensions of variables in the CALIBRATION group
 
-  result.channel_number=calib_group.dimLen("optical_channels");                 // the number of channels
   result.channel_size=calib_group.dimLen("channel_pixels");                     // should be the size of the detector
   result.temp_number=calib_group.dimLen("detector_temperature");                // the number of considered temperatures
+
+  result.channel_number=calib_group.dimLen("total_detector_pixels")/result.channel_size;            // the number of channels
 
   const   size_t start[] = {0,0,0};
   const   size_t count[] = {(size_t)result.temp_number,(size_t)result.channel_number,(size_t)result.channel_size};

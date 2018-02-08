@@ -135,6 +135,8 @@ using std::set;
     vector<short> dts;                                                          //!< \details Datetime_start (date and time at the beginning of the measurement (UT YYYY,MM,DD,hh,mm,ss,ms)
     vector<short> dte;                                                          //!< \details Datetime_end (date and time at the end of the measurement (UT YYYY,MM,DD,hh,mm,ss,ms)
     vector<short> sci;                                                          //!< \details Scan index
+    vector<short> zbi;                                                          //!< \details Zenith before index
+    vector<short> zai;                                                          //!< \details Zenith after index
    };
 
 // ================
@@ -197,6 +199,8 @@ static metadata FRM4DOAS_Read_Metadata(size_t num_rec)
   metadata_group.getVar("datetime_start",datetime_start,datetime_count,2,(short)0,result.dts);
   metadata_group.getVar("datetime_end",datetime_start,datetime_count,2,(short)0,result.dte);
   metadata_group.getVar("scan_index",start,count,1,(short)-1,result.sci);
+  metadata_group.getVar("index_zenith_before",start,count,1,(short)-1,result.zbi);  // Check the presence of the vector !!!
+  metadata_group.getVar("index_zenith_after",start,count,1,(short)-1,result.zai);
 
   // Return
 
@@ -363,7 +367,10 @@ RC FRM4DOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int lo
     pRecordInfo->TotalExpTime=current_metadata.tmt[recordNo-1];
     pRecordInfo->TotalAcqTime=current_metadata.tat[recordNo-1];
     pRecordInfo->maxdoas.measurementType=current_metadata.mt[recordNo-1];
+
     pRecordInfo->maxdoas.scanIndex=current_metadata.sci[recordNo-1];
+    pRecordInfo->maxdoas.zenithBeforeIndex=current_metadata.zbi[recordNo-1];
+    pRecordInfo->maxdoas.zenithAfterIndex=current_metadata.zai[recordNo-1];
 
     // Selection of the reference spectrum
 

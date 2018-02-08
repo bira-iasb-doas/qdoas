@@ -252,7 +252,9 @@ struct _ccd {
 
 typedef struct _maxdoasformat
  {
-  int scanIndex;
+  int scanIndex;           // for FRM4DOAS netCDF file
+  int zenithBeforeIndex;   // for FRM4DOAS netCDF file
+  int zenithAfterIndex;    // for FRM4DOAS netCDF file
   int measurementType;
  }
 MAXDOAS;
@@ -443,6 +445,8 @@ typedef struct _engineBuffers
          *scanRef;                                                              // reference spectrum for the scan (MAXDOAS measurements, MKZY format)
 
   INDEX  *scanIndexes;
+  INDEX  *zenithBeforeIndexes;
+  INDEX  *zenithAfterIndexes;
   uint32_t  *recordIndexes;                                                     // indexes of records for direct access (specific to BIRA-IASB spectra file format)
   MATRIX_OBJECT dnl;                                                            // correction for the non linearity of the detector
  }

@@ -152,6 +152,10 @@ void EngineResetContext(ENGINE_CONTEXT *pEngineContext)
     MEMORY_ReleaseDVector("EngineResetContext ","scanRef",pBuffers->scanRef,0);
    if (pBuffers->scanIndexes!=NULL)
     MEMORY_ReleaseBuffer("EngineResetContext ","scanIndexes",pBuffers->scanIndexes);
+   if (pBuffers->zenithBeforeIndexes!=NULL)
+    MEMORY_ReleaseBuffer("EngineResetContext ","zenithBeforeIndexes",pBuffers->zenithBeforeIndexes);
+   if (pBuffers->zenithAfterIndexes!=NULL)
+    MEMORY_ReleaseBuffer("EngineResetContext ","zenithAfterIndexes",pBuffers->zenithAfterIndexes);
    if (pBuffers->specMaxx!=NULL)
     MEMORY_ReleaseDVector("EngineResetContext ","specMaxx",pBuffers->specMaxx,0);
    if (pBuffers->specMax!=NULL)
@@ -239,6 +243,10 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
         ((pBuffersTarget->scanRef=(double *)MEMORY_AllocDVector("EngineCopyContext","scanRef",0,max_ndet-1))==NULL)) ||
        ((pBuffersSource->scanIndexes!=NULL) && (pBuffersTarget->scanIndexes==NULL) &&
         ((pBuffersTarget->scanIndexes=(INDEX *)MEMORY_AllocBuffer("EngineCopyContext","scanIndexes",pEngineContextSource->recordNumber,sizeof(INDEX),0,MEMORY_TYPE_INT))==NULL)) ||
+       ((pBuffersSource->zenithBeforeIndexes!=NULL) && (pBuffersTarget->zenithBeforeIndexes==NULL) &&
+        ((pBuffersTarget->zenithBeforeIndexes=(INDEX *)MEMORY_AllocBuffer("EngineCopyContext","zenithBeforeIndexes",pEngineContextSource->recordNumber,sizeof(INDEX),0,MEMORY_TYPE_INT))==NULL)) ||
+       ((pBuffersSource->zenithAfterIndexes!=NULL) && (pBuffersTarget->zenithAfterIndexes==NULL) &&
+        ((pBuffersTarget->zenithAfterIndexes=(INDEX *)MEMORY_AllocBuffer("EngineCopyContext","zenithAfterIndexes",pEngineContextSource->recordNumber,sizeof(INDEX),0,MEMORY_TYPE_INT))==NULL)) ||
        ((pBuffersSource->varPix!=NULL) && (pBuffersTarget->varPix==NULL) &&
         ((pBuffersTarget->varPix=(double *)MEMORY_AllocDVector("EngineCopyContext","varPix",0,max_ndet-1))==NULL)) ||
        ((pBuffersSource->specMaxx!=NULL) && (pBuffersTarget->specMaxx==NULL) &&
@@ -283,6 +291,10 @@ RC EngineCopyContext(ENGINE_CONTEXT *pEngineContextTarget,ENGINE_CONTEXT *pEngin
       memcpy(pBuffersTarget->scanRef,pBuffersSource->scanRef,sizeof(double)*max_ndet);
      if ((pBuffersTarget->scanIndexes!=NULL) && (pBuffersSource->scanIndexes!=NULL))
       memcpy(pBuffersTarget->scanIndexes,pBuffersSource->scanIndexes,sizeof(INDEX)*pEngineContextSource->recordNumber);
+     if ((pBuffersTarget->zenithBeforeIndexes!=NULL) && (pBuffersSource->zenithBeforeIndexes!=NULL))
+      memcpy(pBuffersTarget->zenithBeforeIndexes,pBuffersSource->zenithBeforeIndexes,sizeof(INDEX)*pEngineContextSource->recordNumber);
+     if ((pBuffersTarget->zenithAfterIndexes!=NULL) && (pBuffersSource->zenithAfterIndexes!=NULL))
+      memcpy(pBuffersTarget->zenithAfterIndexes,pBuffersSource->zenithAfterIndexes,sizeof(INDEX)*pEngineContextSource->recordNumber);
      if ((pBuffersTarget->varPix!=NULL) && (pBuffersSource->varPix!=NULL))
       memcpy(pBuffersTarget->varPix,pBuffersSource->varPix,sizeof(double)*max_ndet);
      if ((pBuffersTarget->specMaxx!=NULL) && (pBuffersSource->specMaxx!=NULL))
@@ -381,6 +393,8 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
    // MAXDOAS ONLY
 
    pRecord->maxdoas.scanIndex=ITEM_NONE;
+   pRecord->maxdoas.zenithBeforeIndex=ITEM_NONE;
+   pRecord->maxdoas.zenithAfterIndex=ITEM_NONE;
    pRecord->maxdoas.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH;
 
    pEngineContext->mfcDoasisFlag=((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_MFC) ||
@@ -847,6 +861,8 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
    pRecord->fracMoon=0.;
 
    pRecord->maxdoas.scanIndex=ITEM_NONE;
+   pRecord->maxdoas.zenithBeforeIndex=ITEM_NONE;
+   pRecord->maxdoas.zenithAfterIndex=ITEM_NONE;
    pRecord->maxdoas.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH;
 
    pEngineContext->indexRecord=indexRecord;  // !!! for the output
@@ -998,19 +1014,6 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
    if (pRecord->oldZm<(double)0.)
      pRecord->oldZm=pRecord->Zm;
 
-   // MAXDOAS ONLY : add the scan index
-
-   if (is_maxdoas(pEngineContext->project.instrumental.readOutFormat) && (pEngineContext->maxdoasScanIndexFlag) && (pEngineContext->buffers.scanIndexes!=NULL))
-    {
-     INDEX indexFile=ITEM_NONE;
-
-     if (!pEngineContext->mfcDoasisFlag)
-      pRecord->maxdoas.scanIndex=pEngineContext->buffers.scanIndexes[indexRecord-1];
-     else if ((indexFile=MFC_SearchForCurrentFileIndex(pEngineContext))>0)            // indexFile is modeled on indexRecord, this means that first record has indexFile=1
-      pRecord->maxdoas.scanIndex=pEngineContext->buffers.scanIndexes[indexFile-1];
-
-    }
-
    // Correction of the solar zenith angle with the geolocation of the specified observation site
 
    if ((indexSite=SITES_GetIndex(pEngineContext->project.instrumental.observationSite))!=ITEM_NONE) {
@@ -1053,6 +1056,9 @@ RC EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *sp
 
    // Initializations
 
+   resetFlag=(!pEngineContext->mfcDoasisFlag || (THRD_id!=THREAD_TYPE_ANALYSIS) || !pEngineContext->recordInfo.mfcDoasis.nFiles || (MFC_SearchForCurrentFileIndex(pEngineContext)==ITEM_NONE))?1:0;
+   pEngineContext->recordInfo.mfcDoasis.resetFlag=resetFlag;
+
    pRef=&pEngineContext->analysisRef;
    rc=ERROR_ID_NO;
 
@@ -1066,28 +1072,6 @@ RC EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *sp
        pEngineContext->indexRecord=0;
        pEngineContext->currentRecord=1;
      }
-
-   // pEngineContext->fileInfo.fileName is assigned by EngineSetFile.
-   // this means that MFC_SearchForCurrentFileIndex has to be called after EngineSetFile and not before (21/09/2017)
-
-   // For MFC {
-   // For MFC  FILE *fp;
-   // For MFC  fp=fopen("toto.dat","a+t");
-   // For MFC  fprintf(fp,"resetFlag before %d : %d %d\n",pEngineContext->recordInfo.mfcDoasis.resetFlag,pEngineContext->recordInfo.mfcDoasis.nFiles,MFC_SearchForCurrentFileIndex(pEngineContext));
-   // For MFC  fclose(fp);
-   // For MFC }
-
-
-   resetFlag=(!pEngineContext->mfcDoasisFlag || ((THRD_id!=THREAD_TYPE_ANALYSIS) && !pEngineContext->maxdoasScanIndexFlag) || !pEngineContext->recordInfo.mfcDoasis.nFiles || (MFC_SearchForCurrentFileIndex(pEngineContext)==ITEM_NONE))?1:0;
-   pEngineContext->recordInfo.mfcDoasis.resetFlag=resetFlag;
-
-   // For MFC {
-   // For MFC  FILE *fp;
-   // For MFC  fp=fopen("toto.dat","a+t");
-   // For MFC  fprintf(fp,"resetFlag after %d\n",pEngineContext->recordInfo.mfcDoasis.resetFlag);
-   // For MFC  fclose(fp);
-   // For MFC }
-
 
    // MFC measurements : allocate a buffer for files only for the automatic selection of the reference or to assign a scan index
 
@@ -1117,9 +1101,9 @@ RC EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *sp
 
    // For MAXDOAS measurements, calculate the scan indexes (as this operation takes time, it is executed only if it is requested
    // from the Display or Output pages of project properties of it is a selected field to export)
-
-   if (!rc && resetFlag && is_maxdoas(pEngineContext->project.instrumental.readOutFormat) && pEngineContext->maxdoasScanIndexFlag)
-    rc=EngineBuildScanIndex(pEngineContext);
+   // 08/02/2018 : finally, I decide not to calculate the scan index in QDOAS but with external Python routine
+   // if (!rc && resetFlag && is_maxdoas(pEngineContext->project.instrumental.readOutFormat) && pEngineContext->maxdoasScanIndexFlag)
+   // rc=EngineBuildScanIndex(pEngineContext);
 
    // retain calibration plot in case it is already there (e.g. for OMI)
    if (ANALYSE_plotKurucz)
@@ -1169,14 +1153,6 @@ RC EngineRequestEndBrowseSpectra(ENGINE_CONTEXT *pEngineContext)
      if ((!pEngineContext->mfcDoasisFlag || pEngineContext->recordInfo.mfcDoasis.resetFlag) && pEngineContext->analysisRef.refAuto && !pEngineContext->satelliteFlag)
       {
        // Release buffers used for automatic reference
-
-       // For MFC{
-       // For MFC FILE *fp;
-       // For MFC fp=fopen("toto.dat","a+t");
-       // For MFC fprintf(fp,"EndBrowseSpectra %d\n",pEngineContext->recordInfo.mfcDoasis.resetFlag);
-       // For MFC fclose(fp);
-       // For MFC}
-
 
        if (pRef->refIndexes!=NULL)
         MEMORY_ReleaseBuffer(__func__,"refIndexes",pRef->refIndexes);
@@ -1609,36 +1585,16 @@ RC EngineBuildRefList(ENGINE_CONTEXT *pEngineContext)
   pEngineContext->analysisRef.zmMinIndex=indexZmMin;
   pEngineContext->analysisRef.zmMaxIndex=indexZmMax;
 
-  {
-   FILE *fp;
-   fp=fopen("toto.dat","a+t");
-   fprintf(fp,"NRecord %d\n",NRecord);
-   fclose(fp);
-  }
-
-
-   {                                                                                                                                                   // TO CHECK WITH MPI PEOPLE
-    FILE *fp;                                                                                                                                          // TO CHECK WITH MPI PEOPLE
-    int i;                                                                                                                                             // TO CHECK WITH MPI PEOPLE
-    fp=fopen("RefList.dat","w+t");                                                                                                                     // TO CHECK WITH MPI PEOPLE
-    fprintf(fp,"List of references : \n");                                                                                                             // TO CHECK WITH MPI PEOPLE
-    for (i=0;i<NRecord;i++)                                                                                                                            // TO CHECK WITH MPI PEOPLE
-     fprintf(fp,"%d %g %s\n",indexList[i],ZmList[i],&pEngineContext->recordInfo.mfcDoasis.fileNames[(indexList[i]-1)*(DOAS_MAX_PATH_LEN+1)]);          // TO CHECK WITH MPI PEOPLE
-                                                                                                                                                       // TO CHECK WITH MPI PEOPLE
-    fclose(fp);                                                                                                                                        // TO CHECK WITH MPI PEOPLE
-   }                                                                                                                                                   // TO CHECK WITH MPI PEOPLE
-
-
-  // {
-  //  FILE *fp;
-  //  int i;
-  //  fp=fopen("RefList.dat","w+t");
-  //  fprintf(fp,"List of references : \n");
-  //  for (i=0;i<NRecord;i++)
-  //   fprintf(fp,"%d %g %g\n",indexList[i],ZmList[i],TimeDec[i]);
-  //
-  //  fclose(fp);
-  // }
+  // {                                                                                                                                                   // TO CHECK WITH MPI PEOPLE
+  //  FILE *fp;                                                                                                                                          // TO CHECK WITH MPI PEOPLE
+  //  int i;                                                                                                                                             // TO CHECK WITH MPI PEOPLE
+  //  fp=fopen("RefList.dat","w+t");                                                                                                                     // TO CHECK WITH MPI PEOPLE
+  //  fprintf(fp,"List of references : \n");                                                                                                             // TO CHECK WITH MPI PEOPLE
+  //  for (i=0;i<NRecord;i++)                                                                                                                            // TO CHECK WITH MPI PEOPLE
+  //   fprintf(fp,"%d %g %s\n",indexList[i],ZmList[i],&pEngineContext->recordInfo.mfcDoasis.fileNames[(indexList[i]-1)*(DOAS_MAX_PATH_LEN+1)]);          // TO CHECK WITH MPI PEOPLE
+  //                                                                                                                                                     // TO CHECK WITH MPI PEOPLE
+  //  fclose(fp);                                                                                                                                        // TO CHECK WITH MPI PEOPLE
+  // }                                                                                                                                                   // TO CHECK WITH MPI PEOPLE
 
 
   // Copy information from the ref context to the main context
@@ -1784,25 +1740,9 @@ void EngineScanSetRefIndexes(ENGINE_CONTEXT *pEngineContext,INDEX indexRecord)
 
  	// Initializations
 
- 	{
- 	 FILE *fp;
- 	 fp=fopen("toto.dat","a+t");
- 	 fprintf(fp,"Begin SetRefIndexes\n");
- 	 fclose(fp);
- 	}
-
-
  	pRef=&pEngineContext->analysisRef;
  	refIndexes=pRef->refIndexes;
  	nRef=pRef->nRef;
-
- 	{
- 	 FILE *fp;
- 	 fp=fopen("toto.dat","a+t");
- 	 fprintf(fp,"nRef %d %08X\n",nRef,(int)refIndexes);
- 	 fclose(fp);
- 	}
-
 
  	indexScanBefore=indexScanAfter=ITEM_NONE;
 
@@ -1823,14 +1763,6 @@ void EngineScanSetRefIndexes(ENGINE_CONTEXT *pEngineContext,INDEX indexRecord)
      {
       indexScanRecord=(indexScanMin+indexScanMax)>>1;
 
-      {
-       FILE *fp;
-       fp=fopen("toto.dat","a+t");
-       fprintf(fp,"indexScanRecord %d\n",indexScanRecord);
-       fclose(fp);
-      }
-
-
       if (refIndexes[indexScanRecord]==indexRecord)
        indexScanMin=indexScanMax=ITEM_NONE;                                  // the current record is also a zenith (-> in the list of possible reference spectra)
       else if (refIndexes[indexScanRecord]<indexRecord)
@@ -1838,14 +1770,6 @@ void EngineScanSetRefIndexes(ENGINE_CONTEXT *pEngineContext,INDEX indexRecord)
       else
        indexScanMax=indexScanRecord;
      }
-
-    {
-     FILE *fp;
-     fp=fopen("toto.dat","a+t");
-     fprintf(fp,"indexScan Min/Max %d %d\n",indexScanMin,indexScanMax);
-     fclose(fp);
-    }
-
 
     if ((indexScanMin!=ITEM_NONE) && (indexScanMin<nRef) && (refIndexes[indexScanMin]<=indexRecord))
      indexScanBefore=refIndexes[indexScanMin];
@@ -1856,13 +1780,6 @@ void EngineScanSetRefIndexes(ENGINE_CONTEXT *pEngineContext,INDEX indexRecord)
 
   pRef->indexScanBefore=indexScanBefore;
   pRef->indexScanAfter=indexScanAfter;
-
-  {
-   FILE *fp;
-   fp=fopen("toto.dat","a+t");
-   fprintf(fp,"End SetRefIndexes\n");
-   fclose(fp);
-  }
 
  }
 
@@ -1972,14 +1889,6 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
   	  indexScanBefore=pRef->indexScanBefore;
   	  indexScanAfter=pRef->indexScanAfter;
-
-  	  {
-  	   FILE *fp;
-  	   fp=fopen("toto.dat","a+t");
-  	   fprintf(fp,"Search for scan %d %d %d\n",indexRecord,indexScanBefore,indexScanAfter);
-  	   fclose(fp);
-  	  }
-
     }
 
    // Browse analysis windows

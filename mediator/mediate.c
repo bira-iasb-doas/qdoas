@@ -1352,10 +1352,6 @@ int mediateRequestSetProject(void *engineContext,
      else if (operatingMode==THREAD_TYPE_EXPORT)
       for (int i=0;i<project->export_spectra.selection.nSelected;i++)
        fieldsFlag[project->export_spectra.selection.selected[i]]=1;
-
-     pEngineContext->maxdoasScanIndexFlag=((pEngineProject->spectra.fieldsFlag[PRJCT_RESULTS_SCANINDEX] && pEngineProject->spectra.displayDataFlag) ||
-                                          ((operatingMode==THREAD_TYPE_ANALYSIS) && fieldsFlag[PRJCT_RESULTS_SCANINDEX] && pEngineProject->asciiResults.analysisFlag) ||
-                                          ((operatingMode==THREAD_TYPE_EXPORT) && fieldsFlag[PRJCT_RESULTS_SCANINDEX]))?1:0;
     }
 
 

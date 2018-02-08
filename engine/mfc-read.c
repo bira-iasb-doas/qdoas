@@ -347,7 +347,7 @@ INDEX MFC_SearchForCurrentFileIndex(ENGINE_CONTEXT *pEngineContext)
 
  	//  Browse files
 
- 	if ((pEngineContext->analysisRef.refScan /* || pEngineContext->maxdoasScanIndexFlag */) && (filesList!=NULL) && ((ptr=strrchr(pEngineContext->fileInfo.fileName,'/'))!=NULL) && (strlen(ptr+1)>0))
+ 	if (pEngineContext->analysisRef.refScan && (filesList!=NULL) && ((ptr=strrchr(pEngineContext->fileInfo.fileName,'/'))!=NULL) && (strlen(ptr+1)>0))
  	 {
  	  strcpy(fileName,ptr+1);
 

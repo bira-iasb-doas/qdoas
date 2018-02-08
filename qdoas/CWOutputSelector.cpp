@@ -165,14 +165,14 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_LONGITEND,              "Longitude End"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_LATITEND,               "Latitude End"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ALTITEND,               "Altitude End"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_TOTALEXPTIME,               "Total Measurement Time"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_TOTALACQTIME,               "Total Acquisition Time"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_LAMBDA,               "Lambda"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SPECTRA,               "Spectra"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_FILENAME,              "File name"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_TOTALEXPTIME,           "Total Measurement Time"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_TOTALACQTIME,           "Total Acquisition Time"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_LAMBDA,                 "Lambda"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SPECTRA,                "Spectra"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_FILENAME,               "File name"));
 
   // if (selectorOrigin==TAB_SELECTOR_OUTPUT)
-   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SCANINDEX,              "Scan index"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SCANINDEX,              "Scan index"));
 
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_PRECALCULATED_FLUXES,   "Precalculated fluxes"));
 
@@ -300,6 +300,7 @@ QVariant CWOutputFieldItem::data(int role) const
 
 void getValidFieldFlags(int *validFlags, int instrument,int selectorOrigin)
  {
+   int format=(int)static_cast<enum _prjctInstrFormat>(instrument);
    int satelliteFlag = is_satellite(static_cast<enum _prjctInstrFormat>(instrument));
    int maxdoasFlag = is_maxdoas(static_cast<enum _prjctInstrFormat>(instrument));
 
@@ -361,7 +362,7 @@ void getValidFieldFlags(int *validFlags, int instrument,int selectorOrigin)
   validFlags[PRJCT_RESULTS_TOTALACQTIME]=
   validFlags[PRJCT_RESULTS_TOTALEXPTIME]=!satelliteFlag;
   validFlags[PRJCT_RESULTS_MEASTYPE]=maxdoasFlag;
-  validFlags[PRJCT_RESULTS_SCANINDEX]=maxdoasFlag;
+  validFlags[PRJCT_RESULTS_SCANINDEX]=(format==PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF)?1:0;
 
   // set the appropriate flags
 
