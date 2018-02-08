@@ -1,8 +1,6 @@
 
-
 //  ----------------------------------------------------------------------------
 //! \addtogroup Format
-//! All the modules to read spectra in the various formats supported by QDOAS
 //! @{
 //!
 //! \file      mkzy-read.c

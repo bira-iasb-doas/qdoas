@@ -624,7 +624,7 @@ RC GDP_BIN_Set(ENGINE_CONTEXT *pEngineContext) {
           rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,fileName);
           continue;
         }
-        
+
         if (pOrbitFile->gdpBinHeader.version<40) {
           if (fread(&pOrbitFile->gdpBinGeo3,sizeof(GEO_3),1,fp) != 1)
             return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_BAD_FORMAT, pOrbitFile->gdpBinFileName);
@@ -805,8 +805,8 @@ RC GDP_BIN_Read(ENGINE_CONTEXT *pEngineContext,int recordNo) {
     pRecord->latitude =0.01*pOrbitFile->gdpBinGeo3.latArray[4];
     pRecord->zenithViewAngle=0.01*pOrbitFile->gdpBinGeo3.losZa[1];
     pRecord->azimuthViewAngle=0.01*pOrbitFile->gdpBinGeo3.losAzim[1];
-    pRecord->cloudFraction=pOrbitFile->gdpBinGeo3.cloudFraction;
-    pRecord->cloudTopPressure=pOrbitFile->gdpBinGeo3.cloudTopPressure;
+    pRecord->satellite.cloud_fraction=pOrbitFile->gdpBinGeo3.cloudFraction;
+    pRecord->satellite.cloud_top_pressure=pOrbitFile->gdpBinGeo3.cloudTopPressure;
     for (int i=0; i<3; ++i) {
       pRecord->gome.azim[i]=pOrbitFile->gdpBinGeo3.aziArray[i];
       pRecord->gome.sza[i]=pOrbitFile->gdpBinGeo3.szaArray[i];
@@ -826,8 +826,8 @@ RC GDP_BIN_Read(ENGINE_CONTEXT *pEngineContext,int recordNo) {
     pRecord->latitude =0.01*pOrbitFile->gdpBinGeo4.latArray[4];
     pRecord->zenithViewAngle=pOrbitFile->gdpBinGeo4.losZaBOA[1];
     pRecord->azimuthViewAngle=pOrbitFile->gdpBinGeo4.losAzimBOA[1];
-    pRecord->cloudFraction=pOrbitFile->gdpBinGeo4.cloudInfo.CloudFraction[0];
-    pRecord->cloudTopPressure=pOrbitFile->gdpBinGeo4.cloudInfo.CTP[0];
+    pRecord->satellite.cloud_fraction=pOrbitFile->gdpBinGeo4.cloudInfo.CloudFraction[0];
+    pRecord->satellite.cloud_top_pressure=pOrbitFile->gdpBinGeo4.cloudInfo.CTP[0];
     for (int i=0; i<3; ++i) {
       pRecord->gome.azim[i]=pOrbitFile->gdpBinGeo4.aziArrayBOA[i];
       pRecord->gome.sza[i]=pOrbitFile->gdpBinGeo4.szaArrayBOA[i];
@@ -862,7 +862,7 @@ RC GDP_BIN_Read(ENGINE_CONTEXT *pEngineContext,int recordNo) {
   pRecord->gome.pixelType=pOrbitFile->gdpBinSpectrum.groundPixelType;
 
   pRecord->altitude=0.;
-  
+
 cleanup:
 
   // Close file
@@ -876,7 +876,7 @@ static bool use_as_reference(const GDP_BIN_INFO *record, const FENO *feno) {
   const double latDelta = fabs(feno->refLatMin - feno->refLatMax);
   const double lonDelta = fabs(feno->refLonMin - feno->refLonMax);
   const double cloudDelta = fabs(feno->cloudFractionMin - feno->cloudFractionMax);
-  
+
   const bool match_lat = latDelta <= EPSILON
     || (record->lat >= feno->refLatMin && record->lat <= feno->refLatMax);
   const bool match_lon = lonDelta <= EPSILON
@@ -889,7 +889,7 @@ static bool use_as_reference(const GDP_BIN_INFO *record, const FENO *feno) {
     || ( fabs(record->sza - feno->refSZA) <= feno->refSZADelta);
   const bool match_cloud = cloudDelta <= EPSILON
     || (record->cloudfrac >= feno->cloudFractionMin && record->cloudfrac <= feno->cloudFractionMax);
-    
+
   return (match_lat && match_lon && match_sza && match_cloud);
 }
 
@@ -928,7 +928,7 @@ static int find_ref_spectra(struct ref_list *selected_spectra[NFeno][NUM_VZA_REF
             && pTabFeno->useKurucz!=ANLYS_KURUCZ_SPEC
             && pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC
             && use_as_reference(&orbit->gdpBinInfo[j],pTabFeno) ) {
-            
+
           if (ref == NULL) {
             // ref hasn't been initialized yet for another analysis window, so do that now:
             ref = malloc(sizeof(*ref));
@@ -965,7 +965,7 @@ static int find_ref_spectra(struct ref_list *selected_spectra[NFeno][NUM_VZA_REF
 
 static void initialize_vza_refs(void) {
   free_vza_refs(); // will free previous allocated structures, if any.
-  
+
   vza_refs = malloc(NFeno * sizeof(*vza_refs));
 
   // Build array of pointers to the collection of VZA references:
@@ -1034,7 +1034,7 @@ static RC GdpBinNewRef(const ENGINE_CONTEXT *pEngineContext,void *responseHandle
   int i_row = 1; // row index of the GUI "spreadsheet" to print reference info.
   ANALYSE_plotRef=1;
 
-  if (pEngineContext->recordNumber==0) 
+  if (pEngineContext->recordNumber==0)
     return ERROR_ID_ALLOC;
 
   // Allocate references
@@ -1276,8 +1276,8 @@ RC GDP_BIN_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle) {
     if (useUsamp && (THRD_id!=THREAD_TYPE_KURUCZ)) {
 
        if ( (rc=ANALYSE_UsampLocalAlloc(0) )!=ERROR_ID_NO ||
-            (rc=ANALYSE_UsampBuild(0,0))!=ERROR_ID_NO ||
-            (rc=ANALYSE_UsampBuild(1,ITEM_NONE))!=ERROR_ID_NO)
+            (rc=ANALYSE_UsampBuild(0,0,0))!=ERROR_ID_NO ||
+            (rc=ANALYSE_UsampBuild(1,ITEM_NONE,0))!=ERROR_ID_NO)
 
         goto EndGOME_LoadAnalysis;
     }

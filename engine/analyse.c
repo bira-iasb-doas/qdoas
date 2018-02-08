@@ -1975,7 +1975,7 @@ RC ANALYSE_Function(double *spectrum_orig, double *reference, const double *Sigm
     if ( (rc=ShiftVector(LambdaSpec, spectrum_orig, SplineSpec, spectrum_interpolated, n_wavel,
                          shift_rad, stretch_rad, stretch2_rad,
                          0., 0., 0., fitParamsF, -1, 0, indexFenoColumn))!=ERROR_ID_NO ||
-         (Feno->useUsamp && pUsamp->method==PRJCT_USAMP_AUTOMATIC && (rc=ANALYSE_UsampBuild(2,ITEM_NONE))!=ERROR_ID_NO) )
+         (Feno->useUsamp && pUsamp->method==PRJCT_USAMP_AUTOMATIC && (rc=ANALYSE_UsampBuild(2,ITEM_NONE,indexFenoColumn))!=ERROR_ID_NO) )
 
       goto EndFunction;
 
@@ -2283,6 +2283,7 @@ RC ANALYSE_Function(double *spectrum_orig, double *reference, const double *Sigm
       if (Feno->analysisMethod==OPTICAL_DENSITY_FIT) {
         LINEAR_set_weight(fitprops->linfit, SigmaY);
         rc = LINEAR_decompose(fitprops->linfit,fitprops->SigmaSqr,fitprops->covar);
+
         if (rc != ERROR_ID_NO)
           goto EndFunction;
       }
@@ -3118,6 +3119,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
         case PRJCT_INSTR_FORMAT_OMI:
         case PRJCT_INSTR_FORMAT_OMPS:
         case PRJCT_INSTR_FORMAT_TROPOMI:
+        case PRJCT_INSTR_FORMAT_GOME1_NETCDF:
           memcpy(Feno->Lambda,pBuffers->lambda,sizeof(double)*n_wavel);
           break;
         default:
@@ -3196,6 +3198,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
           if (pInstrumental->readOutFormat == PRJCT_INSTR_FORMAT_OMI
               || pInstrumental->readOutFormat == PRJCT_INSTR_FORMAT_OMPS
               || pInstrumental->readOutFormat == PRJCT_INSTR_FORMAT_TROPOMI
+              || pInstrumental->readOutFormat == PRJCT_INSTR_FORMAT_GOME1_NETCDF
               || pInstrumental->readOutFormat == PRJCT_INSTR_FORMAT_GOME2 ) {
 
             double *spec_deriv2 = malloc(n_wavel * sizeof(*spec_deriv2));
@@ -5483,13 +5486,12 @@ void ANALYSE_Free(void)
 //               between Ref2 and Ref1;
 //               so this function is called after ANALYSE_Spectrum.
 // -----------------------------------------------------------------------------
-RC ANALYSE_UsampBuild(int analysisFlag,int gomeFlag)
+RC ANALYSE_UsampBuild(int analysisFlag,int gomeFlag,int indexFenoColumn)
 {
   // Declarations
 
   MATRIX_OBJECT khrConvoluted,slitMatrix[NSFP];
   INDEX indexFeno,i,indexPixMin,indexPixMax,j;
-  int indexFenoColumn;
   double slitParam[NSFP],*lambda,*lambda2,lambda0,x0;
   FENO *pTabFeno;
   RC rc;
@@ -5508,7 +5510,6 @@ RC ANALYSE_UsampBuild(int analysisFlag,int gomeFlag)
 
   rc=ERROR_ID_NO;
 
-  indexFenoColumn=0;                                                            // later, use the second dimension of TabFeno (and add a second dimension to undersampling buffers)
   const int n_wavel = NDET[indexFenoColumn];
 
   // Buffer allocation
@@ -5802,10 +5803,13 @@ RC ANALYSE_UsampLocalAlloc(int gomeFlag)
 
   rc=ERROR_ID_NO;
 
-  for (indexFenoColumn=0;(indexFenoColumn<ANALYSE_swathSize) && !rc;indexFenoColumn++)
+  // for (indexFenoColumn=0;(indexFenoColumn<ANALYSE_swathSize) && !rc;indexFenoColumn++)
+
+  indexFenoColumn=0;  // per row, the configuration of the analysis shouldn't change   // TO DO LATER
+
    for (indexFeno=0;(indexFeno<NFeno) && !rc;indexFeno++)
     {
-     pTabFeno=&TabFeno[0][indexFeno];
+     pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
 
      if (!pTabFeno->hidden && pTabFeno->useUsamp && (pTabFeno->gomeRefFlag==gomeFlag))
       {

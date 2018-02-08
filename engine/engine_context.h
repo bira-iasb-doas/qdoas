@@ -178,6 +178,7 @@ typedef struct _prjctInstrumental
   PRJCT_ASCII ascii;
   PRJCT_SAOZ  saoz;
   PRJCT_GOME  gome;
+  PRJCT_GOME  gomenetcdf;
   PRJCT_SCIA  scia;
   PRJCT_OMI   omi;
   PRJCT_MFC   mfc;
@@ -264,6 +265,8 @@ struct satellite_location {
   double earth_radius;
   double sza, saa; // solar zenith/azimuth angles at satellite height
   double vza;
+  double cloud_top_pressure;
+  double cloud_fraction;
   int orbit_number;
 };
 
@@ -518,8 +521,6 @@ typedef struct _engineRecordInfo
   double longitude;                                                             // longitude
   double latitude;                                                              // latitude
   double altitude;                                                              // altitude
-  double cloudFraction;
-  double cloudTopPressure;
 
                                                                                 // SAOZ
 

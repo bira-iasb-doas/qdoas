@@ -170,11 +170,11 @@ static inline void get_orbit_number(struct output_field *this_field __attribute_
 }
 
 static inline void get_cloud_fraction(struct output_field *this_field __attribute__ ((unused)), float *cloud_fraction, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  *cloud_fraction = pEngineContext->recordInfo.cloudFraction;
+  *cloud_fraction = pEngineContext->recordInfo.satellite.cloud_fraction;
 }
 
 static inline void get_cloud_top_pressure(struct output_field *this_field __attribute__ ((unused)), float *cloud_top_pressure, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  *cloud_top_pressure = pEngineContext->recordInfo.cloudTopPressure;
+  *cloud_top_pressure = pEngineContext->recordInfo.satellite.cloud_top_pressure;
 }
 
 static inline void get_scia_state_index(struct output_field *this_field __attribute__ ((unused)), unsigned short *scia_state_index, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {

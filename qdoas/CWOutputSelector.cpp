@@ -579,9 +579,12 @@ void getValidFieldFlags(int *validFlags, int instrument,int selectorOrigin)
     break;
  // ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_GDP_BIN :
+    case PRJCT_INSTR_FORMAT_GOME1_NETCDF :
      {
       validFlags[PRJCT_RESULTS_PIXEL]=1;
       validFlags[PRJCT_RESULTS_PIXEL_TYPE]=1;
+      validFlags[PRJCT_RESULTS_LOS_ZA]=0;
+      validFlags[PRJCT_RESULTS_LOS_AZIMUTH]=0;
       validFlags[PRJCT_RESULTS_TINT]=0;
       validFlags[PRJCT_RESULTS_CLOUD]=1;
       validFlags[PRJCT_RESULTS_CLOUDTOPP]=1;

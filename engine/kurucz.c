@@ -1849,6 +1849,7 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,int saveFlag,int gomeFla
           VECTOR_Equal(pKurucz->hrSolar.matrix[0],pTabFeno->LambdaRef,pTabFeno->NDET,(double)1.e-7) &&
           VECTOR_Equal(pKurucz->hrSolar.matrix[1],reference,pTabFeno->NDET,(double)1.e-7)) {
         // Reference spectrum equals high-resolution spectrum for Kurucz -> skip calibration.
+
         pTabFeno->rcKurucz=ERROR_ID_NO;
       } else {
 

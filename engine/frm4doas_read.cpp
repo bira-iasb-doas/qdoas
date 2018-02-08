@@ -1,7 +1,6 @@
 
 //  ----------------------------------------------------------------------------
 //! \addtogroup Format
-//! All the modules to read spectra in the various formats supported by QDOAS
 //! @{
 //!
 //! \file      frm4doas_read.cpp
@@ -146,7 +145,7 @@ static NetCDFFile current_file;                                                 
 static string root_name;                                                        //!< \details The name of the root (should be the basename of the file)
 static metadata current_metadata;                                               //!< \details Keep the metadata as far as the netCDF file is open
 
-size_t det_size;                                                                //!< \details The current detector size
+static size_t det_size;                                                         //!< \details The current detector size
 
 // -----------------------------------------------------------------------------
 // FUNCTION FRM4DOAS_Read_Metadata

@@ -280,7 +280,7 @@ static void free_vza_refs(void) {
 
 static void initialize_vza_refs(void) {
   free_vza_refs();// will free previously allocated structures, if any.
-  
+
   vza_refs = malloc(NFeno * sizeof(*vza_refs));
   refs_left_scan = malloc(NFeno * sizeof(*refs_left_scan));
   refs_right_scan = malloc(NFeno * sizeof(*refs_right_scan));
@@ -312,7 +312,7 @@ static inline size_t find_bin(const double vza) {
   // search backwards, starting from the last bin
   size_t bin = NUM_VZA_BINS-1;
   for (; vza < vza_bins[bin]; --bin);
-  
+
   return bin;
 }
 
@@ -578,7 +578,7 @@ RC Gome2ReadSunRef(GOME2_ORBIT_FILE *pOrbitFile) {
   coda_cursor_goto_record_field_by_name(&pOrbitFile->gome2Cursor,"SMR");                  // VIADR_SMR.LAMBDA_SMR
 
   coda_cursor_read_double_array(&pOrbitFile->gome2Cursor,&gome2SunRef[0][0],coda_array_ordering_c);
-  
+
   for (int i=0; i<n_wavel; i++) {
     const size_t channel= pOrbitFile->gome2Info.channelIndex;
     pOrbitFile->gome2SunWve[i]=gome2SunWve[channel][i];
@@ -1356,7 +1356,7 @@ RC GOME2_Set(ENGINE_CONTEXT *pEngineContext) {
     return ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_FILE_EMPTY,pOrbitFile->gome2FileName);
   if (pOrbitFile->rc)
     return rc;
-  
+
   if (pOrbitFile->gome2Pf==NULL)
     rc=Gome2Open(&pOrbitFile->gome2Pf,pEngineContext->fileInfo.fileName,&pOrbitFile->version);
   if (!rc) {
@@ -1444,7 +1444,7 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex) {
       }
 
       // read radiance & error ('RAD' and 'ERR_RAD')
-      // 
+      //
       // RAD and ERR_RAD fields are 'vsf_integers', consisting of a
       // 'value' and 'scale' integer pair.  CODA will automatically
       // convert these to one number value * 10^(-scale), but it's
@@ -1516,8 +1516,8 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex) {
         pRecord->gome2.losAzi[i] = pGeoloc->losAzi[i];
       }
 
-      pRecord->cloudTopPressure=pGeoloc->cloudTopPressure;
-      pRecord->cloudFraction=pGeoloc->cloudFraction;
+      pRecord->satellite.cloud_top_pressure=pGeoloc->cloudTopPressure;
+      pRecord->satellite.cloud_fraction=pGeoloc->cloudFraction;
 
       pRecord->gome2.scanDirection=pGeoloc->scanDirection;
       pRecord->gome2.observationMode=pGeoloc->observationMode;
@@ -1535,7 +1535,7 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex) {
       pRecord->Azimuth=pGeoloc->solAzi[1];
       pRecord->zenithViewAngle=pGeoloc->losZen[1];
       pRecord->azimuthViewAngle=pGeoloc->losAzi[1];
-      
+
       pRecord->satellite.earth_radius = pGeoloc->earth_radius;
 
       pRecord->satellite.altitude = pGeoloc->sat_alt;
@@ -1562,8 +1562,8 @@ RC GOME2_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex) {
           (pEngineContext->project.spectra.cloudMax<=1.) &&
           fabs(pEngineContext->project.spectra.cloudMax-pEngineContext->project.spectra.cloudMin) >EPSILON &&
           fabs(pEngineContext->project.spectra.cloudMax-pEngineContext->project.spectra.cloudMin) <(1.-EPSILON) &&
-          (pRecord->cloudFraction < pEngineContext->project.spectra.cloudMin-EPSILON ||
-           pRecord->cloudFraction > pEngineContext->project.spectra.cloudMax+EPSILON) ) {
+          (pRecord->satellite.cloud_fraction < pEngineContext->project.spectra.cloudMin-EPSILON ||
+           pRecord->satellite.cloud_fraction > pEngineContext->project.spectra.cloudMax+EPSILON) ) {
         rc=ERROR_ID_FILE_RECORD;
       }
     }
@@ -1681,7 +1681,7 @@ static int find_ref_spectra(struct ref_list *selected_spectra[NFeno][NUM_VZA_REF
             && pTabFeno->useKurucz!=ANLYS_KURUCZ_SPEC
             && pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC
             && use_as_reference(record, pTabFeno) ) {
-            
+
           if (ref == NULL) {
             // ref hasn't been initialized yet for another analysis window, so do that now:
 
@@ -1722,9 +1722,9 @@ static int find_ref_spectra(struct ref_list *selected_spectra[NFeno][NUM_VZA_REF
           struct ref_list *list_item = malloc(sizeof(*list_item));
           list_item->ref = ref;
           const size_t bin = find_bin(fabs(record->sat_vza));
-          
+
           // add the reference to the list for the right VZA bin:
-          // 
+          //
           // bins are identified by their offset:
           // 0 = nadir,
           // (1, NUM_VZA_BINS( = left scan
@@ -1864,7 +1864,7 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle) {
     return rc;
 
   int useUsamp=0,useKurucz=0;
-  
+
   // Browse analysis windows and load missing data
 
   for (int indexFeno=0; indexFeno<NFeno && !rc; indexFeno++) {
@@ -1898,7 +1898,7 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle) {
                 ((indexTabCross==pTabFeno->indexCommonResidual) ||
                  (((indexTabCross==pTabFeno->indexUsamp1) || (indexTabCross==pTabFeno->indexUsamp2)) && (pUsamp->method==PRJCT_USAMP_FILE))))) &&
               ((rc=ANALYSE_CheckLambda(pWrkSymbol,pTabFeno->LambdaRef,pTabFeno->NDET)) !=ERROR_ID_NO))
-            
+
             goto EndGOME2_LoadAnalysis;
         }
 
@@ -1937,12 +1937,12 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle) {
     useUsamp+=pTabFeno->useUsamp;
     useKurucz+=pTabFeno->useKurucz;
   }
-    
+
   // Wavelength calibration alignment
-    
+
   if (useKurucz || (THRD_id==THREAD_TYPE_KURUCZ)) {
     KURUCZ_Init(0,0);
-      
+
     if ((THRD_id!=THREAD_TYPE_KURUCZ) && ((rc=KURUCZ_Reference(NULL,0,saveFlag,0,responseHandle,0)) !=ERROR_ID_NO))
       goto EndGOME2_LoadAnalysis;
   }
@@ -1953,8 +1953,8 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle) {
     // ANALYSE_UsampLocalFree();
 
     if (((rc=ANALYSE_UsampLocalAlloc(0)) !=ERROR_ID_NO) ||
-        ((rc=ANALYSE_UsampBuild(0,0)) !=ERROR_ID_NO) ||
-        ((rc=ANALYSE_UsampBuild(1,ITEM_NONE)) !=ERROR_ID_NO))
+        ((rc=ANALYSE_UsampBuild(0,0,0)) !=ERROR_ID_NO) ||
+        ((rc=ANALYSE_UsampBuild(1,ITEM_NONE,0)) !=ERROR_ID_NO))
 
       goto EndGOME2_LoadAnalysis;
   }

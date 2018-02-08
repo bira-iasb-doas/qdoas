@@ -1,5 +1,24 @@
 
 //  ----------------------------------------------------------------------------
+//! \addtogroup Format
+//! All the modules to read spectra in the various formats supported by QDOAS
+//! should include two functions <format>_Set and <format>_Read to call respectively
+//! from EngineSetFile and EngineReadFile.\n
+//! The function <format>_Set should : \n
+//!    \li set the number of records (pEngineContext->recordNumber)
+//!    \li according to the file format, initialize some variables or buffers
+//! @{
+//!
+//! \file      engine.c
+//! \brief     Starts the engine
+//! \details
+//! \authors   Ian Price
+//! \date
+//! \todo
+//! \copyright QDOAS is distributed under GNU General Public License
+//!
+//! @}
+//  ----------------------------------------------------------------------------
 //
 //  Product/Project   :  QDOAS
 //  Module purpose    :  ENGINE CONTEXT
@@ -72,6 +91,7 @@
 #include "omps_read.h"
 #include "omi_read.h"
 #include "gdp_bin_read.h"
+#include "gome1netcdf_read.h"
 #include "apex_read.h"
 #include "mfc-read.h"
 #include "spectrum_files.h"
@@ -624,6 +644,7 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
        (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMPS) &&
        (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_SCIA_PDS) &&
        (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GOME2) &&
+       (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GOME1_NETCDF) &&
        ((pFile->specFp=fopen(pEngineContext->fileInfo.fileName,"rb"))==NULL))
 
     rc=ERROR_SetLast("EngineSetFile",ERROR_TYPE_WARNING,ERROR_ID_FILE_NOT_FOUND,pFile->fileName);
@@ -739,6 +760,11 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
         rc=GDP_BIN_LoadAnalysis(pEngineContext,responseHandle);
        break;
        // ---------------------------------------------------------------------------
+     case PRJCT_INSTR_FORMAT_GOME1_NETCDF :
+       if (!(rc=GOME1NETCDF_Set(pEngineContext)) &&  (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_EXPORT) && (THRD_id!=THREAD_TYPE_NONE))
+        rc=GOME1NETCDF_LoadAnalysis(pEngineContext,responseHandle);
+       break;
+       // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_SCIA_PDS :
        if (!(rc=SCIA_SetPDS(pEngineContext)) &&  (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_EXPORT) && (THRD_id!=THREAD_TYPE_NONE))
         rc=SCIA_LoadAnalysis(pEngineContext,responseHandle);
@@ -755,10 +781,7 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
        break;
        // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF :
-       rc=FRM4DOAS_Set(pEngineContext); // do not need specFp because the file is open with netCDF
-
-      // if (!(rc=MKZY_Set(pEngineContext,pFile->specFp)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_EXPORT) && (THRD_id!=THREAD_TYPE_NONE))
-      //  rc=MKZY_LoadAnalysis(pEngineContext,responseHandle);
+       rc=FRM4DOAS_Set(pEngineContext);
        break;
        // ---------------------------------------------------------------------------
      default :
@@ -816,8 +839,8 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
    pRecord->longitude=0.;
    pRecord->latitude=0.;
    pRecord->altitude=0.;
-   pRecord->cloudFraction=(double)0.;
-   pRecord->cloudTopPressure=(double)0.;
+   pRecord->satellite.cloud_fraction=(double)0.;
+   pRecord->satellite.cloud_top_pressure=(double)0.;
 
    pRecord->aMoon=0.;
    pRecord->hMoon=0.;
@@ -932,6 +955,9 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
       rc=GDP_BIN_Read(pEngineContext,indexRecord,pFile->specFp);
       break;
       // ---------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_GOME1_NETCDF :
+      rc=GOME1NETCDF_Read(pEngineContext,indexRecord);
+      break;
     case PRJCT_INSTR_FORMAT_SCIA_PDS :
       rc=SCIA_ReadPDS(pEngineContext,indexRecord);
       break;
@@ -946,9 +972,6 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
       // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF :
        rc=FRM4DOAS_Read(pEngineContext,indexRecord,dateFlag,localCalDay); // do not need specFp because the file is open with netCDF
-
-      // if (!(rc=MKZY_Set(pEngineContext,pFile->specFp)) && (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_EXPORT) && (THRD_id!=THREAD_TYPE_NONE))
-      //  rc=MKZY_LoadAnalysis(pEngineContext,responseHandle);
        break;
        // ---------------------------------------------------------------------------
     default :
@@ -960,7 +983,10 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
    if (rc)
      return rc;
 
-   int i_crosstrack = (indexRecord - 1) % ANALYSE_swathSize;
+   int i_crosstrack = (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GOME1_NETCDF) ?
+                      (indexRecord - 1) % ANALYSE_swathSize :
+                      pEngineContext->recordInfo.gome.pixelType;
+
    const int n_wavel = NDET[i_crosstrack];
 
    rc=THRD_SpectrumCorrection(pEngineContext,pEngineContext->buffers.spectrum,n_wavel);
@@ -1044,8 +1070,24 @@ RC EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *sp
    // pEngineContext->fileInfo.fileName is assigned by EngineSetFile.
    // this means that MFC_SearchForCurrentFileIndex has to be called after EngineSetFile and not before (21/09/2017)
 
+   // For MFC {
+   // For MFC  FILE *fp;
+   // For MFC  fp=fopen("toto.dat","a+t");
+   // For MFC  fprintf(fp,"resetFlag before %d : %d %d\n",pEngineContext->recordInfo.mfcDoasis.resetFlag,pEngineContext->recordInfo.mfcDoasis.nFiles,MFC_SearchForCurrentFileIndex(pEngineContext));
+   // For MFC  fclose(fp);
+   // For MFC }
+
+
    resetFlag=(!pEngineContext->mfcDoasisFlag || ((THRD_id!=THREAD_TYPE_ANALYSIS) && !pEngineContext->maxdoasScanIndexFlag) || !pEngineContext->recordInfo.mfcDoasis.nFiles || (MFC_SearchForCurrentFileIndex(pEngineContext)==ITEM_NONE))?1:0;
    pEngineContext->recordInfo.mfcDoasis.resetFlag=resetFlag;
+
+   // For MFC {
+   // For MFC  FILE *fp;
+   // For MFC  fp=fopen("toto.dat","a+t");
+   // For MFC  fprintf(fp,"resetFlag after %d\n",pEngineContext->recordInfo.mfcDoasis.resetFlag);
+   // For MFC  fclose(fp);
+   // For MFC }
+
 
    // MFC measurements : allocate a buffer for files only for the automatic selection of the reference or to assign a scan index
 
@@ -1128,6 +1170,14 @@ RC EngineRequestEndBrowseSpectra(ENGINE_CONTEXT *pEngineContext)
       {
        // Release buffers used for automatic reference
 
+       // For MFC{
+       // For MFC FILE *fp;
+       // For MFC fp=fopen("toto.dat","a+t");
+       // For MFC fprintf(fp,"EndBrowseSpectra %d\n",pEngineContext->recordInfo.mfcDoasis.resetFlag);
+       // For MFC fclose(fp);
+       // For MFC}
+
+
        if (pRef->refIndexes!=NULL)
         MEMORY_ReleaseBuffer(__func__,"refIndexes",pRef->refIndexes);
        pRef->refIndexes=NULL;
@@ -1182,6 +1232,7 @@ RC EngineEndCurrentSession(ENGINE_CONTEXT *pEngineContext)
      OMI_ReleaseBuffers();
      tropomi_cleanup();
      FRM4DOAS_Cleanup();
+     GOME1NETCDF_Cleanup();
      SCIA_ReleaseBuffers(pEngineContext->project.instrumental.readOutFormat);
      apex_clean();
 
@@ -1276,6 +1327,8 @@ RC EngineDestroyContext(ENGINE_CONTEXT *pEngineContext)
 // ==========================================
 // AUTOMATIC SEARCH OF THE REFERENCE SPECTRUM
 // ==========================================
+
+double scanTimeInterval=900.;
 
 // -----------------------------------------------------------------------------
 // FUNCTION      EngineBuildScanIndex
@@ -1383,7 +1436,7 @@ RC EngineBuildScanIndex(ENGINE_CONTEXT *pEngineContext)
 
             if ((upFlag==1) &&                                                    // increasing sequence of off axis measurements
                 (lastMeasurementType==PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) &&        // last measurement was an off-axis one; the current one is a zenith one
-                (tmLocal-lastTime<(double)900.))                                  // no more than 15 minutes between the last off axis measurement and the current zenith one
+                (tmLocal-lastTime<(double)scanTimeInterval))                      // no more than 15 minutes between the last off axis measurement and the current zenith one
 
              scanIndexes[indexRecord]=scanIndex;                                  // same scan index as the last off axis measurement
            }
@@ -1394,7 +1447,7 @@ RC EngineBuildScanIndex(ENGINE_CONTEXT *pEngineContext)
            {
             // if there is more than 15 minutes with the last off-axis measurement, increase the scan index
 
-            if (tmLocal-lastTime>(double)900.)   // 900 sec -> 15 min
+            if (tmLocal-lastTime>(double)scanTimeInterval)   // 900 sec -> 15 min
              scanIndex++;
 
             // use the two first off axis measurements, to determine if the sequences are increasing or decreasing
@@ -1556,16 +1609,24 @@ RC EngineBuildRefList(ENGINE_CONTEXT *pEngineContext)
   pEngineContext->analysisRef.zmMinIndex=indexZmMin;
   pEngineContext->analysisRef.zmMaxIndex=indexZmMax;
 
-  //  {                                                                                                                                                   // TO CHECK WITH MPI PEOPLE
-  //   FILE *fp;                                                                                                                                          // TO CHECK WITH MPI PEOPLE
-  //   int i;                                                                                                                                             // TO CHECK WITH MPI PEOPLE
-  //   fp=fopen("RefList.dat","w+t");                                                                                                                     // TO CHECK WITH MPI PEOPLE
-  //   fprintf(fp,"List of references : \n");                                                                                                             // TO CHECK WITH MPI PEOPLE
-  //   for (i=0;i<NRecord;i++)                                                                                                                            // TO CHECK WITH MPI PEOPLE
-  //    fprintf(fp,"%d %g %s\n",indexList[i],ZmList[i],&pEngineContext->recordInfo.mfcDoasis.fileNames[(indexList[i]-1)*(DOAS_MAX_PATH_LEN+1)]);          // TO CHECK WITH MPI PEOPLE
-  //                                                                                                                                                      // TO CHECK WITH MPI PEOPLE
-  //   fclose(fp);                                                                                                                                        // TO CHECK WITH MPI PEOPLE
-  //  }                                                                                                                                                   // TO CHECK WITH MPI PEOPLE
+  {
+   FILE *fp;
+   fp=fopen("toto.dat","a+t");
+   fprintf(fp,"NRecord %d\n",NRecord);
+   fclose(fp);
+  }
+
+
+   {                                                                                                                                                   // TO CHECK WITH MPI PEOPLE
+    FILE *fp;                                                                                                                                          // TO CHECK WITH MPI PEOPLE
+    int i;                                                                                                                                             // TO CHECK WITH MPI PEOPLE
+    fp=fopen("RefList.dat","w+t");                                                                                                                     // TO CHECK WITH MPI PEOPLE
+    fprintf(fp,"List of references : \n");                                                                                                             // TO CHECK WITH MPI PEOPLE
+    for (i=0;i<NRecord;i++)                                                                                                                            // TO CHECK WITH MPI PEOPLE
+     fprintf(fp,"%d %g %s\n",indexList[i],ZmList[i],&pEngineContext->recordInfo.mfcDoasis.fileNames[(indexList[i]-1)*(DOAS_MAX_PATH_LEN+1)]);          // TO CHECK WITH MPI PEOPLE
+                                                                                                                                                       // TO CHECK WITH MPI PEOPLE
+    fclose(fp);                                                                                                                                        // TO CHECK WITH MPI PEOPLE
+   }                                                                                                                                                   // TO CHECK WITH MPI PEOPLE
 
 
   // {
@@ -1723,9 +1784,25 @@ void EngineScanSetRefIndexes(ENGINE_CONTEXT *pEngineContext,INDEX indexRecord)
 
  	// Initializations
 
+ 	{
+ 	 FILE *fp;
+ 	 fp=fopen("toto.dat","a+t");
+ 	 fprintf(fp,"Begin SetRefIndexes\n");
+ 	 fclose(fp);
+ 	}
+
+
  	pRef=&pEngineContext->analysisRef;
  	refIndexes=pRef->refIndexes;
  	nRef=pRef->nRef;
+
+ 	{
+ 	 FILE *fp;
+ 	 fp=fopen("toto.dat","a+t");
+ 	 fprintf(fp,"nRef %d %08X\n",nRef,(int)refIndexes);
+ 	 fclose(fp);
+ 	}
+
 
  	indexScanBefore=indexScanAfter=ITEM_NONE;
 
@@ -1746,6 +1823,14 @@ void EngineScanSetRefIndexes(ENGINE_CONTEXT *pEngineContext,INDEX indexRecord)
      {
       indexScanRecord=(indexScanMin+indexScanMax)>>1;
 
+      {
+       FILE *fp;
+       fp=fopen("toto.dat","a+t");
+       fprintf(fp,"indexScanRecord %d\n",indexScanRecord);
+       fclose(fp);
+      }
+
+
       if (refIndexes[indexScanRecord]==indexRecord)
        indexScanMin=indexScanMax=ITEM_NONE;                                  // the current record is also a zenith (-> in the list of possible reference spectra)
       else if (refIndexes[indexScanRecord]<indexRecord)
@@ -1753,6 +1838,14 @@ void EngineScanSetRefIndexes(ENGINE_CONTEXT *pEngineContext,INDEX indexRecord)
       else
        indexScanMax=indexScanRecord;
      }
+
+    {
+     FILE *fp;
+     fp=fopen("toto.dat","a+t");
+     fprintf(fp,"indexScan Min/Max %d %d\n",indexScanMin,indexScanMax);
+     fclose(fp);
+    }
+
 
     if ((indexScanMin!=ITEM_NONE) && (indexScanMin<nRef) && (refIndexes[indexScanMin]<=indexRecord))
      indexScanBefore=refIndexes[indexScanMin];
@@ -1763,6 +1856,14 @@ void EngineScanSetRefIndexes(ENGINE_CONTEXT *pEngineContext,INDEX indexRecord)
 
   pRef->indexScanBefore=indexScanBefore;
   pRef->indexScanAfter=indexScanAfter;
+
+  {
+   FILE *fp;
+   fp=fopen("toto.dat","a+t");
+   fprintf(fp,"End SetRefIndexes\n");
+   fclose(fp);
+  }
+
  }
 
 RC EngineLoadRefMFC(ENGINE_CONTEXT *pEngineContextRef,ENGINE_CONTEXT *pEngineContext,INDEX indexRefRecord)
@@ -1871,6 +1972,14 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
   	  indexScanBefore=pRef->indexScanBefore;
   	  indexScanAfter=pRef->indexScanAfter;
+
+  	  {
+  	   FILE *fp;
+  	   fp=fopen("toto.dat","a+t");
+  	   fprintf(fp,"Search for scan %d %d %d\n",indexRecord,indexScanBefore,indexScanAfter);
+  	   fclose(fp);
+  	  }
+
     }
 
    // Browse analysis windows
@@ -2115,7 +2224,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
     rc=ANALYSE_AlignReference(pEngineContext,1,responseHandle,0);
 
    if (!rc && useUsamp)
-    rc=ANALYSE_UsampBuild(1,ITEM_NONE);
+    rc=ANALYSE_UsampBuild(1,ITEM_NONE,0);
 
    EndNewRef :
 

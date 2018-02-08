@@ -443,6 +443,9 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   case PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF:
     fprintf(fp, "\"frm4doas\"");
     break;
+  case PRJCT_INSTR_FORMAT_GOME1_NETCDF:
+    fprintf(fp, "\"gdpnetcdf\"");
+    break;    
   default:
     fprintf(fp, "\"invalid\"");
   }

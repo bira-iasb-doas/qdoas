@@ -738,6 +738,8 @@ bool CProjectInstrumentalSubHandler::start(const QXmlAttributes &atts)
     m_instrumental->format = PRJCT_INSTR_FORMAT_OCEAN_OPTICS;
   else if (str == "frm4doas")
     m_instrumental->format = PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF;
+  else if (str == "gdpnetcdf")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_GOME1_NETCDF;    
   else
     return postErrorMessage("Invalid instrumental format");
 

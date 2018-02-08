@@ -320,7 +320,7 @@ RC   ANALYSE_LoadSlit(const PRJCT_SLIT *pSlit,int kuruczFlag);
 RC   ANALYSE_Alloc(void);
 void ANALYSE_Free(void);
 
-RC   ANALYSE_UsampBuild(int analysisFlag,int gomeFlag);
+RC   ANALYSE_UsampBuild(int analysisFlag,int gomeFlag,int indexFenoColumn);
 void ANALYSE_UsampGlobalFree(void);
 RC   ANALYSE_UsampGlobalAlloc(double lambdaMin,double lambdaMax,int size);
 RC   ANALYSE_UsampLocalAlloc(int gomeFlag);

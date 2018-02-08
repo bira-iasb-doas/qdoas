@@ -43,6 +43,7 @@ class CWInstrMinimumEdit;
 class CWInstrCcdEdit;
 class CWInstrCcdEevEdit;
 class CWInstrGdpEdit;
+class CWInstrGome1Edit;
 class CWInstrGome2Edit;
 class CWInstrSciaEdit;
 class CWInstrOmiEdit;
@@ -87,7 +88,7 @@ Q_OBJECT
   CWInstrMinimumEdit *m_rasasEdit;
   CWInstrMinimumEdit *m_pdasiEasoeEdit;
   CWInstrCcdEevEdit *m_ccdEevEdit;
-  CWInstrGdpEdit *m_gdpNetcdfEdit;
+  CWInstrGome1Edit *m_gdpNetcdfEdit;
   CWInstrGdpEdit *m_gdpBinEdit;
   CWInstrSciaEdit *m_sciaHdfEdit;
   CWInstrSciaEdit *m_sciaPdsEdit;
@@ -339,6 +340,20 @@ class CWInstrGdpEdit : public CWCalibInstrEdit
 {
  public:
   CWInstrGdpEdit(const struct instrumental_gdp *d, QWidget *parent = 0);
+
+  void apply(struct instrumental_gdp *d) const;
+
+ private:
+  QComboBox *m_bandTypeCombo;
+  QComboBox *m_pixelTypeCombo;
+};
+
+//--------------------------------------------------------------------------
+
+class CWInstrGome1Edit : public CWCalibInstrEdit
+{
+ public:
+  CWInstrGome1Edit(const struct instrumental_gdp *d, QWidget *parent = 0);
 
   void apply(struct instrumental_gdp *d) const;
 

@@ -111,7 +111,7 @@ static inline size_t find_bin(const double vza) {
   // search backwards, starting from the last bin
   size_t bin = NUM_VZA_BINS-1;
   for (; vza < vza_bins[bin]; --bin);
-  
+
   return bin;
 }
 
@@ -485,7 +485,7 @@ void SCIA_FromMJD2000ToYMD(double mjd,struct datetime *datetime)
 INDEX SciaGetStateIndex(int recordNo,int *pObs,INDEX fileIndex)
  {
   // Declarations
-   
+
   SCIA_ORBIT_FILE *pOrbitFile;                                                  // pointer to the current orbit file
   INDEX indexState;                                                             // browse states
   int sumObs;                                                                   // accumulate the number of observations in the different states
@@ -687,7 +687,7 @@ RC SciaNadirGeolocations(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
     GeoN_array_getbin(pOrbitFile->sciaPDSInfo.FILE_l1c,sciaGeoloc,pClusDef->nobs);
 
     // Browse observations
-     
+
     for (int j=0; j<pClusDef->nobs; j++,indexRecord++) {
       pSciaGeoloc=&pOrbitFile->sciaGeolocations[indexRecord];
 
@@ -725,7 +725,7 @@ RC SciaNadirGeolocations(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex)
       //
       // (foward-scan:) -30., -26., ..., 24., 27.,
       // (backscan:) 22., 7., -9. -24.
-      // 
+      //
       // Backscan pixels are therefore the only pixels for which the
       // esm position is lower than the esm position of the previous
       // pixel and larger than the esm position of the next
@@ -800,7 +800,7 @@ RC SciaReadSunRefPDS(ENGINE_CONTEXT *pEngineContext,INDEX fileIndex) {
       n_read=fread(pOrbitFile->sciaSunWve,sizeof(float),SCIA_CHANNEL_SIZE,fp);
       if (n_read != SCIA_CHANNEL_SIZE)
         return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_BAD_FORMAT,pEngineContext->fileInfo.fileName);
-      
+
       // Read the reference spectrum, offset is 8*SCIA_CHANNEL_SIZE
       fseek(fp,offset+sizeof(refId)+(pEngineContext->project.instrumental.scia.sciaChannel+8)*SCIA_CHANNEL_SIZE*sizeof(float),SEEK_SET);
       n_read=fread(pOrbitFile->sciaSunRef,sizeof(float),SCIA_CHANNEL_SIZE,fp);
@@ -1096,7 +1096,7 @@ RC SCIA_SetPDS(ENGINE_CONTEXT *pEngineContext) {
       // this file was no was not previously loaded -> we are in a new
       // directory and need to generate a new automatic reference
       sciaLoadReferenceFlag=1;
-      
+
       // Get file path
       strcpy(filePath,pEngineContext->fileInfo.fileName);
 
@@ -1134,7 +1134,7 @@ RC SCIA_SetPDS(ENGINE_CONTEXT *pEngineContext) {
 
         for (hDir=opendir(filePath);(hDir!=NULL) && ((fileInfo=readdir(hDir))!=NULL);) {
           sprintf(sciaOrbitFiles[sciaOrbitFilesN].sciaFileName,"%s/%s",filePath,fileInfo->d_name);
-          
+
           if (!STD_IsDir(sciaOrbitFiles[sciaOrbitFilesN].sciaFileName)) {
             strcpy(filePrefix,fileInfo->d_name);
             for (ptrOld=filePrefix,_n=0;((ptr=strchr(ptrOld,'_'))!=NULL) && ++_n<4;ptrOld=ptr+1);
@@ -1358,7 +1358,7 @@ static void free_vza_refs(void) {
 
 static void initialize_vza_refs(void) {
   free_vza_refs();// will free previously allocated structures, if any.
-  
+
   vza_refs = malloc(NFeno * sizeof(*vza_refs));
   refs_left_scan = malloc(NFeno * sizeof(*refs_left_scan));
   refs_right_scan = malloc(NFeno * sizeof(*refs_right_scan));
@@ -1468,7 +1468,7 @@ static int find_ref_spectra(struct ref_list *selected_spectra[NFeno][NUM_VZA_REF
             && pTabFeno->useKurucz!=ANLYS_KURUCZ_SPEC
             && pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC
             && use_as_reference(record, pTabFeno) ) {
-            
+
           if (ref == NULL) {
             // ref hasn't been initialized yet for another analysis window, so do that now:
             ref = malloc(sizeof(*ref));
@@ -1500,7 +1500,7 @@ static int find_ref_spectra(struct ref_list *selected_spectra[NFeno][NUM_VZA_REF
           // 0 = nadir,
           // (1, NUM_VZA_BINS( = left scan
           // (NUM_VZA_BINS,2*NUM_VZA_BINS-1( = right scan
-          // :add the reference 
+          // :add the reference
           const size_t vza_offset = (bin == 0 || record->esm_pos < 0.) ? bin : (NUM_VZA_BINS-1 + bin);
           list_item->next = selected_spectra[analysis_window][vza_offset];
           selected_spectra[analysis_window][vza_offset] = list_item;
@@ -1738,8 +1738,8 @@ RC SCIA_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle) {
        // ANALYSE_UsampLocalFree();
 
       if (((rc=ANALYSE_UsampLocalAlloc(0))!=ERROR_ID_NO) ||
-          ((rc=ANALYSE_UsampBuild(0,0))!=ERROR_ID_NO) ||
-          ((rc=ANALYSE_UsampBuild(1,ITEM_NONE))!=ERROR_ID_NO))
+          ((rc=ANALYSE_UsampBuild(0,0,0))!=ERROR_ID_NO) ||
+          ((rc=ANALYSE_UsampBuild(1,ITEM_NONE,0))!=ERROR_ID_NO))
 
        goto EndSCIA_LoadAnalysis;
      }

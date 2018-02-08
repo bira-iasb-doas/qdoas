@@ -123,8 +123,6 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
 
   if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Date and Time","%02d/%02d/%d %02d:%02d:%02d.%06d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec,pRecord->present_datetime.microseconds);
-  else if (((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_BIRA_AIRBORNE) || (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_BIRA_MOBILE)) && pRecord->present_datetime.millis)
-   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Date and Time","%02d/%02d/%d %02d:%02d:%02d.%03d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec,pRecord->present_datetime.millis);
   else if (pRecord->present_datetime.millis>0)
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Date and Time","%02d/%02d/%d %02d:%02d:%02d.%03d",pDay->da_day,pDay->da_mon,pDay->da_year,pTime->ti_hour,pTime->ti_min,pTime->ti_sec,pRecord->present_datetime.millis);
   else
@@ -297,9 +295,9 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
    }
 
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_CLOUD])
-   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Cloud fraction","%.3f",pRecord->cloudFraction);
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Cloud fraction","%.3f",pRecord->satellite.cloud_fraction);
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_CLOUDTOPP])
-   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Cloud top pressure","%.3f",pRecord->cloudTopPressure);
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Cloud top pressure","%.3f",pRecord->satellite.cloud_top_pressure);
 
   if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_GOME2)
    {
@@ -347,6 +345,8 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Satellite latitude","%g",pRecord->satellite.latitude);
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_SAT_HEIGHT])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Satellite height","%g",pRecord->satellite.altitude);
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_EARTH_RADIUS])
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Earth radius","%g",pRecord->satellite.earth_radius);
 
   // Return
 
@@ -1043,13 +1043,16 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_GOME1_NETCDF :                                                               // GOME ERS2 netCDF format
 
-      NDET[0]=1024;                                                                                     // Could be reduced by Set function
+      for(unsigned int i=0; i<MAX_SWATHSIZE; ++i) {
+        NDET[i]=1024;
+        pEngineInstrumental->use_row[i]=false;
+      }                                                                                    // Could be reduced by Set function
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->gdpnetcdf.calibrationFile);     // calibration file
       strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->gdpnetcdf.transmissionFunctionFile);     // instrumental function file
 
-      pEngineInstrumental->gome.bandType=pMediateInstrumental->gdpnetcdf.bandType;
-      pEngineInstrumental->gome.pixelType=pMediateInstrumental->gdpnetcdf.pixelType-1;
+      pEngineInstrumental->gomenetcdf.bandType=pMediateInstrumental->gdpnetcdf.bandType;
+      pEngineInstrumental->gomenetcdf.pixelType=pMediateInstrumental->gdpnetcdf.pixelType;
 
       break;
       // ---------------------------------------------------------------------------
@@ -1638,6 +1641,13 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
    case PRJCT_INSTR_FORMAT_OMI:
      ANALYSE_swathSize = 60;
      break;
+   case PRJCT_INSTR_FORMAT_GOME1_NETCDF:
+     ANALYSE_swathSize = 4;   // the number of pixel types
+     for (int i =0; i< ANALYSE_swathSize; ++i)
+       pInstrumental->use_row[i] = true;
+
+     break;
+
    case PRJCT_INSTR_FORMAT_TROPOMI:
      rc = tropomi_init(analysisWindows[0].refOneFile,pEngineContext);
      break;
@@ -1930,7 +1940,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
        (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) && useUsamp &&
        !(rc=ANALYSE_UsampGlobalAlloc(lambdaMin,lambdaMax,max_ndet)) &&
        !(rc=ANALYSE_UsampLocalAlloc(1)))
-    rc=ANALYSE_UsampBuild(0,1);
+    rc=ANALYSE_UsampBuild(0,1,0);   // !!! ACCOUNT FOR UNDERSAMPLING ???
 
  handle_errors:
 
