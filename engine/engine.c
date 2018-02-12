@@ -387,6 +387,7 @@ RC EngineSetProject(ENGINE_CONTEXT *pEngineContext)
    pRecord=&pEngineContext->recordInfo;
 
    pEngineContext->lastRefRecord=0;
+   pEngineContext->n_crosstrack=1;
    pRecord->nSpecMax=0;
    pRecord->i_crosstrack=0;
 
@@ -866,6 +867,7 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
    pRecord->maxdoas.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH;
 
    pEngineContext->indexRecord=indexRecord;  // !!! for the output
+   pRecord->i_alongtrack=(indexRecord-1)/ANALYSE_swathSize;
 
    switch((int)pEngineContext->project.instrumental.readOutFormat)
     {

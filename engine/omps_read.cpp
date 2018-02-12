@@ -347,8 +347,8 @@ RC OMPS_set(ENGINE_CONTEXT *pEngineContext) {
     d.close();
 
     pEngineContext->recordNumber = dims[0]*dims[1];
-    pEngineContext->recordInfo.n_alongtrack= dims[0];
-    pEngineContext->recordInfo.n_crosstrack= dims[1];
+    pEngineContext->n_alongtrack= dims[0];
+    pEngineContext->n_crosstrack= dims[1];
 
     currentOrbit.nMeasurements = dims[0];
     currentOrbit.nXTrack = dims[1];
@@ -549,4 +549,16 @@ RC OMPS_load_analysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle) {
 
 void OMPS_ReleaseBuffers(void) {
   referenceFileNames.clear();
+}
+
+// TODO
+int OMPS_get_orbit_date(int *orbit_year, int *orbit_month, int *orbit_day) {
+
+ *orbit_year=*orbit_month=*orbit_day=0;
+ return 1;
+ // std::istringstream orbit_start(&geoData.utcDate[0]);
+ // // time_coverage_start is formatted as "YYYY-MM-DD"
+ // char tmp; // to skip "-" chars
+ // orbit_start >> *orbit_year >> tmp >> *orbit_month >> tmp >> *orbit_day;
+ // return  orbit_start.good() ? 0 : 1;
 }

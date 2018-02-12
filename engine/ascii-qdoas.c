@@ -242,7 +242,9 @@ char *ascFieldsNames[PRJCT_RESULTS_MAX]=
   (char *)"lambda",                                                             // PRJCT_RESULTS_LAMBDA,
   (char *)"spectrum",                                                           // PRJCT_RESULTS_SPECTRA,
   (char *)"filename",                                                           // PRJCT_RESULTS_FILENAME
-  (char *)"Scan index"                                                          // PRJCT_RESULTS_SCANINDEX
+  (char *)"Scan index",                                                         // PRJCT_RESULTS_SCANINDEX
+  (char *)"Index zenith before",                                                // PRJCT_RESULTS_ZENITH_BEFORE,
+  (char *)"Index zenith after"                                                  // PRJCT_RESULTS_ZENITH_AFTER,
  };
 
 enum _ascLineType

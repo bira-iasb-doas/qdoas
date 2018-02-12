@@ -133,7 +133,7 @@ static void define_variable(NetCDFGroup &group, const struct output_field& thefi
       dimids.push_back(get_dimid("n_crosstrack"));
       chunksizes.push_back(std::min<size_t>(100, n_crosstrack));
     }
-  
+
     dimids.push_back(get_dimid("n_calib"));
     chunksizes.push_back(std::min<size_t>(100, n_calib));
   } else {
@@ -151,7 +151,7 @@ static void define_variable(NetCDFGroup &group, const struct output_field& thefi
   group.defVarChunking(varid, NC_CHUNKED, chunksizes.data());
   group.defVarDeflate(varid);
   group.defVarFletcher32(varid, NC_FLETCHER32);
-  
+
   switch (thefield.memory_type) {
   case OUTPUT_STRING:
     group.putAttr("_FillValue", QDOAS_FILL_STRING, varid);
@@ -192,7 +192,7 @@ static void write_global_attrs(const ENGINE_CONTEXT*pEngineContext, NetCDFGroup 
 
   const char *input_filename = strrchr(pEngineContext->fileInfo.fileName,PATH_SEP);
   if (input_filename) {
-    ++input_filename; // if we have found PATH_SEP, file name starts at character behind PATH_SEP 
+    ++input_filename; // if we have found PATH_SEP, file name starts at character behind PATH_SEP
   } else { // no PATH_SEP found -> just use fileinfo.fileName
     input_filename = pEngineContext->fileInfo.fileName;
   }
@@ -261,7 +261,7 @@ static void write_calibration_data(NetCDFGroup& group) {
     }
     write_calibration_field(calibfield, calib_group, varname, start, count);
   }
-  
+
 }
 
 void write_automatic_reference_info(const ENGINE_CONTEXT *pEngineContext, NetCDFGroup& group) {
@@ -313,8 +313,8 @@ RC netcdf_open(const ENGINE_CONTEXT *pEngineContext, const char *filename) {
     output_file = NetCDFFile(filename + string(output_file_extensions[NETCDF]), NC_WRITE );
     output_group = output_file.defGroup(pEngineContext->project.asciiResults.swath_name);
 
-    n_crosstrack = ANALYSE_swathSize;
-    n_alongtrack = pEngineContext->recordNumber / n_crosstrack;
+    n_crosstrack = pEngineContext->n_crosstrack; // ANALYSE_swathSize;
+    n_alongtrack = pEngineContext->n_alongtrack;
 
     n_calib = 0;
     for (int firstrow = 0; firstrow<ANALYSE_swathSize; firstrow++) {
@@ -338,10 +338,10 @@ RC netcdf_open(const ENGINE_CONTEXT *pEngineContext, const char *filename) {
     write_calibration_data(output_group);
 
     for (unsigned int i=0; i<output_num_fields; ++i) {
-      NetCDFGroup group = output_data_analysis[i].windowname ? 
-        output_group.getGroup(output_data_analysis[i].windowname) : output_group;
-      define_variable(group, output_data_analysis[i], get_netcdf_varname(output_data_analysis[i].fieldname), Analysis);
-    }
+       NetCDFGroup group = output_data_analysis[i].windowname ?
+         output_group.getGroup(output_data_analysis[i].windowname) : output_group;
+       define_variable(group, output_data_analysis[i], get_netcdf_varname(output_data_analysis[i].fieldname), Analysis);
+     }
   } catch (std::runtime_error& e) {
     output_file.close();
     return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, e.what() );
@@ -413,14 +413,15 @@ static void write_buffer(const struct output_field *thefield, const bool selecte
   NetCDFGroup group = thefield->windowname ? output_group.getGroup(thefield->windowname) : output_group;
   string varname { get_netcdf_varname(thefield->fieldname) };
   T fill = group.getFillValue<T>(group.varID(varname));
-  
+
   // buffer will hold all output data for this variable
   vector<T> buffer(n_alongtrack * n_crosstrack * ncols * dimension, fill);
+
   for (int record=0; record < num_records; ++record) {
     if (selected[record]) {
 
-      int i_crosstrack = (recordinfo[record].specno-1) % n_crosstrack; //specno is 1-based
-      int i_alongtrack = (recordinfo[record].specno-1) / n_crosstrack;
+      int i_crosstrack = recordinfo[record].i_crosstrack; // (recordinfo[record].specno-1) % n_crosstrack; //specno is 1-based
+      int i_alongtrack = recordinfo[record].i_alongtrack; // (recordinfo[record].specno-1) / n_crosstrack;
 
       for (size_t i=0; i< ncols; ++i) {
         // write into the buffer at the correct index position, using
@@ -444,14 +445,15 @@ void write_buffer<const char*>(const struct output_field *thefield, const bool s
   NetCDFGroup group = thefield->windowname ? output_group.getGroup(thefield->windowname) : output_group;
   string varname { get_netcdf_varname(thefield->fieldname) };
   string fill = group.getFillValue<string>(group.varID(varname));
-  
+
   // buffer will hold all output data for this variable
   vector<const char*> buffer(n_alongtrack * n_crosstrack * ncols, fill.c_str());
+
   for (int record=0; record < num_records; ++record) {
     if (selected[record]) {
 
-      int i_crosstrack = (recordinfo[record].specno-1) % n_crosstrack; //specno is 1-based
-      int i_alongtrack = (recordinfo[record].specno-1) / n_crosstrack;
+      int i_crosstrack = recordinfo[record].i_crosstrack; // (recordinfo[record].specno-1) % n_crosstrack; //specno is 1-based
+      int i_alongtrack = recordinfo[record].i_alongtrack; // (recordinfo[record].specno-1) / n_crosstrack;
 
       for (size_t i=0; i< ncols; ++i) {
         // write into the buffer at the correct index position, using
@@ -469,7 +471,7 @@ RC netcdf_write_analysis_data(const bool selected_records[], int num_records, co
   try {
     for (unsigned int i=0; i<output_num_fields; ++i) {
       struct output_field *thefield = &output_data_analysis[i];
-      
+
       switch(thefield->memory_type) {
       case OUTPUT_INT:
         write_buffer<int>(thefield, selected_records, num_records, recordinfo);

@@ -234,10 +234,10 @@ RC FRM4DOAS_Set(ENGINE_CONTEXT *pEngineContext)
 
     NetCDFGroup root_group = current_file.getGroup(root_name);                  // go to the root
 
-    pEngineContext->recordInfo.n_alongtrack=
+    pEngineContext->n_alongtrack=
     pEngineContext->recordNumber=root_group.dimLen("num_rec");                  // get the record number
 
-    pEngineContext->recordInfo.n_crosstrack=1;                                  // spectra should be one dimension only
+    pEngineContext->n_crosstrack=1;                                             // spectra should be one dimension only
     det_size=root_group.dimLen("det_size");                                     // get the number of pixels of the detector
 
     // Read metadata

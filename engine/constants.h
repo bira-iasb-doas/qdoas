@@ -624,6 +624,8 @@ enum _prjctResults
   PRJCT_RESULTS_SPECTRA,
   PRJCT_RESULTS_FILENAME,
   PRJCT_RESULTS_SCANINDEX,
+  PRJCT_RESULTS_ZENITH_BEFORE,
+  PRJCT_RESULTS_ZENITH_AFTER,
   PRJCT_RESULTS_MAX            // addition/deletion of new fields impact changes in ascii-qdoas (ascFieldsNames)
  };
 

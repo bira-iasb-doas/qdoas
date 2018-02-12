@@ -42,6 +42,9 @@
 //  GOME1NETCDF_Read           read a specified record from a file in netCDF format
 //  GOME1NETCDF_Cleanup        close the current file and release allocated buffers
 //
+//  GOME1NETCDF_get_orbit_date return the date of the current orbit file to create the output directory
+//  GOME1NETCDF_LoadAnalysis   load analysis parameters depending on the reference spectrum
+//
 //  ----------------------------------------------------------------------------
 //
 //  QDOAS is a cross-platform application developed in QT for DOAS retrieval
@@ -211,6 +214,7 @@ static int gome1netCDF_loadReferenceFlag=0;
 
 static vector<int>scanline_indexes;
 static vector<char>scanline_pixtype;
+static vector<int>alongtrack_indexes;
 static vector<double> delta_time; // number of milliseconds after reference_time
 static time_t reference_time;
 
@@ -520,7 +524,7 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
   int selected_band;
   vector<int> scanline,scanline_bs;
   vector <double> deltatime,deltatime_bs;
-  vector <short> startpixel,endpixel;
+  vector <short> startpixel;
   int i,j,k,n;
   int currentScanIndex;
 
@@ -553,7 +557,6 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
 
     scan_size=scan_size_bs=pixel_size=pixel_size_bs=(size_t)0;
 
-
          // Dimensions of spectra are 'time' x 'scan_size' x 'pixel_size ' x 'spectral_channel'
          // For example : 1 x 552 x 3 x 832
 
@@ -562,6 +565,10 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
     if (pInstrumental->gomenetcdf.pixelType!=PRJCT_INSTR_GOME1_PIXEL_BACKSCAN)   // if not backscan pixels only
      {
       band_group = current_file.getGroup(root_name+"/MODE_NADIR/"+gome1netcdf_bandName[selected_band]);
+
+      pEngineContext->project.instrumental.use_row[0]=
+      pEngineContext->project.instrumental.use_row[1]=
+      pEngineContext->project.instrumental.use_row[2]=true;
 
       if ((band_group.dimLen("time")!=1) || (band_group.dimLen("ground_pixel")!=3))
        rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_FORMAT, "Dimensions of ground pixels in the GOME1 netCDF file are not the expected ones");  // in case of error, capture the message
@@ -600,8 +607,9 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
     if (pInstrumental->gomenetcdf.pixelType!=PRJCT_INSTR_GOME1_PIXEL_GROUND)     // if not ground pixels only
      {
       band_group = current_file.getGroup(root_name+"/MODE_NADIR_BACKSCAN/"+gome1netcdf_bandName[selected_band]);
+      pEngineContext->project.instrumental.use_row[3]=true;
 
-      if ((band_group.dimLen("time")!=1) || (band_group.dimLen("ground_pixel")!=1) || (band_group.dimLen("spectral_channel")!=det_size))
+      if ((band_group.dimLen("time")!=1) || (band_group.dimLen("ground_pixel")!=1))
        rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_FORMAT, "Dimensions of backscan pixels in the GOME1 netCDF file are not the expected ones");  // in case of error, capture the message
       else
        {
@@ -635,8 +643,6 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
 
     // Assign size
 
-    pEngineContext->recordInfo.n_alongtrack=(scan_size>scan_size_bs)?scan_size:scan_size_bs;
-    pEngineContext->recordInfo.n_crosstrack=pixel_size+pixel_size_bs;
     pEngineContext->recordNumber=scan_size*pixel_size+scan_size_bs*pixel_size_bs;  // get the total number of records (ground pixels + backscans)
 
     // Sort ground pixels and backscans using scanline
@@ -645,23 +651,26 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
 
     scanline_indexes.resize(pEngineContext->recordNumber);
     scanline_pixtype.resize(pEngineContext->recordNumber);
+    alongtrack_indexes.resize(pEngineContext->recordNumber);
     delta_time.resize(pEngineContext->recordNumber);
 
     auto delta_time_scan = reinterpret_cast<const double(*)[pixel_size]>(deltatime.data());
     auto delta_time_scan_bs = reinterpret_cast<const double(*)[pixel_size_bs]>(deltatime_bs.data());
+    pEngineContext->n_alongtrack=0;
 
     for (currentScanIndex=-1,                  // original scan line index
          i=0,                                  // index to browse elements in scanline
          j=0,                                  // index to browse elements in scanline_bs
          k=0;
-       ((i<scan_size) || (j<(int)scan_size_bs)) && (k<(int)pEngineContext->recordNumber);)
+       ((i<(int)scan_size) || (j<(int)scan_size_bs)) && (k<(int)pEngineContext->recordNumber);)
      {
-      if ((i<(int)scan_size) && pixel_size && (scanline[i]>(int)currentScanIndex))
+      if ((i<(int)scan_size) && pixel_size ) // && (scanline[i]>(int)currentScanIndex))
        {
         for (n=0;n<(int)pixel_size;n++)
          {
           scanline_indexes[k+n]=i;
           scanline_pixtype[k+n]=n;
+          alongtrack_indexes[k+n]=pEngineContext->n_alongtrack;
           delta_time[k+n]=delta_time_scan[i][n];
          }
 
@@ -670,23 +679,26 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
         i++;
        }
 
-      if ((j<scan_size_bs) && pixel_size_bs && (!pixel_size || (scanline_bs[j]==currentScanIndex)))
+      if ((j<(int)scan_size_bs) && pixel_size_bs && (!pixel_size || (scanline_bs[j]==currentScanIndex)))
        {
         scanline_indexes[k]=j;
         scanline_pixtype[k]=3;
+        alongtrack_indexes[k]=pEngineContext->n_alongtrack;
         delta_time[k]=delta_time_scan_bs[j][0];
 
         k++;
         j++;
        }
+
+      pEngineContext->n_alongtrack++;
      }
+    
     GOME1NETCDF_Get_Irradiance(pEngineContext,channel_index,pEngineContext->buffers.lambda_irrad,pEngineContext->buffers.irrad);
 
-    for(i=0; i<MAX_SWATHSIZE; ++i) {
-      NDET[i]=(int)calibration.channel_size;
-      pEngineContext->project.instrumental.use_row[i]=true;
-    }                                                                                    // Could be reduced by Set function
+    for(i=0; i<MAX_SWATHSIZE; ++i)
+     NDET[i]=(int)calibration.channel_size;
 
+    pEngineContext->n_crosstrack=4;
    }
   catch (std::runtime_error& e)
    {
@@ -694,7 +706,7 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
    }
 
   // Return
-
+  
   return rc;
 }
 
@@ -735,6 +747,7 @@ RC GOME1NETCDF_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
   // Initializations
 
   pRecordInfo=&pEngineContext->recordInfo;
+  pRecordInfo->i_alongtrack=alongtrack_indexes[recordNo-1];                  // because in mediate, use +1
   pInstrumental=&pEngineContext->project.instrumental;
   selected_band=pInstrumental->gomenetcdf.bandType;
   rc = ERROR_ID_NO;
@@ -864,6 +877,56 @@ RC GOME1NETCDF_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
  }
 
 // -----------------------------------------------------------------------------
+// FUNCTION GOME1NETCDF_Cleanup
+// -----------------------------------------------------------------------------
+//!
+//! \fn      void GOME1NETCDF_Cleanup(void)
+//! \details Close the current file and release allocated buffers\n
+//!
+// -----------------------------------------------------------------------------
+
+void GOME1NETCDF_Cleanup(void)
+ {
+  current_file.close();
+
+  calibration = calib();
+  irradiance = refspec();
+  ground_geodata = geodata();
+  ground_clouddata = clouddata();
+  backscan_geodata = geodata();
+  backscan_clouddata = clouddata();
+
+  scanline_indexes.clear();
+  scanline_pixtype.clear();
+  alongtrack_indexes.clear();
+  delta_time.clear();
+ }
+
+
+
+// -----------------------------------------------------------------------------
+// FUNCTION GOME1NETCDF_get_orbit_date
+// -----------------------------------------------------------------------------
+//!
+//! \fn      RC GOME1NETCDF_get_orbit_date(int *orbit_year, int *orbit_month, int *orbit_day)
+//! \details Return the date of the current orbit file to create the output directory
+//! \param   [out]  year  pointer to the engine context; some fields are affected by this function.\n
+//! \param   [in]  responseHandle  address where to transmit error to the user interface\n
+//! \return  0 on success, 1 otherwise
+//!
+// -----------------------------------------------------------------------------
+
+// ACCOUNT FOR ORBIT !!!!!!!!!!!!!!!!!!!!!
+
+int GOME1NETCDF_get_orbit_date(int *orbit_year, int *orbit_month, int *orbit_day) {
+  std::istringstream orbit_start(current_file.getAttText("time_reference"));
+  // time_coverage_start is formatted as "YYYY-MM-DD"
+  char tmp; // to skip "-" chars
+  orbit_start >> *orbit_year >> tmp >> *orbit_month >> tmp >> *orbit_day;
+  return  orbit_start.good() ? 0 : 1;
+}
+
+// -----------------------------------------------------------------------------
 // FUNCTION GOME1NETCDF_LoadAnalysis
 // -----------------------------------------------------------------------------
 //!
@@ -899,6 +962,9 @@ RC GOME1NETCDF_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   // Browse analysis windows and load missing data
 
   for (int indexFenoColumn=0;(indexFenoColumn<ANALYSE_swathSize) && !rc;indexFenoColumn++) {
+
+   if (!pEngineContext->project.instrumental.use_row[indexFenoColumn]) continue;
+
    for (int indexFeno=0; indexFeno<NFeno && !rc; indexFeno++) {
      FENO *pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
      pTabFeno->NDET=n_wavel;
@@ -1011,29 +1077,4 @@ EndGOME1NETCDF_LoadAnalysis:
 
   return rc;
 }
-
-// -----------------------------------------------------------------------------
-// FUNCTION GOME1NETCDF_Cleanup
-// -----------------------------------------------------------------------------
-//!
-//! \fn      void GOME1NETCDF_Cleanup(void)
-//! \details Close the current file and release allocated buffers\n
-//!
-// -----------------------------------------------------------------------------
-
-void GOME1NETCDF_Cleanup(void)
- {
-  current_file.close();
-
-  calibration = calib();
-  irradiance = refspec();
-  ground_geodata = geodata();
-  ground_clouddata = clouddata();
-  backscan_geodata = geodata();
-  backscan_clouddata = clouddata();
-
-  scanline_indexes.clear();
-  scanline_pixtype.clear();
-  delta_time.clear();
- }
 

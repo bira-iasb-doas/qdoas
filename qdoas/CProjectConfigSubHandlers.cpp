@@ -267,6 +267,10 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
     d->selected[d->nSelected] = PRJCT_RESULTS_PRECALCULATED_FLUXES;
   else if (str == "scan_index")
     d->selected[d->nSelected] = PRJCT_RESULTS_SCANINDEX;
+  else if (str == "zenith_before_index")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ZENITH_BEFORE;
+  else if (str == "zenith_after_index")
+    d->selected[d->nSelected] = PRJCT_RESULTS_ZENITH_AFTER;
   else
     return postErrorMessage("Invalid output field " + str);
 
@@ -739,7 +743,7 @@ bool CProjectInstrumentalSubHandler::start(const QXmlAttributes &atts)
   else if (str == "frm4doas")
     m_instrumental->format = PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF;
   else if (str == "gdpnetcdf")
-    m_instrumental->format = PRJCT_INSTR_FORMAT_GOME1_NETCDF;    
+    m_instrumental->format = PRJCT_INSTR_FORMAT_GOME1_NETCDF;
   else
     return postErrorMessage("Invalid instrumental format");
 

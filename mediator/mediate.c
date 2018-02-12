@@ -159,29 +159,24 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
       mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"End time","%02d:%02d:%02d.%03d",pdateTime->thetime.ti_hour,pdateTime->thetime.ti_min,pdateTime->thetime.ti_sec,pdateTime->millis);
    }
 
-  if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)
-    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Record","%d/%d",pEngineContext->indexRecord,pEngineContext->recordNumber);
-  else if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMI ||
-           pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_TROPOMI ||
-           pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_OMPS ||
-           pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_APEX)
+  if (ANALYSE_swathSize>1)
     {
       if (pInstrumental->averageFlag)
         mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Record","%d/%d (%d spectra averaged)",
-                                pEngineContext->indexRecord,pEngineContext->recordNumber,pRecord->n_alongtrack);
+                                pEngineContext->indexRecord,pEngineContext->recordNumber,pEngineContext->n_alongtrack);
       else
        mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Record","%d/%d (measurement %d/%d, row %d/%d)",
                                pEngineContext->indexRecord,pEngineContext->recordNumber,
-                               1+pRecord->i_alongtrack,pRecord->n_alongtrack,
-                               1+pRecord->i_crosstrack,pRecord->n_crosstrack);
-
-      if (pSpectra->fieldsFlag[PRJCT_RESULTS_INDEX_ALONGTRACK])
-       mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Along-track index","%d",pRecord->i_alongtrack);
-      if (pSpectra->fieldsFlag[PRJCT_RESULTS_INDEX_CROSSTRACK])
-       mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Cross-track index","%d",pRecord->i_crosstrack);
+                               1+pRecord->i_alongtrack,pEngineContext->n_alongtrack,
+                               1+pRecord->i_crosstrack,pEngineContext->n_crosstrack);
     }
   else
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Record","%d/%d",pEngineContext->indexRecord,pEngineContext->recordNumber);
+
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_INDEX_ALONGTRACK])
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Along-track index","%d",pRecord->i_alongtrack);
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_INDEX_CROSSTRACK])
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Cross-track index","%d",pRecord->i_crosstrack);
 
   if (strlen(pRecord->Nom) && (pSpectra->fieldsFlag[PRJCT_RESULTS_NAME]))
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Record name","%s",pRecord->Nom);
@@ -339,6 +334,10 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
 
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_SCANINDEX])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Scan index","%d",pRecord->maxdoas.scanIndex);
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ZENITH_BEFORE])
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Zenith before index","%d",pRecord->maxdoas.zenithBeforeIndex);
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_ZENITH_AFTER])
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Zenith after index","%d",pRecord->maxdoas.zenithAfterIndex);
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_SAT_LON])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Satellite longitude","%g",pRecord->satellite.longitude);
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_SAT_LAT])
@@ -599,7 +598,7 @@ void setMediateProjectDisplay(PRJCT_SPECTRA *pEngineSpectra,const mediate_projec
    pEngineSpectra->displayCalibFlag=pMediateSpectra->requireCalib;
    pEngineSpectra->displayFitFlag=pMediateSpectra->requireFits;
 
-   memset(pEngineSpectra->fieldsFlag,0,PRJCT_RESULTS_MAX);
+   memset(pEngineSpectra->fieldsFlag,0,PRJCT_RESULTS_MAX*sizeof(int));
 
    for (i=0;i<pMediateSpectra->selection.nSelected;i++)
     pEngineSpectra->fieldsFlag[(int)pMediateSpectra->selection.selected[i]]=(char)1;
@@ -1268,9 +1267,9 @@ void setMediateProjectOutput(PRJCT_RESULTS *pEngineOutput,const mediate_project_
    pEngineOutput->successFlag=pMediateOutput->successFlag;
 
    if (!(pEngineOutput->fieldsNumber=pMediateOutput->selection.nSelected))
-    memset(pEngineOutput->fieldsFlag,0,PRJCT_RESULTS_MAX);
+    memset(pEngineOutput->fieldsFlag,0,PRJCT_RESULTS_MAX*sizeof(int));
    else
-    memcpy(pEngineOutput->fieldsFlag,pMediateOutput->selection.selected,pEngineOutput->fieldsNumber);
+    memcpy(pEngineOutput->fieldsFlag,pMediateOutput->selection.selected,pEngineOutput->fieldsNumber*sizeof(int));
  }
 
 void setMediateProjectExport(PRJCT_EXPORT *pEngineExport,const mediate_project_export_t *pMediateExport)
@@ -1281,9 +1280,9 @@ void setMediateProjectExport(PRJCT_EXPORT *pEngineExport,const mediate_project_e
  	pEngineExport->directoryFlag=pMediateExport->directoryFlag;
 
   if (!(pEngineExport->fieldsNumber=pMediateExport->selection.nSelected))
-   memset(pEngineExport->fieldsFlag,0,PRJCT_RESULTS_MAX);
+   memset(pEngineExport->fieldsFlag,0,PRJCT_RESULTS_MAX*sizeof(int));
   else
-   memcpy(pEngineExport->fieldsFlag,pMediateExport->selection.selected,pEngineExport->fieldsNumber);
+   memcpy(pEngineExport->fieldsFlag,pMediateExport->selection.selected,pEngineExport->fieldsNumber*sizeof(int));
  }
 
 // -----------------------------------------------------------------------------
@@ -1340,9 +1339,9 @@ int mediateRequestSetProject(void *engineContext,
 
    if (is_maxdoas(pEngineProject->instrumental.readOutFormat))
     {
-     char fieldsFlag[PRJCT_RESULTS_MAX];
+     int fieldsFlag[PRJCT_RESULTS_MAX];
 
-     memset(fieldsFlag,0,PRJCT_RESULTS_MAX);
+     memset(fieldsFlag,0,PRJCT_RESULTS_MAX*sizeof(int));
 
      // fieldsFlag not processed the same time in display page and output/export ??? -> to check later
 

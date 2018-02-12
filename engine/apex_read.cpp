@@ -106,8 +106,8 @@ int apex_set(ENGINE_CONTEXT *pEngineContext) {
     }
 
     pEngineContext->recordNumber = row_dim * col_dim;
-    pEngineContext->recordInfo.n_alongtrack= row_dim;
-    pEngineContext->recordInfo.n_crosstrack= col_dim;
+    pEngineContext->n_alongtrack= row_dim;
+    pEngineContext->n_crosstrack= col_dim;
 
     size_t start[] = {0, 0};
     size_t count[] = {spectral_dim, 1};

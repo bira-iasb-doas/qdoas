@@ -746,6 +746,14 @@ static inline void get_spectrum(struct output_field *this_field __attribute__ ((
 static inline void get_scan_index(struct output_field *this_field __attribute__ ((unused)), int *scanIndex, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
   *scanIndex = pEngineContext->recordInfo.maxdoas.scanIndex;
 }
+
+static inline void get_zenith_before_index(struct output_field *this_field __attribute__ ((unused)), int *zenithBeforeIndex, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  *zenithBeforeIndex = pEngineContext->recordInfo.maxdoas.zenithBeforeIndex;
+}
+
+static inline void get_zenith_after_index(struct output_field *this_field __attribute__ ((unused)), int *zenithAfterIndex, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  *zenithAfterIndex = pEngineContext->recordInfo.maxdoas.zenithAfterIndex;
+}
 // write_spikes:
 // concatenate all pixels containing spikes into a single string for output.
 

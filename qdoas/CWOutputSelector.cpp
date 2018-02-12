@@ -173,6 +173,8 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
 
   // if (selectorOrigin==TAB_SELECTOR_OUTPUT)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SCANINDEX,              "Scan index"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ZENITH_BEFORE,          "Zenith before index"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ZENITH_AFTER,           "Zenith after index"));
 
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_PRECALCULATED_FLUXES,   "Precalculated fluxes"));
 
@@ -202,8 +204,8 @@ void CWOutputSelector::apply(data_select_list_t *d)
   int row = 0;
   while (row < m_chosenList->count()) {
     QListWidgetItem *item = m_chosenList->item(row);
-    if (item && !item->isHidden()) {
-      d->selected[n] = (unsigned char)(item->data(Qt::UserRole).toInt());
+     if (item && !item->isHidden() ) {
+      d->selected[n] = item->data(Qt::UserRole).toInt();
       ++n;
     }
     ++row;
@@ -362,7 +364,6 @@ void getValidFieldFlags(int *validFlags, int instrument,int selectorOrigin)
   validFlags[PRJCT_RESULTS_TOTALACQTIME]=
   validFlags[PRJCT_RESULTS_TOTALEXPTIME]=!satelliteFlag;
   validFlags[PRJCT_RESULTS_MEASTYPE]=maxdoasFlag;
-  validFlags[PRJCT_RESULTS_SCANINDEX]=(format==PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF)?1:0;
 
   // set the appropriate flags
 
@@ -591,6 +592,11 @@ void getValidFieldFlags(int *validFlags, int instrument,int selectorOrigin)
       validFlags[PRJCT_RESULTS_CLOUDTOPP]=1;
       validFlags[PRJCT_RESULTS_LON_CORNERS]=1;
       validFlags[PRJCT_RESULTS_LAT_CORNERS]=1;
+      if (instrument==PRJCT_INSTR_FORMAT_GOME1_NETCDF)
+       {
+        validFlags[PRJCT_RESULTS_INDEX_ALONGTRACK]=1;
+        validFlags[PRJCT_RESULTS_INDEX_CROSSTRACK]=1;
+       }
      }
     break;
  // ----------------------------------------------------------------------------
@@ -685,6 +691,8 @@ void getValidFieldFlags(int *validFlags, int instrument,int selectorOrigin)
 
    case PRJCT_INSTR_FORMAT_TROPOMI:
      {
+       validFlags[PRJCT_RESULTS_INDEX_ALONGTRACK]=1;
+       validFlags[PRJCT_RESULTS_INDEX_CROSSTRACK]=1;
        validFlags[PRJCT_RESULTS_LON_CORNERS]=1;
        validFlags[PRJCT_RESULTS_LAT_CORNERS]=1;
        validFlags[PRJCT_RESULTS_SAT_LAT]=1;
@@ -714,6 +722,9 @@ void getValidFieldFlags(int *validFlags, int instrument,int selectorOrigin)
       validFlags[PRJCT_RESULTS_LONGIT]=1;
       validFlags[PRJCT_RESULTS_LATIT]=1;
       validFlags[PRJCT_RESULTS_ALTIT]=1;
+      validFlags[PRJCT_RESULTS_SCANINDEX]=1;
+      validFlags[PRJCT_RESULTS_ZENITH_BEFORE]=1;
+      validFlags[PRJCT_RESULTS_ZENITH_AFTER]=1;
      }
      break;
 

@@ -708,7 +708,7 @@ static void register_field(struct output_field field) {
   \param [in] fieldsFlag       list of fields to output
   \param [in] fieldsNumber     the number of fields in the previous list
 */
-static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const char *fieldsFlag,int fieldsNumber)
+static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const int *fieldsFlag,int fieldsNumber)
 {
   PROJECT *pProject=(PROJECT *)&pEngineContext->project;
 
@@ -1060,7 +1060,12 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
      case PRJCT_RESULTS_SCANINDEX:
        register_field( (struct output_field) { .basic_fieldname = "Scan index", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&get_scan_index });
      break;
-
+     case PRJCT_RESULTS_ZENITH_BEFORE:
+       register_field( (struct output_field) { .basic_fieldname = "index_zenith_before", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&get_zenith_before_index });
+     break;
+     case PRJCT_RESULTS_ZENITH_AFTER:
+       register_field( (struct output_field) { .basic_fieldname = "index_zenith_after", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&get_zenith_after_index });
+     break;
      default:
        break;
      }
@@ -1073,7 +1078,7 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const cha
   \param [in] fieldsFlag       list of fields to output
   \param [in] fieldsNumber     the number of fields in the previous list
 */
-static void OutputRegisterFieldsToExport(const ENGINE_CONTEXT *pEngineContext, const char *fieldsFlag,int fieldsNumber)
+static void OutputRegisterFieldsToExport(const ENGINE_CONTEXT *pEngineContext, const int *fieldsFlag,int fieldsNumber)
 {
   PROJECT *pProject=(PROJECT *)&pEngineContext->project;
 
@@ -1430,6 +1435,12 @@ static void OutputRegisterFieldsToExport(const ENGINE_CONTEXT *pEngineContext, c
      break;
      case PRJCT_RESULTS_SCANINDEX:  // !!! EXPORT FUNCTION !!!
        register_field( (struct output_field) { .basic_fieldname = "Scan index", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&get_scan_index });
+     break;
+     case PRJCT_RESULTS_ZENITH_BEFORE:  // !!! EXPORT FUNCTION !!!
+       register_field( (struct output_field) { .basic_fieldname = "index_zenith_before", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&get_zenith_before_index });
+     break;
+     case PRJCT_RESULTS_ZENITH_AFTER:  // !!! EXPORT FUNCTION !!!
+       register_field( (struct output_field) { .basic_fieldname = "index_zenith_after", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&get_zenith_after_index });
      break;
 
      default:  // !!! EXPORT FUNCTION !!!
@@ -1863,7 +1874,7 @@ RC OUTPUT_RegisterSpectra(const ENGINE_CONTEXT *pEngineContext) {
 
   // Initializations
 
-  const char *fieldsFlag=pEngineContext->project.exportSpectra.fieldsFlag;
+  const int *fieldsFlag=pEngineContext->project.exportSpectra.fieldsFlag;
   int fieldsNumber=pEngineContext->project.exportSpectra.fieldsNumber;
 
   // Browse fields
@@ -1902,6 +1913,9 @@ static void OutputSaveRecord(const ENGINE_CONTEXT *pEngineContext,INDEX indexFen
       outputRecords[index_record].day=(int)pRecordInfo->present_datetime.thedate.da_day;
       outputRecords[index_record].longit=(float)pRecordInfo->longitude;
       outputRecords[index_record].latit=(float)pRecordInfo->latitude;
+
+      outputRecords[index_record].i_crosstrack = pRecordInfo->i_crosstrack; // (outputRecords[index_record].specno-1) % n_crosstrack; //specno is 1-based
+      outputRecords[index_record].i_alongtrack = pRecordInfo->i_alongtrack; // (outputRecords[index_record].specno-1) / n_crosstrack;
     }
  }
 
@@ -1972,6 +1986,12 @@ static RC get_orbit_date(const ENGINE_CONTEXT *pEngineContext, int *orbit_year, 
     break;
   case PRJCT_INSTR_FORMAT_SCIA_PDS:
     SCIA_get_orbit_date(orbit_year, orbit_month, orbit_day);
+    break;
+  case PRJCT_INSTR_FORMAT_OMPS:
+    OMPS_get_orbit_date(orbit_year, orbit_month, orbit_day);
+    break;
+  case PRJCT_INSTR_FORMAT_GOME1_NETCDF:
+    GOME1NETCDF_get_orbit_date(orbit_year, orbit_month, orbit_day);
     break;
   default:
     // we should never get here:

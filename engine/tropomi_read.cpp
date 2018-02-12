@@ -249,8 +249,8 @@ int tropomi_set(ENGINE_CONTEXT *pEngineContext) {
     size_groundpixel = obsGroup.dimLen("ground_pixel");
 
     pEngineContext->recordNumber = size_groundpixel * size_scanline;
-    pEngineContext->recordInfo.n_alongtrack= size_scanline;
-    pEngineContext->recordInfo.n_crosstrack= size_groundpixel;
+    pEngineContext->n_alongtrack= size_scanline;
+    pEngineContext->n_crosstrack= size_groundpixel;
 
     size_t start[] = {0, 0};
     size_t count[] = {1, size_scanline};

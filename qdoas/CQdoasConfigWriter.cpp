@@ -445,7 +445,7 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
     break;
   case PRJCT_INSTR_FORMAT_GOME1_NETCDF:
     fprintf(fp, "\"gdpnetcdf\"");
-    break;    
+    break;
   default:
     fprintf(fp, "\"invalid\"");
   }
@@ -1656,6 +1656,8 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     case PRJCT_RESULTS_SPECTRA : config_string = "spectra"; break;
     case PRJCT_RESULTS_FILENAME : config_string = "filename"; break;
     case PRJCT_RESULTS_SCANINDEX : config_string = "scan_index"; break;
+    case PRJCT_RESULTS_ZENITH_BEFORE : config_string = "zenith_before_index"; break;
+    case PRJCT_RESULTS_ZENITH_AFTER : config_string = "zenith_after_index"; break;
     case PRJCT_RESULTS_PRECALCULATED_FLUXES:            config_string = "precalculated_fluxes"; break;
 
     default: puts("ERROR: no configuration string defined for output field. This is a bug, please contact Qdoas developers.");

@@ -421,7 +421,7 @@ struct anlyswin_linear
   typedef struct data_select_list
   {
     int nSelected;
-    char selected[256];
+    int selected[256];
   } data_select_list_t;
 
 #if defined(_cplusplus) || defined(__cplusplus)

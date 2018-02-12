@@ -3133,8 +3133,8 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
         } else {
           sprintf(tabTitle,"%s results (record %d/%d, measurement %d/%d, row %d/%d)",
                   Feno->windowName,pEngineContext->indexRecord,pEngineContext->recordNumber,
-                  1+pEngineContext->recordInfo.i_alongtrack,pEngineContext->recordInfo.n_alongtrack,
-                  1+pEngineContext->recordInfo.i_crosstrack,pEngineContext->recordInfo.n_crosstrack);
+                  1+pEngineContext->recordInfo.i_alongtrack,pEngineContext->n_alongtrack,
+                  1+pEngineContext->recordInfo.i_crosstrack,pEngineContext->n_crosstrack);
         }
 
         displayFlag=Feno->displaySpectrum+                            //  force display spectrum

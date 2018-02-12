@@ -1327,8 +1327,8 @@ RC OMI_Set(ENGINE_CONTEXT *pEngineContext)
   // Open the file
   if (!rc) {
     pEngineContext->recordNumber=current_orbit_file.specNumber;
-    pEngineContext->recordInfo.n_alongtrack=current_orbit_file.nMeasurements;
-    pEngineContext->recordInfo.n_crosstrack=current_orbit_file.nXtrack;
+    pEngineContext->n_alongtrack=current_orbit_file.nMeasurements;
+    pEngineContext->n_crosstrack=current_orbit_file.nXtrack;
 
     omiTotalRecordNumber+=current_orbit_file.nMeasurements;
 
