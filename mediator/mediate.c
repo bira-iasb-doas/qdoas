@@ -335,9 +335,9 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_SCANINDEX])
    mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Scan index","%d",pRecord->maxdoas.scanIndex);
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_ZENITH_BEFORE])
-   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Zenith before index","%d",pRecord->maxdoas.zenithBeforeIndex);
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Zenith before index","%d",1+pRecord->maxdoas.zenithBeforeIndex);   // Add one because record indexes are 1 based
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_ZENITH_AFTER])
-   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Zenith after index","%d",pRecord->maxdoas.zenithAfterIndex);
+   mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Zenith after index","%d",1+pRecord->maxdoas.zenithAfterIndex);    // Add one because record indexes are 1 based
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_SAT_LON])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Satellite longitude","%g",pRecord->satellite.longitude);
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_SAT_LAT])

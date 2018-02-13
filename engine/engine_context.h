@@ -569,6 +569,8 @@ typedef struct _analysisRef
  	int nRef;
  	int zmMinIndex;
  	int zmMaxIndex;
+ 	int zenBefIndex;
+ 	int zenAftIndex;
 
  	int indexScanBefore;
  	int indexScanAfter;

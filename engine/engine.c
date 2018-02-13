@@ -1096,8 +1096,11 @@ RC EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *sp
      } else {
        pRef->nRef=0;
        pRef->zmMinIndex=
-         pRef->indexScanBefore=
-         pRef->indexScanAfter=ITEM_NONE;
+       pRef->zmMaxIndex=
+       pRef->zenBefIndex=
+       pRef->zenAftIndex=
+       pRef->indexScanBefore=
+       pRef->indexScanAfter=ITEM_NONE;
      }
    }
 
@@ -1499,6 +1502,7 @@ RC EngineBuildRefList(ENGINE_CONTEXT *pEngineContext)
   int                 NRecord;                                                  // number of hold record
   int                 localCalDay;                                              // local day number
   int                 recordNumber;                                             // the current number of records
+  int                 zenithBeforeIndex,zenithAfterIndex;
   RC                  rc;                                                       // return code
 
   // Make a backup of the buffer part of the engine context
@@ -1507,6 +1511,7 @@ RC EngineBuildRefList(ENGINE_CONTEXT *pEngineContext)
   EngineCopyContext(&ENGINE_contextRef2,pEngineContext);
 
   ENGINE_contextRef.analysisRef.refScan=0;                                      // in order not to have error on zenith sky spectra
+  zenithBeforeIndex=zenithAfterIndex=ITEM_NONE;
 
   // Initializations
 
@@ -1575,6 +1580,11 @@ RC EngineBuildRefList(ENGINE_CONTEXT *pEngineContext)
         rc=ERROR_ID_NO;
         break;
        }
+
+      if ((ENGINE_contextRef.recordInfo.maxdoas.zenithBeforeIndex>zenithBeforeIndex) && (ENGINE_contextRef.recordInfo.maxdoas.zenithBeforeIndex<9999))
+       zenithBeforeIndex=ENGINE_contextRef.recordInfo.maxdoas.zenithBeforeIndex;
+      if ((ENGINE_contextRef.recordInfo.maxdoas.zenithAfterIndex>zenithAfterIndex) && (ENGINE_contextRef.recordInfo.maxdoas.zenithAfterIndex<9999))
+       zenithAfterIndex=ENGINE_contextRef.recordInfo.maxdoas.zenithAfterIndex;
      }
 
     if (!NRecord)
@@ -1586,6 +1596,8 @@ RC EngineBuildRefList(ENGINE_CONTEXT *pEngineContext)
   pEngineContext->analysisRef.nRef=NRecord;
   pEngineContext->analysisRef.zmMinIndex=indexZmMin;
   pEngineContext->analysisRef.zmMaxIndex=indexZmMax;
+  pEngineContext->analysisRef.zenBefIndex=zenithBeforeIndex;
+  pEngineContext->analysisRef.zenAftIndex=zenithBeforeIndex;
 
   // {                                                                                                                                                   // TO CHECK WITH MPI PEOPLE
   //  FILE *fp;                                                                                                                                          // TO CHECK WITH MPI PEOPLE
@@ -1737,52 +1749,63 @@ void EngineScanSetRefIndexes(ENGINE_CONTEXT *pEngineContext,INDEX indexRecord)
  	// Declarations
 
  	ANALYSIS_REF *pRef;
+ 	RECORD_INFO *pRecordInfo;
  	int *refIndexes,nRef;
  	int indexScanBefore,indexScanAfter,indexScanMin,indexScanMax,indexScanRecord;
 
  	// Initializations
 
+ 	pRecordInfo=&pEngineContext->recordInfo;
  	pRef=&pEngineContext->analysisRef;
- 	refIndexes=pRef->refIndexes;
- 	nRef=pRef->nRef;
 
- 	indexScanBefore=indexScanAfter=ITEM_NONE;
-
-  // Dichotomic search of the reference spectrum
-
-  if (indexRecord<refIndexes[0])
-   indexScanAfter=refIndexes[0];
-  else if (indexRecord>refIndexes[nRef-1])
-   indexScanBefore=refIndexes[nRef-1];
-  else
+  if ((pEngineContext->recordInfo.maxdoas.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) ||
+      (pEngineContext->analysisRef.zenBefIndex==ITEM_NONE) && (pEngineContext->analysisRef.zenAftIndex==ITEM_NONE))
    {
-    indexScanMin=indexScanRecord=0;
-    indexScanMax=nRef;
+ 	  refIndexes=pRef->refIndexes;
+ 	  nRef=pRef->nRef;
 
-    // Dichotomic search
+ 	  indexScanBefore=indexScanAfter=ITEM_NONE;
 
-    while (indexScanMax-indexScanMin>1)
+    // Dichotomic search of the reference spectrum
+
+    if (indexRecord<refIndexes[0])
+     indexScanAfter=refIndexes[0];
+    else if (indexRecord>refIndexes[nRef-1])
+     indexScanBefore=refIndexes[nRef-1];
+    else
      {
-      indexScanRecord=(indexScanMin+indexScanMax)>>1;
+      indexScanMin=indexScanRecord=0;
+      indexScanMax=nRef;
 
-      if (refIndexes[indexScanRecord]==indexRecord)
-       indexScanMin=indexScanMax=ITEM_NONE;                                  // the current record is also a zenith (-> in the list of possible reference spectra)
-      else if (refIndexes[indexScanRecord]<indexRecord)
-       indexScanMin=indexScanRecord;
-      else
-       indexScanMax=indexScanRecord;
+      // Dichotomic search
+
+      while (indexScanMax-indexScanMin>1)
+       {
+        indexScanRecord=(indexScanMin+indexScanMax)>>1;
+
+        if (refIndexes[indexScanRecord]==indexRecord)
+         indexScanMin=indexScanMax=ITEM_NONE;                                  // the current record is also a zenith (-> in the list of possible reference spectra)
+        else if (refIndexes[indexScanRecord]<indexRecord)
+         indexScanMin=indexScanRecord;
+        else
+         indexScanMax=indexScanRecord;
+       }
+
+      if ((indexScanMin!=ITEM_NONE) && (indexScanMin<nRef) && (refIndexes[indexScanMin]<=indexRecord))
+       indexScanBefore=refIndexes[indexScanMin];
+
+      if ((indexScanMax!=ITEM_NONE) && (indexScanMax<nRef) && (refIndexes[indexScanMax]>=indexRecord))
+       indexScanAfter=refIndexes[indexScanMax];
      }
 
-    if ((indexScanMin!=ITEM_NONE) && (indexScanMin<nRef) && (refIndexes[indexScanMin]<=indexRecord))
-     indexScanBefore=refIndexes[indexScanMin];
-
-    if ((indexScanMax!=ITEM_NONE) && (indexScanMax<nRef) && (refIndexes[indexScanMax]>=indexRecord))
-     indexScanAfter=refIndexes[indexScanMax];
+    pRef->indexScanBefore=indexScanBefore;
+    pRef->indexScanAfter=indexScanAfter;
    }
-
-  pRef->indexScanBefore=indexScanBefore;
-  pRef->indexScanAfter=indexScanAfter;
-
+  else
+   {
+    pRef->indexScanBefore=pRecordInfo->maxdoas.zenithBeforeIndex+1;   // pRef->indexScanBefore -> EngineReadRecord uses 1-based index
+    pRef->indexScanAfter=pRecordInfo->maxdoas.zenithAfterIndex+1;     // pRef->indexScanBefore -> EngineReadRecord uses 1-based index
+   }
  }
 
 RC EngineLoadRefMFC(ENGINE_CONTEXT *pEngineContextRef,ENGINE_CONTEXT *pEngineContext,INDEX indexRefRecord)
