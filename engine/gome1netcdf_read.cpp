@@ -650,11 +650,9 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
        }
      }
 
-    // Assign size
+    // Assign size and allocate buffers to keep information as long as the file is open
 
     pEngineContext->recordNumber=scan_size*pixel_size+scan_size_bs*pixel_size_bs;  // get the total number of records (ground pixels + backscans)
-
-    // Sort ground pixels and backscans using scanline
 
     start_pixel=startpixel[0];
 
@@ -669,6 +667,8 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
 
     pEngineContext->n_alongtrack=0;
 
+    // Get the maximum scanline number
+
     maxscan=0;
     if (scan_size && (scanline[(int)scan_size-1]>maxscan))
      maxscan=scanline[(int)scan_size-1];
@@ -676,25 +676,37 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
      maxscan=scanline_bs[(int)scan_size_bs-1];
     maxscan++;
 
+    // Allocate scanline buffers to sort ground pixels and backscans on the scanline number
+
     if (((iscan=(int *)malloc(sizeof(int)*maxscan))==NULL) ||
         ((iscan_bs=(int *)malloc(sizeof(int)*maxscan))==NULL))
 
      rc=ERROR_ID_ALLOC;
     else
      {
+      // Initialize scanline buffers
+
       for (i=0;i<maxscan;i++)
        iscan[i]=iscan_bs[i]=ITEM_NONE;
+
+      // Consider ground pixels and fill scanline buffer with the indexes of ground pixels
 
       if (scan_size)
        for (i=0;i<(int)scan_size;i++)
         iscan[scanline[i]]=i;
 
+      // Consider backscan pixels and fill scanline buffer with the indexes of backscan pixels
+
       if (scan_size_bs)
        for (i=0;i<(int)scan_size_bs;i++)
         iscan_bs[scanline_bs[i]]=i;
 
+      // The following loop browse scanline and sort them
+
       for (i=k=0;i<maxscan;i++)
        {
+        // Consider ground pixels
+
         if ((j=iscan[i])!=ITEM_NONE)
          {
           for (n=0;n<(int)pixel_size;n++)
@@ -707,6 +719,8 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
            }
           k+=pixel_size;
          }
+
+        // Consider backscan pixels
 
         if ((j=iscan_bs[i])!=ITEM_NONE)
          {
@@ -726,85 +740,6 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
     // Sort ground pixels and backscans using scanline
 
     start_pixel=startpixel[0];
-
-    // scanline_indexes.resize(pEngineContext->recordNumber);
-    // scanline_pixtype.resize(pEngineContext->recordNumber);
-    // scanline_pixnum.resize(pEngineContext->recordNumber);
-    // alongtrack_indexes.resize(pEngineContext->recordNumber);
-    // delta_time.resize(pEngineContext->recordNumber);
-    //
-    // auto delta_time_scan=reinterpret_cast<const double(*)[pixel_size]>(deltatime.data());
-    // auto delta_time_scan_bs = reinterpret_cast<const double(*)[pixel_size_bs]>(deltatime_bs.data());
-    //
-    // pEngineContext->n_alongtrack=0;
-    //
-    // for (currentScanIndex=-1,                  // original scan line index
-    //      i=0,                                  // index to browse elements in scanline
-    //      j=0,                                  // index to browse elements in scanline_bs
-    //      k=0;
-    //    ((i<(int)scan_size) || (j<(int)scan_size_bs)) && (k<(int)pEngineContext->recordNumber) ;)   // !!!  && (pEngineContext->n_alongtrack<(int)scan_size)
-    //  {
-    //   // Consider ground pixels
-    //
-    //   if ((i<(int)scan_size) && pixel_size )
-    //    {
-    //     for (n=0;n<(int)pixel_size;n++)
-    //      {
-    //       scanline_indexes[k+n]=i;
-    //       scanline_pixtype[k+n]=n;
-    //       scanline_pixnum[k+n]=scanline[i];
-    //       alongtrack_indexes[k+n]=pEngineContext->n_alongtrack;
-    //       delta_time[k+n]=delta_time_scan[i][n];
-    //      }
-    //
-    //     currentScanIndex=scanline[i];
-    //     k+=n;
-    //     i++;
-    //    }
-    //
-    //   // Consider back scan pixels (ground pixels could be missing : for example : 227 gb+bs, 228 bs, 229 gp -> avoid 227, 229, 228 bs and also infinite loops)
-    //
-    //   for (;(j<(int)scan_size_bs) && pixel_size_bs && (!pixel_size  || (i>=(int)scan_size) || (scanline_bs[j]<=currentScanIndex));)
-    //    {
-    //     // If only backscan pixel, sort is necessary
-    //
-    //     if (pixel_size && (scanline_bs[j]<currentScanIndex))
-    //      {
-    //       int k2;
-    //
-    //       for (k2=k-1;(k2>=0) && (scanline_pixnum[k2]>scanline_bs[j]);k2--)
-    //        {
-    //         scanline_indexes[k2+1]=scanline_indexes[k2];
-    //         scanline_pixtype[k2+1]=scanline_pixtype[k2];
-    //         scanline_pixnum[k2+1]=scanline_pixnum[k2];
-    //         alongtrack_indexes[k2+1]=alongtrack_indexes[k2]+1;
-    //         delta_time[k2+1]=delta_time[k2];
-    //        }
-    //
-    //       scanline_indexes[k2+1]=j;
-    //       scanline_pixtype[k2+1]=3;
-    //       scanline_pixnum[k2+1]=scanline_bs[j];
-    //       // --> do not assign alongtrack here : alongtrack_indexes[k2+1]=pEngineContext->n_alongtrack;
-    //       delta_time[k2+1]=delta_time_scan_bs[j][0];
-    //      }
-    //
-    //     // Add backscan
-    //
-    //     else
-    //      {
-    //       scanline_indexes[k]=j;
-    //       scanline_pixtype[k]=3;
-    //       scanline_pixnum[k]=scanline_bs[j];
-    //       alongtrack_indexes[k]=pEngineContext->n_alongtrack;
-    //       delta_time[k]=delta_time_scan_bs[j][0];
-    //      }
-    //
-    //     k++;
-    //     j++;
-    //    }
-    //
-    //   pEngineContext->n_alongtrack++;
-    //  }
 
     GOME1NETCDF_Get_Irradiance(pEngineContext,channel_index,pEngineContext->buffers.lambda_irrad,pEngineContext->buffers.irrad);
 
