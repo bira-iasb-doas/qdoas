@@ -260,6 +260,7 @@ struct _feno {
   INDEX           indexRefOmi;
   int             newrefFlag;
   double          preshift;
+  double          lambda0;
 };
 
 extern FENO         **TabFeno,*Feno;

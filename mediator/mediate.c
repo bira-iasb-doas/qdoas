@@ -1819,6 +1819,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
              useUsamp+=pTabFeno->useUsamp;
              xsToConvolute+=pTabFeno->xsToConvolute;
              xsToConvoluteI0+=pTabFeno->xsToConvoluteI0;
+             pTabFeno->lambda0=(double)(pAnalysisWindows->fitMinWavelength+pAnalysisWindows->fitMaxWavelength)*0.5;
 
              if (pTabFeno->gomeRefFlag || pEngineContext->refFlag) {
                memcpy(pTabFeno->Lambda,pTabFeno->LambdaRef,sizeof(double)*n_wavel);

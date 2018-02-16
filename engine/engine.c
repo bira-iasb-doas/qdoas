@@ -1758,8 +1758,10 @@ void EngineScanSetRefIndexes(ENGINE_CONTEXT *pEngineContext,INDEX indexRecord)
  	pRecordInfo=&pEngineContext->recordInfo;
  	pRef=&pEngineContext->analysisRef;
 
-  if ((pEngineContext->recordInfo.maxdoas.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) ||
-      (pEngineContext->analysisRef.zenBefIndex==ITEM_NONE) && (pEngineContext->analysisRef.zenAftIndex==ITEM_NONE))
+  if (pEngineContext->recordInfo.maxdoas.measurementType==PRJCT_INSTR_MAXDOAS_TYPE_ZENITH)
+   pRef->indexScanBefore=pRef->indexScanAfter=ITEM_NONE;
+  else if ((pEngineContext->recordInfo.maxdoas.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) ||
+          ((pEngineContext->analysisRef.zenBefIndex==ITEM_NONE) && (pEngineContext->analysisRef.zenAftIndex==ITEM_NONE)))
    {
  	  refIndexes=pRef->refIndexes;
  	  nRef=pRef->nRef;
@@ -1803,8 +1805,8 @@ void EngineScanSetRefIndexes(ENGINE_CONTEXT *pEngineContext,INDEX indexRecord)
    }
   else
    {
-    pRef->indexScanBefore=pRecordInfo->maxdoas.zenithBeforeIndex+1;   // pRef->indexScanBefore -> EngineReadRecord uses 1-based index
-    pRef->indexScanAfter=pRecordInfo->maxdoas.zenithAfterIndex+1;     // pRef->indexScanBefore -> EngineReadRecord uses 1-based index
+    pRef->indexScanBefore=(pRecordInfo->maxdoas.zenithBeforeIndex!=ITEM_NONE)?pRecordInfo->maxdoas.zenithBeforeIndex+1:ITEM_NONE;   // pRef->indexScanBefore -> EngineReadRecord uses 1-based index
+    pRef->indexScanAfter=(pRecordInfo->maxdoas.zenithAfterIndex!=ITEM_NONE)?pRecordInfo->maxdoas.zenithAfterIndex+1:ITEM_NONE;     // pRef->indexScanBefore -> EngineReadRecord uses 1-based index
    }
  }
 
@@ -2065,15 +2067,10 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
            if (indexRefRecord==ITEM_NONE)
             {
-             pTabFeno->indexRefScanBefore=indexScanBefore;
-             pTabFeno->indexRefScanAfter=indexScanAfter;
-
              pTabFeno->Zm2=ENGINE_contextRef2.recordInfo.Zm;
              pTabFeno->Tm2=ENGINE_contextRef2.recordInfo.Tm;
              pTabFeno->TimeDec2=ENGINE_contextRef2.recordInfo.TimeDec;
             }
-           else
-            pTabFeno->indexRefScanBefore=pTabFeno->indexRefScanAfter=ITEM_NONE;
 
            pTabFeno->displayRef=1;
 
@@ -2085,6 +2082,25 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
           pTabFeno->displayRef=1;
         }
+
+       if ((pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC) &&
+           (pTabFeno->refMaxdoasSelectionMode!=ANLYS_MAXDOAS_REF_SZA))
+        {
+         pTabFeno->indexRefScanBefore=indexScanBefore;
+         pTabFeno->indexRefScanAfter=indexScanAfter;
+
+         if (indexRefRecord==ITEM_NONE)
+          {
+           pTabFeno->indexRefScanBefore=indexScanBefore;
+           pTabFeno->indexRefScanAfter=indexScanAfter;
+          }
+         else if (indexScanBefore!=ITEM_NONE)
+          pTabFeno->indexRefScanAfter=indexScanBefore;
+         else if (indexScanAfter!=ITEM_NONE)
+          pTabFeno->indexRefScanBefore=indexScanAfter;
+        }
+       else
+        pTabFeno->indexRefScanBefore=pTabFeno->indexRefScanAfter=ITEM_NONE;
 
        if (pEngineContext->project.spectra.displayFitFlag && ((indexRefRecord!=ITEM_NONE) || (indexScanBefore!=ITEM_NONE) || (indexScanAfter!=ITEM_NONE)))
         {

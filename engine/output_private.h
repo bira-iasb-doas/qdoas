@@ -748,11 +748,11 @@ static inline void get_scan_index(struct output_field *this_field __attribute__ 
 }
 
 static inline void get_zenith_before_index(struct output_field *this_field __attribute__ ((unused)), int *zenithBeforeIndex, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  *zenithBeforeIndex = pEngineContext->recordInfo.maxdoas.zenithBeforeIndex+1;
+  *zenithBeforeIndex = (pEngineContext->recordInfo.maxdoas.zenithBeforeIndex!=ITEM_NONE)?pEngineContext->recordInfo.maxdoas.zenithBeforeIndex+1:ITEM_NONE;
 }
 
 static inline void get_zenith_after_index(struct output_field *this_field __attribute__ ((unused)), int *zenithAfterIndex, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
-  *zenithAfterIndex = pEngineContext->recordInfo.maxdoas.zenithAfterIndex+1;
+  *zenithAfterIndex = (pEngineContext->recordInfo.maxdoas.zenithAfterIndex!=ITEM_NONE)?pEngineContext->recordInfo.maxdoas.zenithAfterIndex+1:ITEM_NONE;
 }
 // write_spikes:
 // concatenate all pixels containing spikes into a single string for output.

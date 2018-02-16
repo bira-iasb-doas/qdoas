@@ -743,14 +743,6 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
         pRecord->localCalDay=ZEN_FNCaljda(&tmLocal);
         pRecord->localTimeDec=fmod(pRecord->TimeDec+24.+timeshift,(double)24.);
 
-{
- FILE *fp;
- fp=fopen("toto.dat","a+t");
- if (dateFlag)
- fprintf(fp,"%s %d %d %g %g\n",fileName,pRecord->localCalDay,localDay,MFC_header.longitude,timeshift);
- fclose(fp);
-}
-
         pRecord->longitude=-MFC_header.longitude;  // !!!
 
         pRecord->maxdoas.measurementType=(pRecord->elevationViewAngle>80.)?PRJCT_INSTR_MAXDOAS_TYPE_ZENITH:PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS;  // Not the possibility to separate almucantar, horizon and direct sun from off-axis measurements
@@ -759,8 +751,6 @@ RC ReliMFC(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay
 
 //        if (dateFlag && (pRecord->localCalDay>localDay))
 //         rc=ERROR_ID_FILE_END;
-
-
 
 
         if (rc || (dateFlag && ((pRecord->localCalDay!=localDay) ||

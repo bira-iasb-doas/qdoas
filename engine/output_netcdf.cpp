@@ -9,6 +9,8 @@
 #include "output_netcdf.h"
 #include "engine_context.h"
 #include "omi_read.h"
+#include "spectral_range.h"
+#include "fit_properties.h"
 
 using std::string;
 using std::vector;
@@ -277,12 +279,44 @@ void write_automatic_reference_info(const ENGINE_CONTEXT *pEngineContext, NetCDF
               && pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC
               && pTabFeno->ref_description != NULL) {
             std::stringstream attrname;
-            attrname << pTabFeno->windowName << " - row " << row << " automatic reference";
+            attrname << pTabFeno->windowName << " - row " << row << " automatic reference"; 
             group.putAttr(attrname.str(), pTabFeno->ref_description);
           }
         }
       }
       break;
+    case PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF :
+
+      for(int analysiswindow=0; analysiswindow < NFeno; ++analysiswindow)
+       {
+        const FENO *pTabFeno = &TabFeno[0][analysiswindow];
+        if (!pTabFeno->hidden)
+         {
+          std::stringstream attrname;
+          std::stringstream attrdesc;
+
+          attrname << pTabFeno->windowName << " ref mode";
+
+          if (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_FILE)
+           attrdesc << "file";
+          else if (pTabFeno->refMaxdoasSelectionMode==ANLYS_MAXDOAS_REF_SZA)
+           attrdesc << "SZA";
+          else if (pTabFeno->refSpectrumSelectionScanMode==ANLYS_MAXDOAS_REF_SCAN_BEFORE)
+           attrdesc << "scan before";
+          else if (pTabFeno->refSpectrumSelectionScanMode==ANLYS_MAXDOAS_REF_SCAN_AFTER)
+           attrdesc << "scan after";
+          else if (pTabFeno->refSpectrumSelectionScanMode==ANLYS_MAXDOAS_REF_SCAN_AVERAGE)
+           attrdesc << "scans average";
+          else if (pTabFeno->refSpectrumSelectionScanMode==ANLYS_MAXDOAS_REF_SCAN_INTERPOLATE)
+           attrdesc << "scans interpolate";
+          else
+           attrdesc << "unknown";
+
+          group.putAttr(attrname.str(), attrdesc.str());
+         }
+       }
+
+    break;
     default:
       break;
     }
@@ -291,7 +325,7 @@ void write_automatic_reference_info(const ENGINE_CONTEXT *pEngineContext, NetCDF
 
 // create a subgroup for each analysis window, and for the calibration
 // data belonging to that window
-void create_subgroups(NetCDFGroup &group) {
+void create_subgroups(const ENGINE_CONTEXT *pEngineContext,NetCDFGroup &group) {
 
   for (unsigned int i=0; i<calib_num_fields; ++i) {
     if (group.groupID(output_data_calib[i].windowname) < 0) {
@@ -300,12 +334,32 @@ void create_subgroups(NetCDFGroup &group) {
       subgroup.defGroup(calib_subgroup_name);
     }
   }
-  for (unsigned int i=0; i<output_num_fields; ++i) {
+
+      for(int analysiswindow=0; analysiswindow < NFeno; ++analysiswindow)
+       {
+        const FENO *pTabFeno = &TabFeno[0][analysiswindow];
+    
+        if (!pTabFeno->hidden && (group.groupID(pTabFeno->windowName)<0))
+         {
+          auto subgroup=group.defGroup(pTabFeno->windowName);
+
+          // needs the wavelength at the center of the fitting window for profiling algorithm
+          
+          if (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF)
+           {
+            char str[80];
+            sprintf(str,"%.3lf",pTabFeno->lambda0);            
+            subgroup.putAttr("lambda0", str);
+           }
+         } 
+       } 
+
+   /*for (unsigned int i=0; i<output_num_fields; ++i) {
     if (output_data_analysis[i].windowname &&
         group.groupID(output_data_analysis[i].windowname) < 0) {
       group.defGroup(output_data_analysis[i].windowname);
-    }
-  }
+    } 
+  } */
 }
 
 RC netcdf_open(const ENGINE_CONTEXT *pEngineContext, const char *filename) {
@@ -332,7 +386,7 @@ RC netcdf_open(const ENGINE_CONTEXT *pEngineContext, const char *filename) {
     dimensions["n_alongtrack"] = n_alongtrack;
     dimensions["n_calib"] = n_calib;
 
-    create_subgroups(output_group);
+    create_subgroups(pEngineContext,output_group);
     write_global_attrs(pEngineContext, output_group);
     write_automatic_reference_info(pEngineContext, output_group);
     write_calibration_data(output_group);

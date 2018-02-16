@@ -127,6 +127,8 @@ const char *gome1netcdf_bandName[GOME1NETCDF_NBAND]=                            
 // STRUCTURES DEFINITIONS
 // ======================
 
+namespace {
+
 //! \struct calib
 //!< \details wavelength grid per detector temperature
 
@@ -188,6 +190,7 @@ struct clouddata
   vector<unsigned char> snow_ice_flag;                                          //!< \details Snow/ice flag (0 : normal)
   vector<unsigned char> sun_glint;                                              //!< \details Possible Sun-glint derived by a geometrical calculation using viewing angles (0 = no, 1 = yes)
  };
+} 
 
 // ================
 // STATIC VARIABLES
@@ -212,10 +215,11 @@ static int start_pixel;                                                         
 
 static int gome1netCDF_loadReferenceFlag=0;
 
-static vector<int>scanline_indexes;
-static vector<char>scanline_pixtype;
-static vector<int>alongtrack_indexes;
-static vector<double> delta_time; // number of milliseconds after reference_time
+vector<int>scanline_indexes;
+vector<int>scanline_pixtype;
+vector<int>scanline_pixnum;
+vector<int>alongtrack_indexes;
+vector<double> delta_time; // number of milliseconds after reference_time
 static time_t reference_time;
 
 // replace by functions using QDateTime?
@@ -522,8 +526,10 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
   NetCDFGroup irrad_group;
   RC rc = ERROR_ID_NO;
   int selected_band;
-  vector<int> scanline,scanline_bs;
-  vector <double> deltatime,deltatime_bs;
+  vector<int> scanline;
+  vector<int> scanline_bs;
+  vector <double> deltatime;
+  vector <double> deltatime_bs;
   vector <short> startpixel;
   int i,j,k,n;
   int currentScanIndex;
@@ -602,6 +608,8 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
        }
      }
 
+
+
     // Read backscans geodata and clouddata
 
     if (pInstrumental->gomenetcdf.pixelType!=PRJCT_INSTR_GOME1_PIXEL_GROUND)     // if not ground pixels only
@@ -651,25 +659,30 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
 
     scanline_indexes.resize(pEngineContext->recordNumber);
     scanline_pixtype.resize(pEngineContext->recordNumber);
+    scanline_pixnum.resize(pEngineContext->recordNumber);
     alongtrack_indexes.resize(pEngineContext->recordNumber);
     delta_time.resize(pEngineContext->recordNumber);
 
-    auto delta_time_scan = reinterpret_cast<const double(*)[pixel_size]>(deltatime.data());
+    auto delta_time_scan=reinterpret_cast<const double(*)[pixel_size]>(deltatime.data());
     auto delta_time_scan_bs = reinterpret_cast<const double(*)[pixel_size_bs]>(deltatime_bs.data());
+
     pEngineContext->n_alongtrack=0;
 
     for (currentScanIndex=-1,                  // original scan line index
          i=0,                                  // index to browse elements in scanline
          j=0,                                  // index to browse elements in scanline_bs
          k=0;
-       ((i<(int)scan_size) || (j<(int)scan_size_bs)) && (k<(int)pEngineContext->recordNumber);)
+       ((i<(int)scan_size) || (j<(int)scan_size_bs)) && (k<(int)pEngineContext->recordNumber) ;)   // !!!  && (pEngineContext->n_alongtrack<(int)scan_size)
      {
-      if ((i<(int)scan_size) && pixel_size ) // && (scanline[i]>(int)currentScanIndex))
+      // Consider ground pixels
+
+      if ((i<(int)scan_size) && pixel_size )
        {
         for (n=0;n<(int)pixel_size;n++)
          {
           scanline_indexes[k+n]=i;
           scanline_pixtype[k+n]=n;
+          scanline_pixnum[k+n]=scanline[i];
           alongtrack_indexes[k+n]=pEngineContext->n_alongtrack;
           delta_time[k+n]=delta_time_scan[i][n];
          }
@@ -679,12 +692,49 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
         i++;
        }
 
-      if ((j<(int)scan_size_bs) && pixel_size_bs && (!pixel_size || (scanline_bs[j]==currentScanIndex)))
+      // Consider back scan pixels (ground pixels could be missing : for example : 227 gb+bs, 228 bs, 229 gp -> avoid 227, 229, 228 bs and also infinite loops)
+
+      for (;(j<(int)scan_size_bs) && pixel_size_bs && (!pixel_size  || (i>=(int)scan_size) || (scanline_bs[j]<=currentScanIndex));)
        {
-        scanline_indexes[k]=j;
-        scanline_pixtype[k]=3;
-        alongtrack_indexes[k]=pEngineContext->n_alongtrack;
-        delta_time[k]=delta_time_scan_bs[j][0];
+        // If only backscan pixel, sort is necessary
+
+       /* if (pixel_size && (scanline_bs[j]<currentScanIndex))
+         {
+          int k2;
+
+          for (k2=k-1;(k2>=0) && (scanline_pixnum[k2]>scanline_bs[j]);k2--)
+           {
+            scanline_indexes[k2+1]=scanline_indexes[k2];
+            scanline_pixtype[k2+1]=scanline_pixtype[k2];
+            scanline_pixnum[k2+1]=scanline_pixnum[k2];
+            alongtrack_indexes[k2+1]=alongtrack_indexes[k2]+1;
+            delta_time[k2+1]=delta_time[k2];
+           }
+
+           {
+            FILE *fp;
+            fp=fopen("toto.dat","a+t");
+            fprintf(fp,"--- %d %d %d %d %d %d \n",k,k2,i,j,alongtrack_indexes[k2+1],pEngineContext->n_alongtrack);
+            fclose(fp);
+           }
+
+          scanline_indexes[k2+1]=j;
+          scanline_pixtype[k2+1]=3;
+          scanline_pixnum[k2+1]=scanline_bs[j];
+          // alongtrack_indexes[k2+1]=pEngineContext->n_alongtrack;
+          delta_time[k2+1]=delta_time[k2]; // delta_time_scan_bs[j][0];
+         }
+
+        // Add backscan
+
+        else */
+         {
+          scanline_indexes[k]=j;
+          scanline_pixtype[k]=3;
+          scanline_pixnum[k]=scanline_bs[j];
+          alongtrack_indexes[k]=pEngineContext->n_alongtrack;
+          delta_time[k]=delta_time_scan_bs[j][0];
+         }
 
         k++;
         j++;
@@ -692,7 +742,7 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
 
       pEngineContext->n_alongtrack++;
      }
-    
+
     GOME1NETCDF_Get_Irradiance(pEngineContext,channel_index,pEngineContext->buffers.lambda_irrad,pEngineContext->buffers.irrad);
 
     for(i=0; i<MAX_SWATHSIZE; ++i)
@@ -706,7 +756,7 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
    }
 
   // Return
-  
+
   return rc;
 }
 
@@ -764,7 +814,7 @@ RC GOME1NETCDF_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
     int    pixelType=scanline_pixtype[recordNo-1];                              // pixel type
     size_t pixelIndex=(pixelType==3)?0:pixelType;                               // index of the pixel in the scan : should be 0,1,2 for ground pixels and 0 for backscans
     int    pixelSize=(pixelType==3)?1:3;                                        // pixel size : should be 3 for ground pixels and 1 for backscans
-    size_t start[] = {0,scanIndex,(pixelType==3)?0:pixelType,0};
+    size_t start[] = {0,scanIndex,((int)pixelType==3)?0:(int)pixelType,0};
     size_t count[] = {1,1,1,det_size};                                          // only one record to load
 
     getDate(delta_time[recordNo-1], &pRecordInfo->present_datetime);
@@ -855,9 +905,9 @@ RC GOME1NETCDF_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
       pEngineContext->buffers.sigmaSpec[j]=err[i];
      }
 
-    obs_group.getVar("scanline",start,count,2,(int)0,scanline);
+    // obs_group.getVar("scanline",start,count,2,(int)0,scanline);
 
-    pRecordInfo->gome.pixelNumber=scanline[0];                                  // pixel number
+    pRecordInfo->gome.pixelNumber=scanline_pixnum[recordNo-1];                  // pixel number
     pRecordInfo->gome.pixelType=pixelType;                                      // pixel type
     pRecordInfo->i_crosstrack=pixelType;
    }
@@ -898,6 +948,7 @@ void GOME1NETCDF_Cleanup(void)
 
   scanline_indexes.clear();
   scanline_pixtype.clear();
+  scanline_pixnum.clear();
   alongtrack_indexes.clear();
   delta_time.clear();
  }
