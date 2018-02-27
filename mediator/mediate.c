@@ -347,6 +347,13 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
   if (pSpectra->fieldsFlag[PRJCT_RESULTS_EARTH_RADIUS])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Earth radius","%g",pRecord->satellite.earth_radius);
 
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_SAT_SZA])
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Satellite solar zenith angle","%g",pRecord->satellite.sza);
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_SAT_SAA])
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Satellite solar azimuth angle","%g",pRecord->satellite.saa);
+  if (pSpectra->fieldsFlag[PRJCT_RESULTS_SAT_VZA])
+     mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Satellite viewing zenith angle","%g",pRecord->satellite.vza);
+
   // Return
 
   return indexLine;
