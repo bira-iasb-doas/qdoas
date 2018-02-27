@@ -387,7 +387,6 @@ void getValidFieldFlags(int *validFlags, int instrument,int selectorOrigin)
       validFlags[PRJCT_RESULTS_ALTIT]=1;
       validFlags[PRJCT_RESULTS_VIEW_ELEVATION]=1;
       validFlags[PRJCT_RESULTS_VIEW_AZIMUTH]=1;
-      validFlags[PRJCT_RESULTS_VIEW_ZENITH]=1;
       validFlags[PRJCT_RESULTS_STARTDATE]=1;
       validFlags[PRJCT_RESULTS_ENDDATE]=1;
       validFlags[PRJCT_RESULTS_STARTTIME]=1;
@@ -592,10 +591,14 @@ void getValidFieldFlags(int *validFlags, int instrument,int selectorOrigin)
       validFlags[PRJCT_RESULTS_CLOUDTOPP]=1;
       validFlags[PRJCT_RESULTS_LON_CORNERS]=1;
       validFlags[PRJCT_RESULTS_LAT_CORNERS]=1;
+
       if (instrument==PRJCT_INSTR_FORMAT_GOME1_NETCDF)
        {
         validFlags[PRJCT_RESULTS_INDEX_ALONGTRACK]=1;
         validFlags[PRJCT_RESULTS_INDEX_CROSSTRACK]=1;
+        validFlags[PRJCT_RESULTS_SAT_SAA]=1;
+        validFlags[PRJCT_RESULTS_SAT_SZA]=1;
+        validFlags[PRJCT_RESULTS_SAT_VZA]=1;
        }
      }
     break;

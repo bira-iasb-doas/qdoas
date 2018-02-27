@@ -843,6 +843,10 @@ RC GOME1NETCDF_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
     auto saa = reinterpret_cast<const float(*)[pixelSize][3]>(geo.saa.data());
     auto vza = reinterpret_cast<const float(*)[pixelSize][3]>(geo.vza.data());
     auto vaa = reinterpret_cast<const float(*)[pixelSize][3]>(geo.vaa.data());
+    auto sza_sat = reinterpret_cast<const float(*)[pixelSize][3]>(geo.sza_sat.data());
+    auto saa_sat = reinterpret_cast<const float(*)[pixelSize][3]>(geo.saa_sat.data());
+    auto vza_sat = reinterpret_cast<const float(*)[pixelSize][3]>(geo.vza_sat.data());
+    auto vaa_sat = reinterpret_cast<const float(*)[pixelSize][3]>(geo.vaa_sat.data());
 
     for (i=0;i<3;i++)
      {
@@ -856,6 +860,11 @@ RC GOME1NETCDF_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
     pRecordInfo->Azimuth=pRecordInfo->gome.azim[1];
     pRecordInfo->zenithViewAngle=pRecordInfo->gome.vza[1];
     pRecordInfo->azimuthViewAngle=pRecordInfo->gome.vaa[1];
+
+    pRecordInfo->satellite.sza=sza_sat[scanIndex][pixelIndex][1];
+    pRecordInfo->satellite.saa=saa_sat[scanIndex][pixelIndex][1];
+    pRecordInfo->satellite.vza=vza_sat[scanIndex][pixelIndex][1];
+    pRecordInfo->satellite.vaa=vaa_sat[scanIndex][pixelIndex][1];
 
     // Geolocations
 

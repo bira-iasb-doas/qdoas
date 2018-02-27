@@ -266,7 +266,7 @@ struct satellite_location {
   double altitude;
   double earth_radius;
   double sza, saa; // solar zenith/azimuth angles at satellite height
-  double vza;
+  double vza, vaa;
   double cloud_top_pressure;
   double cloud_fraction;
   int orbit_number;
