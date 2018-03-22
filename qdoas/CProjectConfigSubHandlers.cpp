@@ -1196,6 +1196,16 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
 	return postErrorMessage("Tropomi reference orbit directory name too long");
     }
 
+    str = atts.value("trackSelection");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < (int)sizeof(m_instrumental->tropomi.trackSelection))
+	strcpy(m_instrumental->tropomi.trackSelection, str.toLocal8Bit().data());
+      else
+	return postErrorMessage("Track selection string too long");
+    }
+
+
     str = atts.value("calib");
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);

@@ -165,7 +165,7 @@ openblas {
 #
 # QDOAS needs a somewhat recent GCC compiler.  On the SLES systems, we
 # need to load a module for that:
-# 
+#
 # module load gcc-4.9.2
 # qmake all.pro CONFIG+=compute
 # make
@@ -222,11 +222,11 @@ compute {
 # module load 17/doas 17/intel-17u1 17/base 17/hdf-netcdf 17/linalg
 # qmake all.pro CONFIG+=hpc
 # make
-# 
+#
 # installation:
 # -------------
 # make install <= !!! attention
-# 
+#
 # This will install qdoas in /space/hpc-aps/bira/doas/bin_$$QDOAS_VERSION,
 hpc {
   LIBS -= -lgslcblas

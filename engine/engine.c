@@ -805,6 +805,9 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
        // ---------------------------------------------------------------------------
      }
 
+   if (!pEngineContext->n_alongtrack && ANALYSE_swathSize)
+    pEngineContext->n_alongtrack=pEngineContext->recordNumber/ANALYSE_swathSize;
+
    // Return
 
    return rc;

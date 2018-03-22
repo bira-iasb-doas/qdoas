@@ -196,36 +196,82 @@ struct clouddata
 // STATIC VARIABLES
 // ================
 
+//! \struct GOME1NETCDF_ORBIT_FILE
+//! \brief description of an orbit in GOME1 netCDF format
+
+typedef struct _gome1netCDF_orbitFiles
+{
+  char fileName[MAX_STR_LEN+1];                                                 //!< \details the name of the file with a part of the orbit
+
+  geodata ground_geodata;                                                       //!< \details Keep the geolocation data and angles content from the MODE_NADIR group as far as the netCDF file is open
+  geodata backscan_geodata;                                                     //!< \details Keep the geolocation data and angles content from the MODE_NADIR_BACKSCAN group as far as the netCDF file is open
+  clouddata ground_clouddata;                                                   //!< \details Keep the cloud information content from the MODE_NADIR group as far as the netCDF file is open
+  clouddata backscan_clouddata;                                                 //!< \details Keep the cloud information content from the MODE_NADIR_BACKSCAN group as far as the netCDF file is open
+  calib calibration;                                                            //!< \details Keep information on the wavelength grids as far as the netCDF file is open
+  refspec irradiance;                                                           //!< \details Keep information on the irradiance spectrum as far as the netCDF file is open
+
+  size_t det_size;                                                              //!< \details The current detector size
+  size_t scan_size;                                                             //!< \details The number of lines in the MODE_NADIR group
+  size_t scan_size_bs;                                                          //!< \details The number of lines in the MODE_NADIR_BACKSCAN group
+  size_t pixel_size;                                                            //!< \details The number of ground pixels in one scan line (3 for the MODE_NADIR group)
+  size_t pixel_size_bs;                                                         //!< \details The number of backscan pixels in one scan line (1 for the MODE_NADIR_BACKSCAN group)
+  int start_pixel;                                                              //!< \details start pixel in the channel (depend on the selected band)
+
+  vector<int>scanline_indexes;
+  vector<int>scanline_pixtype;
+  vector<int>scanline_pixnum;
+  vector<int>alongtrack_indexes;
+  vector<double> delta_time; // number of milliseconds after reference_time
+  time_t reference_time;
+
+  // GDP_BIN_INFO *gdpBinInfo;                                                     //!< \details useful information on records for fast access
+  // INDEX gdpBinBandIndex;                                                        //!< \details indexes of bands present in the current file
+  // unsigned short             *gdpBinReference,                                  //!< \details      // buffer for irradiance spectra
+  //                    *gdpBinRefError;                                           //!< \details errors on irradiance spectra
+  int specNumber;                                                               //!< \details total number of spectra in the file
+  int n_alongtrack;                                                             //!< \details total number of spectra per row (pixel type)
+  RC rc;
+}
+GOME1NETCDF_ORBIT_FILE;
+
+// ---------------------
+// VARIABLES DECLARATION
+// ---------------------
+
+#define MAX_GOME_FILES 50 // maximum number of files per orbit
+
+typedef struct _gome_ref_ {
+  INDEX  indexFile;
+  INDEX  indexRecord;
+  INDEX  pixelNumber;
+  INDEX  pixelType;
+  double sza;
+  double latitude;
+  double longitude;
+  double szaDist;
+  double latDist;
+} GDP_BIN_REF;
+
+// ================
+// GLOBAL VARIABLES
+// ================
+
+static GOME1NETCDF_ORBIT_FILE gome1netCDF_orbitFiles[MAX_GOME_FILES];           //!< \details list of files for an orbit
+
+static int gome1netCDF_currentFileIndex=ITEM_NONE;                              //!< \details index of the current file in the list
+static int gome1netCDF_loadReferenceFlag=0;                                     //!< \details 1 for analysis with automatic reference selection
+static int gome1netCDF_orbitFilesN=0;                                           //!< \details the total number of files for the current day
+static int gome1netCDF_totalRecordNumber=0;                                       //!< \details total number of records for an orbit
+
 static NetCDFFile current_file;                                                 //!< \details Pointer to the current netCDF file
 static string root_name;                                                        //!< \details The name of the root (should be the basename of the file)
-static geodata ground_geodata;                                                  //!< \details Keep the geolocation data and angles content from the MODE_NADIR group as far as the netCDF file is open
-static geodata backscan_geodata;                                                //!< \details Keep the geolocation data and angles content from the MODE_NADIR_BACKSCAN group as far as the netCDF file is open
-static clouddata ground_clouddata;                                              //!< \details Keep the cloud information content from the MODE_NADIR group as far as the netCDF file is open
-static clouddata backscan_clouddata;                                            //!< \details Keep the cloud information content from the MODE_NADIR_BACKSCAN group as far as the netCDF file is open
-static calib calibration;                                                       //!< \details Keep information on the wavelength grids as far as the netCDF file is open
-static refspec irradiance;                                                      //!< \details Keep information on the irradiance spectrum as far as the netCDF file is open
-
-static size_t det_size;                                                         //!< \details The current detector size
-static size_t scan_size;                                                        //!< \details The number of lines in the MODE_NADIR group
-static size_t scan_size_bs;                                                     //!< \details The number of lines in the MODE_NADIR_BACKSCAN group
-static size_t pixel_size;                                                       //!< \details The number of ground pixels in one scan line (3 for the MODE_NADIR group)
-static size_t pixel_size_bs;                                                    //!< \details The number of backscan pixels in one scan line (1 for the MODE_NADIR_BACKSCAN group)
 static int channel_index;                                                       //!< \details For the irradiance, the channel number (depend on the selected band)
-static int start_pixel;                                                         //!< \details start pixel in the channel (depend on the selected band)
 
-static int gome1netCDF_loadReferenceFlag=0;
-
-vector<int>scanline_indexes;
-vector<int>scanline_pixtype;
-vector<int>scanline_pixnum;
-vector<int>alongtrack_indexes;
-vector<double> delta_time; // number of milliseconds after reference_time
-static time_t reference_time;
 
 // replace by functions using QDateTime?
-static void getDate(double delta_t, struct datetime *date_time) {
+static void getDate(GOME1NETCDF_ORBIT_FILE *pOrbitFile,double delta_t, struct datetime *date_time) {
   // TODO: handle UTC leap seconds?  Is this possible? (no UTC time info in file?)
-  time_t thetime = reference_time + (int)floor(delta_t); //1000;
+  time_t thetime = pOrbitFile->reference_time + (int)floor(delta_t); //1000;
 
   struct date *pDate = &date_time->thedate;
   struct time *pTime = &date_time->thetime;
@@ -249,7 +295,7 @@ static void getDate(double delta_t, struct datetime *date_time) {
   date_time->millis = static_cast<int>((delta_t-floor(delta_t))*1000.+0.1); // % 1000;
 }
 
-static void set_reference_time(const string& utc_date) {
+static void set_reference_time(GOME1NETCDF_ORBIT_FILE *pOrbitFile,const string& utc_date) {
   int year,month,day;
   std::istringstream utc(utc_date);
 
@@ -276,7 +322,7 @@ static void set_reference_time(const string& utc_date) {
   };
 
    // get number of seconds since 1/1/1970, UTC
-  reference_time = STD_timegm(&t);
+  pOrbitFile->reference_time = STD_timegm(&t);
 }
 
 // -----------------------------------------------------------------------------
@@ -421,15 +467,15 @@ static calib GOME1NETCDF_Read_Calib(NetCDFGroup calib_group)
 //!
 // -----------------------------------------------------------------------------
 
-void GOME1NETCDF_Get_Wavelength(ENGINE_CONTEXT *pEngineContext,int channel_index,int temp_index,double *wavelength)
+void GOME1NETCDF_Get_Wavelength(GOME1NETCDF_ORBIT_FILE *pOrbitFile,ENGINE_CONTEXT *pEngineContext,int channel_index,int temp_index,double *wavelength)
  {
-  auto wve = reinterpret_cast<const float(*)[calibration.channel_number][calibration.channel_size]>(calibration.wavelength.data());
+  auto wve = reinterpret_cast<const float(*)[pOrbitFile->calibration.channel_number][pOrbitFile->calibration.channel_size]>(pOrbitFile->calibration.wavelength.data());
 
-  if ((temp_index>=0) && (temp_index<calibration.temp_number) && (channel_index>=0) && (channel_index<calibration.channel_size))
-   for (int i=0;i<(int)calibration.channel_size;i++)
+  if ((temp_index>=0) && (temp_index<pOrbitFile->calibration.temp_number) && (channel_index>=0) && (channel_index<pOrbitFile->calibration.channel_size))
+   for (int i=0;i<(int)pOrbitFile->calibration.channel_size;i++)
     wavelength[i]=wve[temp_index][channel_index][i];
   else
-   memcpy(wavelength,pEngineContext->buffers.lambda_irrad,sizeof(double)*calibration.channel_size);
+   memcpy(wavelength,pEngineContext->buffers.lambda_irrad,sizeof(double)*pOrbitFile->calibration.channel_size);
  }
 
 // -----------------------------------------------------------------------------
@@ -478,7 +524,7 @@ static refspec GOME1NETCDF_Read_Irrad(NetCDFGroup irrad_group,int channelIndex)
 //!
 // -----------------------------------------------------------------------------
 
-void GOME1NETCDF_Get_Irradiance (ENGINE_CONTEXT *pEngineContext,int channel_index,double *wavelength,double *irrad)
+void GOME1NETCDF_Get_Irradiance (GOME1NETCDF_ORBIT_FILE *pOrbitFile,ENGINE_CONTEXT *pEngineContext,int channel_index,double *wavelength,double *irrad)
  {
   // Declarations
 
@@ -488,17 +534,17 @@ void GOME1NETCDF_Get_Irradiance (ENGINE_CONTEXT *pEngineContext,int channel_inde
   // Load the wavelengths grids
 
   calib_group=current_file.getGroup(root_name+"/CALIBRATION");
-  calibration=GOME1NETCDF_Read_Calib(calib_group);
+  pOrbitFile->calibration=GOME1NETCDF_Read_Calib(calib_group);
 
   // Load the irradiance spectrum
 
   irrad_group=current_file.getGroup(root_name+"/IRRADIANCE");
-  irradiance=GOME1NETCDF_Read_Irrad(irrad_group,channel_index);
+  pOrbitFile->irradiance=GOME1NETCDF_Read_Irrad(irrad_group,channel_index);
 
-  GOME1NETCDF_Get_Wavelength(pEngineContext,channel_index,(int)irradiance.spectral_index[0],wavelength);
+  GOME1NETCDF_Get_Wavelength(pOrbitFile,pEngineContext,channel_index,(int)pOrbitFile->irradiance.spectral_index[0],wavelength);
 
-  for (int i=0;i<(int)calibration.channel_size;i++)
-   irrad[i]=(double)irradiance.ref_spec[i];
+  for (int i=0;i<(int)pOrbitFile->calibration.channel_size;i++)
+   irrad[i]=(double)pOrbitFile->irradiance.ref_spec[i];
  }
 
 // -----------------------------------------------------------------------------
@@ -517,6 +563,7 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
  {
   // Declarations
 
+  GOME1NETCDF_ORBIT_FILE *pOrbitFile;
   PRJCT_INSTRUMENTAL *pInstrumental;
   NetCDFGroup root_group;
   NetCDFGroup band_group;
@@ -533,7 +580,6 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
   vector <short> startpixel;
   int *iscan,*iscan_bs,maxscan;
   int i,j,k,n;
-  int currentScanIndex;
 
   // Initializations
 
@@ -553,212 +599,332 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
   else
    channel_index=2;
 
-  iscan=iscan_bs=NULL;
+  pEngineContext->recordNumber=0;
+  gome1netCDF_loadReferenceFlag=0;
+  gome1netCDF_currentFileIndex=ITEM_NONE;
 
-  // Try to open the file and load metadata
+  // In automatic reference selection, the file has maybe already loaded
 
-  try
+  if ((THRD_id==THREAD_TYPE_ANALYSIS) && pEngineContext->analysisRef.refAuto)
    {
-    current_file = NetCDFFile(pEngineContext->fileInfo.fileName,NC_NOWRITE);    // open file
-    root_name = current_file.getName();                                         // get the root name (should be the file name)
-    root_group = current_file.getGroup(root_name);                              // go to the root
-    set_reference_time(current_file.getAttText("time_reference"));              // get the reference time
+    int indexFile = 0;
+    for (;indexFile<gome1netCDF_orbitFilesN;indexFile++)
+      if (!strcasecmp(pEngineContext->fileInfo.fileName,gome1netCDF_orbitFiles[indexFile].fileName) )
+        break;
 
-    scan_size=scan_size_bs=pixel_size=pixel_size_bs=(size_t)0;
+    if (indexFile<gome1netCDF_orbitFilesN)
+      gome1netCDF_currentFileIndex=indexFile;
+   }
 
-         // Dimensions of spectra are 'time' x 'scan_size' x 'pixel_size ' x 'spectral_channel'
-         // For example : 1 x 552 x 3 x 832
+  // File has not been loaded already -> load a new file.
 
-    // Read ground pixels geodata and clouddata
+  if (gome1netCDF_currentFileIndex==ITEM_NONE)
+   {
+    // Release old buffers
+    GOME1NETCDF_Cleanup();
 
-    if (pInstrumental->gomenetcdf.pixelType!=PRJCT_INSTR_GOME1_PIXEL_BACKSCAN)   // if not backscan pixels only
+    // Get the number of files to load
+    gome1netCDF_orbitFilesN = 0;
+    if ((THRD_id==THREAD_TYPE_ANALYSIS) && pEngineContext->analysisRef.refAuto)
      {
-      band_group = current_file.getGroup(root_name+"/MODE_NADIR/"+gome1netcdf_bandName[selected_band]);
+      gome1netCDF_loadReferenceFlag=1;
 
-      pEngineContext->project.instrumental.use_row[0]=
-      pEngineContext->project.instrumental.use_row[1]=
-      pEngineContext->project.instrumental.use_row[2]=true;
+      char filePath[MAX_STR_SHORT_LEN+1];
+      strcpy(filePath,pEngineContext->fileInfo.fileName);
 
-      if ((band_group.dimLen("time")!=1) || (band_group.dimLen("ground_pixel")!=3))
-       rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_FORMAT, "Dimensions of ground pixels in the GOME1 netCDF file are not the expected ones");  // in case of error, capture the message
+      char *ptr = strrchr(filePath, PATH_SEP);
+      if (ptr == NULL)
+       strcpy(filePath,".");
       else
+       *ptr = '\0';
+
+      DIR *hDir=opendir(filePath);
+      struct dirent *fileInfo = NULL;
+      while (hDir!=NULL && ((fileInfo=readdir(hDir))!=NULL) )
        {
-        // Get the different groups
-
-        geodata_group = current_file.getGroup(root_name+"/MODE_NADIR/"+gome1netcdf_bandName[selected_band]+"/GEODATA");
-        clouddata_group = current_file.getGroup(root_name+"/MODE_NADIR/"+gome1netcdf_bandName[selected_band]+"/CLOUDDATA");
-        obs_group = current_file.getGroup(root_name+"/MODE_NADIR/"+gome1netcdf_bandName[selected_band]+"/OBSERVATIONS");
-
-        // Get the scanline and pixel size for ground pixel
-
-        scan_size=band_group.dimLen("scanline");
-        pixel_size=band_group.dimLen("ground_pixel");
-        det_size=band_group.dimLen("spectral_channel");
-
-        // Read the metadata
-
-        ground_geodata=GOME1NETCDF_Read_Geodata(geodata_group,scan_size,pixel_size);
-        ground_clouddata=GOME1NETCDF_Read_Clouddata(clouddata_group,scan_size,pixel_size);
-
-        // Get the scanline indexes
-
-        const size_t start[] = {0,0,0};
-        const size_t count[] = {1,scan_size,pixel_size};
-
-        obs_group.getVar("scanline",start,count,2,(int)-1,scanline);
-        obs_group.getVar("delta_time",start,count,3,(double)0.,deltatime);
-        band_group.getVar("start_pixel",start,count,1,(short)0,startpixel);
+        sprintf(gome1netCDF_orbitFiles[gome1netCDF_orbitFilesN].fileName,"%s/%s",filePath,fileInfo->d_name);
+        if (!STD_IsDir(gome1netCDF_orbitFiles[gome1netCDF_orbitFilesN].fileName))
+          ++gome1netCDF_orbitFilesN;
        }
+
+      if (hDir != NULL)
+        closedir(hDir);
      }
 
-    // Read backscans geodata and clouddata
-
-    if (pInstrumental->gomenetcdf.pixelType!=PRJCT_INSTR_GOME1_PIXEL_GROUND)     // if not ground pixels only
+    if (!gome1netCDF_orbitFilesN)
      {
-      band_group = current_file.getGroup(root_name+"/MODE_NADIR_BACKSCAN/"+gome1netcdf_bandName[selected_band]);
-      pEngineContext->project.instrumental.use_row[3]=true;
-
-      if ((band_group.dimLen("time")!=1) || (band_group.dimLen("ground_pixel")!=1))
-       rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_FORMAT, "Dimensions of backscan pixels in the GOME1 netCDF file are not the expected ones");  // in case of error, capture the message
-      else
-       {
-        // Get the different groups
-
-        geodata_group = current_file.getGroup(root_name+"/MODE_NADIR_BACKSCAN/"+gome1netcdf_bandName[selected_band]+"/GEODATA");
-        clouddata_group = current_file.getGroup(root_name+"/MODE_NADIR_BACKSCAN/"+gome1netcdf_bandName[selected_band]+"/CLOUDDATA");
-        obs_group = current_file.getGroup(root_name+"/MODE_NADIR_BACKSCAN/"+gome1netcdf_bandName[selected_band]+"/OBSERVATIONS");
-
-        // Get the scanline and pixel size for backscans
-
-        scan_size_bs=band_group.dimLen("scanline");
-        pixel_size_bs=band_group.dimLen("ground_pixel");
-        det_size=band_group.dimLen("spectral_channel");
-
-        // Read the metadata
-
-        backscan_geodata=GOME1NETCDF_Read_Geodata(geodata_group,scan_size_bs,pixel_size_bs);
-        backscan_clouddata=GOME1NETCDF_Read_Clouddata(clouddata_group,scan_size_bs,pixel_size_bs);
-
-        // Get the scanline indexes
-
-        const size_t start[] = {0,0,0};
-        const size_t count[] = {1,scan_size_bs,pixel_size_bs};
-
-        obs_group.getVar("scanline",start,count,2,(int)-1,scanline_bs);
-        obs_group.getVar("delta_time",start,count,3,(double)0.,deltatime_bs);
-        band_group.getVar("start_pixel",start,count,1,(short)0,startpixel);
-       }
+      gome1netCDF_orbitFilesN=1;
+      strcpy(gome1netCDF_orbitFiles[0].fileName,pEngineContext->fileInfo.fileName);
      }
 
-    // Assign size and allocate buffers to keep information as long as the file is open
+    // Load files
 
-    pEngineContext->recordNumber=scan_size*pixel_size+scan_size_bs*pixel_size_bs;  // get the total number of records (ground pixels + backscans)
-
-    start_pixel=startpixel[0];
-
-    scanline_indexes.resize(pEngineContext->recordNumber);
-    scanline_pixtype.resize(pEngineContext->recordNumber);
-    scanline_pixnum.resize(pEngineContext->recordNumber);
-    alongtrack_indexes.resize(pEngineContext->recordNumber);
-    delta_time.resize(pEngineContext->recordNumber);
-
-    auto delta_time_scan=reinterpret_cast<const double(*)[pixel_size]>(deltatime.data());
-    auto delta_time_scan_bs = reinterpret_cast<const double(*)[pixel_size_bs]>(deltatime_bs.data());
-
-    pEngineContext->n_alongtrack=0;
-
-    // Get the maximum scanline number
-
-    maxscan=0;
-    if (scan_size && (scanline[(int)scan_size-1]>maxscan))
-     maxscan=scanline[(int)scan_size-1];
-    if (scan_size_bs && (scanline_bs[(int)scan_size_bs-1]>maxscan))
-     maxscan=scanline_bs[(int)scan_size_bs-1];
-    maxscan++;
-
-    // Allocate scanline buffers to sort ground pixels and backscans on the scanline number
-
-    if (((iscan=(int *)malloc(sizeof(int)*maxscan))==NULL) ||
-        ((iscan_bs=(int *)malloc(sizeof(int)*maxscan))==NULL))
-
-     rc=ERROR_ID_ALLOC;
-    else
+    gome1netCDF_totalRecordNumber=0;
+    for (int indexFile=0;indexFile<gome1netCDF_orbitFilesN;indexFile++)
      {
-      // Initialize scanline buffers
+      pOrbitFile=&gome1netCDF_orbitFiles[indexFile];
+      pOrbitFile->specNumber=0;
+      iscan=iscan_bs=NULL;
 
-      for (i=0;i<maxscan;i++)
-       iscan[i]=iscan_bs[i]=ITEM_NONE;
+      // Try to open the file and load metadata
 
-      // Consider ground pixels and fill scanline buffer with the indexes of ground pixels
-
-      if (scan_size)
-       for (i=0;i<(int)scan_size;i++)
-        iscan[scanline[i]]=i;
-
-      // Consider backscan pixels and fill scanline buffer with the indexes of backscan pixels
-
-      if (scan_size_bs)
-       for (i=0;i<(int)scan_size_bs;i++)
-        iscan_bs[scanline_bs[i]]=i;
-
-      // The following loop browse scanline and sort them
-
-      for (i=k=0;i<maxscan;i++)
+      try
        {
-        // Consider ground pixels
+        current_file = NetCDFFile(pEngineContext->fileInfo.fileName,NC_NOWRITE);    // open file
+        root_name = current_file.getName();                                         // get the root name (should be the file name)
+        root_group = current_file.getGroup(root_name);                              // go to the root
+        set_reference_time(pOrbitFile,current_file.getAttText("time_reference"));   // get the reference time
 
-        if ((j=iscan[i])!=ITEM_NONE)
+        pOrbitFile->scan_size=
+        pOrbitFile->scan_size_bs=
+        pOrbitFile->pixel_size=
+        pOrbitFile->pixel_size_bs=(size_t)0;
+
+             // Dimensions of spectra are 'time' x 'scan_size' x 'pixel_size ' x 'spectral_channel'
+             // For example : 1 x 552 x 3 x 832
+
+        // Read ground pixels geodata and clouddata
+
+        if (pInstrumental->gomenetcdf.pixelType!=PRJCT_INSTR_GOME1_PIXEL_BACKSCAN)   // if not backscan pixels only
          {
-          for (n=0;n<(int)pixel_size;n++)
+          band_group = current_file.getGroup(root_name+"/MODE_NADIR/"+gome1netcdf_bandName[selected_band]);
+
+          pEngineContext->project.instrumental.use_row[0]=
+          pEngineContext->project.instrumental.use_row[1]=
+          pEngineContext->project.instrumental.use_row[2]=true;
+
+          if ((band_group.dimLen("time")!=1) || (band_group.dimLen("ground_pixel")!=3))
+           rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_FORMAT, "Dimensions of ground pixels in the GOME1 netCDF file are not the expected ones");  // in case of error, capture the message
+          else
            {
-            scanline_indexes[k+n]=j;
-            scanline_pixtype[k+n]=n;
-            scanline_pixnum[k+n]=i;
-            alongtrack_indexes[k+n]=pEngineContext->n_alongtrack;
-            delta_time[k+n]=delta_time_scan[j][n];
+            // Get the different groups
+
+            geodata_group = current_file.getGroup(root_name+"/MODE_NADIR/"+gome1netcdf_bandName[selected_band]+"/GEODATA");
+            clouddata_group = current_file.getGroup(root_name+"/MODE_NADIR/"+gome1netcdf_bandName[selected_band]+"/CLOUDDATA");
+            obs_group = current_file.getGroup(root_name+"/MODE_NADIR/"+gome1netcdf_bandName[selected_band]+"/OBSERVATIONS");
+
+            // Get the scanline and pixel size for ground pixel
+
+            pOrbitFile->scan_size=band_group.dimLen("scanline");
+            pOrbitFile->pixel_size=band_group.dimLen("ground_pixel");
+            pOrbitFile->det_size=band_group.dimLen("spectral_channel");
+
+            // Read the metadata
+
+            pOrbitFile->ground_geodata=GOME1NETCDF_Read_Geodata(geodata_group,pOrbitFile->scan_size,pOrbitFile->pixel_size);
+            pOrbitFile->ground_clouddata=GOME1NETCDF_Read_Clouddata(clouddata_group,pOrbitFile->scan_size,pOrbitFile->pixel_size);
+
+            // Get the scanline indexes
+
+            const size_t start[] = {0,0,0};
+            const size_t count[] = {1,pOrbitFile->scan_size,pOrbitFile->pixel_size};
+
+            obs_group.getVar("scanline",start,count,2,(int)-1,scanline);
+            obs_group.getVar("delta_time",start,count,3,(double)0.,deltatime);
+            band_group.getVar("start_pixel",start,count,1,(short)0,startpixel);
            }
-          k+=pixel_size;
          }
 
-        // Consider backscan pixels
+        // Read backscans geodata and clouddata
 
-        if ((j=iscan_bs[i])!=ITEM_NONE)
+        if (pInstrumental->gomenetcdf.pixelType!=PRJCT_INSTR_GOME1_PIXEL_GROUND)     // if not ground pixels only
          {
-          scanline_indexes[k]=j;
-          scanline_pixtype[k]=3;
-          scanline_pixnum[k]=i;
-          alongtrack_indexes[k]=pEngineContext->n_alongtrack;
-          delta_time[k]=delta_time_scan_bs[j][0];
-          k++;
+          band_group = current_file.getGroup(root_name+"/MODE_NADIR_BACKSCAN/"+gome1netcdf_bandName[selected_band]);
+          pEngineContext->project.instrumental.use_row[3]=true;
+
+          if ((band_group.dimLen("time")!=1) || (band_group.dimLen("ground_pixel")!=1))
+           rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_FORMAT, "Dimensions of backscan pixels in the GOME1 netCDF file are not the expected ones");  // in case of error, capture the message
+          else
+           {
+            // Get the different groups
+
+            geodata_group = current_file.getGroup(root_name+"/MODE_NADIR_BACKSCAN/"+gome1netcdf_bandName[selected_band]+"/GEODATA");
+            clouddata_group = current_file.getGroup(root_name+"/MODE_NADIR_BACKSCAN/"+gome1netcdf_bandName[selected_band]+"/CLOUDDATA");
+            obs_group = current_file.getGroup(root_name+"/MODE_NADIR_BACKSCAN/"+gome1netcdf_bandName[selected_band]+"/OBSERVATIONS");
+
+            // Get the scanline and pixel size for backscans
+
+            pOrbitFile->scan_size_bs=band_group.dimLen("scanline");
+            pOrbitFile->pixel_size_bs=band_group.dimLen("ground_pixel");
+            pOrbitFile->det_size=band_group.dimLen("spectral_channel");
+
+            // Read the metadata
+
+            pOrbitFile->backscan_geodata=GOME1NETCDF_Read_Geodata(geodata_group,pOrbitFile->scan_size_bs,pOrbitFile->pixel_size_bs);
+            pOrbitFile->backscan_clouddata=GOME1NETCDF_Read_Clouddata(clouddata_group,pOrbitFile->scan_size_bs,pOrbitFile->pixel_size_bs);
+
+            // Get the scanline indexes
+
+            const size_t start[] = {0,0,0};
+            const size_t count[] = {1,pOrbitFile->scan_size_bs,pOrbitFile->pixel_size_bs};
+
+            obs_group.getVar("scanline",start,count,2,(int)-1,scanline_bs);
+            obs_group.getVar("delta_time",start,count,3,(double)0.,deltatime_bs);
+            band_group.getVar("start_pixel",start,count,1,(short)0,startpixel);
+           }
          }
 
-        if ((iscan[i]!=ITEM_NONE) || (iscan_bs[i]!=ITEM_NONE))
-         pEngineContext->n_alongtrack++;
+        // Assign size and allocate buffers to keep information as long as the file is open
+
+        pOrbitFile->specNumber=pOrbitFile->scan_size*pOrbitFile->pixel_size+pOrbitFile->scan_size_bs*pOrbitFile->pixel_size_bs;  // get the total number of records (ground pixels + backscans)
+
+        pOrbitFile->start_pixel=startpixel[0];
+
+        pOrbitFile->scanline_indexes.resize(pOrbitFile->specNumber);
+        pOrbitFile->scanline_pixtype.resize(pOrbitFile->specNumber);
+        pOrbitFile->scanline_pixnum.resize(pOrbitFile->specNumber);
+        pOrbitFile->alongtrack_indexes.resize(pOrbitFile->specNumber);
+        pOrbitFile->delta_time.resize(pOrbitFile->specNumber);
+
+        auto delta_time_scan=reinterpret_cast<const double(*)[pOrbitFile->pixel_size]>(deltatime.data());
+        auto delta_time_scan_bs = reinterpret_cast<const double(*)[pOrbitFile->pixel_size_bs]>(deltatime_bs.data());
+
+        pOrbitFile->n_alongtrack=0;
+
+        // Get the maximum scanline number
+
+        maxscan=0;
+        if (pOrbitFile->scan_size && (scanline[(int)pOrbitFile->scan_size-1]>maxscan))
+         maxscan=scanline[(int)pOrbitFile->scan_size-1];
+        if (pOrbitFile->scan_size_bs && (scanline_bs[(int)pOrbitFile->scan_size_bs-1]>maxscan))
+         maxscan=scanline_bs[(int)pOrbitFile->scan_size_bs-1];
+        maxscan++;
+
+        // Allocate scanline buffers to sort ground pixels and backscans on the scanline number
+
+        if (((iscan=(int *)malloc(sizeof(int)*maxscan))==NULL) ||
+            ((iscan_bs=(int *)malloc(sizeof(int)*maxscan))==NULL))
+
+         rc=ERROR_ID_ALLOC;
+        else
+         {
+          // Initialize scanline buffers
+
+          for (i=0;i<maxscan;i++)
+           iscan[i]=iscan_bs[i]=ITEM_NONE;
+
+          // Consider ground pixels and fill scanline buffer with the indexes of ground pixels
+
+          if (pOrbitFile->scan_size)
+           for (i=0;i<(int)pOrbitFile->scan_size;i++)
+            iscan[scanline[i]]=i;
+
+          // Consider backscan pixels and fill scanline buffer with the indexes of backscan pixels
+
+          if (pOrbitFile->scan_size_bs)
+           for (i=0;i<(int)pOrbitFile->scan_size_bs;i++)
+            iscan_bs[scanline_bs[i]]=i;
+
+          // The following loop browse scanline and sort them
+
+          for (i=k=0;i<maxscan;i++)
+           {
+            // Consider ground pixels
+
+            if ((j=iscan[i])!=ITEM_NONE)
+             {
+              for (n=0;n<(int)pOrbitFile->pixel_size;n++)
+               {
+                pOrbitFile->scanline_indexes[k+n]=j;
+                pOrbitFile->scanline_pixtype[k+n]=n;
+                pOrbitFile->scanline_pixnum[k+n]=i;
+                pOrbitFile->alongtrack_indexes[k+n]=pOrbitFile->n_alongtrack;
+                pOrbitFile->delta_time[k+n]=delta_time_scan[j][n];
+               }
+              k+=pOrbitFile->pixel_size;
+             }
+
+            // Consider backscan pixels
+
+            if ((j=iscan_bs[i])!=ITEM_NONE)
+             {
+              pOrbitFile->scanline_indexes[k]=j;
+              pOrbitFile->scanline_pixtype[k]=3;
+              pOrbitFile->scanline_pixnum[k]=i;
+              pOrbitFile->alongtrack_indexes[k]=pOrbitFile->n_alongtrack;
+              pOrbitFile->delta_time[k]=delta_time_scan_bs[j][0];
+              k++;
+             }
+
+            if ((iscan[i]!=ITEM_NONE) || (iscan_bs[i]!=ITEM_NONE))
+             pOrbitFile->n_alongtrack++;
+           }
+         }
+
+        // Sort ground pixels and backscans using scanline
+
+        pOrbitFile->start_pixel=startpixel[0];
+
+        current_file.close();
        }
+      catch (std::runtime_error& e)
+       {
+        rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, e.what());  // in case of error, capture the message
+       }
+
+      // Return
+
+      if (iscan!=NULL)
+       free(iscan);
+      if (iscan_bs!=NULL)
+       free(iscan_bs);
+
+      // ++++++++++++++ read file and fill gdpBinInfo ???
+
+      // TO control later  if (pOrbitFile->gdpBinHeader.version<40) {
+      // TO control later    if (fread(&pOrbitFile->gdpBinGeo3,sizeof(GEO_3),1,fp) != 1)
+      // TO control later      return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_BAD_FORMAT, pOrbitFile->filename);
+      // TO control later
+      // TO control later    pOrbitFile->gdpBinInfo[indexRecord].sza=pOrbitFile->gdpBinGeo3.szaArray[1];
+      // TO control later    pOrbitFile->gdpBinInfo[indexRecord].lat=0.01*pOrbitFile->gdpBinGeo3.latArray[4];
+      // TO control later    pOrbitFile->gdpBinInfo[indexRecord].lon=0.01*pOrbitFile->gdpBinGeo3.lonArray[4];
+      // TO control later    pOrbitFile->gdpBinInfo[indexRecord].cloudfrac=pOrbitFile->gdpBinGeo3.cloudFraction;
+      // TO control later  } else { // gdpBinHeader.version >= 40:
+      // TO control later    if (fread(&pOrbitFile->gdpBinGeo4,sizeof(GEO_4),1,fp) != 1)
+      // TO control later      return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_BAD_FORMAT, pOrbitFile->filename);
+      // TO control later
+      // TO control later    pOrbitFile->gdpBinInfo[indexRecord].sza=pOrbitFile->gdpBinGeo4.szaArrayBOA[1];
+      // TO control later    pOrbitFile->gdpBinInfo[indexRecord].lat=0.01*pOrbitFile->gdpBinGeo4.latArray[4];
+      // TO control later    pOrbitFile->gdpBinInfo[indexRecord].lon=0.01*pOrbitFile->gdpBinGeo4.lonArray[4];
+      // TO control later    pOrbitFile->gdpBinInfo[indexRecord].cloudfrac=pOrbitFile->gdpBinGeo4.cloudInfo.CloudFraction[0];
+      // TO control later  }
+      // TO control later  pOrbitFile->gdpBinInfo[indexRecord].pixelNumber=pOrbitFile->gdpBinSpectrum.groundPixelID;
+      // TO control later  pOrbitFile->gdpBinInfo[indexRecord].pixelType=pOrbitFile->gdpBinSpectrum.groundPixelType;
+      // TO control later}
+
+      if (!strcasecmp(pEngineContext->fileInfo.fileName,pOrbitFile->fileName))
+        gome1netCDF_currentFileIndex=indexFile;
+
+      gome1netCDF_totalRecordNumber+=pOrbitFile->specNumber;
+
+      if (rc!=ERROR_ID_NO)
+        pOrbitFile->rc=rc;
+
+      rc=ERROR_ID_NO;
      }
+   } // end if (currentfileindex == ITEM_NONE)
 
-    // Sort ground pixels and backscans using scanline
+  if (gome1netCDF_currentFileIndex!=ITEM_NONE
+      && (pEngineContext->recordNumber=gome1netCDF_orbitFiles[gome1netCDF_currentFileIndex].specNumber)>0
+      && !rc
+      && !(rc=gome1netCDF_orbitFiles[gome1netCDF_currentFileIndex].rc))
 
-    start_pixel=startpixel[0];
+   {
+    pOrbitFile=&gome1netCDF_orbitFiles[gome1netCDF_currentFileIndex];
 
-    GOME1NETCDF_Get_Irradiance(pEngineContext,channel_index,pEngineContext->buffers.lambda_irrad,pEngineContext->buffers.irrad);
-
-    for(i=0; i<MAX_SWATHSIZE; ++i)
-     NDET[i]=(int)calibration.channel_size;
+    current_file = NetCDFFile(pEngineContext->fileInfo.fileName,NC_NOWRITE);    // open current file
+    root_name = current_file.getName();                                         // get the root name (should be the file name)
 
     pEngineContext->n_crosstrack=4;
-   }
-  catch (std::runtime_error& e)
-   {
-    rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, e.what());  // in case of error, capture the message
-   }
+    pEngineContext->n_alongtrack=pOrbitFile->n_alongtrack;
 
-  // Return
+    // Irradiance spectrum
 
-  if (iscan!=NULL)
-   free(iscan);
-  if (iscan_bs!=NULL)
-   free(iscan_bs);
+    GOME1NETCDF_Get_Irradiance(pOrbitFile,pEngineContext,channel_index,pEngineContext->buffers.lambda_irrad,pEngineContext->buffers.irrad);
+
+    for(i=0; i<MAX_SWATHSIZE; ++i)
+     NDET[i]=(int)pOrbitFile->calibration.channel_size;
+   }
 
   return rc;
 }
@@ -781,6 +947,7 @@ RC GOME1NETCDF_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
  {
   // Declarations
 
+  GOME1NETCDF_ORBIT_FILE *pOrbitFile;
   PRJCT_INSTRUMENTAL *pInstrumental;
   NetCDFGroup obs_group;                                                        // measurement group in the netCDF file
   RECORD_INFO *pRecordInfo;                                                     // pointer to the record structure in the engine context
@@ -799,8 +966,9 @@ RC GOME1NETCDF_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
 
   // Initializations
 
+  pOrbitFile=&gome1netCDF_orbitFiles[gome1netCDF_currentFileIndex];
   pRecordInfo=&pEngineContext->recordInfo;
-  pRecordInfo->i_alongtrack=alongtrack_indexes[recordNo-1];                  // because in mediate, use +1
+  pRecordInfo->i_alongtrack=pOrbitFile->alongtrack_indexes[recordNo-1];                  // because in mediate, use +1
   pInstrumental=&pEngineContext->project.instrumental;
   selected_band=pInstrumental->gomenetcdf.bandType;
   rc = ERROR_ID_NO;
@@ -809,20 +977,20 @@ RC GOME1NETCDF_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
 
   if ((recordNo<=0) || (recordNo>pEngineContext->recordNumber))
    rc=ERROR_ID_FILE_END;
-  else if (delta_time[recordNo-1]>(double)1.e36)
+  else if (pOrbitFile->delta_time[recordNo-1]>(double)1.e36)
    rc=ERROR_ID_FILE_RECORD;
   else
    {
-    size_t scanIndex=scanline_indexes[recordNo-1];                              // index in the ground pixel scanlines or backscan scanlines
-    int    pixelType=scanline_pixtype[recordNo-1];                              // pixel type
+    size_t scanIndex=pOrbitFile->scanline_indexes[recordNo-1];                  // index in the ground pixel scanlines or backscan scanlines
+    int    pixelType=pOrbitFile->scanline_pixtype[recordNo-1];                  // pixel type
     size_t pixelIndex=(pixelType==3)?0:pixelType;                               // index of the pixel in the scan : should be 0,1,2 for ground pixels and 0 for backscans
     int    pixelSize=(pixelType==3)?1:3;                                        // pixel size : should be 3 for ground pixels and 1 for backscans
-    size_t start[] = {0,scanIndex,((int)pixelType==3)?0:(int)pixelType,0};
-    size_t count[] = {1,1,1,det_size};                                          // only one record to load
+    size_t start[] = {0,scanIndex,((int)pixelType==3)?0:(size_t)pixelType,0};
+    size_t count[] = {1,1,1,pOrbitFile->det_size};                              // only one record to load
 
-    getDate(delta_time[recordNo-1], &pRecordInfo->present_datetime);
+    getDate(pOrbitFile,pOrbitFile->delta_time[recordNo-1], &pRecordInfo->present_datetime);
 
-    for (i=0;i<calibration.channel_size;i++)
+    for (i=0;i<(int)pOrbitFile->calibration.channel_size;i++)
      {
       pEngineContext->buffers.spectrum[i]=
       pEngineContext->buffers.sigmaSpec[i]=(double)0.;
@@ -834,8 +1002,8 @@ RC GOME1NETCDF_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
 
   // TODO int     nRef;                                                                 // size of irradiance vectors
 
-    geo=(pixelType==3)?backscan_geodata:ground_geodata;
-    cloud=(pixelType==3)?backscan_clouddata:ground_clouddata;
+    geo=(pixelType==3)?pOrbitFile->backscan_geodata:pOrbitFile->ground_geodata;
+    cloud=(pixelType==3)?pOrbitFile->backscan_clouddata:pOrbitFile->ground_clouddata;
 
     // Solar zenith angles
 
@@ -909,9 +1077,9 @@ RC GOME1NETCDF_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
     obs_group.getVar("radiance_precision",start,count,4,(float)0.,err);
     obs_group.getVar("spectral_index",start,count,3,(short)0,clb);
 
-    GOME1NETCDF_Get_Wavelength(pEngineContext,channel_index,(int)clb[0],pEngineContext->buffers.lambda);
+    GOME1NETCDF_Get_Wavelength(pOrbitFile,pEngineContext,channel_index,(int)clb[0],pEngineContext->buffers.lambda);
 
-    for (i=0,j=start_pixel;i<(int)det_size;i++,j++)
+    for (i=0,j=pOrbitFile->start_pixel;i<(int)pOrbitFile->det_size;i++,j++)
      {
       pEngineContext->buffers.spectrum[j]=spe[i];
       pEngineContext->buffers.sigmaSpec[j]=err[i];
@@ -919,7 +1087,7 @@ RC GOME1NETCDF_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
 
     // obs_group.getVar("scanline",start,count,2,(int)0,scanline);
 
-    pRecordInfo->gome.pixelNumber=scanline_pixnum[recordNo-1];                  // pixel number
+    pRecordInfo->gome.pixelNumber=pOrbitFile->scanline_pixnum[recordNo-1];                  // pixel number
     pRecordInfo->gome.pixelType=pixelType;                                      // pixel type
     pRecordInfo->i_crosstrack=pixelType;
    }
@@ -949,20 +1117,30 @@ RC GOME1NETCDF_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
 
 void GOME1NETCDF_Cleanup(void)
  {
+  GOME1NETCDF_ORBIT_FILE *pOrbitFile;
+
   current_file.close();
 
-  calibration = calib();
-  irradiance = refspec();
-  ground_geodata = geodata();
-  ground_clouddata = clouddata();
-  backscan_geodata = geodata();
-  backscan_clouddata = clouddata();
+  for (int indexFile = 0;indexFile<gome1netCDF_orbitFilesN;indexFile++)
+   {
+    pOrbitFile=&gome1netCDF_orbitFiles[indexFile];
 
-  scanline_indexes.clear();
-  scanline_pixtype.clear();
-  scanline_pixnum.clear();
-  alongtrack_indexes.clear();
-  delta_time.clear();
+    pOrbitFile->calibration = calib();
+    pOrbitFile->irradiance = refspec();
+    pOrbitFile->ground_geodata = geodata();
+    pOrbitFile->ground_clouddata = clouddata();
+    pOrbitFile->backscan_geodata = geodata();
+    pOrbitFile->backscan_clouddata = clouddata();
+
+    pOrbitFile->scanline_indexes.clear();
+    pOrbitFile->scanline_pixtype.clear();
+    pOrbitFile->scanline_pixnum.clear();
+    pOrbitFile->alongtrack_indexes.clear();
+    pOrbitFile->delta_time.clear();
+   }
+
+  gome1netCDF_orbitFilesN=0;
+  gome1netCDF_currentFileIndex=ITEM_NONE;
  }
 
 
@@ -1005,10 +1183,8 @@ int GOME1NETCDF_get_orbit_date(int *orbit_year, int *orbit_month, int *orbit_day
 
 RC GOME1NETCDF_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle) {
 
-  // TO CHANGE LATER GOME1NETCDF_ORBIT_FILE *pOrbitFile=&GOME1NETCDFOrbitFiles[GOME1NETCDFCurrentFileIndex];
-  // const int n_wavel = pOrbitFile->GOME1NETCDFInfo.no_of_pixels;
-
-  const int n_wavel=calibration.channel_size;
+  GOME1NETCDF_ORBIT_FILE *pOrbitFile=&gome1netCDF_orbitFiles[gome1netCDF_currentFileIndex];
+  const int n_wavel=pOrbitFile->calibration.channel_size;
   int saveFlag= pEngineContext->project.spectra.displayDataFlag;
 
   RC rc=0; // TO CHANGE LATER pOrbitFile->rc;

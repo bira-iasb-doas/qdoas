@@ -150,9 +150,9 @@ static void define_variable(NetCDFGroup &group, const struct output_field& thefi
   getDims(thefield, dimids, chunksizes);
 
   const int varid = group.defVar(varname, dimids, getNCType(thefield.memory_type));
-  group.defVarChunking(varid, NC_CHUNKED, chunksizes.data());
-  group.defVarDeflate(varid);
-  group.defVarFletcher32(varid, NC_FLETCHER32);
+  // !!! group.defVarChunking(varid, NC_CHUNKED, chunksizes.data());
+  // !!! group.defVarDeflate(varid);
+  // !!! group.defVarFletcher32(varid, NC_FLETCHER32);
 
   switch (thefield.memory_type) {
   case OUTPUT_STRING:
@@ -279,7 +279,7 @@ void write_automatic_reference_info(const ENGINE_CONTEXT *pEngineContext, NetCDF
               && pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC
               && pTabFeno->ref_description != NULL) {
             std::stringstream attrname;
-            attrname << pTabFeno->windowName << " - row " << row << " automatic reference"; 
+            attrname << pTabFeno->windowName << " - row " << row << " automatic reference";
             group.putAttr(attrname.str(), pTabFeno->ref_description);
           }
         }
@@ -338,28 +338,28 @@ void create_subgroups(const ENGINE_CONTEXT *pEngineContext,NetCDFGroup &group) {
       for(int analysiswindow=0; analysiswindow < NFeno; ++analysiswindow)
        {
         const FENO *pTabFeno = &TabFeno[0][analysiswindow];
-    
+
         if (!pTabFeno->hidden && (group.groupID(pTabFeno->windowName)<0))
          {
           auto subgroup=group.defGroup(pTabFeno->windowName);
 
           // needs the wavelength at the center of the fitting window for profiling algorithm
-          
+
           if (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF)
            {
             char str[80];
-            sprintf(str,"%.3lf",pTabFeno->lambda0);            
+            sprintf(str,"%.3lf",pTabFeno->lambda0);
             subgroup.putAttr("lambda0", str);
            }
-         } 
-       } 
+         }
+       }
 
    /*for (unsigned int i=0; i<output_num_fields; ++i) {
     if (output_data_analysis[i].windowname &&
         group.groupID(output_data_analysis[i].windowname) < 0) {
       group.defGroup(output_data_analysis[i].windowname);
-    } 
-  } */
+    }
+  }   */
 }
 
 RC netcdf_open(const ENGINE_CONTEXT *pEngineContext, const char *filename) {
@@ -391,11 +391,11 @@ RC netcdf_open(const ENGINE_CONTEXT *pEngineContext, const char *filename) {
     write_automatic_reference_info(pEngineContext, output_group);
     write_calibration_data(output_group);
 
-    for (unsigned int i=0; i<output_num_fields; ++i) {
-       NetCDFGroup group = output_data_analysis[i].windowname ?
-         output_group.getGroup(output_data_analysis[i].windowname) : output_group;
-       define_variable(group, output_data_analysis[i], get_netcdf_varname(output_data_analysis[i].fieldname), Analysis);
-     }
+   for (unsigned int i=0; i<output_num_fields; ++i) {
+      NetCDFGroup group = output_data_analysis[i].windowname ?
+        output_group.getGroup(output_data_analysis[i].windowname) : output_group;
+      define_variable(group, output_data_analysis[i], get_netcdf_varname(output_data_analysis[i].fieldname), Analysis);
+    }
   } catch (std::runtime_error& e) {
     output_file.close();
     return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, e.what() );
@@ -456,6 +456,35 @@ size_t vardimension<struct datetime>() {
   return 7;
 }
 
+static void write_data_field(const struct output_field& datafield, NetCDFGroup &group, const string& varname,
+                                    const vector<size_t> start, const vector<size_t> count) {
+  switch (datafield.memory_type) {
+  case OUTPUT_INT:
+    group.putVar(varname, start.data(), count.data(), static_cast<const int *>(datafield.data));
+    break;
+  case OUTPUT_SHORT:
+    group.putVar(varname, start.data(), count.data(), static_cast<const short *>(datafield.data));
+    break;
+  case OUTPUT_USHORT:
+    group.putVar(varname, start.data(), count.data(), static_cast<const unsigned short *>(datafield.data));
+    break;
+  case OUTPUT_STRING:
+    group.putVar(varname, start.data(), count.data(), static_cast<const char **>(datafield.data));
+    break;
+  case OUTPUT_FLOAT:
+    group.putVar(varname, start.data(), count.data(), static_cast<const float *>(datafield.data));
+    break;
+  case OUTPUT_DOUBLE:
+    group.putVar(varname, start.data(), count.data(), static_cast<const double *>(datafield.data));
+    break;
+  case OUTPUT_DATE:
+  case OUTPUT_TIME:
+  case OUTPUT_DATETIME:
+    assert(false && "date, time or datetime output for calibration not supported");
+    break;
+  }
+}
+
 template<typename T, typename U = T>
 static void write_buffer(const struct output_field *thefield, const bool selected[], int num_records, const OUTPUT_INFO *recordinfo) {
 
@@ -464,7 +493,9 @@ static void write_buffer(const struct output_field *thefield, const bool selecte
 
   // variables that depend on the analysis window go the the
   // appropriate subgroup for their analysis window:
+
   NetCDFGroup group = thefield->windowname ? output_group.getGroup(thefield->windowname) : output_group;
+
   string varname { get_netcdf_varname(thefield->fieldname) };
   T fill = group.getFillValue<T>(group.varID(varname));
 
@@ -485,7 +516,22 @@ static void write_buffer(const struct output_field *thefield, const bool selecte
       }
     }
   }
-  group.putVar(varname, buffer.data() );
+
+
+  //  vector<int> dimids(output_group.dimIDs(varname));
+  //  vector<size_t> start(dimids.size());
+  //  start[0] = thefield->index_row;
+  //  vector<size_t> count;
+  //  for (auto dim : dimids) {
+  //    if (n_crosstrack > 1 && dim == get_dimid("n_crosstrack")) {
+  //      count.push_back(1);
+  //    } else { // we want to write across the full extent of each dimension, except crosstrack
+  //      count.push_back(group.dimLen(dim));
+  //    }
+  //  }
+  //
+  // write_data_field(*thefield, output_group, varname, start, count);
+  group.putVar(varname, buffer.data() );   // This causes erros under Windows
 }
 
 // specialization to deal with string variable types...
@@ -517,11 +563,13 @@ void write_buffer<const char*>(const struct output_field *thefield, const bool s
       }
     }
   }
+
   group.putVar(varname, buffer.data() );
 }
 
 RC netcdf_write_analysis_data(const bool selected_records[], int num_records, const OUTPUT_INFO *recordinfo) {
   int rc = ERROR_ID_NO;
+
   try {
     for (unsigned int i=0; i<output_num_fields; ++i) {
       struct output_field *thefield = &output_data_analysis[i];
@@ -559,6 +607,7 @@ RC netcdf_write_analysis_data(const bool selected_records[], int num_records, co
   } catch (std::runtime_error& e) {
     rc =  ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, e.what());
   }
+
   return rc;
 }
 

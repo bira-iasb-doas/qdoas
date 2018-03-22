@@ -258,13 +258,13 @@ RC FRM4DOAS_Set(ENGINE_CONTEXT *pEngineContext)
 // FUNCTION FRM4DOAS_Read
 // -----------------------------------------------------------------------------
 //!
-//! \fn      RC FRM4DOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay)
-//! \details Read a specified record from a file in the netCDF format implemented for the FRM<sub>4</sub>DOAS project\n
-//! \param   [in]  pEngineContext  pointer to the engine context; some fields are affected by this function.\n
-//! \param   [in]  recordNo        the index of the record to read\n
-//! \param   [in]  dateFlag        1 to search for a reference spectrum; 0 otherwise\n
-//! \param   [in]  localDay        if \a dateFlag is 1, the calendar day for the reference spectrum to search for\n
-//! \return  ERROR_ID_FILE_END if the requested record number is not found\n
+//! /fn      RC FRM4DOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int localDay)
+//! /details Read a specified record from a file in the netCDF format implemented for the FRM<sub>4</sub>DOAS project\n
+//! /param   [in]  pEngineContext  pointer to the engine context; some fields are affected by this function.\n
+//! /param   [in]  recordNo        the index of the record to read\n
+//! /param   [in]  dateFlag        1 to search for a reference spectrum; 0 otherwise\n
+//! /param   [in]  localDay        if /a dateFlag is 1, the calendar day for the reference spectrum to search for\n
+//! /return  ERROR_ID_FILE_END if the requested record number is not found\n
 //!          ERROR_ID_FILE_RECORD if the requested record doesn't satisfy current criteria (for example for the selection of the reference)\n
 //!          ERROR_ID_NO on success
 //!
@@ -372,6 +372,15 @@ RC FRM4DOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int lo
     pRecordInfo->maxdoas.zenithBeforeIndex=current_metadata.zbi[recordNo-1];
     pRecordInfo->maxdoas.zenithAfterIndex=current_metadata.zai[recordNo-1];
 
+    // Recalculate solar zenith angle if necessary
+
+    if (std::isnan(pRecordInfo->Zm) && !std::isnan(pRecordInfo->longitude) && !std::isnan(pRecordInfo->latitude))
+     {
+      double longitude;
+      longitude=-pRecordInfo->longitude;
+      pRecordInfo->Zm=ZEN_FNTdiz(ZEN_FNCrtjul(&pRecordInfo->Tm),&longitude,&pRecordInfo->latitude,&pRecordInfo->Azimuth);
+     }
+
     // Selection of the reference spectrum
 
     if (rc || (dateFlag &&
@@ -399,8 +408,8 @@ RC FRM4DOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int lo
 // FUNCTION FRM4DOAS_Cleanup
 // -----------------------------------------------------------------------------
 //!
-//! \fn      void FRM4DOAS_Cleanup(void)
-//! \details Close the current file and release allocated buffers\n
+//! /fn      void FRM4DOAS_Cleanup(void)
+//! /details Close the current file and release allocated buffers\n
 //!
 // -----------------------------------------------------------------------------
 

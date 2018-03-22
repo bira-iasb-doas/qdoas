@@ -968,6 +968,7 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
       }
   fprintf(fp, "      <tropomi band=\"%s\"", tropomiSpectralBand);
   fprintf(fp, " reference_orbit_dir=\"%s\"", pathMgr->simplifyPath(QString(d->tropomi.reference_orbit_dir)).toUtf8().constData());
+  fprintf(fp," trackSelection=\"%s\"",d->tropomi.trackSelection);
 
   tmpStr = pathMgr->simplifyPath(QString(d->tropomi.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());

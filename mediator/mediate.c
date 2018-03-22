@@ -1204,6 +1204,8 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->tropomi.calibrationFile);     // calibration file
       strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->tropomi.instrFunctionFile);     // instrumental function file
 
+      OMI_TrackSelection(pMediateInstrumental->tropomi.trackSelection,pEngineInstrumental->use_row);
+
       break;
       // ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_OMPS:

@@ -84,16 +84,16 @@ CWProjectTabSelection::CWProjectTabSelection(const mediate_project_selection_t *
   QGroupBox *recordGroup = new QGroupBox("Spectra No. Range", this);
   QGridLayout *recordGroupLayout = new QGridLayout;
 
-  pixels = fm.width("000000");
+  pixels = fm.width("00000000");
   recordGroupLayout->addWidget(new QLabel("Min", this), 0, 0);
   m_recordMinEdit = new QLineEdit(this);
   m_recordMinEdit->setFixedWidth(pixels);
-  m_recordMinEdit->setValidator(new QIntValidator(0, 99999, m_recordMinEdit));
+  m_recordMinEdit->setValidator(new QIntValidator(0, 9999999, m_recordMinEdit));
   recordGroupLayout->addWidget(m_recordMinEdit, 0, 1);
   recordGroupLayout->addWidget(new QLabel("Max", this), 1, 0);
   m_recordMaxEdit = new QLineEdit(this);
   m_recordMaxEdit->setFixedWidth(pixels);
-  m_recordMaxEdit->setValidator(new QIntValidator(0, 99999, m_recordMaxEdit));
+  m_recordMaxEdit->setValidator(new QIntValidator(0, 9999999, m_recordMaxEdit));
   recordGroupLayout->addWidget(m_recordMaxEdit, 1, 1);
   recordGroupLayout->setColumnStretch(2, 1);
   recordGroup->setLayout(recordGroupLayout);

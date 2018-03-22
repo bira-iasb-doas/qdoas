@@ -26,6 +26,7 @@ struct instrumental_tropomi {
    // directory where we want to look for reference spectra.  If
    // empty, QDOAS will look for orbits of the same day.
   char reference_orbit_dir[FILENAME_BUFFER_LENGTH];
+  char trackSelection[TRACK_SELECTION_LENGTH];
   enum tropomiSpectralBand spectralBand;
 };
 

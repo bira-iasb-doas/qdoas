@@ -313,6 +313,10 @@ int tropomi_read(ENGINE_CONTEXT *pEngineContext,int record) {
   const size_t indexPixel = (record - 1) % size_groundpixel;
   size_t n_wavel = 0;
 
+  if (!pEngineContext->project.instrumental.use_row[indexPixel]) {
+    return ERROR_ID_FILE_RECORD;
+  }
+
   if (THRD_id==THREAD_TYPE_ANALYSIS) {
      // in analysis mode, variables must have been initialized by tropomi_init()
     assert(irradiance_reference.size() == ANALYSE_swathSize);

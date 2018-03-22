@@ -435,6 +435,16 @@ RC ParseInstrumental(QStringList &xmlFields,int xmlFieldN,int startingField,QStr
        else if (xmlFields.at(indexField+1)=="instr")
         std::cout << "project/instrumental/omi/instr field can not be changed yet" << std::endl;
       }
+     else if (xmlFields.at(indexField)=="tropomi")
+      {
+       if (indexField+1>=xmlFieldN)
+        std::cout << "tropomi attribute is missing" << std::endl;
+       else if (xmlFields.at(indexField+1)=="trackSelection")
+        {
+         std::cout << "project/instrumental/tropomi/trackSelection : " << newProjectProperties.instrumental.tropomi.trackSelection << " replaced by " << pXmlValue->toLocal8Bit().constData() << std::endl;
+         strcpy(newProjectProperties.instrumental.tropomi.trackSelection,pXmlValue->toLocal8Bit().constData());
+        }
+      }
      else if (xmlFields.at(indexField)=="gome2")
       std::cout << "project/instrumental/gome2 field can not be changed yet" << std::endl;
      else if (xmlFields.at(indexField)=="mkzy")

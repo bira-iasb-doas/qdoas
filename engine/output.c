@@ -45,7 +45,7 @@
   fields containing results of the reference calibration are stored in
   the array #output_data_calib, and output fields containing results of
   the analyis (or run calibration) are contained in the array
-  #output_data_analysis.
+  output_data_analysis.
 
   The main members of the output_field structure are the buffer
   output_field::data, used to store the required data until it is
@@ -1595,6 +1595,7 @@ static int register_analysis_field(const struct output_field* fieldcontent, int 
   sprintf(full_fieldname, "%s%s", newfield->basic_fieldname, symbol_name);
   newfield->fieldname = full_fieldname;
   newfield->windowname = strdup(window_name);
+
   newfield->data = NULL;
   if (newfield->data_cols == 0) // data_cols = 1 as a default
     newfield->data_cols = 1;
@@ -1631,6 +1632,7 @@ static int register_analysis_output_field(int field,struct outputconfig analysis
       int rc = register_analysis_field(&output->field, indexFeno, index_calib, ITEM_NONE, windowName, "");
       if (rc != ERROR_ID_NO) return rc;
      }
+
    return ERROR_ID_NO;
  }
 

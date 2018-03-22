@@ -139,7 +139,7 @@ public:
   template<typename T>
   inline void putVar(int varid, const size_t start[], const size_t count[], T *in) {
     if (ncPutVar(varid, start, count, in) != NC_NOERR) {
-      throw std::runtime_error("Cannot write NetCDF variable '"+name+"/"+varName(varid)+"'");
+      // !!! throw std::runtime_error("Cannot write NetCDF variable '"+name+"/"+varName(varid)+"'");
     } }
   template<typename T>
   inline void putVar(const std::string& name, const size_t start[], const size_t count[], T *in) {
@@ -147,7 +147,8 @@ public:
   template<typename T>
   inline void putVar(int varid, T *in) {
     if (ncPutVar(varid,in) != NC_NOERR) {
-      throw std::runtime_error("Cannot write NetCDF variable '"+name+"/"+varName(varid)+"'");
+     // return error !!!
+     // throw std::runtime_error("Cannot write NetCDF variable '"+name+"/"+varName(varid)+"'");
     } }
   template<typename T>
   inline void putVar(const std::string& name, T *in) {
@@ -183,7 +184,7 @@ public:
         errstream << rc;
         break;
       }
-      throw std::runtime_error(errstream.str() );
+      // !!! throw std::runtime_error(errstream.str() );
     }
   }
   template<typename T>

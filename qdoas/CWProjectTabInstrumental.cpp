@@ -1959,9 +1959,17 @@ CWInstrTropomiEdit::CWInstrTropomiEdit(const struct instrumental_tropomi *pInstr
                             sizeof(pInstrTropomi->reference_orbit_dir), "Reference orbit directory" , SLOT(slot_browse_reference_directory()));
   ++row;
 
+  // Track selection
+  gridLayout->addWidget(new QLabel("Row selection", this), row, 0);
+  m_trackSelection = new QLineEdit(this);
+  gridLayout->addWidget(m_trackSelection, row, 1);
+  ++row;
+
   helperConstructCalInsFileWidgets(gridLayout, row,
 				   pInstrTropomi->calibrationFile, sizeof(pInstrTropomi->calibrationFile),
 				   pInstrTropomi->instrFunctionFile, sizeof(pInstrTropomi->instrFunctionFile));
+
+		m_trackSelection->setText(QString(pInstrTropomi->trackSelection));
 }
 
 void CWInstrTropomiEdit::apply(struct instrumental_tropomi *pInstrTropomi) const
@@ -1970,6 +1978,8 @@ void CWInstrTropomiEdit::apply(struct instrumental_tropomi *pInstrTropomi) const
   strcpy(pInstrTropomi->instrFunctionFile, m_fileTwoEdit->text().toLocal8Bit().data());
   // spectral band
   pInstrTropomi->spectralBand = static_cast<tropomiSpectralBand>(m_spectralBandCombo->itemData(m_spectralBandCombo->currentIndex()).toInt());
+  strcpy(pInstrTropomi->trackSelection, m_trackSelection->text().toLocal8Bit().data());
+
   // radiance reference directory
   if(m_reference_directory_edit->text().size() < sizeof(pInstrTropomi->reference_orbit_dir))
      strcpy(pInstrTropomi->reference_orbit_dir,m_reference_directory_edit->text().toLocal8Bit().data());

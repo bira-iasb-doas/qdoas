@@ -448,7 +448,7 @@ class CWInstrTropomiEdit : public CWCalibInstrEdit
 
  private:
   QComboBox *m_spectralBandCombo;
-  QLineEdit *m_reference_directory_edit;
+  QLineEdit *m_reference_directory_edit,*m_trackSelection;
 };
 
 //--------------------------------------------------------------------------
