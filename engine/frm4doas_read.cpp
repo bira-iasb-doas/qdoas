@@ -15,7 +15,8 @@
 //! \date      18/12/2017 (creation date)
 //! \bug       Known issue (20/12/2017) with Windows : netCDF functions fail for compressed variables (zlib=True) when used with hdf5.dll compiled from source.  \n
 //!            Work around : using the hdf5.dll of the precompiled library (4.5.0) seems to solve the problem.
-//! \todo      Load reference spectrum + slit function\n
+//! \todo      Load reference spectrum + slit function      \n
+//!            Check if the wavelength calibration exists   \n
 //!            Complete with general ground-based fields
 //! \copyright QDOAS is distributed under GNU General Public License
 //!
@@ -240,6 +241,9 @@ RC FRM4DOAS_Set(ENGINE_CONTEXT *pEngineContext)
     pEngineContext->n_crosstrack=1;                                             // spectra should be one dimension only
     det_size=root_group.dimLen("det_size");                                     // get the number of pixels of the detector
 
+    for (int i=0;i<(int)det_size;i++)
+     pEngineContext->buffers.irrad[i]=(double)0.;
+
     // Read metadata
 
     current_metadata = FRM4DOAS_Read_Metadata(pEngineContext->recordNumber);
@@ -311,6 +315,7 @@ RC FRM4DOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int lo
 
     for (i=0;i<det_size;i++)
      {
+      pEngineContext->buffers.lambda_irrad[i]=(double)wve[i];    // do not apply if irradiance present in the file
       pEngineContext->buffers.lambda[i]=wve[i];
       pEngineContext->buffers.spectrum[i]=spe[i];
       pEngineContext->buffers.sigmaSpec[i]=err[i];
@@ -383,10 +388,10 @@ RC FRM4DOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int lo
 
     // Selection of the reference spectrum
 
-    if (rc || (dateFlag &&
-            (((fabs(pRecordInfo->elevationViewAngle+0.1)>EPSILON) || (fabs(pRecordInfo->azimuthViewAngle+0.1)>EPSILON)) &&
+    if (rc || (dateFlag && ((pRecordInfo->maxdoas.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH) ||
+             ((fabs(pRecordInfo->elevationViewAngle+1.)>EPSILON) &&
              ((pRecordInfo->elevationViewAngle<pEngineContext->project.spectra.refAngle-pEngineContext->project.spectra.refTol) ||
-              (pRecordInfo->elevationViewAngle>pEngineContext->project.spectra.refAngle+pEngineContext->project.spectra.refTol)))))
+              (pRecordInfo->elevationViewAngle>pEngineContext->project.spectra.refAngle+pEngineContext->project.spectra.refTol))))))
 
      rc=ERROR_ID_FILE_RECORD;
 

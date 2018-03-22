@@ -806,7 +806,7 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
      }
 
    if (!pEngineContext->n_alongtrack && ANALYSE_swathSize)
-    pEngineContext->n_alongtrack=pEngineContext->recordNumber/ANALYSE_swathSize;
+    pEngineContext->n_alongtrack=pEngineContext->recordNumber/ANALYSE_swathSize;     
 
    // Return
 
@@ -1585,7 +1585,7 @@ RC EngineBuildRefList(ENGINE_CONTEXT *pEngineContext)
        }
 
       if ((ENGINE_contextRef.recordInfo.maxdoas.zenithBeforeIndex>zenithBeforeIndex) && (ENGINE_contextRef.recordInfo.maxdoas.zenithBeforeIndex<9999))
-       zenithBeforeIndex=ENGINE_contextRef.recordInfo.maxdoas.zenithBeforeIndex;
+       zenithBeforeIndex=ENGINE_contextRef.recordInfo.maxdoas.zenithBeforeIndex;  // apply only if zenithBeforeIndex==ITEM_NONE ???
       if ((ENGINE_contextRef.recordInfo.maxdoas.zenithAfterIndex>zenithAfterIndex) && (ENGINE_contextRef.recordInfo.maxdoas.zenithAfterIndex<9999))
        zenithAfterIndex=ENGINE_contextRef.recordInfo.maxdoas.zenithAfterIndex;
      }
@@ -1600,7 +1600,7 @@ RC EngineBuildRefList(ENGINE_CONTEXT *pEngineContext)
   pEngineContext->analysisRef.zmMinIndex=indexZmMin;
   pEngineContext->analysisRef.zmMaxIndex=indexZmMax;
   pEngineContext->analysisRef.zenBefIndex=zenithBeforeIndex;
-  pEngineContext->analysisRef.zenAftIndex=zenithBeforeIndex;
+  pEngineContext->analysisRef.zenAftIndex=zenithAfterIndex;
 
   // {                                                                                                                                                   // TO CHECK WITH MPI PEOPLE
   //  FILE *fp;                                                                                                                                          // TO CHECK WITH MPI PEOPLE
@@ -1755,6 +1755,7 @@ void EngineScanSetRefIndexes(ENGINE_CONTEXT *pEngineContext,INDEX indexRecord)
  	RECORD_INFO *pRecordInfo;
  	int *refIndexes,nRef;
  	int indexScanBefore,indexScanAfter,indexScanMin,indexScanMax,indexScanRecord;
+
 
  	// Initializations
 
@@ -1914,8 +1915,12 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
    if (pEngineContext->analysisRef.refScan)
     {
-    	if (newref || ((pRef->indexScanBefore==ITEM_NONE) && (pRef->indexScanAfter==ITEM_NONE)) || (indexRecord<=pRef->indexScanBefore) || ((pRef->indexScanAfter!=ITEM_NONE) && (indexRecord>=pRef->indexScanAfter)))
-    	 EngineScanSetRefIndexes(pEngineContext,indexRecord);
+     if (newref ||
+       ((pRef->indexScanBefore==ITEM_NONE) || (pRef->indexScanAfter==ITEM_NONE)) ||
+        (indexRecord<=pRef->indexScanBefore) || 
+       (((pRef->indexScanAfter!=ITEM_NONE) /* || (pRecord->maxdoas.zenithAfterIndex>0) */) && (indexRecord>=pRef->indexScanAfter)))
+
+      EngineScanSetRefIndexes(pEngineContext,indexRecord);
 
   	  indexScanBefore=pRef->indexScanBefore;
   	  indexScanAfter=pRef->indexScanAfter;

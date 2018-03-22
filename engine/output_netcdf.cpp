@@ -150,9 +150,10 @@ static void define_variable(NetCDFGroup &group, const struct output_field& thefi
   getDims(thefield, dimids, chunksizes);
 
   const int varid = group.defVar(varname, dimids, getNCType(thefield.memory_type));
-  // !!! group.defVarChunking(varid, NC_CHUNKED, chunksizes.data());
-  // !!! group.defVarDeflate(varid);
-  // !!! group.defVarFletcher32(varid, NC_FLETCHER32);
+  
+  group.defVarChunking(varid, NC_CHUNKED, chunksizes.data());
+  group.defVarDeflate(varid);
+  group.defVarFletcher32(varid, NC_FLETCHER32);
 
   switch (thefield.memory_type) {
   case OUTPUT_STRING:
@@ -267,6 +268,7 @@ static void write_calibration_data(NetCDFGroup& group) {
 }
 
 void write_automatic_reference_info(const ENGINE_CONTEXT *pEngineContext, NetCDFGroup& group) {
+
   if ( pEngineContext->project.asciiResults.referenceFlag
        && pEngineContext->analysisRef.refAuto ) {
     switch(pEngineContext->project.instrumental.readOutFormat) {
@@ -354,12 +356,12 @@ void create_subgroups(const ENGINE_CONTEXT *pEngineContext,NetCDFGroup &group) {
          }
        }
 
-   /*for (unsigned int i=0; i<output_num_fields; ++i) {
+   for (unsigned int i=0; i<output_num_fields; ++i) {
     if (output_data_analysis[i].windowname &&
         group.groupID(output_data_analysis[i].windowname) < 0) {
       group.defGroup(output_data_analysis[i].windowname);
-    }
-  }   */
+    } 
+  } 
 }
 
 RC netcdf_open(const ENGINE_CONTEXT *pEngineContext, const char *filename) {
