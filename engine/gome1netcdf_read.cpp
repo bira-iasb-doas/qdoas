@@ -98,22 +98,27 @@ extern "C" {
 #include "comdefs.h"
 #include "stdfunc.h"
 #include "engine_context.h"
+#include "engine.h"
 #include "mediate.h"
 #include "analyse.h"
 #include "spline.h"
 #include "vector.h"
 #include "zenithal.h"
 #include "kurucz.h"
+#include "ref_list.h"
 }
 
 using std::string;
 using std::vector;
 using std::set;
 
-#define GOME1NETCDF_NBAND                6
-#define GOME1NETCDF_DETECTOR_SIZE     1024
+#define MAX_GOME_FILES 50                                                       //!< \details Maximum number of files per orbit (in principle, 14/15 should be enough)
+#define GOME1NETCDF_NBAND                6                                      //!< \details The number of spectral bands (1A, 1B, 2A, 2B, 3, 4)
+#define GOME1NETCDF_DETECTOR_SIZE     1024                                      //!< \details The size of the detector
 
-const char *gome1netcdf_bandName[GOME1NETCDF_NBAND]=                             //!< \details Available bands in GOME1 files
+#define NUM_VZA_REFS                     4                                      //!< \details The number of pixel types (considered here as "rows")
+
+const char *gome1netcdf_bandName[GOME1NETCDF_NBAND]=                            //!< \details Available bands in GOME1 files
  {
   "BAND_1A",
   "BAND_1B",
@@ -127,134 +132,134 @@ const char *gome1netcdf_bandName[GOME1NETCDF_NBAND]=                            
 // STRUCTURES DEFINITIONS
 // ======================
 
-namespace {
-
-//! \struct calib
-//!< \details wavelength grid per detector temperature
-
-struct calib
+namespace
  {
-  int channel_number;                                                           //!< \details the number of channels
-  int channel_size;                                                             //!< \details should be the size of the detector
-  int temp_number;                                                              //!< \details the number of considered temperatures
+  //! \struct calib
+  //!< \details wavelength grid per detector temperature
 
-  vector<float> wavelength;                                                     //!< \details wavelength grid
- };
+  struct calib
+   {
+    int channel_number;                                                         //!< \details the number of channels
+    int channel_size;                                                           //!< \details should be the size of the detector
+    int temp_number;                                                            //!< \details the number of considered temperatures
 
-//! \struct refspec
-//!< \details irradiance spectrum
+    vector<float> wavelength;                                                   //!< \details wavelength grid
+   };
 
-struct refspec
- {
-  vector<float> ref_spec;                                                       //!< \details the reference spectrum
-  vector<float> ref_sigma;                                                      //!< \details error on the reference spectrum
-  vector<short> spectral_index;                                                 //!< \details index of the spectral wavelength grid (see CALIBRATION/wavelength)
- };
+  //! \struct refspec
+  //!< \details irradiance spectrum
 
-//! \struct geodata
-//! \brief %Geolocation coordinates and angles present in the GEODATA group of the GOME1 netCDF file.
+  struct refspec
+   {
+    vector<float> ref_spec;                                                     //!< \details the reference spectrum
+    vector<float> ref_sigma;                                                    //!< \details error on the reference spectrum
+    vector<short> spectral_index;                                               //!< \details index of the spectral wavelength grid (see CALIBRATION/wavelength)
+   };
 
-struct geodata
- {
-  vector<float> sza;                                                            //!< \details Solar zenith angle
-  vector<float> sza_sat;                                                        //!< \details Solar zenith angle at satellite
-  vector<float> saa;                                                            //!< \details Solar azimuth angle
-  vector<float> saa_sat;                                                        //!< \details Solar azimuth angle_sat at satellite
-  vector<float> vza;                                                            //!< \details Viewing zenith angle
-  vector<float> vza_sat;                                                        //!< \details Viewing zenith angle at satellite
-  vector<float> vaa;                                                            //!< \details Viewing azimuth angle
-  vector<float> vaa_sat;                                                        //!< \details Viewing azimuth angle at satellite
-  vector<float> lon;                                                            //!< \details pixel center longitude
-  vector<float> lat;                                                            //!< \details pixel center latitude
-  vector<float> alt_sat;                                                        //!< \details Satellite altitude
-  vector<float> lat_bounds;                                                     //!< \details The corner coordinate latitudes of each observation
-  vector<float> lon_bounds;                                                     //!< \details The corner coordinate longitudes of each observation
-  vector<float> earth_rad;                                                      //!< \details The earth radius
- };
+  //! \struct geodata
+  //! \brief %Geolocation coordinates and angles present in the GEODATA group of the GOME1 netCDF file.
 
-//! \struct clouddata
-//! \brief Information on clouds contained in the CLOUDDATA group of the GOME1 netCDF file.
+  struct geodata
+   {
+    vector<float> sza;                                                          //!< \details Solar zenith angle
+    vector<float> sza_sat;                                                      //!< \details Solar zenith angle at satellite
+    vector<float> saa;                                                          //!< \details Solar azimuth angle
+    vector<float> saa_sat;                                                      //!< \details Solar azimuth angle_sat at satellite
+    vector<float> vza;                                                          //!< \details Viewing zenith angle
+    vector<float> vza_sat;                                                      //!< \details Viewing zenith angle at satellite
+    vector<float> vaa;                                                          //!< \details Viewing azimuth angle
+    vector<float> vaa_sat;                                                      //!< \details Viewing azimuth angle at satellite
+    vector<float> lon;                                                          //!< \details pixel center longitude
+    vector<float> lat;                                                          //!< \details pixel center latitude
+    vector<float> alt_sat;                                                      //!< \details Satellite altitude
+    vector<float> lat_bounds;                                                   //!< \details The corner coordinate latitudes of each observation
+    vector<float> lon_bounds;                                                   //!< \details The corner coordinate longitudes of each observation
+    vector<float> earth_rad;                                                    //!< \details The earth radius
+   };
 
-struct clouddata
- {
-  vector<float> cloud_alb;                                                      //!< \details Cloud albedo
-  vector<float> cloud_alb_prec;                                                 //!< \details Cloud albedo precision
-  vector<float> cloud_frac;                                                     //!< \details Cloud fraction
-  vector<float> cloud_frac_prec;                                                //!< \details Cloud fraction precision
-  vector<float> cloud_hgt;                                                      //!< \details Cloud height
-  vector<float> cloud_hgt_prec;                                                 //!< \details Cloud height precision
-  vector<float> cloud_pres;                                                     //!< \details Cloud pressure
-  vector<float> cloud_pres_prec;                                                //!< \details Cloud pressure precision
-  vector<float> surf_hgt;                                                       //!< \details Surface height (kms)
+  //! \struct clouddata
+  //! \brief Information on clouds contained in the CLOUDDATA group of the GOME1 netCDF file.
 
-  vector<unsigned char> snow_ice_flag;                                          //!< \details Snow/ice flag (0 : normal)
-  vector<unsigned char> sun_glint;                                              //!< \details Possible Sun-glint derived by a geometrical calculation using viewing angles (0 = no, 1 = yes)
- };
-}
+  struct clouddata
+   {
+    vector<float> cloud_alb;                                                    //!< \details Cloud albedo
+    vector<float> cloud_alb_prec;                                               //!< \details Cloud albedo precision
+    vector<float> cloud_frac;                                                   //!< \details Cloud fraction
+    vector<float> cloud_frac_prec;                                              //!< \details Cloud fraction precision
+    vector<float> cloud_hgt;                                                    //!< \details Cloud height
+    vector<float> cloud_hgt_prec;                                               //!< \details Cloud height precision
+    vector<float> cloud_pres;                                                   //!< \details Cloud pressure
+    vector<float> cloud_pres_prec;                                              //!< \details Cloud pressure precision
+    vector<float> surf_hgt;                                                     //!< \details Surface height (kms)
+
+    vector<unsigned char> snow_ice_flag;                                        //!< \details Snow/ice flag (0 : normal)
+    vector<unsigned char> sun_glint;                                            //!< \details Possible Sun-glint derived by a geometrical calculation using viewing angles (0 = no, 1 = yes)
+   };
+
+  //! \struct GOME1NETCDF_REF
+  //! \brief information for automatic reference selection
+
+  typedef struct _gome1netCDF_refSelection {
+    double sza;                                                                 //!< \details solar zenith angle
+    INDEX  pixelNumber;                                                         //!< \details pixel number
+    INDEX  pixelType;                                                           //!< \details pixel type
+    double latitude;                                                            //!< \details latitude
+    double longitude;                                                           //!< \details longitude
+    double cloudFraction;                                                       //!< \details cloud fraction
+  }
+  GOME1NETCDF_REF;
+
+  //! \struct GOME1NETCDF_ORBIT_FILE
+  //! \brief description of an orbit in GOME1 netCDF format
+
+  typedef struct _gome1netCDF_orbitFiles
+  {
+    char fileName[MAX_STR_LEN+1];                                               //!< \details the name of the file with a part of the orbit
+
+    GOME1NETCDF_REF *refInfo[4];                                                //!< \details the minimum information useful for automatic reference selection
+    int refNum[4];                                                              //!< \details number of reference spectra
+
+    geodata ground_geodata;                                                     //!< \details Keep the geolocation data and angles content from the MODE_NADIR group as far as the netCDF file is open
+    geodata backscan_geodata;                                                   //!< \details Keep the geolocation data and angles content from the MODE_NADIR_BACKSCAN group as far as the netCDF file is open
+    clouddata ground_clouddata;                                                 //!< \details Keep the cloud information content from the MODE_NADIR group as far as the netCDF file is open
+    clouddata backscan_clouddata;                                               //!< \details Keep the cloud information content from the MODE_NADIR_BACKSCAN group as far as the netCDF file is open
+    calib calibration;                                                          //!< \details Keep information on the wavelength grids as far as the netCDF file is open
+    refspec irradiance;                                                         //!< \details Keep information on the irradiance spectrum as far as the netCDF file is open
+
+    size_t det_size;                                                            //!< \details The current detector size
+    size_t scan_size;                                                           //!< \details The number of lines in the MODE_NADIR group
+    size_t scan_size_bs;                                                        //!< \details The number of lines in the MODE_NADIR_BACKSCAN group
+    size_t pixel_size;                                                          //!< \details The number of ground pixels in one scan line (3 for the MODE_NADIR group)
+    size_t pixel_size_bs;                                                       //!< \details The number of backscan pixels in one scan line (1 for the MODE_NADIR_BACKSCAN group)
+    int start_pixel;                                                            //!< \details start pixel in the channel (depend on the selected band)
+
+    vector<int>scanline_indexes;
+    vector<int>scanline_pixtype;
+    vector<int>scanline_pixnum;
+    vector<int>alongtrack_indexes;
+    vector<double> delta_time; // number of milliseconds after reference_time
+    time_t reference_time;
+
+    string mode;                                                                  //!< \details mode MODE_NADIR or MODE_NARROW_SWATH
+    string mode_bs;                                                               //!< \details mode MODE_NADIR_BACKSCAN or MODE_NARROW_SWATH_BACKSCAN
+
+    // GDP_BIN_INFO *gdpBinInfo;                                                     //!< \details useful information on records for fast access
+    // INDEX gdpBinBandIndex;                                                        //!< \details indexes of bands present in the current file
+    // unsigned short             *gdpBinReference,                                  //!< \details      // buffer for irradiance spectra
+    //                    *gdpBinRefError;                                           //!< \details errors on irradiance spectra
+    int specNumber;                                                               //!< \details total number of spectra in the file
+    int n_alongtrack;                                                             //!< \details total number of spectra per row (pixel type)
+    RC rc;
+  }
+  GOME1NETCDF_ORBIT_FILE;
+ }    // end namespace
 
 // ================
 // STATIC VARIABLES
 // ================
 
-//! \struct GOME1NETCDF_ORBIT_FILE
-//! \brief description of an orbit in GOME1 netCDF format
-
-typedef struct _gome1netCDF_orbitFiles
-{
-  char fileName[MAX_STR_LEN+1];                                                 //!< \details the name of the file with a part of the orbit
-
-  geodata ground_geodata;                                                       //!< \details Keep the geolocation data and angles content from the MODE_NADIR group as far as the netCDF file is open
-  geodata backscan_geodata;                                                     //!< \details Keep the geolocation data and angles content from the MODE_NADIR_BACKSCAN group as far as the netCDF file is open
-  clouddata ground_clouddata;                                                   //!< \details Keep the cloud information content from the MODE_NADIR group as far as the netCDF file is open
-  clouddata backscan_clouddata;                                                 //!< \details Keep the cloud information content from the MODE_NADIR_BACKSCAN group as far as the netCDF file is open
-  calib calibration;                                                            //!< \details Keep information on the wavelength grids as far as the netCDF file is open
-  refspec irradiance;                                                           //!< \details Keep information on the irradiance spectrum as far as the netCDF file is open
-
-  size_t det_size;                                                              //!< \details The current detector size
-  size_t scan_size;                                                             //!< \details The number of lines in the MODE_NADIR group
-  size_t scan_size_bs;                                                          //!< \details The number of lines in the MODE_NADIR_BACKSCAN group
-  size_t pixel_size;                                                            //!< \details The number of ground pixels in one scan line (3 for the MODE_NADIR group)
-  size_t pixel_size_bs;                                                         //!< \details The number of backscan pixels in one scan line (1 for the MODE_NADIR_BACKSCAN group)
-  int start_pixel;                                                              //!< \details start pixel in the channel (depend on the selected band)
-
-  vector<int>scanline_indexes;
-  vector<int>scanline_pixtype;
-  vector<int>scanline_pixnum;
-  vector<int>alongtrack_indexes;
-  vector<double> delta_time; // number of milliseconds after reference_time
-  time_t reference_time;
-
-  // GDP_BIN_INFO *gdpBinInfo;                                                     //!< \details useful information on records for fast access
-  // INDEX gdpBinBandIndex;                                                        //!< \details indexes of bands present in the current file
-  // unsigned short             *gdpBinReference,                                  //!< \details      // buffer for irradiance spectra
-  //                    *gdpBinRefError;                                           //!< \details errors on irradiance spectra
-  int specNumber;                                                               //!< \details total number of spectra in the file
-  int n_alongtrack;                                                             //!< \details total number of spectra per row (pixel type)
-  RC rc;
-}
-GOME1NETCDF_ORBIT_FILE;
-
-// ---------------------
-// VARIABLES DECLARATION
-// ---------------------
-
-#define MAX_GOME_FILES 50 // maximum number of files per orbit
-
-typedef struct _gome_ref_ {
-  INDEX  indexFile;
-  INDEX  indexRecord;
-  INDEX  pixelNumber;
-  INDEX  pixelType;
-  double sza;
-  double latitude;
-  double longitude;
-  double szaDist;
-  double latDist;
-} GDP_BIN_REF;
-
-// ================
-// GLOBAL VARIABLES
-// ================
+// references for each pixel type and for each analysis window;
+static struct reference (*vza_refs)[NUM_VZA_REFS];
 
 static GOME1NETCDF_ORBIT_FILE gome1netCDF_orbitFiles[MAX_GOME_FILES];           //!< \details list of files for an orbit
 
@@ -460,22 +465,19 @@ static calib GOME1NETCDF_Read_Calib(NetCDFGroup calib_group)
 //!
 //! \fn      void  GOME1NETCDF_Get_Wavelength(ENGINE_CONTEXT *pEngineContext,int channel_index,int temp_index,double *wavelength)
 //! \details Load  get information on the irradiance from the IRRADIANCE group
-//! \param   [in]  pEngineContext pointer to the engine context (to get the default irradiance)
 //! \param   [in]  channel_index  the index of the channel
 //! \param   [in]  temp_index     the index of the temperature (called spectral_index in the netCDF file)
 //! \param   [out] wavelength     the wavelength grid for the specified temperature
 //!
 // -----------------------------------------------------------------------------
 
-void GOME1NETCDF_Get_Wavelength(GOME1NETCDF_ORBIT_FILE *pOrbitFile,ENGINE_CONTEXT *pEngineContext,int channel_index,int temp_index,double *wavelength)
+void GOME1NETCDF_Get_Wavelength(GOME1NETCDF_ORBIT_FILE *pOrbitFile,int channel_index,int temp_index,double *wavelength)
  {
   auto wve = reinterpret_cast<const float(*)[pOrbitFile->calibration.channel_number][pOrbitFile->calibration.channel_size]>(pOrbitFile->calibration.wavelength.data());
 
   if ((temp_index>=0) && (temp_index<pOrbitFile->calibration.temp_number) && (channel_index>=0) && (channel_index<pOrbitFile->calibration.channel_size))
    for (int i=0;i<(int)pOrbitFile->calibration.channel_size;i++)
     wavelength[i]=wve[temp_index][channel_index][i];
-  else
-   memcpy(wavelength,pEngineContext->buffers.lambda_irrad,sizeof(double)*pOrbitFile->calibration.channel_size);
  }
 
 // -----------------------------------------------------------------------------
@@ -517,31 +519,15 @@ static refspec GOME1NETCDF_Read_Irrad(NetCDFGroup irrad_group,int channelIndex)
 //!
 //! \fn      void GOME1NETCDF_Get_Irradiance (ENGINE_CONTEXT *pEngineContext,int channel_index,double *wavelength,double *irrad)
 //! \details get irradiance from the IRRADIANCE group and its calibration from the CALIBRATION group
-//! \param   [in]  pEngineContext pointer to the engine context (to get the default irradiance)
 //! \channel [in]  channel_index the index of the requested channel
 //! \param   [out] wavelength    the wavelength grid of the irradiance spectrum
 //! \param   [out] irrad         the irradiance spectrum
 //!
 // -----------------------------------------------------------------------------
 
-void GOME1NETCDF_Get_Irradiance (GOME1NETCDF_ORBIT_FILE *pOrbitFile,ENGINE_CONTEXT *pEngineContext,int channel_index,double *wavelength,double *irrad)
+void GOME1NETCDF_Get_Irradiance(GOME1NETCDF_ORBIT_FILE *pOrbitFile,int channel_index,double *wavelength,double *irrad)
  {
-  // Declarations
-
-  NetCDFGroup calib_group;
-  NetCDFGroup irrad_group;
-
-  // Load the wavelengths grids
-
-  calib_group=current_file.getGroup(root_name+"/CALIBRATION");
-  pOrbitFile->calibration=GOME1NETCDF_Read_Calib(calib_group);
-
-  // Load the irradiance spectrum
-
-  irrad_group=current_file.getGroup(root_name+"/IRRADIANCE");
-  pOrbitFile->irradiance=GOME1NETCDF_Read_Irrad(irrad_group,channel_index);
-
-  GOME1NETCDF_Get_Wavelength(pOrbitFile,pEngineContext,channel_index,(int)pOrbitFile->irradiance.spectral_index[0],wavelength);
+  GOME1NETCDF_Get_Wavelength(pOrbitFile,channel_index,(int)pOrbitFile->irradiance.spectral_index[0],wavelength);
 
   for (int i=0;i<(int)pOrbitFile->calibration.channel_size;i++)
    irrad[i]=(double)pOrbitFile->irradiance.ref_spec[i];
@@ -571,6 +557,7 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
   NetCDFGroup clouddata_group;
   NetCDFGroup obs_group;
   NetCDFGroup irrad_group;
+  NetCDFGroup calib_group;
   RC rc = ERROR_ID_NO;
   int selected_band;
   vector<int> scanline;
@@ -623,8 +610,6 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
     // Release old buffers
     GOME1NETCDF_Cleanup();
 
-    // Get the number of files to load
-    gome1netCDF_orbitFilesN = 0;
     if ((THRD_id==THREAD_TYPE_ANALYSIS) && pEngineContext->analysisRef.refAuto)
      {
       gome1netCDF_loadReferenceFlag=1;
@@ -660,7 +645,7 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
     // Load files
 
     gome1netCDF_totalRecordNumber=0;
-    for (int indexFile=0;indexFile<gome1netCDF_orbitFilesN;indexFile++)
+    for (int indexFile=0;(indexFile<gome1netCDF_orbitFilesN) && !rc;indexFile++)
      {
       pOrbitFile=&gome1netCDF_orbitFiles[indexFile];
       pOrbitFile->specNumber=0;
@@ -670,7 +655,7 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
 
       try
        {
-        current_file = NetCDFFile(pEngineContext->fileInfo.fileName,NC_NOWRITE);    // open file
+        current_file = NetCDFFile(pOrbitFile->fileName,NC_NOWRITE);    // open file
         root_name = current_file.getName();                                         // get the root name (should be the file name)
         root_group = current_file.getGroup(root_name);                              // go to the root
         set_reference_time(pOrbitFile,current_file.getAttText("time_reference"));   // get the reference time
@@ -680,6 +665,21 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
         pOrbitFile->pixel_size=
         pOrbitFile->pixel_size_bs=(size_t)0;
 
+        // Load the wavelengths grids
+
+        calib_group=current_file.getGroup(root_name+"/CALIBRATION");
+        pOrbitFile->calibration=GOME1NETCDF_Read_Calib(calib_group);
+
+        // Load the irradiance spectrum
+
+        irrad_group=current_file.getGroup(root_name+"/IRRADIANCE");
+        pOrbitFile->irradiance=GOME1NETCDF_Read_Irrad(irrad_group,channel_index);
+
+        // MODE_NADIR or MODE_NARROW_SWATH ?
+
+        pOrbitFile->mode=(current_file.groupID(root_name+"/MODE_NADIR/"+gome1netcdf_bandName[selected_band])!=-1)?"/MODE_NADIR/":"/MODE_NARROW_SWATH/";
+        pOrbitFile->mode_bs=(current_file.groupID(root_name+"/MODE_NADIR_BACKSCAN/"+gome1netcdf_bandName[selected_band])!=-1)?"/MODE_NADIR_BACKSCAN/":"/MODE_NARROW_SWATH_BACKSCAN/";
+
              // Dimensions of spectra are 'time' x 'scan_size' x 'pixel_size ' x 'spectral_channel'
              // For example : 1 x 552 x 3 x 832
 
@@ -687,21 +687,21 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
 
         if (pInstrumental->gomenetcdf.pixelType!=PRJCT_INSTR_GOME1_PIXEL_BACKSCAN)   // if not backscan pixels only
          {
-          band_group = current_file.getGroup(root_name+"/MODE_NADIR/"+gome1netcdf_bandName[selected_band]);
+          band_group = current_file.getGroup(root_name+pOrbitFile->mode+gome1netcdf_bandName[selected_band]);
 
           pEngineContext->project.instrumental.use_row[0]=
           pEngineContext->project.instrumental.use_row[1]=
           pEngineContext->project.instrumental.use_row[2]=true;
 
           if ((band_group.dimLen("time")!=1) || (band_group.dimLen("ground_pixel")!=3))
-           rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_FORMAT, "Dimensions of ground pixels in the GOME1 netCDF file are not the expected ones");  // in case of error, capture the message
-          else
+           pOrbitFile->rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_FORMAT, "Dimensions of ground pixels in the GOME1 netCDF file are not the expected ones");  // in case of error, capture the message
+          // else if (pOrbitFile->refInfo[0]=(GOME1NETCDF_REF *)... allocation
            {
             // Get the different groups
 
-            geodata_group = current_file.getGroup(root_name+"/MODE_NADIR/"+gome1netcdf_bandName[selected_band]+"/GEODATA");
-            clouddata_group = current_file.getGroup(root_name+"/MODE_NADIR/"+gome1netcdf_bandName[selected_band]+"/CLOUDDATA");
-            obs_group = current_file.getGroup(root_name+"/MODE_NADIR/"+gome1netcdf_bandName[selected_band]+"/OBSERVATIONS");
+            geodata_group = current_file.getGroup(root_name+pOrbitFile->mode+gome1netcdf_bandName[selected_band]+"/GEODATA");
+            clouddata_group = current_file.getGroup(root_name+pOrbitFile->mode+gome1netcdf_bandName[selected_band]+"/CLOUDDATA");
+            obs_group = current_file.getGroup(root_name+pOrbitFile->mode+gome1netcdf_bandName[selected_band]+"/OBSERVATIONS");
 
             // Get the scanline and pixel size for ground pixel
 
@@ -729,18 +729,18 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
 
         if (pInstrumental->gomenetcdf.pixelType!=PRJCT_INSTR_GOME1_PIXEL_GROUND)     // if not ground pixels only
          {
-          band_group = current_file.getGroup(root_name+"/MODE_NADIR_BACKSCAN/"+gome1netcdf_bandName[selected_band]);
+          band_group = current_file.getGroup(root_name+pOrbitFile->mode_bs+gome1netcdf_bandName[selected_band]);
           pEngineContext->project.instrumental.use_row[3]=true;
 
           if ((band_group.dimLen("time")!=1) || (band_group.dimLen("ground_pixel")!=1))
-           rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_FORMAT, "Dimensions of backscan pixels in the GOME1 netCDF file are not the expected ones");  // in case of error, capture the message
+           pOrbitFile->rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_FORMAT, "Dimensions of backscan pixels in the GOME1 netCDF file are not the expected ones");  // in case of error, capture the message
           else
            {
             // Get the different groups
 
-            geodata_group = current_file.getGroup(root_name+"/MODE_NADIR_BACKSCAN/"+gome1netcdf_bandName[selected_band]+"/GEODATA");
-            clouddata_group = current_file.getGroup(root_name+"/MODE_NADIR_BACKSCAN/"+gome1netcdf_bandName[selected_band]+"/CLOUDDATA");
-            obs_group = current_file.getGroup(root_name+"/MODE_NADIR_BACKSCAN/"+gome1netcdf_bandName[selected_band]+"/OBSERVATIONS");
+            geodata_group = current_file.getGroup(root_name+pOrbitFile->mode_bs+gome1netcdf_bandName[selected_band]+"/GEODATA");
+            clouddata_group = current_file.getGroup(root_name+pOrbitFile->mode_bs+gome1netcdf_bandName[selected_band]+"/CLOUDDATA");
+            obs_group = current_file.getGroup(root_name+pOrbitFile->mode_bs+gome1netcdf_bandName[selected_band]+"/OBSERVATIONS");
 
             // Get the scanline and pixel size for backscans
 
@@ -767,6 +767,18 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
         // Assign size and allocate buffers to keep information as long as the file is open
 
         pOrbitFile->specNumber=pOrbitFile->scan_size*pOrbitFile->pixel_size+pOrbitFile->scan_size_bs*pOrbitFile->pixel_size_bs;  // get the total number of records (ground pixels + backscans)
+
+        // !!!!!!!!!!!!!!!!!!!!!!
+
+
+
+
+
+
+
+
+
+
 
         pOrbitFile->start_pixel=startpixel[0];
 
@@ -859,7 +871,7 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
        }
       catch (std::runtime_error& e)
        {
-        rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, e.what());  // in case of error, capture the message
+        pOrbitFile->rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, e.what());  // in case of error, capture the message
        }
 
       // Return
@@ -869,45 +881,17 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
       if (iscan_bs!=NULL)
        free(iscan_bs);
 
-      // ++++++++++++++ read file and fill gdpBinInfo ???
-
-      // TO control later  if (pOrbitFile->gdpBinHeader.version<40) {
-      // TO control later    if (fread(&pOrbitFile->gdpBinGeo3,sizeof(GEO_3),1,fp) != 1)
-      // TO control later      return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_BAD_FORMAT, pOrbitFile->filename);
-      // TO control later
-      // TO control later    pOrbitFile->gdpBinInfo[indexRecord].sza=pOrbitFile->gdpBinGeo3.szaArray[1];
-      // TO control later    pOrbitFile->gdpBinInfo[indexRecord].lat=0.01*pOrbitFile->gdpBinGeo3.latArray[4];
-      // TO control later    pOrbitFile->gdpBinInfo[indexRecord].lon=0.01*pOrbitFile->gdpBinGeo3.lonArray[4];
-      // TO control later    pOrbitFile->gdpBinInfo[indexRecord].cloudfrac=pOrbitFile->gdpBinGeo3.cloudFraction;
-      // TO control later  } else { // gdpBinHeader.version >= 40:
-      // TO control later    if (fread(&pOrbitFile->gdpBinGeo4,sizeof(GEO_4),1,fp) != 1)
-      // TO control later      return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_BAD_FORMAT, pOrbitFile->filename);
-      // TO control later
-      // TO control later    pOrbitFile->gdpBinInfo[indexRecord].sza=pOrbitFile->gdpBinGeo4.szaArrayBOA[1];
-      // TO control later    pOrbitFile->gdpBinInfo[indexRecord].lat=0.01*pOrbitFile->gdpBinGeo4.latArray[4];
-      // TO control later    pOrbitFile->gdpBinInfo[indexRecord].lon=0.01*pOrbitFile->gdpBinGeo4.lonArray[4];
-      // TO control later    pOrbitFile->gdpBinInfo[indexRecord].cloudfrac=pOrbitFile->gdpBinGeo4.cloudInfo.CloudFraction[0];
-      // TO control later  }
-      // TO control later  pOrbitFile->gdpBinInfo[indexRecord].pixelNumber=pOrbitFile->gdpBinSpectrum.groundPixelID;
-      // TO control later  pOrbitFile->gdpBinInfo[indexRecord].pixelType=pOrbitFile->gdpBinSpectrum.groundPixelType;
-      // TO control later}
-
       if (!strcasecmp(pEngineContext->fileInfo.fileName,pOrbitFile->fileName))
-        gome1netCDF_currentFileIndex=indexFile;
+       gome1netCDF_currentFileIndex=indexFile;
 
       gome1netCDF_totalRecordNumber+=pOrbitFile->specNumber;
-
-      if (rc!=ERROR_ID_NO)
-        pOrbitFile->rc=rc;
-
-      rc=ERROR_ID_NO;
      }
    } // end if (currentfileindex == ITEM_NONE)
 
-  if (gome1netCDF_currentFileIndex!=ITEM_NONE
-      && (pEngineContext->recordNumber=gome1netCDF_orbitFiles[gome1netCDF_currentFileIndex].specNumber)>0
-      && !rc
-      && !(rc=gome1netCDF_orbitFiles[gome1netCDF_currentFileIndex].rc))
+  if (!rc
+      && gome1netCDF_currentFileIndex!=ITEM_NONE
+      && !(rc=gome1netCDF_orbitFiles[gome1netCDF_currentFileIndex].rc)
+      && (pEngineContext->recordNumber=gome1netCDF_orbitFiles[gome1netCDF_currentFileIndex].specNumber)>0)
 
    {
     pOrbitFile=&gome1netCDF_orbitFiles[gome1netCDF_currentFileIndex];
@@ -915,15 +899,17 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
     current_file = NetCDFFile(pEngineContext->fileInfo.fileName,NC_NOWRITE);    // open current file
     root_name = current_file.getName();                                         // get the root name (should be the file name)
 
-    pEngineContext->n_crosstrack=4;
+    pEngineContext->n_crosstrack=NUM_VZA_REFS;
     pEngineContext->n_alongtrack=pOrbitFile->n_alongtrack;
 
     // Irradiance spectrum
 
-    GOME1NETCDF_Get_Irradiance(pOrbitFile,pEngineContext,channel_index,pEngineContext->buffers.lambda_irrad,pEngineContext->buffers.irrad);
+    GOME1NETCDF_Get_Irradiance(pOrbitFile,channel_index,pEngineContext->buffers.lambda_irrad,pEngineContext->buffers.irrad);
 
     for(i=0; i<MAX_SWATHSIZE; ++i)
      NDET[i]=(int)pOrbitFile->calibration.channel_size;
+
+    current_file.close();
    }
 
   return rc;
@@ -937,13 +923,14 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
 //! \details Read a specified record from a file in netCDF format
 //! \param   [in]  pEngineContext  pointer to the engine context; some fields are affected by this function.\n
 //! \param   [in]  recordNo        the index of the record to read\n
+//! \param   [in]  fileIndex       the index of the orbit file (in automatic reference selection, all files of the current folder could be loaded)
 //! \return  ERROR_ID_FILE_END if the requested record number is not found\n
 //!          ERROR_ID_FILE_RECORD if the requested record doesn't satisfy current criteria (for example for the selection of the reference)\n
 //!          ERROR_ID_NO on success
 //!
 // -----------------------------------------------------------------------------
 
-RC GOME1NETCDF_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
+RC GOME1NETCDF_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
  {
   // Declarations
 
@@ -966,7 +953,7 @@ RC GOME1NETCDF_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
 
   // Initializations
 
-  pOrbitFile=&gome1netCDF_orbitFiles[gome1netCDF_currentFileIndex];
+  pOrbitFile=&gome1netCDF_orbitFiles[(fileIndex==ITEM_NONE)?gome1netCDF_currentFileIndex:fileIndex];
   pRecordInfo=&pEngineContext->recordInfo;
   pRecordInfo->i_alongtrack=pOrbitFile->alongtrack_indexes[recordNo-1];                  // because in mediate, use +1
   pInstrumental=&pEngineContext->project.instrumental;
@@ -1069,7 +1056,10 @@ RC GOME1NETCDF_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
 
     // Get spectra
 
-    obs_group = current_file.getGroup(root_name+((pixelType==3)?"/MODE_NADIR_BACKSCAN/":"/MODE_NADIR/")+gome1netcdf_bandName[selected_band]+"/OBSERVATIONS");
+    current_file = NetCDFFile(pOrbitFile->fileName,NC_NOWRITE);                 // open current file
+    root_name = current_file.getName();                                         // get the root name (should be the file name)
+
+    obs_group = current_file.getGroup(root_name+((pixelType==3)?pOrbitFile->mode_bs:pOrbitFile->mode)+gome1netcdf_bandName[selected_band]+"/OBSERVATIONS");
 
     // auto spec = reinterpret_cast<const float(*)[det_size]>(spe.data());
 
@@ -1077,7 +1067,7 @@ RC GOME1NETCDF_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
     obs_group.getVar("radiance_precision",start,count,4,(float)0.,err);
     obs_group.getVar("spectral_index",start,count,3,(short)0,clb);
 
-    GOME1NETCDF_Get_Wavelength(pOrbitFile,pEngineContext,channel_index,(int)clb[0],pEngineContext->buffers.lambda);
+    GOME1NETCDF_Get_Wavelength(pOrbitFile,channel_index,(int)clb[0],pEngineContext->buffers.lambda);
 
     for (i=0,j=pOrbitFile->start_pixel;i<(int)pOrbitFile->det_size;i++,j++)
      {
@@ -1087,9 +1077,11 @@ RC GOME1NETCDF_Read(ENGINE_CONTEXT *pEngineContext,int recordNo)
 
     // obs_group.getVar("scanline",start,count,2,(int)0,scanline);
 
-    pRecordInfo->gome.pixelNumber=pOrbitFile->scanline_pixnum[recordNo-1];                  // pixel number
+    pRecordInfo->gome.pixelNumber=pOrbitFile->scanline_pixnum[recordNo-1];      // pixel number
     pRecordInfo->gome.pixelType=pixelType;                                      // pixel type
     pRecordInfo->i_crosstrack=pixelType;
+
+    current_file.close();
    }
 
   // Release buffers
@@ -1119,11 +1111,18 @@ void GOME1NETCDF_Cleanup(void)
  {
   GOME1NETCDF_ORBIT_FILE *pOrbitFile;
 
-  current_file.close();
-
   for (int indexFile = 0;indexFile<gome1netCDF_orbitFilesN;indexFile++)
    {
     pOrbitFile=&gome1netCDF_orbitFiles[indexFile];
+
+    for (int j=0;j<NUM_VZA_REFS;j++)
+     {
+      if (pOrbitFile->refInfo[j]!=NULL)
+       free(pOrbitFile->refInfo[j]);
+
+      pOrbitFile->refNum[j]=0;
+      pOrbitFile->refInfo[j]=NULL;
+     }
 
     pOrbitFile->calibration = calib();
     pOrbitFile->irradiance = refspec();
@@ -1142,8 +1141,6 @@ void GOME1NETCDF_Cleanup(void)
   gome1netCDF_orbitFilesN=0;
   gome1netCDF_currentFileIndex=ITEM_NONE;
  }
-
-
 
 // -----------------------------------------------------------------------------
 // FUNCTION GOME1NETCDF_get_orbit_date
@@ -1167,6 +1164,451 @@ int GOME1NETCDF_get_orbit_date(int *orbit_year, int *orbit_month, int *orbit_day
   return  orbit_start.good() ? 0 : 1;
 }
 
+
+static void free_vza_refs(void) {
+  if (vza_refs != NULL) {
+    for (int i=0; i<NFeno; ++i) {
+      for(size_t j=0; j<NUM_VZA_REFS; ++j) {
+        free(vza_refs[i][j].spectrum);
+      }
+    }
+  }
+  free(vza_refs);
+  vza_refs=NULL;
+}
+
+// -----------------------------------------------------------------------------
+// FUNCTION get_ref_info
+// -----------------------------------------------------------------------------
+//!
+//! \fn      RC get_ref_info(GOME1NETCDF_ORBIT_FILE *pOrbitFile,GOME1NETCDF_REF *ref_list)
+//! \details Browse spectra of the current orbit file and collect information for the automatic reference selection
+//! \param   [out] ref_list  the information on spectra useful for the automatic reference selection\n
+//! \param   [in]  pOrbitFile : pointer to the current orbit file\n
+//!
+// -----------------------------------------------------------------------------
+
+static void get_ref_info(GOME1NETCDF_ORBIT_FILE *pOrbitFile,GOME1NETCDF_REF *ref_list)
+ {
+  // Global declarations
+
+  GOME1NETCDF_REF *pRef;
+  geodata geo;
+  int pixelSize;
+
+  // Declare substition variables for ground pixels
+
+  geo=pOrbitFile->ground_geodata;                                               // do not work ???
+  pixelSize=3;
+
+  auto sza_gr = reinterpret_cast<const float(*)[pixelSize][3]>(pOrbitFile->ground_geodata.sza.data());
+  auto lat_gr =  reinterpret_cast<const float(*)[pixelSize]>(pOrbitFile->ground_geodata.lat.data());
+  auto lon_gr =  reinterpret_cast<const float(*)[pixelSize]>(pOrbitFile->ground_geodata.lon.data());
+  auto cloud_gr =  reinterpret_cast<const float(*)[pixelSize]>(pOrbitFile->ground_clouddata.cloud_frac.data());
+
+  // Declare substition variables for backscan pixels
+
+  geo=pOrbitFile->backscan_geodata;
+  pixelSize=1;
+
+  auto sza_bs = reinterpret_cast<const float(*)[pixelSize][3]>(geo.sza.data());
+  auto lat_bs =  reinterpret_cast<const float(*)[pixelSize]>(geo.lat.data());
+  auto lon_bs =  reinterpret_cast<const float(*)[pixelSize]>(geo.lon.data());
+
+  auto cloud_bs =  reinterpret_cast<const float(*)[pixelSize]>(pOrbitFile->backscan_clouddata.cloud_frac.data());
+
+  for (int i=0;i<pOrbitFile->specNumber;i++)
+   {
+    // Declarations
+
+    size_t scanIndex=pOrbitFile->scanline_indexes[i];                           // index in the ground pixel scanlines or backscan scanlines
+    int    pixelType=pOrbitFile->scanline_pixtype[i];                           // pixel type
+    size_t pixelIndex=(pixelType==3)?0:pixelType;                               // index of the pixel in the scan : should be 0,1,2 for ground pixels and 0 for backscans
+
+    // Get useful information for automatic reference selection
+
+    pRef=&ref_list[i];
+
+    pRef->pixelType=pixelType;
+    pRef->sza=(pixelType==3)?sza_bs[scanIndex][pixelIndex][1]:sza_gr[scanIndex][pixelIndex][1];
+    pRef->latitude=(pixelType==3)?lat_bs[scanIndex][pixelIndex]:lat_gr[scanIndex][pixelIndex];
+    pRef->longitude=(pixelType==3)?lon_bs[scanIndex][pixelIndex]:lon_gr[scanIndex][pixelIndex];
+    pRef->cloudFraction=(pixelType==3)?cloud_bs[scanIndex][pixelIndex]:cloud_gr[scanIndex][pixelIndex];
+
+    // {
+    //  FILE *fp;
+    //  fp=fopen("toto.dat","a+t");
+    //  fprintf(fp,"--- %d %d %g %g %g\n",(i+1),pixelType,pRef->latitude,pRef->longitude,pRef->sza);
+    //  fclose(fp);
+    // }
+
+   }
+ }
+
+static bool use_as_reference(GOME1NETCDF_REF *pRef,const FENO *feno)
+ {
+  const double latDelta = fabs(feno->refLatMin - feno->refLatMax);
+  const double lonDelta = fabs(feno->refLonMin - feno->refLonMax);
+  const double cloudDelta = fabs(feno->cloudFractionMin - feno->cloudFractionMax);
+
+  // Check if the current record satisfies reference selection
+
+  const bool match_lat = latDelta <= EPSILON || (pRef->latitude >= feno->refLatMin && pRef->latitude <= feno->refLatMax);
+  const bool match_lon = lonDelta <= EPSILON
+        || ( (feno->refLonMin < feno->refLonMax && pRef->longitude >=feno->refLonMin && pRef->longitude <= feno->refLonMax)
+          || (feno->refLonMin >= feno->refLonMax && (pRef->longitude >= feno->refLonMin || pRef->longitude <= feno->refLonMax))
+           ); // if refLonMin > refLonMax, we have either lonMin < lon < 360, or 0 < lon < refLonMax
+
+  const bool match_sza = feno->refSZADelta <= EPSILON || (fabs(pRef->sza-feno->refSZA) <= feno->refSZADelta);
+  const bool match_cloud = cloudDelta <= EPSILON || (pRef->cloudFraction>9.e36) || (pRef->cloudFraction >= feno->cloudFractionMin && pRef->cloudFraction <= feno->cloudFractionMax);
+
+  // if (match_lat && match_lon && match_sza)
+  // {
+  //  FILE *fp;
+  //  fp=fopen("toto.dat","a+t");
+  //  fprintf(fp,"%d %g %g %g\n",pRef->pixelType,pRef->latitude,pRef->longitude,pRef->sza);
+  //  fclose(fp);
+  // }
+
+
+  return (match_lat && match_lon && match_sza && match_cloud);
+ }
+
+// create a list of all spectra that match reference selection criteria for one or more analysis windows.
+static int find_ref_spectra(struct ref_list *(*selected_spectra)[NUM_VZA_REFS], struct ref_list **list_handle)
+ {
+  // zero-initialize
+  for (int i=0; i<NFeno; ++i)
+   {
+    for (size_t j=0; j<NUM_VZA_REFS; ++j)
+     selected_spectra[i][j] = (struct ref_list *)NULL;
+   }
+  *list_handle = NULL;
+
+  // iterate over all orbit files in same directory
+  for (int i=0; i<gome1netCDF_orbitFilesN; ++i) {
+    GOME1NETCDF_ORBIT_FILE *pOrbitFile=&gome1netCDF_orbitFiles[i];
+    size_t n_wavel = pOrbitFile->calibration.channel_size;
+    GOME1NETCDF_REF *refList;
+
+    // {
+    //  FILE *fp;
+    //  fp=fopen("toto.dat","a+t");
+    //  fprintf(fp,"%s\n",pOrbitFile->fileName);
+    //  fclose(fp);
+    // }
+
+
+    if ((refList=(GOME1NETCDF_REF *)malloc(pOrbitFile->specNumber*sizeof(GOME1NETCDF_REF)))!=NULL)
+     {
+      get_ref_info(pOrbitFile,refList);
+
+      for (int j=0; j<pOrbitFile->specNumber; ++j) {
+        // each spectrum can be used for multiple analysis windows, so
+        // we use one copy, and share the pointer between the different
+        // analysis windows. We initialize as NULL, it becomes not-null
+        // as soon as it is used in one or more analysis windows:
+        struct ref_spectrum *ref = NULL;
+        RC rc;
+
+        // check if this spectrum satisfies constraints for one of the analysis windows:
+        for(int analysis_window = 0; analysis_window<NFeno; analysis_window++) {
+          const int pixel_type = pOrbitFile->scanline_pixtype[j];
+          const FENO *pTabFeno = &TabFeno[pixel_type][analysis_window];
+
+          if (!pTabFeno->hidden
+              && pTabFeno->useKurucz!=ANLYS_KURUCZ_SPEC
+              && pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC
+              && use_as_reference(&refList[j],pTabFeno) ) {
+
+               // {
+               //  FILE *fp;
+               //  fp=fopen("toto.dat","a+t");
+               //  fprintf(fp,"Found %d %d %d %d\n",i,j,analysis_window,pixel_type);
+               //  fclose(fp);
+               // }
+
+            if (ref == NULL) {
+              // ref hasn't been initialized yet for another analysis window, so do that now:
+              ref = (struct ref_spectrum *)malloc(sizeof(struct ref_spectrum));
+              ref->lambda = (double *)malloc(n_wavel*sizeof(*ref->lambda));
+              ref->spectrum = (double *)malloc(n_wavel*sizeof(*ref->spectrum));
+
+              // store the new reference at the front of the linked list:
+              struct ref_list *newRef = (struct ref_list *)malloc(sizeof(*newRef));
+              newRef->ref = ref;
+              newRef->next = *list_handle;
+              *list_handle = newRef;
+
+              if ((rc = GOME1NETCDF_Read(&ENGINE_contextRef, j, i))!= ERROR_ID_NO)
+               return rc;
+
+              for (int k=0; k<(int)n_wavel; ++k)
+               {
+                ref->lambda[k] = ENGINE_contextRef.buffers.lambda[k];
+                ref->spectrum[k] = ENGINE_contextRef.buffers.spectrum[k];
+               }
+            }
+
+            // store ref at the front of the list of selected references for this analysis window and vza bin.
+            struct ref_list *list_item = (struct ref_list *)malloc(sizeof(struct ref_list));
+            list_item->ref = ref;
+            list_item->next = selected_spectra[analysis_window][pixel_type];
+            selected_spectra[analysis_window][pixel_type] = list_item;
+          }
+        }
+      }
+
+      free(refList);
+     }
+  }
+
+  return ERROR_ID_NO;
+}
+
+static void initialize_vza_refs(void) {
+  free_vza_refs(); // will free previous allocated structures, if any.
+
+  vza_refs = (struct reference (*)[4])malloc(NFeno * sizeof(*vza_refs));
+
+  // Build array of pointers to the collection of VZA references:
+  for (int i=0; i<NFeno; ++i) {
+    const int n_wavel = TabFeno[0][i].NDET;
+    for(size_t j=0; j<NUM_VZA_REFS; ++j) {
+      struct reference *ref = &vza_refs[i][j];
+      ref->spectrum = (double *)malloc(n_wavel*sizeof(*ref->spectrum));
+      for (int i=0; i<n_wavel; ++i)
+        ref->spectrum[i]=0.;
+      ref->n_wavel = n_wavel;
+      ref->n_spectra = 0;
+      ref->norm = ref->shift = ref->stretch = ref->stretch2 = 0.0;
+    }
+  }
+}
+
+static int show_ref_info(int i_row, const FENO *pTabFeno, const struct reference *refs, void *responseHandle) {
+  int i_column=2;
+
+  mediateResponseLabelPage(plotPageRef, "Reference", "Reference", responseHandle);
+  mediateResponseCellDataString(plotPageRef, i_row, i_column, "Analysis window", responseHandle);
+  mediateResponseCellDataString(plotPageRef, i_row, 1+i_column, pTabFeno->windowName, responseHandle);
+  i_row+=2;
+  mediateResponseCellDataString(plotPageRef, i_row, i_column, "Earthshine reference", responseHandle);
+  mediateResponseCellDataString(plotPageRef, i_row, 1+i_column, "# spectra", responseHandle);
+  mediateResponseCellDataString(plotPageRef, i_row, 2+i_column, "shift", responseHandle);
+  mediateResponseCellDataString(plotPageRef, i_row, 3+i_column, "stretch", responseHandle);
+  ++i_row;
+  const char *pixeltype[] = {"EAST", "CENTER", "WEST", "BACKSCAN"};
+  for (int i=0; i != sizeof(pixeltype)/sizeof(pixeltype[0]); ++i) {
+    mediateResponseCellDataString(plotPageRef, i_row, i_column, pixeltype[i], responseHandle);
+    mediateResponseCellDataInteger(plotPageRef, i_row, 1+ i_column, refs[i].n_spectra, responseHandle);
+    mediateResponseCellDataDouble(plotPageRef, i_row, 2 + i_column,refs[i].shift, responseHandle);
+    mediateResponseCellDataDouble(plotPageRef, i_row, 3 + i_column,refs[i].stretch, responseHandle);
+    ++i_row;
+    const char* labelfmt = "Reference %s";
+    char plot_label[strlen(labelfmt) +strlen(pixeltype[i])];
+    sprintf(plot_label, labelfmt, pixeltype[i]);
+    plot_data_t spectrum_data;
+    spectrum_data.x = pTabFeno->LambdaRef;
+    spectrum_data.y = refs[i].spectrum;
+    spectrum_data.length = refs[i].n_wavel;
+    spectrum_data.curveName[0] = '\0';
+
+    mediateResponsePlotData(plotPageRef,&spectrum_data,1,Spectrum,forceAutoScale,plot_label,"Wavelength (nm)","Intensity", responseHandle);
+  }
+  return ++i_row;
+}
+
+// -----------------------------------------------------------------------------
+// FUNCTION      GOME1NETCDF_NewRef
+// -----------------------------------------------------------------------------
+// PURPOSE       In automatic reference selection, search for reference spectra
+//
+// INPUT         pEngineContext    hold the configuration of the current project
+//
+// RETURN        ERROR_ID_ALLOC if something failed;
+//               ERROR_ID_NO otherwise.
+// -----------------------------------------------------------------------------
+
+RC GOME1NETCDF_NewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle) {
+
+  // {
+  //  FILE *fp;
+  //  fp=fopen("toto.dat","a+t");
+  //  fprintf(fp,"Begin GOME1NETCDF_NewRef\n");
+  //  fclose(fp);
+  // }
+
+  // make a copy of the EngineContext structure to read reference data
+  RC rc=EngineCopyContext(&ENGINE_contextRef,pEngineContext);
+
+  // {
+  //  FILE *fp;
+  //  fp=fopen("toto.dat","a+t");
+  //  fprintf(fp,"OK1 %d\n",ENGINE_contextRef.recordNumber);
+  //  fclose(fp);
+  // }
+
+
+  if (ENGINE_contextRef.recordNumber==0)
+    return ERROR_ID_ALLOC;
+
+  // Allocate reference structures:
+  initialize_vza_refs();
+
+  // {
+  //  FILE *fp;
+  //  fp=fopen("toto.dat","a+t");
+  //  fprintf(fp,"OK2\n");
+  //  fclose(fp);
+  // }
+
+
+  // 1. look in all candidate orbit files (i.e. orbit files in same
+  //    dir)
+
+  // for each analysis window: selected spectra per VZA bin
+  // the same spectrum can be used in multiple analysis windows.
+  struct ref_list *selected_spectra[NFeno][NUM_VZA_REFS];
+
+  // list_handle: list of references to same set of spectra, used for
+  // memory management.  In this list, each spectrum appears only once.
+  struct ref_list *list_handle;
+
+  rc = find_ref_spectra(selected_spectra, &list_handle);
+
+  // {
+  //  FILE *fp;
+  //  fp=fopen("toto.dat","a+t");
+  //  fprintf(fp,"OK3 %d\n",rc);
+  //  fclose(fp);
+  // }
+
+  if (rc != ERROR_ID_NO)
+    goto cleanup;
+
+  for (int indexFenoColumn=0;(indexFenoColumn<ANALYSE_swathSize) && !rc;indexFenoColumn++)
+   {
+    // 2. average spectra per analysis window and per VZA bin
+    for (int i=0;(i<NFeno) && (rc<THREAD_EVENT_STOP);i++)
+     {
+      FENO *pTabFeno=&TabFeno[indexFenoColumn][i];
+
+      if ((pTabFeno->hidden!=1) &&
+          (pTabFeno->useKurucz!=ANLYS_KURUCZ_SPEC) &&
+          (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC))
+       {
+
+        //for (size_t j=0; j<NUM_VZA_REFS; ++j) {
+          if (selected_spectra[i][indexFenoColumn] == NULL)
+           {
+            // We may not find references for every VZA bin/analysis
+            // window.  At this point we just emit a warning (it's not a
+            // problem until we *need* that during retrieval for that bin).
+
+           // {
+           //  FILE *fp;
+           //  fp=fopen("toto.dat","a+t");
+           //  fprintf(fp,"Not found %d %d\n",i,indexFenoColumn);
+           //  fclose(fp);
+           // }
+
+  #define MESSAGE " for analysis window %s and VZA bin %d"
+            const int length = strlen(MESSAGE) + strlen(pTabFeno->windowName) + strlen(TOSTRING(MAX_FENO));
+            char tmp[length];
+            sprintf(tmp, MESSAGE, pTabFeno->windowName, indexFenoColumn); // TODO convert ref number back to bin for error message
+  #undef MESSAGE
+            ERROR_SetLast(__func__, ERROR_TYPE_WARNING, ERROR_ID_REFERENCE_SELECTION, tmp);
+            continue;
+           }
+          struct reference *ref = &vza_refs[i][indexFenoColumn];
+
+         // {
+         //  FILE *fp;
+         //  fp=fopen("toto.dat","a+t");
+         //  fprintf(fp,"Average_ref_spectra %d %s\n",i,pTabFeno->windowName);
+         //  fclose(fp);
+         // }
+
+          rc = average_ref_spectra(selected_spectra[i][indexFenoColumn], pTabFeno->LambdaRef, pTabFeno->NDET, ref);
+
+        //  {
+        //   FILE *fp;
+        //   fp=fopen("toto.dat","a+t");
+        //   fprintf(fp,"Average_ref_spectra %d\n",rc);
+        //   fclose(fp);
+        //  }
+
+          if (rc != ERROR_ID_NO)
+            goto cleanup;
+
+          // align ref w.r.t irradiance reference:
+          double sigma_shift, sigma_stretch, sigma_stretch2; // not used here...
+
+        //  {
+        //   FILE *fp;
+        //   fp=fopen("toto.dat","a+t");
+        //   fprintf(fp," ANALYSE_fit_shift_stretch %d %s\n",i,pTabFeno->windowName);
+        //   fclose(fp);
+        //  }
+
+          rc = ANALYSE_fit_shift_stretch(1, 0, pTabFeno->SrefEtalon, ref->spectrum,
+                                         &ref->shift, &ref->stretch, &ref->stretch2,
+                                         &sigma_shift, &sigma_stretch, &sigma_stretch2);
+
+ // {
+ //  FILE *fp;
+ //  fp=fopen("toto.dat","a+t");
+ //  fprintf(fp,"ANALYSE_fit_shift_stretch %d\n",rc);
+ //  fclose(fp);
+ // }
+
+      //  }
+       }
+     }
+   }
+ // {
+ //  FILE *fp;
+ //  fp=fopen("toto.dat","a+t");
+ //  fprintf(fp,"OK4\n");
+ //  fclose(fp);
+ // }
+
+
+ cleanup:
+  // 3. free lists created in step 1
+
+  // for 'selected_spectra', we only free the 'gome_ref_list'
+  // structures, the other components are pointers to spetra owned by
+  // the list_handle structure:
+  for (int i=0; i<NFeno; ++i) {
+    for (size_t j=0; j<NUM_VZA_REFS; ++j) {
+      free_ref_list(selected_spectra[i][j], FREE_LIST_ONLY);
+    }
+  }
+
+ // {
+ //  FILE *fp;
+ //  fp=fopen("toto.dat","a+t");
+ //  fprintf(fp,"OK5\n");
+ //  fclose(fp);
+ // }
+
+
+  // for 'list_handle', we also free the gome_ref_spectrum* pointers,
+  // and the double* pointers 'lambda' & 'spectrum':
+  free_ref_list(list_handle, FREE_DATA);
+
+ // {
+ //  FILE *fp;
+ //  fp=fopen("toto.dat","a+t");
+ //  fprintf(fp,"End GOME1NETCDF_NewRef\n");
+ //  fclose(fp);
+ // }
+
+  return rc;
+ }
+
 // -----------------------------------------------------------------------------
 // FUNCTION GOME1NETCDF_LoadAnalysis
 // -----------------------------------------------------------------------------
@@ -1187,7 +1629,7 @@ RC GOME1NETCDF_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   const int n_wavel=pOrbitFile->calibration.channel_size;
   int saveFlag= pEngineContext->project.spectra.displayDataFlag;
 
-  RC rc=0; // TO CHANGE LATER pOrbitFile->rc;
+  RC rc=pOrbitFile->rc;
 
   // don't continue when current file has an error, or if we are
   // working with automatic references and don't need to create a new
@@ -1200,6 +1642,14 @@ RC GOME1NETCDF_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
   // Browse analysis windows and load missing data
 
+ // {
+ //  FILE *fp;
+ //  fp=fopen("toto.dat","a+t");
+ //  fprintf(fp,"GOME1NETCDF_ORBIT_FILE Begin\n");
+ //  fclose(fp);
+ // }
+
+
   for (int indexFenoColumn=0;(indexFenoColumn<ANALYSE_swathSize) && !rc;indexFenoColumn++) {
 
    if (!pEngineContext->project.instrumental.use_row[indexFenoColumn]) continue;
@@ -1211,14 +1661,10 @@ RC GOME1NETCDF_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
      // Load calibration and reference spectra
 
      if (!pTabFeno->gomeRefFlag) { // use irradiance from L1B file
-   // TO CHANGE LATER    memcpy(pTabFeno->LambdaRef,pOrbitFile->GOME1NETCDFSunWve,sizeof(double) *n_wavel);
-   // TO CHANGE LATER    memcpy(pTabFeno->Sref,pOrbitFile->GOME1NETCDFSunRef,sizeof(double) *n_wavel);
 
+       GOME1NETCDF_Get_Irradiance(pOrbitFile,channel_index,pTabFeno->LambdaRef,pTabFeno->Sref);
 
-       memcpy(pTabFeno->LambdaRef,pEngineContext->buffers.lambda_irrad,sizeof(double) *n_wavel);
-       memcpy(pTabFeno->Sref,pEngineContext->buffers.irrad,sizeof(double) *n_wavel);
-
-       if (!TabFeno[0][indexFeno].hidden) {
+       if (!TabFeno[indexFenoColumn][indexFeno].hidden) {
          rc = VECTOR_NormalizeVector(pTabFeno->Sref-1,pTabFeno->NDET,&pTabFeno->refNormFact,"GOME1NETCDF_LoadAnalysis (Reference) ");
 
          if (rc)
@@ -1294,6 +1740,13 @@ RC GOME1NETCDF_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   }
  }
 
+  // {
+  //  FILE *fp;
+  //  fp=fopen("toto.dat","a+t");
+  //  fprintf(fp,"GOME1NETCDF_ORBIT_FILE End %d %d\n",gome1netCDF_loadReferenceFlag,rc);
+  //  fclose(fp);
+  // }
+
   // Build undersampling cross sections
 
   if (useUsamp && (THRD_id!=THREAD_TYPE_KURUCZ) && !(rc=ANALYSE_UsampLocalAlloc(0))) {
@@ -1301,16 +1754,18 @@ RC GOME1NETCDF_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
    for (int indexFenoColumn=0;indexFenoColumn<ANALYSE_swathSize;indexFenoColumn++)
 
-    if (// ((rc=ANALYSE_UsampLocalAlloc(0)) !=ERROR_ID_NO) ||
+    if (((rc=ANALYSE_UsampLocalAlloc(0)) !=ERROR_ID_NO) ||
         ((rc=ANALYSE_UsampBuild(0,0,indexFenoColumn)) !=ERROR_ID_NO) ||
         ((rc=ANALYSE_UsampBuild(1,ITEM_NONE,indexFenoColumn)) !=ERROR_ID_NO))
 
       goto EndGOME1NETCDF_LoadAnalysis;
   }
-// Automatic reference selection
-// TODO LATER if (gome1netCDF_loadReferenceFlag)
-// TODO LATER   rc=GOME1NETCDFNewRef(pEngineContext,responseHandle);
-// TODO LATER if (!rc) gome1netCDF_loadReferenceFlag=0;
+
+  // Automatic reference selection
+
+  if (gome1netCDF_loadReferenceFlag)
+   rc=GOME1NETCDF_NewRef(pEngineContext,responseHandle);
+  if (!rc) gome1netCDF_loadReferenceFlag=0;
 
 EndGOME1NETCDF_LoadAnalysis:
 

@@ -269,18 +269,6 @@ GOME_ORBIT_FILE;
 
 #define MAX_GOME_FILES 50 // maximum number of files per orbit
 
-typedef struct _gome_ref_ {
-  INDEX  indexFile;
-  INDEX  indexRecord;
-  INDEX  pixelNumber;
-  INDEX  pixelType;
-  double sza;
-  double latitude;
-  double longitude;
-  double szaDist;
-  double latDist;
-} GDP_BIN_REF;
-
 // ================
 // GLOBAL VARIABLES
 // ================

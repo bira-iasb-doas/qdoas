@@ -806,7 +806,7 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
      }
 
    if (!pEngineContext->n_alongtrack && ANALYSE_swathSize)
-    pEngineContext->n_alongtrack=pEngineContext->recordNumber/ANALYSE_swathSize;     
+    pEngineContext->n_alongtrack=pEngineContext->recordNumber/ANALYSE_swathSize;
 
    // Return
 
@@ -977,8 +977,9 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_GOME1_NETCDF :
-      rc=GOME1NETCDF_Read(pEngineContext,indexRecord);
+      rc=GOME1NETCDF_Read(pEngineContext,indexRecord,ITEM_NONE);
       break;
+      // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_SCIA_PDS :
       rc=SCIA_ReadPDS(pEngineContext,indexRecord);
       break;
@@ -1917,7 +1918,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
     {
      if (newref ||
        ((pRef->indexScanBefore==ITEM_NONE) || (pRef->indexScanAfter==ITEM_NONE)) ||
-        (indexRecord<=pRef->indexScanBefore) || 
+        (indexRecord<=pRef->indexScanBefore) ||
        (((pRef->indexScanAfter!=ITEM_NONE) /* || (pRecord->maxdoas.zenithAfterIndex>0) */) && (indexRecord>=pRef->indexScanAfter)))
 
       EngineScanSetRefIndexes(pEngineContext,indexRecord);

@@ -267,13 +267,13 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   // longitude (min/max)
   satelliteLayout->addWidget(new QLabel("Lon.", m_satelliteFrame));
   m_refTwoLonMinEdit = new QLineEdit(m_satelliteFrame);
-  m_refTwoLonMinEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 360.0, 1, m_refTwoLonMinEdit));
+  m_refTwoLonMinEdit->setValidator(new CDoubleFixedFmtValidator(-180, 360.0, 1, m_refTwoLonMinEdit));
   m_refTwoLonMinEdit->setAlignment(Qt::AlignRight);
-  const int lon_width = m_refTwoLonMinEdit->fontMetrics().width("00360.0");
+  const int lon_width = m_refTwoLonMinEdit->fontMetrics().width("-00360.0");
   m_refTwoLonMinEdit->setFixedWidth(lon_width);
   satelliteLayout->addWidget(m_refTwoLonMinEdit);
   m_refTwoLonMaxEdit = new QLineEdit(m_satelliteFrame);
-  m_refTwoLonMaxEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 360.0, 1, m_refTwoLonMaxEdit));
+  m_refTwoLonMaxEdit->setValidator(new CDoubleFixedFmtValidator(-180.0, 360.0, 1, m_refTwoLonMaxEdit));
   m_refTwoLonMaxEdit->setAlignment(Qt::AlignRight);
   m_refTwoLonMaxEdit->setFixedWidth(lon_width);
   satelliteLayout->addWidget(m_refTwoLonMaxEdit);
@@ -629,6 +629,7 @@ void CWAnalysisWindowPropertyEditor::projectPropertiesChanged()
     switch (d->instrumental.format)  {
     // -------------------------------------------------------------------------
        case PRJCT_INSTR_FORMAT_GDP_BIN:
+       case PRJCT_INSTR_FORMAT_GOME1_NETCDF:
        case PRJCT_INSTR_FORMAT_GOME2:
          // GOME & GOME-2 have cloud fraction info in L1 data:
          m_cloudFractionMinEdit->setEnabled(true);

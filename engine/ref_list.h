@@ -1,6 +1,10 @@
 #ifndef REF_LIST_H
 #define REF_LIST_H
 
+#if defined(_cplusplus) || defined(__cplusplus)
+extern "C" {
+#endif
+
 // Eartshine references spectrum
 struct reference {
   double *spectrum;
@@ -34,5 +38,9 @@ int average_ref_spectra(const struct ref_list *reflist, const double *lambda_tar
 /** \brief Free the linked list of reference spectra. When
     how==FREE_DATA, also free the reference spectra in the list. */
 void free_ref_list(struct ref_list *list, enum ref_list_free_mode how);
+
+#if defined(_cplusplus) || defined(__cplusplus)
+}
+#endif
 
 #endif
