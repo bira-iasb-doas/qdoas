@@ -1217,6 +1217,10 @@ static void get_ref_info(GOME1NETCDF_ORBIT_FILE *pOrbitFile,GOME1NETCDF_REF *ref
 
   auto cloud_bs =  reinterpret_cast<const float(*)[pixelSize]>(pOrbitFile->backscan_clouddata.cloud_frac.data());
 
+   // {
+   //   FILE *fp;
+   //   fp=fopen("toto.dat","a+t");  
+
   for (int i=0;i<pOrbitFile->specNumber;i++)
    {
     // Declarations
@@ -1235,14 +1239,14 @@ static void get_ref_info(GOME1NETCDF_ORBIT_FILE *pOrbitFile,GOME1NETCDF_REF *ref
     pRef->longitude=(pixelType==3)?lon_bs[scanIndex][pixelIndex]:lon_gr[scanIndex][pixelIndex];
     pRef->cloudFraction=(pixelType==3)?cloud_bs[scanIndex][pixelIndex]:cloud_gr[scanIndex][pixelIndex];
 
-    // {
-    //  FILE *fp;
-    //  fp=fopen("toto.dat","a+t");
-    //  fprintf(fp,"--- %d %d %g %g %g\n",(i+1),pixelType,pRef->latitude,pRef->longitude,pRef->sza);
-    //  fclose(fp);
-    // }
+  //  if (i>=970 && i<=990)
+  //   fprintf(fp,"--- %d %d %g %g %g\n",(i+1),pixelType,pRef->latitude,pRef->longitude,pRef->sza);
 
    }
+
+         
+   //   fclose(fp);
+   //  } 
  }
 
 static bool use_as_reference(GOME1NETCDF_REF *pRef,const FENO *feno)
@@ -1262,13 +1266,13 @@ static bool use_as_reference(GOME1NETCDF_REF *pRef,const FENO *feno)
   const bool match_sza = feno->refSZADelta <= EPSILON || (fabs(pRef->sza-feno->refSZA) <= feno->refSZADelta);
   const bool match_cloud = cloudDelta <= EPSILON || (pRef->cloudFraction>9.e36) || (pRef->cloudFraction >= feno->cloudFractionMin && pRef->cloudFraction <= feno->cloudFractionMax);
 
-  // if (match_lat && match_lon && match_sza)
-  // {
-  //  FILE *fp;
-  //  fp=fopen("toto.dat","a+t");
-  //  fprintf(fp,"%d %g %g %g\n",pRef->pixelType,pRef->latitude,pRef->longitude,pRef->sza);
-  //  fclose(fp);
-  // }
+  /* if (match_lat && match_lon && match_sza)
+   {
+    FILE *fp;
+    fp=fopen("toto.dat","a+t");
+    fprintf(fp,"%d %g %g %g\n",pRef->pixelType,pRef->latitude,pRef->longitude,pRef->sza);
+    fclose(fp);
+   } */
 
 
   return (match_lat && match_lon && match_sza && match_cloud);
@@ -1291,12 +1295,12 @@ static int find_ref_spectra(struct ref_list *(*selected_spectra)[NUM_VZA_REFS], 
     size_t n_wavel = pOrbitFile->calibration.channel_size;
     GOME1NETCDF_REF *refList;
 
-    // {
-    //  FILE *fp;
-    //  fp=fopen("toto.dat","a+t");
-    //  fprintf(fp,"%s\n",pOrbitFile->fileName);
-    //  fclose(fp);
-    // }
+   /* {
+      FILE *fp;
+      fp=fopen("toto.dat","a+t");
+      fprintf(fp,"%s\n",pOrbitFile->fileName);
+      fclose(fp);
+     } */
 
 
     if ((refList=(GOME1NETCDF_REF *)malloc(pOrbitFile->specNumber*sizeof(GOME1NETCDF_REF)))!=NULL)
@@ -1321,12 +1325,12 @@ static int find_ref_spectra(struct ref_list *(*selected_spectra)[NUM_VZA_REFS], 
               && pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC
               && use_as_reference(&refList[j],pTabFeno) ) {
 
-               // {
-               //  FILE *fp;
-               //  fp=fopen("toto.dat","a+t");
-               //  fprintf(fp,"Found %d %d %d %d\n",i,j,analysis_window,pixel_type);
-               //  fclose(fp);
-               // }
+              /* {
+                 FILE *fp;
+                 fp=fopen("toto.dat","a+t");
+                 fprintf(fp,"Found %d %d %d %d\n",i,j,analysis_window,pixel_type);
+                 fclose(fp);
+                } */
 
             if (ref == NULL) {
               // ref hasn't been initialized yet for another analysis window, so do that now:
@@ -1432,22 +1436,22 @@ static int show_ref_info(int i_row, const FENO *pTabFeno, const struct reference
 
 RC GOME1NETCDF_NewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle) {
 
-  // {
-  //  FILE *fp;
-  //  fp=fopen("toto.dat","a+t");
-  //  fprintf(fp,"Begin GOME1NETCDF_NewRef\n");
-  //  fclose(fp);
-  // }
+ /* {
+   FILE *fp;
+   fp=fopen("toto.dat","a+t");
+   fprintf(fp,"Begin GOME1NETCDF_NewRef\n");
+   fclose(fp);
+  } */
 
   // make a copy of the EngineContext structure to read reference data
   RC rc=EngineCopyContext(&ENGINE_contextRef,pEngineContext);
 
-  // {
-  //  FILE *fp;
-  //  fp=fopen("toto.dat","a+t");
-  //  fprintf(fp,"OK1 %d\n",ENGINE_contextRef.recordNumber);
-  //  fclose(fp);
-  // }
+  /* {
+    FILE *fp;
+    fp=fopen("toto.dat","a+t");
+    fprintf(fp,"OK1 %d\n",ENGINE_contextRef.recordNumber);
+    fclose(fp);
+   } */
 
 
   if (ENGINE_contextRef.recordNumber==0)
@@ -1456,12 +1460,12 @@ RC GOME1NETCDF_NewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle) {
   // Allocate reference structures:
   initialize_vza_refs();
 
-  // {
-  //  FILE *fp;
-  //  fp=fopen("toto.dat","a+t");
-  //  fprintf(fp,"OK2\n");
-  //  fclose(fp);
-  // }
+  /* {
+    FILE *fp;
+    fp=fopen("toto.dat","a+t");
+    fprintf(fp,"OK2\n");
+    fclose(fp);
+   } */
 
 
   // 1. look in all candidate orbit files (i.e. orbit files in same
@@ -1477,12 +1481,12 @@ RC GOME1NETCDF_NewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle) {
 
   rc = find_ref_spectra(selected_spectra, &list_handle);
 
-  // {
-  //  FILE *fp;
-  //  fp=fopen("toto.dat","a+t");
-  //  fprintf(fp,"OK3 %d\n",rc);
-  //  fclose(fp);
-  // }
+  /* {
+    FILE *fp;
+    fp=fopen("toto.dat","a+t");
+    fprintf(fp,"OK3 %d\n",rc);
+    fclose(fp);
+   } */
 
   if (rc != ERROR_ID_NO)
     goto cleanup;
@@ -1506,12 +1510,12 @@ RC GOME1NETCDF_NewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle) {
             // window.  At this point we just emit a warning (it's not a
             // problem until we *need* that during retrieval for that bin).
 
-           // {
-           //  FILE *fp;
-           //  fp=fopen("toto.dat","a+t");
-           //  fprintf(fp,"Not found %d %d\n",i,indexFenoColumn);
-           //  fclose(fp);
-           // }
+          /*  {
+             FILE *fp;
+             fp=fopen("toto.dat","a+t");
+             fprintf(fp,"Not found %d %d\n",i,indexFenoColumn);
+             fclose(fp);
+            } */
 
   #define MESSAGE " for analysis window %s and VZA bin %d"
             const int length = strlen(MESSAGE) + strlen(pTabFeno->windowName) + strlen(TOSTRING(MAX_FENO));
@@ -1523,21 +1527,21 @@ RC GOME1NETCDF_NewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle) {
            }
           struct reference *ref = &vza_refs[i][indexFenoColumn];
 
-         // {
-         //  FILE *fp;
-         //  fp=fopen("toto.dat","a+t");
-         //  fprintf(fp,"Average_ref_spectra %d %s\n",i,pTabFeno->windowName);
-         //  fclose(fp);
-         // }
+        /*  {
+           FILE *fp;
+           fp=fopen("toto.dat","a+t");
+           fprintf(fp,"Average_ref_spectra %d %s\n",i,pTabFeno->windowName);
+           fclose(fp);
+          } */
 
           rc = average_ref_spectra(selected_spectra[i][indexFenoColumn], pTabFeno->LambdaRef, pTabFeno->NDET, ref);
 
-        //  {
-        //   FILE *fp;
-        //   fp=fopen("toto.dat","a+t");
-        //   fprintf(fp,"Average_ref_spectra %d\n",rc);
-        //   fclose(fp);
-        //  }
+        /*  {
+           FILE *fp;
+           fp=fopen("toto.dat","a+t");
+           fprintf(fp,"Average_ref_spectra %d\n",rc);
+           fclose(fp);
+          } */
 
           if (rc != ERROR_ID_NO)
             goto cleanup;
@@ -1545,34 +1549,33 @@ RC GOME1NETCDF_NewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle) {
           // align ref w.r.t irradiance reference:
           double sigma_shift, sigma_stretch, sigma_stretch2; // not used here...
 
-        //  {
-        //   FILE *fp;
-        //   fp=fopen("toto.dat","a+t");
-        //   fprintf(fp," ANALYSE_fit_shift_stretch %d %s\n",i,pTabFeno->windowName);
-        //   fclose(fp);
-        //  }
+        /*  {
+           FILE *fp;
+           fp=fopen("toto.dat","a+t");
+           fprintf(fp," ANALYSE_fit_shift_stretch %d %s\n",i,pTabFeno->windowName);
+           fclose(fp);
+          } */
 
           rc = ANALYSE_fit_shift_stretch(1, 0, pTabFeno->SrefEtalon, ref->spectrum,
                                          &ref->shift, &ref->stretch, &ref->stretch2,
                                          &sigma_shift, &sigma_stretch, &sigma_stretch2);
 
- // {
- //  FILE *fp;
- //  fp=fopen("toto.dat","a+t");
- //  fprintf(fp,"ANALYSE_fit_shift_stretch %d\n",rc);
- //  fclose(fp);
- // }
+  /* {
+   FILE *fp;
+   fp=fopen("toto.dat","a+t");
+   fprintf(fp,"ANALYSE_fit_shift_stretch %d\n",rc);
+   fclose(fp);
+  } */
 
-      //  }
        }
      }
    }
- // {
- //  FILE *fp;
- //  fp=fopen("toto.dat","a+t");
- //  fprintf(fp,"OK4\n");
- //  fclose(fp);
- // }
+/*  {
+   FILE *fp;
+   fp=fopen("toto.dat","a+t");
+   fprintf(fp,"OK4\n");
+   fclose(fp);
+  } */
 
 
  cleanup:
@@ -1587,24 +1590,24 @@ RC GOME1NETCDF_NewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle) {
     }
   }
 
- // {
- //  FILE *fp;
- //  fp=fopen("toto.dat","a+t");
- //  fprintf(fp,"OK5\n");
- //  fclose(fp);
- // }
+  /* {
+   FILE *fp;
+   fp=fopen("toto.dat","a+t");
+   fprintf(fp,"OK5\n");
+   fclose(fp);
+  } */
 
 
   // for 'list_handle', we also free the gome_ref_spectrum* pointers,
   // and the double* pointers 'lambda' & 'spectrum':
   free_ref_list(list_handle, FREE_DATA);
 
- // {
- //  FILE *fp;
- //  fp=fopen("toto.dat","a+t");
- //  fprintf(fp,"End GOME1NETCDF_NewRef\n");
- //  fclose(fp);
- // }
+  /* {
+   FILE *fp;
+   fp=fopen("toto.dat","a+t");
+   fprintf(fp,"End GOME1NETCDF_NewRef\n");
+   fclose(fp);
+  } */
 
   return rc;
  }
@@ -1642,12 +1645,12 @@ RC GOME1NETCDF_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
   // Browse analysis windows and load missing data
 
- // {
- //  FILE *fp;
- //  fp=fopen("toto.dat","a+t");
- //  fprintf(fp,"GOME1NETCDF_ORBIT_FILE Begin\n");
- //  fclose(fp);
- // }
+  /* {
+   FILE *fp;
+   fp=fopen("toto.dat","a+t");
+   fprintf(fp,"GOME1NETCDF_ORBIT_FILE Begin\n");
+   fclose(fp);
+  } */
 
 
   for (int indexFenoColumn=0;(indexFenoColumn<ANALYSE_swathSize) && !rc;indexFenoColumn++) {
@@ -1740,12 +1743,12 @@ RC GOME1NETCDF_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   }
  }
 
-  // {
-  //  FILE *fp;
-  //  fp=fopen("toto.dat","a+t");
-  //  fprintf(fp,"GOME1NETCDF_ORBIT_FILE End %d %d\n",gome1netCDF_loadReferenceFlag,rc);
-  //  fclose(fp);
-  // }
+   /* {
+    FILE *fp;
+    fp=fopen("toto.dat","a+t");
+    fprintf(fp,"GOME1NETCDF_ORBIT_FILE End %d %d\n",gome1netCDF_loadReferenceFlag,rc);
+    fclose(fp);
+   } */
 
   // Build undersampling cross sections
 
