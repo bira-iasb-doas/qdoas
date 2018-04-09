@@ -1239,11 +1239,21 @@ void GOME1NETCDF_Cleanup(void)
 // ACCOUNT FOR ORBIT !!!!!!!!!!!!!!!!!!!!!
 
 int GOME1NETCDF_get_orbit_date(int *orbit_year, int *orbit_month, int *orbit_day) {
-  std::istringstream orbit_start(current_file.getAttText("time_reference"));
-  // time_coverage_start is formatted as "YYYY-MM-DD"
-  char tmp; // to skip "-" chars
-  orbit_start >> *orbit_year >> tmp >> *orbit_month >> tmp >> *orbit_day;
-  return  orbit_start.good() ? 0 : 1;
+  if (gome1netCDF_currentFileIndex==ITEM_NONE)
+   return 0;
+  else
+   {
+    GOME1NETCDF_ORBIT_FILE *pOrbitFile;
+    pOrbitFile=&gome1netCDF_orbitFiles[gome1netCDF_currentFileIndex];
+    current_file = NetCDFFile(pOrbitFile->fileName,NC_NOWRITE);                 // open current file
+    
+    std::istringstream orbit_start(current_file.getAttText("time_reference"));
+    // time_coverage_start is formatted as "YYYY-MM-DD"
+    char tmp; // to skip "-" chars
+    orbit_start >> *orbit_year >> tmp >> *orbit_month >> tmp >> *orbit_day;
+    current_file.close();
+    return  orbit_start.good() ? 0 : 1;
+   } 
 }
 
 
