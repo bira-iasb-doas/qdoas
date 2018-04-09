@@ -65,6 +65,7 @@
 #include <string.h>
 
 #include "engine_context.h"
+#include "engine.h"
 #include "spectrum_files.h"
 #include "winthrd.h"
 #include "vector.h"
@@ -439,7 +440,7 @@ RC ASCII_QDOAS_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   int recordNumber;
   int headerSize,spectraSize;
   int n_wavel;
-
+  int startDateFlag,startTimeFlag;
   int headerFlag=0;
   int indexField;
   int lineType,oldLineType;
@@ -458,8 +459,11 @@ RC ASCII_QDOAS_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
   asciiLastOffset=ITEM_NONE;
   recordNumber=0;
   spectraSize=0;
+  startDateFlag=0;
+  startTimeFlag=0;
   n_wavel = NDET[0];
 
+  ENGINE_refStartDate=1;
   rc=ERROR_ID_NO;
 
   // Check the file pointer
@@ -482,7 +486,8 @@ RC ASCII_QDOAS_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
         if (lineType!=ASC_LINE_TYPE_SPECTRA)
          sscanf(fileLine,"%[^=]=%[^\n]",keyName,keyValue);
 
-        if ((lineType!=ASC_LINE_TYPE_COMMENT) && (asciiSpectraSize>0) && (asciiSpectraSize<=n_wavel) && (pEngineContext->recordNumber>0))
+        if ((lineType!=ASC_LINE_TYPE_COMMENT) && (asciiSpectraSize>0) && (asciiSpectraSize<=n_wavel) && (pEngineContext->recordNumber>0) &&
+           ((THRD_id!=THREAD_TYPE_ANALYSIS) || !pEngineContext->analysisRef.refAuto || (startDateFlag && startTimeFlag)))
          break;
         else if (lineType==ASC_LINE_TYPE_COMMENT)
          {
@@ -502,6 +507,37 @@ RC ASCII_QDOAS_Set(ENGINE_CONTEXT *pEngineContext,FILE *specFp)
          spectraSize++;
         else if (lineType==ASC_LINE_TYPE_FIELD)
          {
+          if (!startDateFlag && (indexField==PRJCT_RESULTS_DATE))
+           {
+            int day,mon,year;
+            sscanf(fileLine,"%[^=]=%[^\n]",keyName,keyValue);
+
+            if (sscanf(keyValue,"%d/%d/%d",&day,&mon,&year)==3)
+             {
+              pEngineContext->fileInfo.startDate.da_day=(char)day;
+              pEngineContext->fileInfo.startDate.da_mon=(char)mon;
+              pEngineContext->fileInfo.startDate.da_year=year;
+
+              startDateFlag=1;
+             }
+           }
+
+          if (!startTimeFlag && (indexField==PRJCT_RESULTS_TIME))
+           {
+            int hour,minute,sec,millis,n_args;
+            sscanf(fileLine,"%[^=]=%[^\n]",keyName,keyValue);
+
+            if ((n_args=sscanf(keyValue,"%d:%d:%d.%d",&hour,&minute,&sec,&millis))>=3)
+             {
+              pEngineContext->fileInfo.startTime.ti_hour=(unsigned char)hour;
+              pEngineContext->fileInfo.startTime.ti_min=(unsigned char)minute;
+              pEngineContext->fileInfo.startTime.ti_sec=(unsigned char)sec;
+              pEngineContext->fileInfo.startTime.ti_hund=(unsigned char)millis/10;
+
+              startTimeFlag=1;
+             }
+           }
+
           if (!headerSize && (recordNumber<MAX_RECORDS))
            offset[++asciiLastOffset]=oldpos;
 

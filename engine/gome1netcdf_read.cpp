@@ -534,6 +534,84 @@ void GOME1NETCDF_Get_Irradiance(GOME1NETCDF_ORBIT_FILE *pOrbitFile,int channel_i
  }
 
 // -----------------------------------------------------------------------------
+// FUNCTION get_ref_info
+// -----------------------------------------------------------------------------
+//!
+//! \fn      RC get_ref_info(GOME1NETCDF_ORBIT_FILE *pOrbitFile,GOME1NETCDF_REF *ref_list)
+//! \details Browse spectra of the current orbit file and collect information for the automatic reference selection
+//! \param   [out] ref_list  the information on spectra useful for the automatic reference selection\n
+//! \param   [in]  pOrbitFile : pointer to the current orbit file\n
+//!
+// -----------------------------------------------------------------------------
+
+static void get_ref_info(GOME1NETCDF_ORBIT_FILE *pOrbitFile)
+ {
+  // Global declarations
+
+  GOME1NETCDF_REF *refList,*pRef;
+  geodata geo;
+  int pixelSize;
+
+  // Declare substition variables for ground pixels
+
+  geo=pOrbitFile->ground_geodata;                                               // do not work ???
+  pixelSize=3;
+
+  auto sza_gr = reinterpret_cast<const float(*)[pixelSize][3]>(pOrbitFile->ground_geodata.sza.data());
+  auto lat_gr =  reinterpret_cast<const float(*)[pixelSize]>(pOrbitFile->ground_geodata.lat.data());
+  auto lon_gr =  reinterpret_cast<const float(*)[pixelSize]>(pOrbitFile->ground_geodata.lon.data());
+  auto cloud_gr =  reinterpret_cast<const float(*)[pixelSize]>(pOrbitFile->ground_clouddata.cloud_frac.data());
+
+
+  // Declare substition variables for backscan pixels
+
+  geo=pOrbitFile->backscan_geodata;
+  pixelSize=1;
+
+  auto sza_bs = reinterpret_cast<const float(*)[pixelSize][3]>(pOrbitFile->backscan_geodata.sza.data());
+  auto lat_bs =  reinterpret_cast<const float(*)[pixelSize]>(pOrbitFile->backscan_geodata.lat.data());
+  auto lon_bs =  reinterpret_cast<const float(*)[pixelSize]>(pOrbitFile->backscan_geodata.lon.data());
+
+  auto cloud_bs =  reinterpret_cast<const float(*)[pixelSize]>(pOrbitFile->backscan_clouddata.cloud_frac.data());
+
+//   {
+//     FILE *fp;
+//     fp=fopen("toto.dat","a+t");
+
+  for (int i=0;i<pOrbitFile->specNumber;i++)
+   {
+    // Declarations
+
+    size_t scanIndex=pOrbitFile->scanline_indexes[i];                           // index in the ground pixel scanlines or backscan scanlines
+    int    pixelType=pOrbitFile->scanline_pixtype[i];                           // pixel type
+    size_t pixelIndex=(pixelType==3)?0:pixelType;                               // index of the pixel in the scan : should be 0,1,2 for ground pixels and 0 for backscans
+
+    // Get useful information for automatic reference selection
+
+    if (pOrbitFile->refInfo[pixelType]!=NULL)
+     {
+      refList=pOrbitFile->refInfo[pixelType];
+      pRef=&refList[pOrbitFile->refNum[pixelType]];
+
+      pRef->pixelType=pixelType;
+      pRef->sza=(pixelType==3)?sza_bs[scanIndex][pixelIndex][1]:sza_gr[scanIndex][pixelIndex][1];
+      pRef->latitude=(pixelType==3)?lat_bs[scanIndex][pixelIndex]:lat_gr[scanIndex][pixelIndex];
+      pRef->longitude=(pixelType==3)?lon_bs[scanIndex][pixelIndex]:lon_gr[scanIndex][pixelIndex];
+      pRef->cloudFraction=(pixelType==3)?cloud_bs[scanIndex][pixelIndex]:cloud_gr[scanIndex][pixelIndex];
+
+      pOrbitFile->refNum[pixelType]=pOrbitFile->refNum[pixelType]+1;
+
+  //    if (i>=970 && i<=990)
+  //     fprintf(fp,"+++ %d %d %d %g %g %g\n",(i+1),pixelType,pixelIndex,pRef->latitude,pRef->longitude,pRef->sza);
+     }
+   }
+
+
+  //   fclose(fp);
+  //  }
+ }
+
+// -----------------------------------------------------------------------------
 // FUNCTION GOME1NETCDF_Set
 // -----------------------------------------------------------------------------
 //!
@@ -695,7 +773,7 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
 
           if ((band_group.dimLen("time")!=1) || (band_group.dimLen("ground_pixel")!=3))
            pOrbitFile->rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_FORMAT, "Dimensions of ground pixels in the GOME1 netCDF file are not the expected ones");  // in case of error, capture the message
-          // else if (pOrbitFile->refInfo[0]=(GOME1NETCDF_REF *)... allocation
+          else
            {
             // Get the different groups
 
@@ -768,106 +846,110 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
 
         pOrbitFile->specNumber=pOrbitFile->scan_size*pOrbitFile->pixel_size+pOrbitFile->scan_size_bs*pOrbitFile->pixel_size_bs;  // get the total number of records (ground pixels + backscans)
 
-        // !!!!!!!!!!!!!!!!!!!!!!
+        if  ((THRD_id==THREAD_TYPE_ANALYSIS) && pEngineContext->analysisRef.refAuto &&
 
+           (((pInstrumental->gomenetcdf.pixelType!=PRJCT_INSTR_GOME1_PIXEL_BACKSCAN) &&
+           (((pOrbitFile->refInfo[0]=(GOME1NETCDF_REF *)MEMORY_AllocBuffer(__func__,"refInfo[0]",pOrbitFile->specNumber,sizeof(GOME1NETCDF_REF),0,MEMORY_TYPE_STRUCT))==NULL) ||
+            ((pOrbitFile->refInfo[1]=(GOME1NETCDF_REF *)MEMORY_AllocBuffer(__func__,"refInfo[1]",pOrbitFile->specNumber,sizeof(GOME1NETCDF_REF),0,MEMORY_TYPE_STRUCT))==NULL) ||
+            ((pOrbitFile->refInfo[2]=(GOME1NETCDF_REF *)MEMORY_AllocBuffer(__func__,"refInfo[2]",pOrbitFile->specNumber,sizeof(GOME1NETCDF_REF),0,MEMORY_TYPE_STRUCT))==NULL)))  ||
 
+            ((pInstrumental->gomenetcdf.pixelType!=PRJCT_INSTR_GOME1_PIXEL_GROUND) &&
+            ((pOrbitFile->refInfo[3]=(GOME1NETCDF_REF *)MEMORY_AllocBuffer(__func__,"refInfo[3]",pOrbitFile->specNumber,sizeof(GOME1NETCDF_REF),0,MEMORY_TYPE_STRUCT))==NULL))))
 
-
-
-
-
-
-
-
-
-        pOrbitFile->start_pixel=startpixel[0];
-
-        pOrbitFile->scanline_indexes.resize(pOrbitFile->specNumber);
-        pOrbitFile->scanline_pixtype.resize(pOrbitFile->specNumber);
-        pOrbitFile->scanline_pixnum.resize(pOrbitFile->specNumber);
-        pOrbitFile->alongtrack_indexes.resize(pOrbitFile->specNumber);
-        pOrbitFile->delta_time.resize(pOrbitFile->specNumber);
-
-        auto delta_time_scan=reinterpret_cast<const double(*)[pOrbitFile->pixel_size]>(deltatime.data());
-        auto delta_time_scan_bs = reinterpret_cast<const double(*)[pOrbitFile->pixel_size_bs]>(deltatime_bs.data());
-
-        pOrbitFile->n_alongtrack=0;
-
-        // Get the maximum scanline number
-
-        maxscan=0;
-        if (pOrbitFile->scan_size && (scanline[(int)pOrbitFile->scan_size-1]>maxscan))
-         maxscan=scanline[(int)pOrbitFile->scan_size-1];
-        if (pOrbitFile->scan_size_bs && (scanline_bs[(int)pOrbitFile->scan_size_bs-1]>maxscan))
-         maxscan=scanline_bs[(int)pOrbitFile->scan_size_bs-1];
-        maxscan++;
-
-        // Allocate scanline buffers to sort ground pixels and backscans on the scanline number
-
-        if (((iscan=(int *)malloc(sizeof(int)*maxscan))==NULL) ||
-            ((iscan_bs=(int *)malloc(sizeof(int)*maxscan))==NULL))
-
-         rc=ERROR_ID_ALLOC;
+         rc= pOrbitFile->rc = ERROR_ID_ALLOC;  // in case of error, capture the message
         else
          {
-          // Initialize scanline buffers
+          pOrbitFile->start_pixel=startpixel[0];
 
-          for (i=0;i<maxscan;i++)
-           iscan[i]=iscan_bs[i]=ITEM_NONE;
+          pOrbitFile->scanline_indexes.resize(pOrbitFile->specNumber);
+          pOrbitFile->scanline_pixtype.resize(pOrbitFile->specNumber);
+          pOrbitFile->scanline_pixnum.resize(pOrbitFile->specNumber);
+          pOrbitFile->alongtrack_indexes.resize(pOrbitFile->specNumber);
+          pOrbitFile->delta_time.resize(pOrbitFile->specNumber);
 
-          // Consider ground pixels and fill scanline buffer with the indexes of ground pixels
+          auto delta_time_scan=reinterpret_cast<const double(*)[pOrbitFile->pixel_size]>(deltatime.data());
+          auto delta_time_scan_bs = reinterpret_cast<const double(*)[pOrbitFile->pixel_size_bs]>(deltatime_bs.data());
 
-          if (pOrbitFile->scan_size)
-           for (i=0;i<(int)pOrbitFile->scan_size;i++)
-            iscan[scanline[i]]=i;
+          pOrbitFile->n_alongtrack=0;
 
-          // Consider backscan pixels and fill scanline buffer with the indexes of backscan pixels
+          // Get the maximum scanline number
 
-          if (pOrbitFile->scan_size_bs)
-           for (i=0;i<(int)pOrbitFile->scan_size_bs;i++)
-            iscan_bs[scanline_bs[i]]=i;
+          maxscan=0;
+          if (pOrbitFile->scan_size && (scanline[(int)pOrbitFile->scan_size-1]>maxscan))
+           maxscan=scanline[(int)pOrbitFile->scan_size-1];
+          if (pOrbitFile->scan_size_bs && (scanline_bs[(int)pOrbitFile->scan_size_bs-1]>maxscan))
+           maxscan=scanline_bs[(int)pOrbitFile->scan_size_bs-1];
+          maxscan++;
 
-          // The following loop browse scanline and sort them
+          // Allocate scanline buffers to sort ground pixels and backscans on the scanline number
 
-          for (i=k=0;i<maxscan;i++)
+          if (((iscan=(int *)malloc(sizeof(int)*maxscan))==NULL) ||
+              ((iscan_bs=(int *)malloc(sizeof(int)*maxscan))==NULL))
+
+           rc=ERROR_ID_ALLOC;
+          else
            {
-            // Consider ground pixels
+            // Initialize scanline buffers
 
-            if ((j=iscan[i])!=ITEM_NONE)
+            for (i=0;i<maxscan;i++)
+             iscan[i]=iscan_bs[i]=ITEM_NONE;
+
+            // Consider ground pixels and fill scanline buffer with the indexes of ground pixels
+
+            if (pOrbitFile->scan_size)
+             for (i=0;i<(int)pOrbitFile->scan_size;i++)
+              iscan[scanline[i]]=i;
+
+            // Consider backscan pixels and fill scanline buffer with the indexes of backscan pixels
+
+            if (pOrbitFile->scan_size_bs)
+             for (i=0;i<(int)pOrbitFile->scan_size_bs;i++)
+              iscan_bs[scanline_bs[i]]=i;
+
+            // The following loop browse scanline and sort them
+
+            for (i=k=0;i<maxscan;i++)
              {
-              for (n=0;n<(int)pOrbitFile->pixel_size;n++)
+              // Consider ground pixels
+
+              if ((j=iscan[i])!=ITEM_NONE)
                {
-                pOrbitFile->scanline_indexes[k+n]=j;
-                pOrbitFile->scanline_pixtype[k+n]=n;
-                pOrbitFile->scanline_pixnum[k+n]=i;
-                pOrbitFile->alongtrack_indexes[k+n]=pOrbitFile->n_alongtrack;
-                pOrbitFile->delta_time[k+n]=delta_time_scan[j][n];
+                for (n=0;n<(int)pOrbitFile->pixel_size;n++)
+                 {
+                  pOrbitFile->scanline_indexes[k+n]=j;
+                  pOrbitFile->scanline_pixtype[k+n]=n;
+                  pOrbitFile->scanline_pixnum[k+n]=i;
+                  pOrbitFile->alongtrack_indexes[k+n]=pOrbitFile->n_alongtrack;
+                  pOrbitFile->delta_time[k+n]=delta_time_scan[j][n];
+                 }
+                k+=pOrbitFile->pixel_size;
                }
-              k+=pOrbitFile->pixel_size;
+
+              // Consider backscan pixels
+
+              if ((j=iscan_bs[i])!=ITEM_NONE)
+               {
+                pOrbitFile->scanline_indexes[k]=j;
+                pOrbitFile->scanline_pixtype[k]=3;
+                pOrbitFile->scanline_pixnum[k]=i;
+                pOrbitFile->alongtrack_indexes[k]=pOrbitFile->n_alongtrack;
+                pOrbitFile->delta_time[k]=delta_time_scan_bs[j][0];
+                k++;
+               }
+
+              if ((iscan[i]!=ITEM_NONE) || (iscan_bs[i]!=ITEM_NONE))
+               pOrbitFile->n_alongtrack++;
              }
-
-            // Consider backscan pixels
-
-            if ((j=iscan_bs[i])!=ITEM_NONE)
-             {
-              pOrbitFile->scanline_indexes[k]=j;
-              pOrbitFile->scanline_pixtype[k]=3;
-              pOrbitFile->scanline_pixnum[k]=i;
-              pOrbitFile->alongtrack_indexes[k]=pOrbitFile->n_alongtrack;
-              pOrbitFile->delta_time[k]=delta_time_scan_bs[j][0];
-              k++;
-             }
-
-            if ((iscan[i]!=ITEM_NONE) || (iscan_bs[i]!=ITEM_NONE))
-             pOrbitFile->n_alongtrack++;
            }
+
+          // Sort ground pixels and backscans using scanline
+
+          pOrbitFile->start_pixel=startpixel[0];
          }
 
-        // Sort ground pixels and backscans using scanline
-
-        pOrbitFile->start_pixel=startpixel[0];
-
         current_file.close();
+
+        // get_ref_info(pOrbitFile);
        }
       catch (std::runtime_error& e)
        {
@@ -1188,7 +1270,7 @@ static void free_vza_refs(void) {
 //!
 // -----------------------------------------------------------------------------
 
-static void get_ref_info(GOME1NETCDF_ORBIT_FILE *pOrbitFile,GOME1NETCDF_REF *ref_list)
+static void get_ref_info2(GOME1NETCDF_ORBIT_FILE *pOrbitFile,GOME1NETCDF_REF *ref_list)
  {
   // Global declarations
 
@@ -1201,9 +1283,9 @@ static void get_ref_info(GOME1NETCDF_ORBIT_FILE *pOrbitFile,GOME1NETCDF_REF *ref
   geo=pOrbitFile->ground_geodata;                                               // do not work ???
   pixelSize=3;
 
-  auto sza_gr = reinterpret_cast<const float(*)[pixelSize][3]>(pOrbitFile->ground_geodata.sza.data());
-  auto lat_gr =  reinterpret_cast<const float(*)[pixelSize]>(pOrbitFile->ground_geodata.lat.data());
-  auto lon_gr =  reinterpret_cast<const float(*)[pixelSize]>(pOrbitFile->ground_geodata.lon.data());
+  auto sza_gr = reinterpret_cast<const float(*)[pixelSize][3]>(geo.sza.data());
+  auto lat_gr =  reinterpret_cast<const float(*)[pixelSize]>(geo.lat.data());
+  auto lon_gr =  reinterpret_cast<const float(*)[pixelSize]>(geo.lon.data());
   auto cloud_gr =  reinterpret_cast<const float(*)[pixelSize]>(pOrbitFile->ground_clouddata.cloud_frac.data());
 
   // Declare substition variables for backscan pixels
@@ -1217,9 +1299,9 @@ static void get_ref_info(GOME1NETCDF_ORBIT_FILE *pOrbitFile,GOME1NETCDF_REF *ref
 
   auto cloud_bs =  reinterpret_cast<const float(*)[pixelSize]>(pOrbitFile->backscan_clouddata.cloud_frac.data());
 
-   // {
-   //   FILE *fp;
-   //   fp=fopen("toto.dat","a+t");  
+   {
+     FILE *fp;
+     fp=fopen("toto.dat","a+t");
 
   for (int i=0;i<pOrbitFile->specNumber;i++)
    {
@@ -1239,14 +1321,14 @@ static void get_ref_info(GOME1NETCDF_ORBIT_FILE *pOrbitFile,GOME1NETCDF_REF *ref
     pRef->longitude=(pixelType==3)?lon_bs[scanIndex][pixelIndex]:lon_gr[scanIndex][pixelIndex];
     pRef->cloudFraction=(pixelType==3)?cloud_bs[scanIndex][pixelIndex]:cloud_gr[scanIndex][pixelIndex];
 
-  //  if (i>=970 && i<=990)
-  //   fprintf(fp,"--- %d %d %g %g %g\n",(i+1),pixelType,pRef->latitude,pRef->longitude,pRef->sza);
+    if (i>=970 && i<=990)
+     fprintf(fp,"--- %d %d %d %g %g %g\n",(i+1),pixelType,pixelIndex,pRef->latitude,pRef->longitude,pRef->sza);
 
    }
 
-         
-   //   fclose(fp);
-   //  } 
+
+     fclose(fp);
+    }
  }
 
 static bool use_as_reference(GOME1NETCDF_REF *pRef,const FENO *feno)
@@ -1305,7 +1387,7 @@ static int find_ref_spectra(struct ref_list *(*selected_spectra)[NUM_VZA_REFS], 
 
     if ((refList=(GOME1NETCDF_REF *)malloc(pOrbitFile->specNumber*sizeof(GOME1NETCDF_REF)))!=NULL)
      {
-      get_ref_info(pOrbitFile,refList);
+      get_ref_info2(pOrbitFile,refList);
 
       for (int j=0; j<pOrbitFile->specNumber; ++j) {
         // each spectrum can be used for multiple analysis windows, so
