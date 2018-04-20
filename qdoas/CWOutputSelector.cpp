@@ -113,8 +113,8 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SCIA_QUALITY,           "SCIAMACHY Quality Flag"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SCIA_STATE_INDEX,       "SCIAMACHY State Index"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SCIA_STATE_ID,          "SCIAMACHY State Id"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_STARTDATE,              "Start Date (DDMMYYYY)"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ENDDATE,                "End Date (DDMMYYYY)"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_STARTDATE,              "Start Date"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ENDDATE,                "End Date"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_STARTTIME,              "Start Time (hhmmss)"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ENDTIME,                "Stop Time (hhmmss)"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SCANNING,               "Scanning angle"));
@@ -152,8 +152,8 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SPIKES,                 "Pixels with spikes in residual"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_SERVO_BYTE_SENT,    "Servo position byte sent"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_SERVO_BYTE_RECEIVED,"Servo position byte received"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_INSIDE_TEMP,        "Inside Temperature (°C)"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_OUTSIDE_TEMP,       "Outside Temperature (°C)"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_INSIDE_TEMP,        "Inside Temperature (ï¿½C)"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_OUTSIDE_TEMP,       "Outside Temperature (ï¿½C)"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_PRESSURE,           "Pressure (hPa)"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_HUMIDITY,           "Humidity"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_DEWPOINT,           "Dewpoint"));
@@ -720,6 +720,8 @@ void getValidFieldFlags(int *validFlags, int instrument,int selectorOrigin)
      {
       validFlags[PRJCT_RESULTS_VIEW_ELEVATION]=1;
       validFlags[PRJCT_RESULTS_VIEW_AZIMUTH]=1;                                 // not present in all measurements]=1; but could be in the next future
+      validFlags[PRJCT_RESULTS_STARTDATE]=1;
+      validFlags[PRJCT_RESULTS_ENDDATE]=1;      
       validFlags[PRJCT_RESULTS_STARTTIME]=1;
       validFlags[PRJCT_RESULTS_ENDTIME]=1;
       validFlags[PRJCT_RESULTS_LONGIT]=1;

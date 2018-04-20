@@ -916,6 +916,12 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const int
      case PRJCT_RESULTS_SCIA_STATE_ID:
        register_field( (struct output_field) { .basic_fieldname = "SCIAMACHY State Id", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#5d", .get_data = (func_void)&get_scia_state_id });
        break;
+     case PRJCT_RESULTS_STARTDATE:
+       register_field( (struct output_field) { .basic_fieldname = "Start Date (YYYYMMDDhhmmss)", .memory_type = OUTPUT_DATETIME, .resulttype = fieldtype, .format = format_datetime, .get_data = (func_void)&get_start_datetime });
+       break;
+     case PRJCT_RESULTS_ENDDATE:
+       register_field( (struct output_field) { .basic_fieldname = "End Date (YYYYMMDDhhmmss)", .memory_type = OUTPUT_DATETIME, .resulttype = fieldtype, .format = format_datetime, .get_data = (func_void)&get_end_datetime });
+       break;
      case PRJCT_RESULTS_STARTTIME:
        register_field( (struct output_field) { .basic_fieldname = "Start Time (hhmmss)", .memory_type = OUTPUT_TIME, .resulttype = fieldtype, .format = "%02d%02d%02d", .get_data = (func_void)&get_start_time });
        break;
@@ -1283,6 +1289,12 @@ static void OutputRegisterFieldsToExport(const ENGINE_CONTEXT *pEngineContext, c
        break;
      case PRJCT_RESULTS_SCIA_STATE_ID:  // !!! EXPORT FUNCTION !!!
        register_field( (struct output_field) { .basic_fieldname = "SCIAMACHY State Id", .memory_type = OUTPUT_USHORT, .resulttype = fieldtype, .format = "%#5d", .get_data = (func_void)&get_scia_state_id });
+       break;
+     case PRJCT_RESULTS_STARTDATE:  // !!! EXPORT FUNCTION !!!
+       register_field( (struct output_field) { .basic_fieldname = "UTC Start Date (DD/MM/YYYY)", .memory_type = OUTPUT_DATE, .resulttype = fieldtype, .format = "%02d/%02d/%d", .get_data = (func_void)&get_date_start });
+       break;
+     case PRJCT_RESULTS_ENDDATE:  // !!! EXPORT FUNCTION !!!
+       register_field( (struct output_field) { .basic_fieldname = "UTC End Date (DD/MM/YYYY)", .memory_type = OUTPUT_DATE, .resulttype = fieldtype, .format = "%02d/%02d/%d", .get_data = (func_void)&get_date_end });
        break;
      case PRJCT_RESULTS_STARTTIME:  // !!! EXPORT FUNCTION !!!
        register_field( (struct output_field) { .basic_fieldname = "UTC Start Time", .memory_type = OUTPUT_TIME, .resulttype = fieldtype, .format = "%02d:%02d:%02d", .get_data = (func_void)&get_start_time });

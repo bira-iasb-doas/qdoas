@@ -56,6 +56,20 @@ static inline void get_date(struct output_field *this_field __attribute__ ((unus
   date->da_year = datein->da_year;
 }
 
+static inline void get_date_start(struct output_field *this_field __attribute__ ((unused)), struct date *date, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  const struct date *datein = &pEngineContext->recordInfo.startDateTime.thedate;
+  date->da_day = datein->da_day;
+  date->da_mon = datein->da_mon;
+  date->da_year = datein->da_year;
+}
+
+static inline void get_date_end(struct output_field *this_field __attribute__ ((unused)), struct date *date, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  const struct date *datein = &pEngineContext->recordInfo.endDateTime.thedate;
+  date->da_day = datein->da_day;
+  date->da_mon = datein->da_mon;
+  date->da_year = datein->da_year;
+}
+
 static inline void get_time(struct output_field *this_field __attribute__ ((unused)), struct time *time, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
   *time = pEngineContext->recordInfo.present_datetime.thetime;
 }
@@ -67,6 +81,16 @@ static inline void get_datetime(struct output_field *this_field __attribute__ ((
 
 static inline void get_year(struct output_field *this_field __attribute__ ((unused)), unsigned short *year, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
   *year = pEngineContext->recordInfo.present_datetime.thedate.da_year;
+}
+
+static inline void get_start_datetime(struct output_field *this_field __attribute__ ((unused)), struct datetime *datetime, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  get_date_start(this_field, &datetime->thedate, pEngineContext, indexFenoColumn, index_calib);
+  *datetime =pEngineContext->recordInfo.startDateTime;
+}
+
+static inline void get_end_datetime(struct output_field *this_field __attribute__ ((unused)), struct datetime *datetime, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  get_date_end(this_field, &datetime->thedate, pEngineContext, indexFenoColumn, index_calib);
+  *datetime =pEngineContext->recordInfo.endDateTime;
 }
 
 static inline void get_start_time(struct output_field *this_field __attribute__ ((unused)), struct time *time, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {

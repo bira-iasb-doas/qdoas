@@ -193,13 +193,13 @@ static void write_global_attrs(const ENGINE_CONTEXT*pEngineContext, NetCDFGroup 
   time_t curtime = time(NULL);
   group.putAttr("CreationTime",string(ctime(&curtime) ) );
 
-  const char *input_filename = strrchr(pEngineContext->fileInfo.fileName,PATH_SEP);
-  if (input_filename) {
-    ++input_filename; // if we have found PATH_SEP, file name starts at character behind PATH_SEP
-  } else { // no PATH_SEP found -> just use fileinfo.fileName
-    input_filename = pEngineContext->fileInfo.fileName;
-  }
-  group.putAttr("InputFile", input_filename);
+  // const char *input_filename = strrchr(pEngineContext->fileInfo.fileName,PATH_SEP);
+  // if (input_filename) {
+  //  ++input_filename; // if we have found PATH_SEP, file name starts at character behind PATH_SEP
+  //} else { // no PATH_SEP found -> just use fileinfo.fileName
+  //  input_filename = pEngineContext->fileInfo.fileName;
+  // }
+  group.putAttr("InputFile", pEngineContext->fileInfo.fileName);  // better to have the full path name
   group.putAttr("QDOASConfig", pEngineContext->project.config_file);
   group.putAttr("QDOASConfigProject", pEngineContext->project.project_name);
 }

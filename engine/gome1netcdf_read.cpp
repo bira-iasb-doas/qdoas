@@ -726,6 +726,7 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
      {
       pOrbitFile=&gome1netCDF_orbitFiles[indexFile];
       pOrbitFile->specNumber=0;
+      pOrbitFile->rc=0;
       iscan=iscan_bs=NULL;
 
       // Try to open the file and load metadata
@@ -754,9 +755,23 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
 
         // MODE_NADIR or MODE_NARROW_SWATH ?
 
-        pOrbitFile->mode=(pOrbitFile->current_file.groupID(pOrbitFile->root_name+"/MODE_NADIR/"+gome1netcdf_bandName[selected_band])!=-1)?"/MODE_NADIR/":"/MODE_NARROW_SWATH/";
-        pOrbitFile->mode_bs=(pOrbitFile->current_file.groupID(pOrbitFile->root_name+"/MODE_NADIR_BACKSCAN/"+gome1netcdf_bandName[selected_band])!=-1)?"/MODE_NADIR_BACKSCAN/":"/MODE_NARROW_SWATH_BACKSCAN/";
+        if (pOrbitFile->current_file.groupID(pOrbitFile->root_name+"/MODE_NADIR/"+gome1netcdf_bandName[selected_band])!=-1)
+         pOrbitFile->mode="/MODE_NADIR/";
+        else if (pOrbitFile->current_file.groupID(pOrbitFile->root_name+"/MODE_NARROW_SWATH/"+gome1netcdf_bandName[selected_band])!=-1)
+         pOrbitFile->mode="/MODE_NARROW_SWATH/";
+        else
+         pOrbitFile->mode="";
 
+        if (pOrbitFile->current_file.groupID(pOrbitFile->root_name+"/MODE_NADIR_BACKSCAN/"+gome1netcdf_bandName[selected_band])!=-1)
+         pOrbitFile->mode_bs="/MODE_NADIR_BACKSCAN/";
+        else if (pOrbitFile->current_file.groupID(pOrbitFile->root_name+"/MODE_NARROW_SWATH_BACKSCAN/"+gome1netcdf_bandName[selected_band])!=-1)
+         pOrbitFile->mode_bs="/MODE_NARROW_SWATH_BACKSCAN/";
+        else
+         pOrbitFile->mode_bs="";
+
+        if (!pOrbitFile->mode.length() && pOrbitFile->mode_bs.length())
+         continue;
+         
              // Dimensions of spectra are 'time' x 'scan_size' x 'pixel_size ' x 'spectral_channel'
              // For example : 1 x 552 x 3 x 832
 
@@ -985,6 +1000,8 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
     for(i=0; i<MAX_SWATHSIZE; ++i)
      NDET[i]=(int)pOrbitFile->calibration.channel_size;
    }
+  else
+   rc=1;
 
   return rc;
 }
@@ -1297,9 +1314,9 @@ static void get_ref_info2(GOME1NETCDF_ORBIT_FILE *pOrbitFile,GOME1NETCDF_REF *re
 
   auto cloud_bs =  reinterpret_cast<const float(*)[pixelSize]>(pOrbitFile->backscan_clouddata.cloud_frac.data());
 
-   {
-     FILE *fp;
-     fp=fopen("toto.dat","a+t");
+  //  {
+  //   FILE *fp;
+  //   fp=fopen("toto.dat","a+t");
 
   for (int i=0;i<pOrbitFile->specNumber;i++)
    {
@@ -1319,14 +1336,14 @@ static void get_ref_info2(GOME1NETCDF_ORBIT_FILE *pOrbitFile,GOME1NETCDF_REF *re
     pRef->longitude=(pixelType==3)?lon_bs[scanIndex][pixelIndex]:lon_gr[scanIndex][pixelIndex];
     pRef->cloudFraction=(pixelType==3)?cloud_bs[scanIndex][pixelIndex]:cloud_gr[scanIndex][pixelIndex];
 
-    if (i>=970 && i<=990)
-     fprintf(fp,"--- %d %d %d %g %g %g\n",(i+1),pixelType,pixelIndex,pRef->latitude,pRef->longitude,pRef->sza);
+  //  if (i>=970 && i<=990)
+  //   fprintf(fp,"--- %d %d %d %g %g %g\n",(i+1),pixelType,pixelIndex,pRef->latitude,pRef->longitude,pRef->sza);
 
    }
 
 
-     fclose(fp);
-    }
+  //   fclose(fp);
+  //  }
  }
 
 static bool use_as_reference(GOME1NETCDF_REF *pRef,const FENO *feno)
