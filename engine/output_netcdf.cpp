@@ -133,18 +133,18 @@ static void define_variable(NetCDFGroup &group, const struct output_field& thefi
   if (vtype == Calibration) {
     if (n_crosstrack > 1) {
       dimids.push_back(get_dimid("n_crosstrack"));
-      chunksizes.push_back(std::min<size_t>(100, n_crosstrack));
+      chunksizes.push_back(std::max<size_t>(100, n_crosstrack));
     }
 
     dimids.push_back(get_dimid("n_calib"));
-    chunksizes.push_back(std::min<size_t>(100, n_calib));
+    chunksizes.push_back(std::max<size_t>(100, n_calib));
   } else {
     dimids.push_back(get_dimid("n_alongtrack"));
-    chunksizes.push_back(std::min<size_t>(100, n_alongtrack));
+    chunksizes.push_back(std::max<size_t>(100, n_alongtrack));
 
     if (n_crosstrack > 1) {
       dimids.push_back(get_dimid("n_crosstrack"));
-      chunksizes.push_back(std::min<size_t>(100, n_crosstrack));
+      chunksizes.push_back(std::max<size_t>(100, n_crosstrack));
     }
   }
   getDims(thefield, dimids, chunksizes);
@@ -344,6 +344,7 @@ void create_subgroups(const ENGINE_CONTEXT *pEngineContext,NetCDFGroup &group) {
         if (!pTabFeno->hidden && (group.groupID(pTabFeno->windowName)<0))
          {
           auto subgroup=group.defGroup(pTabFeno->windowName);
+          CROSS_REFERENCE *pTabCross;
 
           // needs the wavelength at the center of the fitting window for profiling algorithm
 
@@ -352,6 +353,14 @@ void create_subgroups(const ENGINE_CONTEXT *pEngineContext,NetCDFGroup &group) {
             char str[80];
             sprintf(str,"%.3lf",pTabFeno->lambda0);
             subgroup.putAttr("lambda0", str);
+           }
+
+          for (int i=0;i<pTabFeno->NTabCross;i++)
+           {
+            pTabCross=(CROSS_REFERENCE *)&pTabFeno->TabCross[i];
+            
+            if ((pTabCross->IndSvdA>0) && (WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CROSS))
+             subgroup.putAttr(WorkSpace[pTabCross->Comp].symbolName,WorkSpace[pTabCross->Comp].crossFileName);
            }
          }
        }

@@ -477,6 +477,7 @@ class CWInstrFrm4doasEdit : public CWAllFilesEdit
 
  private:
   QLineEdit *m_detSizeEdit;
+  QComboBox *m_spectralTypeCombo;
   StrayLightConfig *m_strayLightConfig;
 };
 

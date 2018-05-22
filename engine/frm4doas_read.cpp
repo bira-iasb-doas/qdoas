@@ -83,6 +83,7 @@ extern "C" {
 #include "comdefs.h"
 #include "stdfunc.h"
 #include "engine_context.h"
+#include "engine.h"
 #include "mediate.h"
 #include "analyse.h"
 #include "spline.h"
@@ -225,6 +226,7 @@ RC FRM4DOAS_Set(ENGINE_CONTEXT *pEngineContext)
   // Declarations
 
   RC rc = ERROR_ID_NO;
+  ENGINE_refStartDate=1;
 
   // Try to open the file and load metadata
 
@@ -247,6 +249,12 @@ RC FRM4DOAS_Set(ENGINE_CONTEXT *pEngineContext)
     // Read metadata
 
     current_metadata = FRM4DOAS_Read_Metadata(pEngineContext->recordNumber);
+
+    auto dt = reinterpret_cast<const short(*)[7]>(current_metadata.dt.data());
+
+    pEngineContext->fileInfo.startDate.da_day=(char)dt[0][2];
+    pEngineContext->fileInfo.startDate.da_mon=(char)dt[0][1];
+    pEngineContext->fileInfo.startDate.da_year=dt[0][0];
    }
   catch (std::runtime_error& e)
    {
@@ -285,6 +293,7 @@ RC FRM4DOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int lo
   vector<float> spe;                                                            // spectrum
   vector<float> err;                                                            // instrumental errors
   vector<short> qf;                                                             // quality flag
+  int measurementType;
   int i;                                                                        // index for loops and arrays
   RC rc;                                                                        // return code
 
@@ -388,12 +397,22 @@ RC FRM4DOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int lo
 
     // Selection of the reference spectrum
 
+    measurementType=pEngineContext->project.instrumental.user;
+
     if (rc || (dateFlag && ((pRecordInfo->maxdoas.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH) ||
              ((fabs(pRecordInfo->elevationViewAngle+1.)>EPSILON) &&
              ((pRecordInfo->elevationViewAngle<pEngineContext->project.spectra.refAngle-pEngineContext->project.spectra.refTol) ||
               (pRecordInfo->elevationViewAngle>pEngineContext->project.spectra.refAngle+pEngineContext->project.spectra.refTol))))))
 
      rc=ERROR_ID_FILE_RECORD;
+
+    else if (!dateFlag && (measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_NONE))
+     {
+      if (((measurementType==PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) && (pRecordInfo->maxdoas.measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) && (pRecordInfo->maxdoas.measurementType==PRJCT_INSTR_MAXDOAS_TYPE_ZENITH)) ||
+          ((measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) && (pRecordInfo->maxdoas.measurementType!=measurementType)))
+
+       rc=ERROR_ID_FILE_RECORD;
+     }     
 
     // Later : add the selection of the measurement type in the instrumental page else if (!dateFlag && (measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_NONE))
     // Later : add the selection of the measurement type in the instrumental page  {

@@ -1279,6 +1279,24 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     m_instrumental->frm4doas.lambdaMin = atts.value("lambda_min").toDouble();
     m_instrumental->frm4doas.lambdaMax = atts.value("lambda_max").toDouble();
 
+    str = atts.value("type");
+
+    if (!str.isEmpty())
+      {
+      if (str == "all")
+        m_instrumental->frm4doas.spectralType = PRJCT_INSTR_MAXDOAS_TYPE_NONE;
+      else if (str == "zenith")
+        m_instrumental->frm4doas.spectralType = PRJCT_INSTR_MAXDOAS_TYPE_ZENITH;        
+      else if (str == "off-axis")
+        m_instrumental->frm4doas.spectralType = PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS;
+      else if (str == "direct-sun")
+        m_instrumental->frm4doas.spectralType = PRJCT_INSTR_MAXDOAS_TYPE_DIRECTSUN;
+      else if (str == "almucantar")
+        m_instrumental->frm4doas.spectralType = PRJCT_INSTR_MAXDOAS_TYPE_ALMUCANTAR;
+      else
+        return postErrorMessage("Invalid ccdeev Type");
+     }    
+
     str = atts.value("calib");
     if (!str.isEmpty()) {
       str = m_master->pathExpand(str);

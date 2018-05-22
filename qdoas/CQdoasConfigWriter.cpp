@@ -1048,16 +1048,33 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   fprintf(fp, "      <frm4doas size=\"%d\" straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"",d->frm4doas.detectorSize,
   (d->frm4doas.straylight ? sTrue : sFalse),d->frm4doas.lambdaMin,d->frm4doas.lambdaMax);
   tmpStr = pathMgr->simplifyPath(QString(d->frm4doas.calibrationFile));
+
+  fprintf(fp, " type=");
+  switch (d->frm4doas.spectralType) {
+  case PRJCT_INSTR_MAXDOAS_TYPE_NONE:
+    fprintf(fp, "\"all\"");
+    break;
+  case PRJCT_INSTR_MAXDOAS_TYPE_ZENITH:
+    fprintf(fp, "\"zenith\"");
+    break;    
+  case PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS:
+    fprintf(fp, "\"off-axis\"");
+    break;
+  case PRJCT_INSTR_MAXDOAS_TYPE_DIRECTSUN:
+    fprintf(fp, "\"direct-sun\"");
+    break;
+  case PRJCT_INSTR_MAXDOAS_TYPE_ALMUCANTAR:
+    fprintf(fp, "\"almucantar\"");
+    break;
+  default:
+    fprintf(fp, "\"invalid\"");
+  }
+    
   fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
   tmpStr = pathMgr->simplifyPath(QString(d->frm4doas.transmissionFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
 
   fprintf(fp, "    </instrumental>\n");
-
-  tmpStr = pathMgr->simplifyPath(QString(d->frm4doas.calibrationFile));
-  fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
-  tmpStr = pathMgr->simplifyPath(QString(d->frm4doas.transmissionFunctionFile));
-  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
 }
 
 void CQdoasConfigWriter::writePropertiesSlit(FILE *fp, const mediate_project_slit_t *d)

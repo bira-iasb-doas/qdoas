@@ -383,6 +383,7 @@ extern "C" {
   struct instrumental_frm4doas
   {
     int  detectorSize;
+    int  spectralType;
     int  straylight;
     double lambdaMin,lambdaMax;
     char calibrationFile[FILENAME_BUFFER_LENGTH];

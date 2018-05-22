@@ -1219,6 +1219,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
     case PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF:
 
       NDET[0]=pMediateInstrumental->frm4doas.detectorSize;
+      pEngineInstrumental->user=pMediateInstrumental->frm4doas.spectralType;
 
       pEngineInstrumental->offsetFlag=pMediateInstrumental->frm4doas.straylight;
       pEngineInstrumental->lambdaMin=pMediateInstrumental->frm4doas.lambdaMin;

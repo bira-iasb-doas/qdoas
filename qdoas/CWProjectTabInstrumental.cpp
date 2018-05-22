@@ -1214,6 +1214,17 @@ CWInstrFrm4doasEdit::CWInstrFrm4doasEdit(const struct instrumental_frm4doas *d, 
 
   ++row;
 
+  // Spectral Type
+  gridLayout->addWidget(new QLabel("Spectral Type", this), row, 0);
+  m_spectralTypeCombo = new QComboBox(this);
+  m_spectralTypeCombo->addItem("All", QVariant(PRJCT_INSTR_MAXDOAS_TYPE_NONE));
+  m_spectralTypeCombo->addItem("Zenith", QVariant(PRJCT_INSTR_MAXDOAS_TYPE_ZENITH));
+  m_spectralTypeCombo->addItem("Off-axis", QVariant(PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS));
+  m_spectralTypeCombo->addItem("Direct sun", QVariant(PRJCT_INSTR_MAXDOAS_TYPE_DIRECTSUN));
+  m_spectralTypeCombo->addItem("Almucantar", QVariant(PRJCT_INSTR_MAXDOAS_TYPE_ALMUCANTAR));
+  gridLayout->addWidget(m_spectralTypeCombo, row, 1);
+  ++row;  
+
   // files
   helperConstructCalInsFileWidgets(gridLayout, row,
 				   d->calibrationFile, sizeof(d->calibrationFile),
@@ -1229,6 +1240,12 @@ CWInstrFrm4doasEdit::CWInstrFrm4doasEdit(const struct instrumental_frm4doas *d, 
   m_detSizeEdit->validator()->fixup(tmpStr);
   m_detSizeEdit->setText(tmpStr);
 
+  // spectral type
+
+  int index = m_spectralTypeCombo->findData(QVariant(d->spectralType));
+  if (index != -1)
+    m_spectralTypeCombo->setCurrentIndex(index);  
+
   // straylight bias
   m_strayLightConfig->setChecked(d->straylight ? true : false);
   m_strayLightConfig->setLambdaMin(d->lambdaMin);
@@ -1239,6 +1256,9 @@ void CWInstrFrm4doasEdit::apply(struct instrumental_frm4doas *d) const
 {
   // detector size
   d->detectorSize = m_detSizeEdit->text().toInt();
+
+  // spectral type
+  d->spectralType = m_spectralTypeCombo->itemData(m_spectralTypeCombo->currentIndex()).toInt();  
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toLocal8Bit().data());
