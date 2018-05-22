@@ -776,8 +776,7 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
        break;
        // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_GOME1_NETCDF :
-       if (!(rc=GOME1NETCDF_Set(pEngineContext)) &&  (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_EXPORT) && (THRD_id!=THREAD_TYPE_NONE))
-        rc=GOME1NETCDF_LoadAnalysis(pEngineContext,responseHandle);
+       rc=GOME1NETCDF_Set(pEngineContext);
        break;
        // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_SCIA_PDS :

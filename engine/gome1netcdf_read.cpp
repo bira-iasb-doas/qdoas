@@ -771,7 +771,7 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
 
         if (!pOrbitFile->mode.length() && pOrbitFile->mode_bs.length())
          continue;
-         
+
              // Dimensions of spectra are 'time' x 'scan_size' x 'pixel_size ' x 'spectral_channel'
              // For example : 1 x 552 x 3 x 832
 
@@ -1251,14 +1251,14 @@ int GOME1NETCDF_get_orbit_date(int *orbit_year, int *orbit_month, int *orbit_day
     GOME1NETCDF_ORBIT_FILE *pOrbitFile;
     pOrbitFile=&gome1netCDF_orbitFiles[gome1netCDF_currentFileIndex];
     // current_file = NetCDFFile(pOrbitFile->fileName,NC_NOWRITE);                 // open current file
-    
+
     std::istringstream orbit_start(pOrbitFile->current_file.getAttText("time_reference"));
     // time_coverage_start is formatted as "YYYY-MM-DD"
     char tmp; // to skip "-" chars
     orbit_start >> *orbit_year >> tmp >> *orbit_month >> tmp >> *orbit_day;
     // current_file.close();
     return  orbit_start.good() ? 0 : 1;
-   } 
+   }
 }
 
 
@@ -1536,27 +1536,11 @@ RC GOME1NETCDF_NewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle) {
   // make a copy of the EngineContext structure to read reference data
   RC rc=EngineCopyContext(&ENGINE_contextRef,pEngineContext);
 
-  /* {
-    FILE *fp;
-    fp=fopen("toto.dat","a+t");
-    fprintf(fp,"OK1 %d\n",ENGINE_contextRef.recordNumber);
-    fclose(fp);
-   } */
-
-
   if (ENGINE_contextRef.recordNumber==0)
     return ERROR_ID_ALLOC;
 
   // Allocate reference structures:
   initialize_vza_refs();
-
-  /* {
-    FILE *fp;
-    fp=fopen("toto.dat","a+t");
-    fprintf(fp,"OK2\n");
-    fclose(fp);
-   } */
-
 
   // 1. look in all candidate orbit files (i.e. orbit files in same
   //    dir)
@@ -1570,13 +1554,6 @@ RC GOME1NETCDF_NewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle) {
   struct ref_list *list_handle;
 
   rc = find_ref_spectra(selected_spectra, &list_handle);
-
-  /* {
-    FILE *fp;
-    fp=fopen("toto.dat","a+t");
-    fprintf(fp,"OK3 %d\n",rc);
-    fclose(fp);
-   } */
 
   if (rc != ERROR_ID_NO)
     goto cleanup;
@@ -1660,13 +1637,6 @@ RC GOME1NETCDF_NewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle) {
        }
      }
    }
-/*  {
-   FILE *fp;
-   fp=fopen("toto.dat","a+t");
-   fprintf(fp,"OK4\n");
-   fclose(fp);
-  } */
-
 
  cleanup:
   // 3. free lists created in step 1
@@ -1679,14 +1649,6 @@ RC GOME1NETCDF_NewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle) {
       free_ref_list(selected_spectra[i][j], FREE_LIST_ONLY);
     }
   }
-
-  /* {
-   FILE *fp;
-   fp=fopen("toto.dat","a+t");
-   fprintf(fp,"OK5\n");
-   fclose(fp);
-  } */
-
 
   // for 'list_handle', we also free the gome_ref_spectrum* pointers,
   // and the double* pointers 'lambda' & 'spectrum':
