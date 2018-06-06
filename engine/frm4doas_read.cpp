@@ -315,19 +315,22 @@ RC FRM4DOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int lo
 
     // Spectra
 
-    measurements_group=current_file.getGroup(root_name+"/measurements");
-
-    measurements_group.getVar("wavelengths",start,count,2,(float)0.,wve);
-    measurements_group.getVar("radiances",start,count,2,(float)0.,spe);
-    measurements_group.getVar("radiances_errors",start,count,2,(float)1.,err);
-    measurements_group.getVar("quality_flags",start,count,2,(short)1,qf);
-
-    for (i=0;i<det_size;i++)
+    if (!dateFlag) // for automatic selection of the reference spectrum, it's not necessary to read spectra
      {
-      pEngineContext->buffers.lambda_irrad[i]=(double)wve[i];    // do not apply if irradiance present in the file
-      pEngineContext->buffers.lambda[i]=wve[i];
-      pEngineContext->buffers.spectrum[i]=spe[i];
-      pEngineContext->buffers.sigmaSpec[i]=err[i];
+      measurements_group=current_file.getGroup(root_name+"/measurements");
+
+      measurements_group.getVar("wavelengths",start,count,2,(float)0.,wve);
+      measurements_group.getVar("radiances",start,count,2,(float)0.,spe);
+      measurements_group.getVar("radiances_errors",start,count,2,(float)1.,err);
+      measurements_group.getVar("quality_flags",start,count,2,(short)1,qf);
+
+      for (i=0;i<det_size;i++)
+       {
+        pEngineContext->buffers.lambda_irrad[i]=(double)wve[i];    // do not apply if irradiance present in the file
+        pEngineContext->buffers.lambda[i]=wve[i];
+        pEngineContext->buffers.spectrum[i]=spe[i];
+        pEngineContext->buffers.sigmaSpec[i]=err[i];
+       }
      }
 
     // Date and time fields (UT YYYY,MM,DD,hh,mm,ss,ms)
@@ -412,7 +415,7 @@ RC FRM4DOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int lo
           ((measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) && (pRecordInfo->maxdoas.measurementType!=measurementType)))
 
        rc=ERROR_ID_FILE_RECORD;
-     }     
+     }
 
     // Later : add the selection of the measurement type in the instrumental page else if (!dateFlag && (measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_NONE))
     // Later : add the selection of the measurement type in the instrumental page  {

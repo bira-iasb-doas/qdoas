@@ -148,9 +148,22 @@ NetCDFFile& NetCDFFile::operator=(NetCDFFile &&other) {
   return *this;
 }
 
+#define NEW_CACHE_SIZE 32000000
+#define NEW_CACHE_NELEMS 2000
+#define NEW_CACHE_PREEMPTION .75
+
 static int openNetCDF(const string &filename, int mode) {
   int groupid;
-  int rc = nc_open(filename.c_str(), mode, &groupid);
+
+  int rc;
+
+  /* Change chunk cache. */
+
+  if ((mode==NC_NOWRITE) &&
+     ((rc=nc_set_chunk_cache(NEW_CACHE_SIZE, NEW_CACHE_NELEMS,
+          NEW_CACHE_PREEMPTION))==NC_NOERR))
+
+   rc = nc_open(filename.c_str(), mode, &groupid);
 
   if (rc != NC_NOERR && mode != NC_NOWRITE) {
     // file doesn't exist or is not a valid NetCDF file and we are in write mode
