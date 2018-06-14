@@ -271,6 +271,8 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
     d->selected[d->nSelected] = PRJCT_RESULTS_ZENITH_BEFORE;
   else if (str == "zenith_after_index")
     d->selected[d->nSelected] = PRJCT_RESULTS_ZENITH_AFTER;
+  else if (str == "rc")
+    d->selected[d->nSelected] = PRJCT_RESULTS_RC;    
   else
     return postErrorMessage("Invalid output field " + str);
 

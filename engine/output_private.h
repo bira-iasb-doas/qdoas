@@ -675,7 +675,7 @@ static inline void get_rms(struct output_field *this_field, double *rms, const E
   *rms = (!pTabFeno->rc)?pTabFeno->RMS:QDOAS_FILL_DOUBLE;
 }
 
-static inline void get_rms_calib(struct output_field *this_field, double *rms, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
+static inline void get_rms_calib(struct output_field *this_field, int *rms, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
   *rms = KURUCZ_buffers[indexFenoColumn].KuruczFeno[this_field->index_feno].rms[index_calib];
 }
 
@@ -712,6 +712,16 @@ static inline void get_chisquare(struct output_field *this_field, double *chisqu
 
 static inline void get_chisquare_calib(struct output_field *this_field, double *chisquare, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
   *chisquare = KURUCZ_buffers[indexFenoColumn].KuruczFeno[this_field->index_feno].chiSquare[index_calib];
+}
+
+static inline void get_rc(struct output_field *this_field, int *rc, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib __attribute__ ((unused))) {
+  FENO *pTabFeno = this_field->get_tabfeno(this_field, indexFenoColumn);
+  rc[0] = pTabFeno->rcKurucz;
+  rc[1] = pTabFeno->rc;
+}
+
+static inline void get_rc_calib(struct output_field *this_field, int *rc, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
+  *rc = KURUCZ_buffers[indexFenoColumn].KuruczFeno[this_field->index_feno].rc;
 }
 
 static inline void get_flux(struct output_field *this_field, double *flux, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn, int index_calib __attribute__ ((unused))) {

@@ -546,6 +546,7 @@ typedef struct _engineRecordInfo
 
   char  refFileName[DOAS_MAX_PATH_LEN+1];
   int    refRecord;
+  RC rc;
 
  }
 RECORD_INFO;

@@ -177,6 +177,7 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_ZENITH_AFTER,           "Zenith after index"));
 
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_PRECALCULATED_FLUXES,   "Precalculated fluxes"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_RC,                     "Return code"));
 
   // populate the selected list by key-reference to the available list ...
 
@@ -330,6 +331,7 @@ void getValidFieldFlags(int *validFlags, int instrument,int selectorOrigin)
 
   validFlags[PRJCT_RESULTS_COVAR]=(selectorOrigin!=TAB_SELECTOR_EXPORT)?1:0;
   validFlags[PRJCT_RESULTS_CORR]=(selectorOrigin!=TAB_SELECTOR_EXPORT)?1:0;
+  validFlags[PRJCT_RESULTS_RC]=((selectorOrigin==TAB_SELECTOR_OUTPUT) && (instrument==PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF))?1:0;
 
   // Output fields related to overall analysis (or run calibration) results (per analysis window)
 
@@ -728,6 +730,7 @@ void getValidFieldFlags(int *validFlags, int instrument,int selectorOrigin)
       validFlags[PRJCT_RESULTS_LATIT]=1;
       validFlags[PRJCT_RESULTS_ALTIT]=1;
       validFlags[PRJCT_RESULTS_SCANINDEX]=1;
+      validFlags[PRJCT_RESULTS_SCANS]=1;
       validFlags[PRJCT_RESULTS_ZENITH_BEFORE]=1;
       validFlags[PRJCT_RESULTS_ZENITH_AFTER]=1;
      }

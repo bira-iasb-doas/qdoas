@@ -245,7 +245,8 @@ char *ascFieldsNames[PRJCT_RESULTS_MAX]=
   (char *)"filename",                                                           // PRJCT_RESULTS_FILENAME
   (char *)"Scan index",                                                         // PRJCT_RESULTS_SCANINDEX
   (char *)"Index zenith before",                                                // PRJCT_RESULTS_ZENITH_BEFORE,
-  (char *)"Index zenith after"                                                  // PRJCT_RESULTS_ZENITH_AFTER,
+  (char *)"Index zenith after",                                                 // PRJCT_RESULTS_ZENITH_AFTER,
+  (char *)"Return code"                                                         // PRJCT_RESULTS_RC
  };
 
 enum _ascLineType

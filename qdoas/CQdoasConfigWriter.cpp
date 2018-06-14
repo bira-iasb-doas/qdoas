@@ -1676,7 +1676,8 @@ void CQdoasConfigWriter::writeDataSelectList(FILE *fp, const data_select_list_t 
     case PRJCT_RESULTS_SCANINDEX : config_string = "scan_index"; break;
     case PRJCT_RESULTS_ZENITH_BEFORE : config_string = "zenith_before_index"; break;
     case PRJCT_RESULTS_ZENITH_AFTER : config_string = "zenith_after_index"; break;
-    case PRJCT_RESULTS_PRECALCULATED_FLUXES:            config_string = "precalculated_fluxes"; break;
+    case PRJCT_RESULTS_PRECALCULATED_FLUXES : config_string = "precalculated_fluxes"; break;
+    case PRJCT_RESULTS_RC : config_string = "rc"; break;
 
     default: puts("ERROR: no configuration string defined for output field. This is a bug, please contact Qdoas developers.");
     }

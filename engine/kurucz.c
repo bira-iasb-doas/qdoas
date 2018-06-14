@@ -84,7 +84,7 @@ int KURUCZ_indexLine=1;
 
 // Given two arrays x[1..n] and y[1..n], this routine computes their correlation coefficient
 // r (returned as r), the significance level at which the null hypothesis of zero correlation is
-// disproved (prob whose small value indicates a significant correlation), and Fisher’s z (returned
+// disproved (prob whose small value indicates a significant correlation), and Fisherï¿½s z (returned
 // as z), whose value can be used in further statistical tests as described above.
 
 // Reference : Numerical Recipes in C
@@ -123,10 +123,10 @@ double corrcoef(double *x,double *y,int n)
 
   r=sxy/(sqrt(sxx*syy)+TINY);
 
-  // *z=0.5*log((1.0+(*r)+TINY)/(1.0-(*r)+TINY)); Fisher’s z transformation.
+  // *z=0.5*log((1.0+(*r)+TINY)/(1.0-(*r)+TINY)); Fisherï¿½s z transformation.
   // df=n-2;
   // t=(*r)*sqrt(df/((1.0-(*r)+TINY)*(1.0+(*r)+TINY))); Equation (14.5.5).
-  // *prob=betai(0.5*df,0.5,df/(df+t*t)); Student’s t probability.
+  // *prob=betai(0.5*df,0.5,df/(df+t*t)); Studentï¿½s t probability.
 /* *prob=erfcc(fabs((*z)*sqrt(n-1.0))/1.4142136) */
  // For large n, this easier computation of prob, using the short routine erfcc, would give approximately
  // the same value.
@@ -1314,6 +1314,8 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
     pKurucz->KuruczFeno[indexFeno].chiSquare[indexWindow]=Square;
     pKurucz->KuruczFeno[indexFeno].rms[indexWindow]=(Square>(double)0.)?sqrt(Square):(double)0.;
     pKurucz->KuruczFeno[indexFeno].nIter[indexWindow]=NIter[indexWindow];
+
+    pKurucz->KuruczFeno[indexFeno].rc=rc;
   }  // End for (indexWindow=...
 
   if (rc)
