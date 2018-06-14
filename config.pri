@@ -13,13 +13,13 @@ QMAKE_CFLAGS += -g -std=gnu99 -Wall -Wextra -pedantic \
 QMAKE_LFLAGS += -g
 QMAKE_LFLAGS_RELEASE=
 
-QDOAS_VERSION=GOME1netCDF
+QDOAS_VERSION=r1785
 
 win64 {
   QDOAS_VERSION = "$${QDOAS_VERSION}_x86_64"
 }
 
-DEFINES += QDOAS_VERSION="\"\\\"$${QDOAS_VERSION}\\\"\"" QDOAS_DATE="\"\\\"24 May 2018\\\"\""
+DEFINES += QDOAS_VERSION="\"\\\"$${QDOAS_VERSION}\\\"\"" QDOAS_DATE="\"\\\"7 June 2018\\\"\""
 
 LIBS += -L../mediator -lmediator -L../engine -lengine -L../common -lcommon
 DEPENDPATH += ../common ../engine ../mediator
