@@ -1919,6 +1919,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
        // Apply the calibration procedure on the reference spectrum if the wavelength calibration is different from None at least for one spectral window
        if ((THRD_id==THREAD_TYPE_KURUCZ) || useKurucz) {
          rc=KURUCZ_Alloc(&pEngineContext->project,pEngineContext->buffers.lambda,indexKurucz,lambdaMin,lambdaMax,indexFenoColumn, &hr_solar_temp);
+
          if (!rc && useKurucz) {
            rc=KURUCZ_Reference(pEngineContext->buffers.instrFunction,0,saveFlag,1,responseHandle,indexFenoColumn);
          }

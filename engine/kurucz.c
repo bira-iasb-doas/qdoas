@@ -1217,6 +1217,8 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
     DEBUG_Stop("Kurucz");
 #endif
 
+
+
     // Fill A SVD system
 
     pixMid[indexWindow+1]=(double)( spectrum_start(subwindow_fit[indexWindow].specrange)
@@ -1407,6 +1409,7 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
     // Display residual
 
     if (pKurucz->displayResidual) {
+
       if (ANALYSE_swathSize==1)
         strcpy(string,"Residual");
       else
