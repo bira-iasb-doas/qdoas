@@ -1072,6 +1072,9 @@ static void OutputRegisterFields(const ENGINE_CONTEXT *pEngineContext, const int
      case PRJCT_RESULTS_ZENITH_AFTER:
        register_field( (struct output_field) { .basic_fieldname = "index_zenith_after", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&get_zenith_after_index });
      break;
+     case PRJCT_RESULTS_RC:
+       register_field( (struct output_field) { .basic_fieldname = "rc", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#5d", .get_data = (func_void)&get_rc });
+       break;
      default:
        break;
      }
@@ -1454,7 +1457,9 @@ static void OutputRegisterFieldsToExport(const ENGINE_CONTEXT *pEngineContext, c
      case PRJCT_RESULTS_ZENITH_AFTER:  // !!! EXPORT FUNCTION !!!
        register_field( (struct output_field) { .basic_fieldname = "index_zenith_after", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#6d", .get_data = (func_void)&get_zenith_after_index });
      break;
-
+     case PRJCT_RESULTS_RC:  // !!! EXPORT FUNCTION !!!
+       register_field( (struct output_field) { .basic_fieldname = "rc", .memory_type = OUTPUT_INT, .resulttype = fieldtype, .format = "%#5d", .get_data = (func_void)&get_rc });
+       break;
      default:  // !!! EXPORT FUNCTION !!!
        break;
      }
@@ -1671,7 +1676,7 @@ static int register_analysis_output(const PRJCT_RESULTS *pResults, int indexFeno
         .get_data = (outputRunCalib) ? (func_void) &get_chisquare_calib : (func_void) &get_chisquare} },
     { PRJCT_RESULTS_RC,
       { .basic_fieldname = "rc", .format = FORMAT_INT, .memory_type = OUTPUT_INT,
-        .get_data = (outputRunCalib) ? (func_void) &get_rc_calib : (func_void) &get_rc, .data_cols=(outputRunCalib) ? 1:2, .column_number_format="(%d)" } },
+        .get_data = (outputRunCalib) ? (func_void) &get_rc_calib : (func_void) &get_rc_analysis, .data_cols=(outputRunCalib) ? 1:2, .column_number_format="(%d)" } },
     { PRJCT_RESULTS_RMS,
       { .basic_fieldname = "RMS", .format = FORMAT_DOUBLE, .memory_type = OUTPUT_DOUBLE,
         .get_data = (outputRunCalib) ? (func_void) &get_rms_calib : (func_void) &get_rms} },

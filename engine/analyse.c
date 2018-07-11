@@ -3044,7 +3044,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
     memcpy(Spectre,pBuffers->spectrum,sizeof(double)*n_wavel);
 
-    if ( (rc=VECTOR_NormalizeVector(Spectre-1,n_wavel,&speNormFact,"ANALYSE_Spectrum (Spectrum) "))!=ERROR_ID_NO ) {
+    if ( (pRecord->rc=rc=VECTOR_NormalizeVector(Spectre-1,n_wavel,&speNormFact,"ANALYSE_Spectrum (Spectrum) "))!=ERROR_ID_NO ) {
      goto EndAnalysis;
     }
     // Apply Kurucz on spectrum
@@ -3075,7 +3075,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
               memcpy(pTabFeno->LambdaK,LambdaK,sizeof(double)*n_wavel);
               memcpy(pTabFeno->Lambda,LambdaK,sizeof(double)*n_wavel);
 
-              if ((rc=KURUCZ_ApplyCalibration(pTabFeno,LambdaK,indexFenoColumn))!=ERROR_ID_NO)
+              if ((pRecord->rc=rc=KURUCZ_ApplyCalibration(pTabFeno,LambdaK,indexFenoColumn))!=ERROR_ID_NO)
                 goto EndAnalysis;
             }
           }
@@ -3085,7 +3085,10 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
        }
 
       if (rc>=THREAD_EVENT_STOP)
-       goto EndAnalysis;
+       {
+        pRecord->rc=rc;
+        goto EndAnalysis;
+       }
      }
 
     pRecord->BestShift=(double)0.;
@@ -3172,7 +3175,6 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
             switch(pEngineContext->project.instrumental.readOutFormat) {
             case PRJCT_INSTR_FORMAT_OMPS:
               rc=ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, "Automatic reference selection not implemented for this file format");
-              goto EndAnalysis;
               break;
             case PRJCT_INSTR_FORMAT_GDP_BIN:                                          // GOME1NETCDF !!!!!!
               rc = GDP_BIN_get_vza_ref(pRecord->gome.pixelType, WrkFeno, Feno);
@@ -3212,7 +3214,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
             if (rc == ERROR_ID_NO)
               rc=VECTOR_NormalizeVector(Spectre-1,n_wavel,&speNormFact,__func__);
             if (rc != ERROR_ID_NO)
-              goto EndAnalysis;
+             goto EndAnalysis;
 
             // after putting earthshine on reference grid, assign the
             // Kurucz-corrected reference grid LambdaK to the
@@ -3563,18 +3565,23 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
     EndAnalysis :
 
     if (!nrc)
+     {
       for (int WrkFeno=0;WrkFeno<NFeno;WrkFeno++)
         if (!TabFeno[indexFenoColumn][WrkFeno].hidden)
-          TabFeno[indexFenoColumn][WrkFeno].rc=-1;
+         TabFeno[indexFenoColumn][WrkFeno].rc=rc;
 
-    if ((pEngineContext->mfcDoasisFlag || (pEngineContext->lastSavedRecord!=pEngineContext->indexRecord)) &&
-        (   ((THRD_id==THREAD_TYPE_ANALYSIS) && pProject->asciiResults.analysisFlag && (!pEngineContext->project.asciiResults.successFlag || nrc))
-            || ((THRD_id==THREAD_TYPE_KURUCZ) && pProject->asciiResults.calibFlag) ) )
+      if (pRecord->rc==ERROR_ID_NO)
+       pRecord->rc=-1;
+     }
 
-      rcOutput=OUTPUT_SaveResults(pEngineContext,indexFenoColumn);
+//    if ((pEngineContext->mfcDoasisFlag || (pEngineContext->lastSavedRecord!=pEngineContext->indexRecord)) &&
+//        (   ((THRD_id==THREAD_TYPE_ANALYSIS) && pProject->asciiResults.analysisFlag && (!pEngineContext->project.asciiResults.successFlag /* || nrc */))
+//            || ((THRD_id==THREAD_TYPE_KURUCZ) && pProject->asciiResults.calibFlag) ) )
 
-    if (!rc)
-      rc=rcOutput;
+//      rcOutput=OUTPUT_SaveResults(pEngineContext,indexFenoColumn);
+
+//    if (!rc)
+//      rc=rcOutput;
    }
 
   if (Spectre!=NULL)

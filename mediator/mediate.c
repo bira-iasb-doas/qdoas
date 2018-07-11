@@ -2319,7 +2319,7 @@ int mediateRequestNextMatchingAnalyseSpectrum(void *engineContext,
    // Declarations
 
    ENGINE_CONTEXT *pEngineContext = (ENGINE_CONTEXT *)engineContext;
-   RC rc = ERROR_ID_NO;
+   RC rcOutput = ERROR_ID_NO;
 
    int rec = mediateRequestNextMatchingSpectrum(pEngineContext,responseHandle);
 
@@ -2340,17 +2340,26 @@ int mediateRequestNextMatchingAnalyseSpectrum(void *engineContext,
     {
      mediateRequestPlotSpectra(pEngineContext,responseHandle);
 
-     if (!pEngineContext->analysisRef.refAuto || pEngineContext->satelliteFlag || ((rc=EngineNewRef(pEngineContext,responseHandle))==ERROR_ID_NO))
-      rc=ANALYSE_Spectrum(pEngineContext,responseHandle);
+     if (!pEngineContext->analysisRef.refAuto || pEngineContext->satelliteFlag || ((pEngineContext->recordInfo.rc=EngineNewRef(pEngineContext,responseHandle))==ERROR_ID_NO))
+      pEngineContext->recordInfo.rc=ANALYSE_Spectrum(pEngineContext,responseHandle);
 
-     if (rc!=ERROR_ID_NO)
+    if ((pEngineContext->mfcDoasisFlag || (pEngineContext->lastSavedRecord!=pEngineContext->indexRecord)) &&
+        (   ((THRD_id==THREAD_TYPE_ANALYSIS) && pEngineContext->project.asciiResults.analysisFlag && (!pEngineContext->project.asciiResults.successFlag /* || nrc */))
+            || ((THRD_id==THREAD_TYPE_KURUCZ) && pEngineContext->project.asciiResults.calibFlag) ) )
+
+      pEngineContext->recordInfo.rc=OUTPUT_SaveResults(pEngineContext,pEngineContext->recordInfo.i_crosstrack);
+
+//    if (!rc)
+//      rc=rcOutput;
+
+     if (pEngineContext->recordInfo.rc!=ERROR_ID_NO)
       ERROR_DisplayMessage(responseHandle);
     }
 
    // NB if the function returns -1, the problem is that it is not possible to process
    // next records.
 
-   return ((rc != ERROR_ID_REF_ALIGNMENT) || pEngineContext->analysisRef.refScan) ? rec : -1;
+   return ((pEngineContext->recordInfo.rc != ERROR_ID_REF_ALIGNMENT) || pEngineContext->analysisRef.refScan) ? rec : -1;
  }
 
 int mediateRequestPrevMatchingAnalyseSpectrum(void *engineContext,

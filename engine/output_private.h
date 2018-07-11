@@ -470,6 +470,10 @@ static inline void get_uav_heading(struct output_field *this_field __attribute__
   *uav_heading = pEngineContext->recordInfo.uavBira.heading;
 }
 
+static inline void get_rc(struct output_field *this_field __attribute__ ((unused)), int *rc, const ENGINE_CONTEXT *pEngineContext, int indexFenoColumn __attribute__ ((unused)), int index_calib __attribute__ ((unused))) {
+  *rc = pEngineContext->recordInfo.rc;
+}
+
 static inline void get_slant_column(struct output_field *this_field, double *slant_column, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
   CROSS_RESULTS *pTabCrossResults = this_field->get_cross_results(this_field, indexFenoColumn, index_calib);
   *slant_column = ( pTabCrossResults && pTabCrossResults->SlntFact!=(double)0.)
@@ -714,7 +718,7 @@ static inline void get_chisquare_calib(struct output_field *this_field, double *
   *chisquare = KURUCZ_buffers[indexFenoColumn].KuruczFeno[this_field->index_feno].chiSquare[index_calib];
 }
 
-static inline void get_rc(struct output_field *this_field, int *rc, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib __attribute__ ((unused))) {
+static inline void get_rc_analysis(struct output_field *this_field, int *rc, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib __attribute__ ((unused))) {
   FENO *pTabFeno = this_field->get_tabfeno(this_field, indexFenoColumn);
   rc[0] = pTabFeno->rcKurucz;
   rc[1] = pTabFeno->rc;

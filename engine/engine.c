@@ -833,7 +833,6 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
    INDEX indexSite;
    OBSERVATION_SITE *pSite;
    double longit,latit;
-   int rc;                                                                       // Return code
 
    // Initializations
 
@@ -862,6 +861,7 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
    pRecord->aMoon=0.;
    pRecord->hMoon=0.;
    pRecord->fracMoon=0.;
+   pRecord->rc=ERROR_ID_NO;
 
    pRecord->maxdoas.scanIndex=ITEM_NONE;
    pRecord->maxdoas.zenithBeforeIndex=ITEM_NONE;
@@ -877,132 +877,132 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
     case PRJCT_INSTR_FORMAT_ASCII :
       if ((pEngineContext->project.instrumental.ascii.format==PRJCT_INSTR_ASCII_FORMAT_LINE)  ||
           (pEngineContext->project.instrumental.ascii.format==PRJCT_INSTR_ASCII_FORMAT_COLUMN))
-       rc=ASCII_Read(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
+       pRecord->rc=ASCII_Read(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
       else
-       rc=ASCII_QDOAS_Read(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
+       pRecord->rc=ASCII_QDOAS_Read(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_ACTON :
-      rc=ReliActon_Logger(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pFile->namesFp,pFile->darkFp);
+      pRecord->rc=ReliActon_Logger(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pFile->namesFp,pFile->darkFp);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_PDASI_EASOE :
-      rc=ReliEASOE(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pFile->namesFp,pFile->darkFp);
+      pRecord->rc=ReliEASOE(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pFile->namesFp,pFile->darkFp);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_OCEAN_OPTICS :
-      rc=ReliOceanOptics(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
+      pRecord->rc=ReliOceanOptics(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_PDAEGG :
-      rc=ReliPDA_EGG(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pFile->namesFp,pFile->darkFp,1);
+      pRecord->rc=ReliPDA_EGG(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pFile->namesFp,pFile->darkFp,1);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_PDAEGG_OLD :
-      rc=ReliPDA_EGG(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pFile->namesFp,pFile->darkFp,0);
+      pRecord->rc=ReliPDA_EGG(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pFile->namesFp,pFile->darkFp,0);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_LOGGER :
-      rc=ReliPDA_EGG_Logger(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
+      pRecord->rc=ReliPDA_EGG_Logger(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_SAOZ_VIS :
-      rc=ReliSAOZ(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pFile->namesFp);
+      pRecord->rc=ReliSAOZ(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pFile->namesFp);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_SAOZ_EFM :
-      rc=ReliSAOZEfm(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
+      pRecord->rc=ReliSAOZEfm(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_BIRA_MOBILE :
     case PRJCT_INSTR_FORMAT_BIRA_AIRBORNE :
-      rc=AIRBORNE_Read(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
+      pRecord->rc=AIRBORNE_Read(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_APEX :
-      rc=apex_read(pEngineContext,indexRecord);
+      pRecord->rc=apex_read(pEngineContext,indexRecord);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_MFC :
-      rc=ReliMFC(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pEngineContext->project.instrumental.mfc.mfcMaskSpec);
+      pRecord->rc=ReliMFC(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pEngineContext->project.instrumental.mfc.mfcMaskSpec);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_MFC_STD :
-      rc=ReliMFCStd(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
+      pRecord->rc=ReliMFCStd(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_MFC_BIRA :
-      rc=MFCBIRA_Reli(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
+      pRecord->rc=MFCBIRA_Reli(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_RASAS :
-      rc=ReliRAS(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
+      pRecord->rc=ReliRAS(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_UOFT :
-      rc=ReliUofT(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
+      pRecord->rc=ReliUofT(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_NOAA :
-      rc=ReliNOAA(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
+      pRecord->rc=ReliNOAA(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_OMI :
-      rc=OMI_read_earth(pEngineContext,indexRecord);
+      pRecord->rc=OMI_read_earth(pEngineContext,indexRecord);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_TROPOMI :
-      rc=tropomi_read(pEngineContext,indexRecord);
+      pRecord->rc=tropomi_read(pEngineContext,indexRecord);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_OMPS :
-      rc=OMPS_read(pEngineContext,indexRecord);
+      pRecord->rc=OMPS_read(pEngineContext,indexRecord);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_CCD_EEV :
-      rc=ReliCCD_EEV(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pFile->darkFp);
+      pRecord->rc=ReliCCD_EEV(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pFile->darkFp);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_CCD_HA_94 :
-      rc=ReliCCD(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pFile->namesFp,pFile->darkFp);
+      pRecord->rc=ReliCCD(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pFile->namesFp,pFile->darkFp);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_CCD_OHP_96 :
-      rc=ReliCCDTrack(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pFile->namesFp,pFile->darkFp);
+      pRecord->rc=ReliCCDTrack(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp,pFile->namesFp,pFile->darkFp);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_GDP_BIN :
-      rc=GDP_BIN_Read(pEngineContext,indexRecord,pFile->specFp);
+      pRecord->rc=GDP_BIN_Read(pEngineContext,indexRecord,pFile->specFp);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_GOME1_NETCDF :
-      rc=GOME1NETCDF_Read(pEngineContext,indexRecord,ITEM_NONE);
+      pRecord->rc=GOME1NETCDF_Read(pEngineContext,indexRecord,ITEM_NONE);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_SCIA_PDS :
-      rc=SCIA_ReadPDS(pEngineContext,indexRecord);
+      pRecord->rc=SCIA_ReadPDS(pEngineContext,indexRecord);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_GOME2 :
-      rc=GOME2_Read(pEngineContext,indexRecord,ITEM_NONE);
+      pRecord->rc=GOME2_Read(pEngineContext,indexRecord,ITEM_NONE);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_MKZY :
-      rc=MKZY_Read(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
+      pRecord->rc=MKZY_Read(pEngineContext,indexRecord,dateFlag,localCalDay,pFile->specFp);
       break;
       // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF :
-       rc=FRM4DOAS_Read(pEngineContext,indexRecord,dateFlag,localCalDay); // do not need specFp because the file is open with netCDF
+       pRecord->rc=FRM4DOAS_Read(pEngineContext,indexRecord,dateFlag,localCalDay); // do not need specFp because the file is open with netCDF
        break;
        // ---------------------------------------------------------------------------
     default :
-      rc=ERROR_ID_FILE_BAD_FORMAT;
+      pRecord->rc=ERROR_ID_FILE_BAD_FORMAT;
       break;
       // ---------------------------------------------------------------------------
     }
 
-   if (rc)
-     return rc;
+   if (pRecord->rc)
+     return pRecord->rc;
 
    int i_crosstrack = (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GOME1_NETCDF) ?
                       (indexRecord - 1) % ANALYSE_swathSize :
@@ -1010,10 +1010,10 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
 
    const int n_wavel = NDET[i_crosstrack];
 
-   rc=THRD_SpectrumCorrection(pEngineContext,pEngineContext->buffers.spectrum,n_wavel);
+   pRecord->rc=THRD_SpectrumCorrection(pEngineContext,pEngineContext->buffers.spectrum,n_wavel);
 
-   if (rc)
-     return rc;
+   if (pRecord->rc)
+     return pRecord->rc;
 
    pEngineContext->indexRecord=indexRecord;
    if (pRecord->oldZm<(double)0.)
@@ -1035,7 +1035,7 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
      pRecord->Zm=(pRecord->Tm!=(double)0.)?ZEN_FNTdiz(ZEN_FNCrtjul(&pRecord->Tm),&longit,&latit,&pRecord->Azimuth):(double)-1.;
    }
 
-   return rc;
+   return pRecord->rc;
  }
 
 // -----------------------------------------------------------------------------
@@ -2187,6 +2187,8 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
    EndNewRef :
 
    // Return
+
+   pRecord->rc=rc;
 
    return rc;
  }
