@@ -50,7 +50,7 @@ caro {
     DEFINES     += QWT_DLL
   }
 
-  LIBS         += -L$$GSL_LIB_PATH -lgsl
+  LIBS         += -L$$GSL_LIB_PATH -lgsl -lgslcblas
   CONFIG      += windows
   QT += svg
 }

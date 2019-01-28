@@ -164,14 +164,14 @@ CWProjectTabCalibration::CWProjectTabCalibration(const mediate_project_calibrati
 
   intervalLayout->addWidget(new QLabel("Min", intervalGroup), 0, 0, Qt::AlignRight);
   m_lambdaMinEdit = new QLineEdit(intervalGroup);
-  m_lambdaMinEdit->setValidator(new CDoubleFixedFmtValidator(100.0, 900.0, 2, m_lambdaMinEdit));
-  m_lambdaMinEdit->setFixedWidth(60);
+  m_lambdaMinEdit->setValidator(new CDoubleFixedFmtValidator(100.0, 2000.0, 2, m_lambdaMinEdit));
+  m_lambdaMinEdit->setFixedWidth(100);
   intervalLayout->addWidget(m_lambdaMinEdit, 0, 1, Qt::AlignLeft);
 
   intervalLayout->addWidget(new QLabel("Max", intervalGroup), 1, 0, Qt::AlignRight);
   m_lambdaMaxEdit = new QLineEdit(intervalGroup);
-  m_lambdaMaxEdit->setValidator(new CDoubleFixedFmtValidator(100.0, 900.0, 2, m_lambdaMaxEdit));
-  m_lambdaMaxEdit->setFixedWidth(60);
+  m_lambdaMaxEdit->setValidator(new CDoubleFixedFmtValidator(100.0, 2000.0, 2, m_lambdaMaxEdit));
+  m_lambdaMaxEdit->setFixedWidth(100);
   intervalLayout->addWidget(m_lambdaMaxEdit, 1, 1, Qt::AlignLeft);
 
   groupLayout->addWidget(intervalGroup);

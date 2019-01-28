@@ -113,9 +113,12 @@
 //  Raman scattering and the Franhofer spectrum, K.Chance and R.J.D.Spurr, Applied optics (in press)
 //  ----------------------------------------------------------------------------
 
-#include "engine_xsconv.h"
 
+#include <string.h>
+#include <stdlib.h>
 #include <math.h>
+
+#include "engine_xsconv.h"
 
 // =================
 // N2 RAMAN FUNCTION

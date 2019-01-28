@@ -65,7 +65,7 @@
 // format string for fscanf: read a single number and skip over any
 // following characters that are not part of a number and not a
 // newline:
-#define NEXT_DOUBLE "%lf%*[^0-9.\n-]"
+#define NEXT_DOUBLE "%lf%*[^0-9.-+\n]"
 #define COMMENT_LINE " %1[*;#]%*[^\n]\n"
 
 // ==================
@@ -258,7 +258,8 @@ RC MATRIX_Load(const char *fileName,MATRIX_OBJECT *pMatrix,
                int allocateDeriv2,int reverseFlag, const char *callingFunction) {
   // Declarations
 
-  char     fullPath[MAX_ITEM_TEXT_LEN];                                       // the complete file name to load
+  char     fullPath[MAX_ITEM_TEXT_LEN];                                         // the complete file name to load
+  char     line[MAX_ITEM_TEXT_LEN];                                             // file line
   int      nlMin,ncMin;                                                         // resp. the minimum numbers of lines and columns to load from the file
   INDEX    i,j;                                                                 // indexes for browsing lines and columns in matrix
   double **matrix,**deriv2,                                                     // resp. pointers to the matrix to load and to the second derivatives
@@ -308,28 +309,59 @@ RC MATRIX_Load(const char *fileName,MATRIX_OBJECT *pMatrix,
 
       // Determine the number of columns
 
-      int n_scan = fscanf(fp, " %lf", &tempValue);
-      nl= n_scan && ( (xMin==xMax) || ((tempValue>=xMin)&&(tempValue<=xMax)) ) ? 1 : 0;
+      nc = 0;
+      double firstCalib=(double)0.;
 
-      nc = 1;
-      // in each iteration of the loop, read a number
-      while (fscanf(fp, NEXT_DOUBLE, &tempValue) == 1) {
-        ++nc;
-        char next = fgetc(fp); // look ahead to detect end of line
-        if (next == '\n') {
-          break;
-        } else { // put back the character we read
-          ungetc(next, fp);
-        }
-      }
+      memset(line,0,MAX_ITEM_TEXT_LEN);
+
+      if (fgets(line,MAX_ITEM_TEXT_LEN-1,fp))
+       {
+       	char *ptr=line;
+
+       	for (char *ptr=line;(*ptr!='\n') && (*ptr!='\0');*ptr++)
+       	 {
+         	while ((*ptr==' ') || (*ptr=='\t'))
+         	 *ptr++;
+         	if ((*ptr!='\n') &&
+         	    (sscanf(ptr, NEXT_DOUBLE, &tempValue) == 1))
+           {
+            if (!nc)
+             firstCalib=tempValue;
+            ++nc;
+         	  while ((*ptr!=' ') && (*ptr!='\t') && (*ptr!='\0'))
+         	   *ptr++;
+           }
+         }
+       }
+
+
+   // in each iteration of the loop, read a number
+   //   while (fscanf(fp, NEXT_DOUBLE, &tempValue) == 1) {
+   //     if (!nc)
+   //      firstCalib=tempValue;
+   //
+   //     ++nc;
+   //     char next = fgetc(fp); // look ahead to detect end of line
+   //     if ((next == 0x0D) || (next == 0x0A)) {
+   //       break;
+   //     } else { // put back the character we read
+   //       ungetc(next, fp);
+   //     }
+   //   }
+
+      //int n_scan = fscanf(fp, "%lf", &tempValue);
+      // int n_scan = fscanf(fp, NEXT_DOUBLE, &tempValue);
+      nl= ( (fabs(xMin-xMax)<EPSILON) || ((firstCalib>=xMin)&&(firstCalib<=xMax)) ) ? 1 : 0;
 
       // Determine the number of lines
       while (fscanf(fp, "%lf%*[^\n]\n", &tempValue) == 1) {
-        if ((xMin==xMax) || ((tempValue>=xMin)&&(tempValue<=xMax))) {
+
+        if ((fabs(xMin-xMax)<EPSILON) || ((tempValue>=xMin)&&(tempValue<=xMax))) {
           ++nl;
         }
       }
     }
+
 
     // File read out
 
@@ -367,7 +399,12 @@ RC MATRIX_Load(const char *fileName,MATRIX_OBJECT *pMatrix,
           ++i;
 
           // check each column has same length 'nc'. we should now find a newline or the end of the file:
-          int next = fgetc(fp);
+
+          int next=' ';
+         	while ((next==' ') || (next=='\t'))
+         	 next = fgetc(fp);
+
+          //int next = fgetc(fp);
           if ( next != '\n' && next != EOF) {
             rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_LENGTH,fullPath);
           }

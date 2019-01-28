@@ -55,6 +55,10 @@
 // INCLUDE
 // =======
 
+#include <string.h>
+#include <stdlib.h>
+#include <math.h>
+
 #include "doas.h"
 #include "engine_context.h"
 #include "bin_read.h"

@@ -167,6 +167,7 @@ RC ReliOceanOptics(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int 
    rc=ERROR_ID_FILE_END;
   else
    {
+    npixels=n_wavel;
    	while (!feof(specFp) && fgets(fileLine,MAX_ITEM_TEXT_LEN,specFp))
    	 {
    	 	if  (!spectrumFound)

@@ -51,7 +51,7 @@ caro {
   }
 
   CONFIG      += windows
-  LIBS         += -L$$GSL_LIB_PATH -lgsl
+  LIBS         += -L$$GSL_LIB_PATH -lgsl -lgslcblas
   QT += svg
 }
 

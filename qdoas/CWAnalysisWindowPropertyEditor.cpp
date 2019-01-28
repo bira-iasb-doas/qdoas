@@ -113,12 +113,12 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   fitIntervalLayout->addWidget(new QLabel("Min ", fitIntervalGroup), 0, 0);
   m_fitMinEdit = new QLineEdit(fitIntervalGroup);
   m_fitMinEdit->setFixedWidth(cDoubleEditWidth);
-  m_fitMinEdit->setValidator(new CDoubleFixedFmtValidator(100.0, 999.0, 3, m_fitMinEdit));
+  m_fitMinEdit->setValidator(new CDoubleFixedFmtValidator(100.0, 2000.0, 3, m_fitMinEdit));
   fitIntervalLayout->addWidget(m_fitMinEdit, 0, 1);
   fitIntervalLayout->addWidget(new QLabel("Max ", fitIntervalGroup), 1, 0);
   m_fitMaxEdit = new QLineEdit(fitIntervalGroup);
   m_fitMaxEdit->setFixedWidth(cDoubleEditWidth);
-  m_fitMaxEdit->setValidator(new CDoubleFixedFmtValidator(100.0, 999.0, 3, m_fitMaxEdit));
+  m_fitMaxEdit->setValidator(new CDoubleFixedFmtValidator(100.0, 2000.0, 3, m_fitMaxEdit));
   fitIntervalLayout->addWidget(m_fitMaxEdit, 1, 1);
 
   topLayout->addWidget(fitIntervalGroup);

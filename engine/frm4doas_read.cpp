@@ -76,7 +76,7 @@
 
 #include "frm4doas_read.h"
 #include "netcdfwrapper.h"
-#include "dir_iter.h"
+// #include "dir_iter.h"
 
 extern "C" {
 #include "winthrd.h"
@@ -188,7 +188,7 @@ static metadata FRM4DOAS_Read_Metadata(size_t number_of_records)
   // Get metadata variables
 
   NetCDFGroup metadata_group;
-   
+
   metadata_group = current_file.getGroup(root_name+"/RADIANCE/GEODATA");
 
   metadata_group.getVar("viewing_azimuth_angle",start,count,1,(float)-1.,result.vaa);
@@ -199,7 +199,7 @@ static metadata FRM4DOAS_Read_Metadata(size_t number_of_records)
   metadata_group.getVar("moon_azimuth_angle",start,count,1,(float)-1.,result.maa);
 
   metadata_group = current_file.getGroup(root_name+"/RADIANCE/OBSERVATIONS");
-  
+
   metadata_group.getVar("latitude",start,count,1,(float)lat[0],result.lat);
   metadata_group.getVar("longitude",start,count,1,(float)lon[0],result.lon);
   metadata_group.getVar("altitude",start,count,1,(float)alt[0],result.alt);
@@ -343,7 +343,7 @@ RC FRM4DOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int lo
         pEngineContext->buffers.sigmaSpec[i]=err[i];
        }
      }
-     
+
     // Date and time fields (UT YYYY,MM,DD,hh,mm,ss,ms)
 
     auto dt = reinterpret_cast<const short(*)[7]>(current_metadata.dt.data());
@@ -429,7 +429,7 @@ RC FRM4DOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int lo
           ((measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS) && (pRecordInfo->maxdoas.measurementType!=measurementType)))
 
        rc=ERROR_ID_FILE_RECORD;
-     }     
+     }
 
     // Later : add the selection of the measurement type in the instrumental page else if (!dateFlag && (measurementType!=PRJCT_INSTR_MAXDOAS_TYPE_NONE))
     // Later : add the selection of the measurement type in the instrumental page  {

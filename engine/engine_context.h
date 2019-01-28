@@ -5,8 +5,8 @@
 // ENGINE CONTEXT
 // ==============
 
-#include <stdint.h>
 #include <stdio.h>
+#include <stdint.h>
 
 #include "doas.h"
 #include "mediate_general.h"
@@ -447,7 +447,7 @@ typedef struct _engineBuffers
   INDEX  *scanIndexes;
   INDEX  *zenithBeforeIndexes;
   INDEX  *zenithAfterIndexes;
-  uint32_t  *recordIndexes;                                                     // indexes of records for direct access (specific to BIRA-IASB spectra file format)
+  unsigned int *recordIndexes;                                                     // indexes of records for direct access (specific to BIRA-IASB spectra file format)
   MATRIX_OBJECT dnl;                                                            // correction for the non linearity of the detector
  }
 BUFFERS;

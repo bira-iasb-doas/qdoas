@@ -2344,7 +2344,7 @@ int mediateRequestNextMatchingAnalyseSpectrum(void *engineContext,
       pEngineContext->recordInfo.rc=ANALYSE_Spectrum(pEngineContext,responseHandle);
 
     if ((pEngineContext->mfcDoasisFlag || (pEngineContext->lastSavedRecord!=pEngineContext->indexRecord)) &&
-        (   ((THRD_id==THREAD_TYPE_ANALYSIS) && pEngineContext->project.asciiResults.analysisFlag && (!pEngineContext->project.asciiResults.successFlag /* || nrc */))
+        (   ((THRD_id==THREAD_TYPE_ANALYSIS) && pEngineContext->project.asciiResults.analysisFlag && (!pEngineContext->project.asciiResults.successFlag || !pEngineContext->recordInfo.rc )) // (!pEngineContext->project.asciiResults.successFlag /* || nrc */))
             || ((THRD_id==THREAD_TYPE_KURUCZ) && pEngineContext->project.asciiResults.calibFlag) ) )
 
       pEngineContext->recordInfo.rc=OUTPUT_SaveResults(pEngineContext,pEngineContext->recordInfo.i_crosstrack);

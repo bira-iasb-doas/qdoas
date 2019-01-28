@@ -56,7 +56,7 @@ typedef struct _TBinaryMFC {
   char     FileName[8];           //     filename of spectrum
   char     backgrnd[8];
   int       gap_list[40];
-  char    *comment;
+  char      p_comment_32bit[4];
   int       reg_no;
   char p_prev_32bit[4], p_next_32bit[4];   //  2 32-bit pointers, presumably used by DOASIS at runtime
 } TBinaryMFC;

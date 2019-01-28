@@ -26,8 +26,8 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#include <gsl/gsl_matrix.h>
-#include <gsl/gsl_linalg.h>
+#include "gsl/gsl_matrix.h"
+#include "gsl/gsl_linalg.h"
 
 #include "linear_system.h"
 #include "comdefs.h"

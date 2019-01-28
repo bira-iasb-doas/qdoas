@@ -1,6 +1,9 @@
 #ifndef APEX_H
 #define APEX_H
 
+#include <stdint.h>
+#include <stdio.h>
+
 #include "doas.h"
 
 // initial length of allocated buffers

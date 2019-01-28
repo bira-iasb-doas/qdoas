@@ -476,7 +476,7 @@ void GOME1NETCDF_Get_Wavelength(GOME1NETCDF_ORBIT_FILE *pOrbitFile,int channel_i
 
   if ((temp_index>=0) && (temp_index<pOrbitFile->calibration.temp_number) && (channel_index>=0) && (channel_index<pOrbitFile->calibration.channel_size))
    for (int i=0;i<(int)pOrbitFile->calibration.channel_size;i++)
-    wavelength[i]=wve[temp_index][channel_index][i];
+    wavelength[i]=(double)0.; // !!! wve[temp_index][channel_index][i];
  }
 
 // -----------------------------------------------------------------------------

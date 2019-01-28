@@ -1,7 +1,8 @@
-#include <vector>
-#include <string>
+
 #include <map>
 #include <cassert>
+#include <vector>
+#include <cstdint>
 
 #include "apex_read.h"
 

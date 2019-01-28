@@ -9,7 +9,7 @@
 #include <config.h>
 #else
 /* Preset usefull values if no configure environment is available (WINDOWS)*/
-#define HAVE_STDINT_H 1
+#define HAVE_STDINT_H 0
 #define HAVE_STDLIB_H 1
 #define HAVE_STRING_H 1
 #define PACKAGE "scial2_ascii"
