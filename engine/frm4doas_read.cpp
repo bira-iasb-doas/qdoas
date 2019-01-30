@@ -410,6 +410,8 @@ RC FRM4DOAS_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,int dateFlag,int lo
       double longitude;
       longitude=-pRecordInfo->longitude;
       pRecordInfo->Zm=ZEN_FNTdiz(ZEN_FNCrtjul(&pRecordInfo->Tm),&longitude,&pRecordInfo->latitude,&pRecordInfo->Azimuth);
+      
+      pRecordInfo->Azimuth+=180.; // because the used convention is 0..360, 0° Northward and ZEN_FNTdiz is -180..180
      }
 
     // Selection of the reference spectrum

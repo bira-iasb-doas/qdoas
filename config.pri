@@ -2,7 +2,7 @@
 # General Configuration for ALL applications
 #----------------------------------------------
 
-CODE_GENERATION = release      # debug or release
+CODE_GENERATION = staticlib release      # debug or release
 CONFIG += release
 
 QMAKE_CFLAGS += -g -std=gnu99 -Wall -Wextra -pedantic \

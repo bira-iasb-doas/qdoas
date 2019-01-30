@@ -763,7 +763,7 @@ RC Curfit(int     mode,                                                         
       if (chisq1<chisqr)
        *pLambda*=(double)10.;
       niter++;
-
+      
       if (niter> CURFIT_MAX_ITER)
        {
        	rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_CONVERGENCE, CURFIT_MAX_ITER);

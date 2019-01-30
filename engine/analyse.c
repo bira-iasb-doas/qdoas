@@ -1899,13 +1899,13 @@ RC ANALYSE_Function(double *spectrum_orig, double *reference, const double *Sigm
 
 #if defined(__DEBUG_) && __DEBUG_
   DEBUG_FunctionBegin(__func__,DEBUG_FCTTYPE_APPL);
-#endif
+#endif 
 
   // Initializations
   const int n_wavel = NDET[indexFenoColumn];
   TabCross=Feno->TabCross;
   XTrav=YTrav=newXsTrav=spectrum_interpolated=reference_shifted=spec_nolog=NULL;
-
+  
   for (int i=0;i<NSFP;i++)
    if (Feno->indexFwhmParam[i]!=ITEM_NONE)
     slitParam[i]=(TabCross[Feno->indexFwhmParam[i]].FitParam!=ITEM_NONE)?fitParamsF[TabCross[Feno->indexFwhmParam[i]].FitParam]:TabCross[Feno->indexFwhmParam[i]].InitParam;
@@ -1971,7 +1971,7 @@ RC ANALYSE_Function(double *spectrum_orig, double *reference, const double *Sigm
     } else {
       shift_rad = stretch_rad = stretch2_rad = 0.;
     }
-
+    
     if ( (rc=ShiftVector(LambdaSpec, spectrum_orig, SplineSpec, spectrum_interpolated, n_wavel,
                          shift_rad, stretch_rad, stretch2_rad,
                          0., 0., 0., fitParamsF, -1, 0, indexFenoColumn))!=ERROR_ID_NO ||
@@ -2323,7 +2323,7 @@ RC ANALYSE_Function(double *spectrum_orig, double *reference, const double *Sigm
                         (Feno->analysisType==ANALYSIS_TYPE_FWHM_KURUCZ)?1:0,indexFenoColumn))!=ERROR_ID_NO)
 
      goto EndFunction;
-
+    
 #if defined(__DEBUG_) && __DEBUG_  && defined(__DEBUG_DOAS_SHIFT_) && __DEBUG_DOAS_SHIFT_
     if (((analyseDebugMask&DEBUG_FCTTYPE_MATH)!=0) && analyseDebugVar &&
         (Feno->indexReference!=ITEM_NONE) &&
@@ -3330,7 +3330,7 @@ RC ANALYSE_Spectrum(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
             } else if (rc>THREAD_EVENT_STOP) {
               Feno->rc=rc;
             }
-
+            
             rms_residual = root_mean_square(residuals, Feno->fit_properties.specrange);
           }
           while(!Feno->hidden // no spike removal for calibration
@@ -4401,7 +4401,7 @@ RC ANALYSE_LoadLinear(ANALYSE_LINEAR_PARAMETERS *linearList,int nLinear,INDEX in
           pTabCross->Comp=indexSymbol;
           pTabCross->IndSvdA=++pTabFeno->fit_properties.DimC;
           pTabCross->crossAction=ANLYS_CROSS_ACTION_NOTHING;
-
+          
           pTabFeno->NTabCross++;
 
           // Swap columns of original matrix A in order to have in the end of the matrix, cross sections with fixed concentrations
