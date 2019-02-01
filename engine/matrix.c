@@ -243,13 +243,13 @@ int MatrixNextDouble(FILE *fp,double *dvalue)
 
  	for (nc=0,isdouble=0,oldc=' ';((c=fgetc(fp))!=EOF) && nc<MAX_ITEM_TEXT_LEN;)
  	 {
- 	 	if ((c==EOF) || (c=='\n') || ((c==' ') && (oldc!=' ')) || ((c=='\t') && (nc>0)))
+ 	 	if ((c==EOF) || (c=='\n') || ((c==' ') && (oldc!=' ')) || (((c=='\t') || (c=='\r')) && (nc>0)))
  	 	 {
  	 	  if (nc>0)
  	 	   isdouble=((c==EOF) || (c=='\n'))?-1:1;
  	 	  break;
  	 	 }
- 	 	else if ((c!=' ') && (c!='\t'))
+ 	 	else if ((c!=' ') && (c!='\t') && (c!='\r'))
  	 	 {
  	 	 	if (!strchr("0123456789+-eE.",c))
  	 	   break;
@@ -259,7 +259,7 @@ int MatrixNextDouble(FILE *fp,double *dvalue)
 
  	 	oldc=c;
  	 }
-
+ 	 
   if (nc<MAX_ITEM_TEXT_LEN)
  	 *dvalue=(double)atof(item);
 
@@ -350,7 +350,6 @@ RC MATRIX_Load(const char *fileName,MATRIX_OBJECT *pMatrix,
       nc = 0;
       double firstCalib=(double)0.;
       int rcNextDouble;
-      char newc;
 
       while ((rcNextDouble=MatrixNextDouble(fp,&tempValue))!=0)
        {
@@ -360,7 +359,7 @@ RC MATRIX_Load(const char *fileName,MATRIX_OBJECT *pMatrix,
        	if (rcNextDouble<0)
        	 break;
        }
-
+       
    // in each iteration of the loop, read a number
    //   while (fscanf(fp, NEXT_DOUBLE, &tempValue) == 1) {
    //     if (!nc)
@@ -386,6 +385,7 @@ RC MATRIX_Load(const char *fileName,MATRIX_OBJECT *pMatrix,
           ++nl;
         }
       }
+
     }
 
 
