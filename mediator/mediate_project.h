@@ -445,6 +445,7 @@ extern "C" {
   {
     int analysisFlag;
     int calibrationFlag;
+    int newcalibFlag;
     int referenceFlag; // write components of automatic reference to output
     int configurationFlag;
     enum output_format file_format;

@@ -92,6 +92,7 @@ int batchProcessRing(commands_t *cmd);
 int batchProcessUsamp(commands_t *cmd);
 
 int calibSwitch=0;
+int calibSaveSwitch=0;
 int xmlSwitch=0;
 int verboseMode=0;
 
@@ -193,6 +194,12 @@ enum RunMode parseCommandLine(int argc, char **argv, commands_t *cmd)
 	}
 
       }
+      else if (!strcmp(argv[i], "-saveref")) { // save irradiances
+      	  calibSaveSwitch=calibSwitch;
+        	if (!calibSwitch)
+        	  std::cout << "Warning : Option '-saveref' has effect only with '-k' option." << std::endl;
+      }
+
       else if (!strcmp(argv[i], "-f")) { // filename ...
 	if (++i < argc && argv[i][0] != '-')
 		 {
@@ -568,6 +575,8 @@ int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *p
     // override the output directory
     strcpy(projectData.output.path, outputDir.toLocal8Bit().data());
   }
+
+  projectData.output.newcalibFlag=calibSaveSwitch;
 
   // create engine
   if (mediateRequestCreateEngineContext(engineContext, msgResp) != 0) {

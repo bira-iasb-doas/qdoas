@@ -1496,6 +1496,13 @@ static int register_calibration_field(struct output_field newfield) {
 static int register_calibration(int kurucz_index, int index_row, int index_feno) {
   FENO *pTabFeno=&TabFeno[index_row][kurucz_index];
 
+  // for variables that depend on spectrum length: find maximum length over all detector rows:
+  int max_ndet = 0;
+  for (int i=0; i<ANALYSE_swathSize; ++i) {
+    if (NDET[i] > max_ndet)
+      max_ndet = NDET[i];
+  }
+
   int rc = register_calibration_field((struct output_field){.basic_fieldname="Wavelength", .resulttype = PRJCT_RESULTS_WAVELENGTH, .index_feno=index_feno, .index_row=index_row, .index_cross=ITEM_NONE, .get_data=(func_void)&get_wavelength_calib });
   if (rc != ERROR_ID_NO) return rc;
   rc = register_calibration_field((struct output_field){.basic_fieldname="RMS", .resulttype = PRJCT_RESULTS_RMS, .index_feno=index_feno, .index_row=index_row, .index_cross=ITEM_NONE, .get_data=(func_void)&get_rms_calib });
@@ -1922,7 +1929,7 @@ static void OutputSaveRecord(const ENGINE_CONTEXT *pEngineContext,INDEX indexFen
 
   RECORD_INFO *pRecordInfo =(RECORD_INFO *)&pEngineContext->recordInfo;
 
-  if ((THRD_id==THREAD_TYPE_EXPORT) || (pEngineContext->project.asciiResults.analysisFlag))
+  if ((THRD_id==THREAD_TYPE_EXPORT) || (pEngineContext->project.asciiResults.analysisFlag) || (pEngineContext->project.asciiResults.calibFlag))
     {
       int index_record = outputNbRecords++;
 
@@ -1938,6 +1945,11 @@ static void OutputSaveRecord(const ENGINE_CONTEXT *pEngineContext,INDEX indexFen
 
       outputRecords[index_record].i_crosstrack = pRecordInfo->i_crosstrack; // (outputRecords[index_record].specno-1) % n_crosstrack; //specno is 1-based
       outputRecords[index_record].i_alongtrack = pRecordInfo->i_alongtrack; // (outputRecords[index_record].specno-1) / n_crosstrack;
+
+      if (THRD_id==THREAD_TYPE_KURUCZ)
+       {
+
+       }
     }
  }
 
@@ -2198,6 +2210,7 @@ void output_write_data(const bool selected_records[]) {
 RC output_write_automatic_file(const bool selected_records[], int year, int month, int site_index, const ENGINE_CONTEXT *pEngineContext ) {
   char filename[MAX_ITEM_TEXT_LEN] = {0};
   OutputBuildSiteFileName(pEngineContext,filename,year, month, site_index);
+
   RC rc=open_output_file(pEngineContext,filename);
   if ( !rc ) {
     output_write_data(selected_records);
@@ -2314,6 +2327,8 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
 
   // select records for output according to date/site
   bool selected_records[outputNbRecords];
+
+  rc=OutputBuildFileName(pEngineContext,outputFileName);
 
  if (((THRD_id==THREAD_TYPE_EXPORT) || pResults->analysisFlag || pResults->calibFlag)
      && outputNbRecords

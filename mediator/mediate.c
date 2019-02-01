@@ -1271,6 +1271,7 @@ void setMediateProjectOutput(PRJCT_RESULTS *pEngineOutput,const mediate_project_
 
    pEngineOutput->analysisFlag=pMediateOutput->analysisFlag;
    pEngineOutput->calibFlag=pMediateOutput->calibrationFlag;
+   pEngineOutput->newcalibFlag=pMediateOutput->newcalibFlag;
    pEngineOutput->referenceFlag=pMediateOutput->referenceFlag;
    pEngineOutput->dirFlag=pMediateOutput->directoryFlag;
    pEngineOutput->fileNameFlag=pMediateOutput->filenameFlag;
@@ -2398,6 +2399,23 @@ int mediateRequestNextMatchingCalibrateSpectrum(void *engineContext,
      if ((rc = ANALYSE_Spectrum(pEngineContext,responseHandle))!=ERROR_ID_NO)
       ERROR_DisplayMessage(responseHandle);
     }
+
+
+   if ((pEngineContext->mfcDoasisFlag || (pEngineContext->lastSavedRecord!=pEngineContext->indexRecord)) &&
+       (THRD_id==THREAD_TYPE_KURUCZ) && pEngineContext->project.asciiResults.calibFlag)
+
+     pEngineContext->recordInfo.rc=OUTPUT_SaveResults(pEngineContext,pEngineContext->recordInfo.i_crosstrack);
+
+//   if (!rc)
+//     rc=rcOutput;
+
+    if (pEngineContext->recordInfo.rc!=ERROR_ID_NO)
+     ERROR_DisplayMessage(responseHandle);
+
+
+
+
+
    // NB if the function returns -1, the problem is that it is not possible to process
    // next records.
    return rec; // (rc == ERROR_ID_NO) ? rec : -1;

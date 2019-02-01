@@ -229,6 +229,45 @@ RC MATRIX_Copy(MATRIX_OBJECT *pTarget,MATRIX_OBJECT *pSource, const char *callin
 // FILES PROCESSING
 // ================
 
+int MatrixNextDouble(FILE *fp,double *dvalue)
+ {
+ 	// Declarations
+
+ 	char c,oldc;
+ 	char item[MAX_ITEM_TEXT_LEN];
+ 	int nc;
+ 	int isdouble;
+
+ 	memset(item,0,MAX_ITEM_TEXT_LEN);
+ 	*dvalue=(double)0.;
+
+ 	for (nc=0,isdouble=0,oldc=' ';((c=fgetc(fp))!=EOF) && nc<MAX_ITEM_TEXT_LEN;)
+ 	 {
+ 	 	if ((c==EOF) || (c=='\n') || ((c==' ') && (oldc!=' ')) || ((c=='\t') && (nc>0)))
+ 	 	 {
+ 	 	  if (nc>0)
+ 	 	   isdouble=((c==EOF) || (c=='\n'))?-1:1;
+ 	 	  break;
+ 	 	 }
+ 	 	else if ((c!=' ') && (c!='\t'))
+ 	 	 {
+ 	 	 	if (!strchr("0123456789+-eE.",c))
+ 	 	   break;
+ 	 	  else
+ 	 	   item[nc++]=c;
+ 	 	 }
+
+ 	 	oldc=c;
+ 	 }
+
+  if (nc<MAX_ITEM_TEXT_LEN)
+ 	 *dvalue=(double)atof(item);
+
+ 	// return
+
+ 	return isdouble;
+ }
+
 // -----------------------------------------------------------------------------
 // FUNCTION      MATRIX_Load
 // -----------------------------------------------------------------------------
@@ -259,7 +298,6 @@ RC MATRIX_Load(const char *fileName,MATRIX_OBJECT *pMatrix,
   // Declarations
 
   char     fullPath[MAX_ITEM_TEXT_LEN];                                         // the complete file name to load
-  char     line[MAX_ITEM_TEXT_LEN];                                             // file line
   int      nlMin,ncMin;                                                         // resp. the minimum numbers of lines and columns to load from the file
   INDEX    i,j;                                                                 // indexes for browsing lines and columns in matrix
   double **matrix,**deriv2,                                                     // resp. pointers to the matrix to load and to the second derivatives
@@ -311,29 +349,17 @@ RC MATRIX_Load(const char *fileName,MATRIX_OBJECT *pMatrix,
 
       nc = 0;
       double firstCalib=(double)0.;
+      int rcNextDouble;
+      char newc;
 
-      memset(line,0,MAX_ITEM_TEXT_LEN);
-
-      if (fgets(line,MAX_ITEM_TEXT_LEN-1,fp))
+      while ((rcNextDouble=MatrixNextDouble(fp,&tempValue))!=0)
        {
-       	char *ptr=line;
-
-       	for (char *ptr=line;(*ptr!='\n') && (*ptr!='\0');*ptr++)
-       	 {
-         	while ((*ptr==' ') || (*ptr=='\t'))
-         	 *ptr++;
-         	if ((*ptr!='\n') &&
-         	    (sscanf(ptr, NEXT_DOUBLE, &tempValue) == 1))
-           {
-            if (!nc)
-             firstCalib=tempValue;
-            ++nc;
-         	  while ((*ptr!=' ') && (*ptr!='\t') && (*ptr!='\0'))
-         	   *ptr++;
-           }
-         }
+       	if (!nc)
+       	 firstCalib=tempValue;
+       	nc++;
+       	if (rcNextDouble<0)
+       	 break;
        }
-
 
    // in each iteration of the loop, read a number
    //   while (fscanf(fp, NEXT_DOUBLE, &tempValue) == 1) {

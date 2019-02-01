@@ -1056,7 +1056,7 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
     break;
   case PRJCT_INSTR_MAXDOAS_TYPE_ZENITH:
     fprintf(fp, "\"zenith\"");
-    break;    
+    break;
   case PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS:
     fprintf(fp, "\"off-axis\"");
     break;
@@ -1069,7 +1069,7 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   default:
     fprintf(fp, "\"invalid\"");
   }
-    
+
   fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
   tmpStr = pathMgr->simplifyPath(QString(d->frm4doas.transmissionFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
@@ -1092,10 +1092,12 @@ void CQdoasConfigWriter::writePropertiesSlit(FILE *fp, const mediate_project_sli
 void CQdoasConfigWriter::writePropertiesOutput(FILE *fp, const mediate_project_output_t *d)
 {
   QString tmpStr = CPathMgr::instance()->simplifyPath(QString(d->path));
-
+                                                                 // newcalib=\"%s\"
   fprintf(fp, "    <output path=\"%s\" anlys=\"%s\" calib=\"%s\" ref=\"%s\" conf=\"%s\" dirs=\"%s\" file=\"%s\" success=\"%s\" flux=\"%s\" cic=\" \" bandWidth=\"%f\" swathName=\"%s\" fileFormat=\"%s\">\n",
           tmpStr.toUtf8().constData(), (d->analysisFlag ? sTrue : sFalse),
-          (d->calibrationFlag ? sTrue : sFalse), (d->referenceFlag ? sTrue : sFalse),
+          (d->calibrationFlag ? sTrue : sFalse),
+          // (d->newcalibFlag ? sTrue : sFalse),
+          (d->referenceFlag ? sTrue : sFalse),
           (d->configurationFlag ? sTrue : sFalse),
           (d->directoryFlag ? sTrue : sFalse),
           (d->filenameFlag ? sTrue : sFalse),

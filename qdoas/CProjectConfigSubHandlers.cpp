@@ -272,7 +272,7 @@ bool CSelectorSubHandler::start(const QString &element, const QXmlAttributes &at
   else if (str == "zenith_after_index")
     d->selected[d->nSelected] = PRJCT_RESULTS_ZENITH_AFTER;
   else if (str == "rc")
-    d->selected[d->nSelected] = PRJCT_RESULTS_RC;    
+    d->selected[d->nSelected] = PRJCT_RESULTS_RC;
   else
     return postErrorMessage("Invalid output field " + str);
 
@@ -1288,7 +1288,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
       if (str == "all")
         m_instrumental->frm4doas.spectralType = PRJCT_INSTR_MAXDOAS_TYPE_NONE;
       else if (str == "zenith")
-        m_instrumental->frm4doas.spectralType = PRJCT_INSTR_MAXDOAS_TYPE_ZENITH;        
+        m_instrumental->frm4doas.spectralType = PRJCT_INSTR_MAXDOAS_TYPE_ZENITH;
       else if (str == "off-axis")
         m_instrumental->frm4doas.spectralType = PRJCT_INSTR_MAXDOAS_TYPE_OFFAXIS;
       else if (str == "direct-sun")
@@ -1297,7 +1297,7 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
         m_instrumental->frm4doas.spectralType = PRJCT_INSTR_MAXDOAS_TYPE_ALMUCANTAR;
       else
         return postErrorMessage("Invalid ccdeev Type");
-     }    
+     }
 
     str = atts.value("calib");
     if (!str.isEmpty()) {
@@ -1717,6 +1717,7 @@ bool CProjectOutputSubHandler::start(const QXmlAttributes &atts)
   m_output->calibrationFlag = (atts.value("calib") == "true") ? 1 : 0;
   m_output->configurationFlag = (atts.value("conf") == "true") ? 1 : 0;
   m_output->referenceFlag = (atts.value("ref") == "true");
+  // m_output->newcalibFlag = (atts.value("newcalib") == "true");
   m_output->directoryFlag = (atts.value("dirs") == "true") ? 1 : 0;
   m_output->filenameFlag = (atts.value("file") == "true") ? 1 : 0;
 

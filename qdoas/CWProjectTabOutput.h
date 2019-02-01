@@ -57,7 +57,7 @@ Q_OBJECT
  private:
   QFrame *m_pathFrame;
   QLineEdit *m_pathEdit;
-  QCheckBox *m_analysisCheck, *m_calibrationCheck, *m_referenceCheck;
+  QCheckBox *m_analysisCheck, *m_calibrationCheck, *m_newcalibCheck,*m_referenceCheck;
   QCheckBox *m_directoryCheck;
   QCheckBox *m_useFileName;
   QCheckBox *m_successCheck;

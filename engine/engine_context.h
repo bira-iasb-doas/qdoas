@@ -212,7 +212,8 @@ PRJCT_RESULTS_FIELDS;
 
 struct _prjctAsciiResults {
   char path[MAX_ITEM_TEXT_LEN];                                                 // path for results and fits files
-  int   analysisFlag,calibFlag,referenceFlag,dirFlag,fileNameFlag,successFlag;  // store results in ascii format
+  int   analysisFlag,calibFlag,newcalibFlag,
+        referenceFlag,dirFlag,fileNameFlag,successFlag;                         // store results in ascii format
   char fluxes[MAX_ITEM_TEXT_LEN];                                               // fluxes
   double bandWidth;                                                             // averaging bandwidth for fluxes
   // char cic[MAX_ITEM_TEXT_LEN];                                               // color indexes
