@@ -418,7 +418,7 @@ bool CAnalysisWindowShiftStretchSubHandler::start(const QXmlAttributes &atts)
     QString str;
     struct anlyswin_shift_stretch *d = &(m_d->shiftStretch[m_d->nShiftStretch]);
 
-    d->shFit = (atts.value("shfit") == "true") ? 1 : 0;
+    d->shFit = ((atts.value("shfit") == "true") || (atts.value("shfit")=="nonlinear"))? 1 : 0;
 
     str = atts.value("stfit");
     if (str == "1st") d->stFit = ANLYS_STRETCH_TYPE_FIRST_ORDER;
