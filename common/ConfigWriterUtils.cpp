@@ -51,7 +51,7 @@ void writeFilter(FILE *fp, size_t nIndent, const char *passband, const mediate_f
     fprintf(fp, "\"triangular\"");
     break;
   case PRJCT_FILTER_TYPE_SG:
-    fprintf(fp, "\"savitzky\"");
+    fprintf(fp, "\"savitzky_golay\"");
     break;
   case PRJCT_FILTER_TYPE_ODDEVEN:
     fprintf(fp, "\"oddeven\"");

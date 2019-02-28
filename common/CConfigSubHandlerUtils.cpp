@@ -31,7 +31,7 @@ bool CFilteringSubHandler::start(const QXmlAttributes &atts)
     m_filter->mode = PRJCT_FILTER_TYPE_GAUSSIAN;
   else if (str == "triangular")
     m_filter->mode = PRJCT_FILTER_TYPE_TRIANGLE;
-  else if (str == "savitzky")
+  else if ((str == "savitzky_golay") || (str == "savitzky"))
     m_filter->mode = PRJCT_FILTER_TYPE_SG;
   else if (str == "oddeven")
     m_filter->mode = PRJCT_FILTER_TYPE_ODDEVEN;
@@ -81,7 +81,7 @@ bool CFilteringSubHandler::start(const QString &element, const QXmlAttributes &a
     m_filter->triangular.usage.fittingFlag = (atts.value("fit") == "true") ? 1 : 0;
     m_filter->triangular.usage.divide = (atts.value("div") == "true") ? 1 : 0;
   }
-  else if (element == "savitzky") {
+  else if (element == "savitzky_golay") {
 
     m_filter->savitzky.width = atts.value("width").toInt();
     m_filter->savitzky.order = atts.value("order").toInt();
