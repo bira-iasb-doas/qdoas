@@ -194,6 +194,9 @@ void CWFilteringEditor::reset(const mediate_filter_t *lowpass, const mediate_fil
 
   m_lowBinomial->reset(&(lowpass->binomial));
   m_highBinomial->reset(&(highpass->binomial));
+
+  m_lowSavitzky->reset(&(lowpass->savitzky));
+  m_highSavitzky->reset(&(highpass->savitzky));
 }
 
 void CWFilteringEditor::apply(mediate_filter_t *lowpass, mediate_filter_t *highpass) const
@@ -217,6 +220,9 @@ void CWFilteringEditor::apply(mediate_filter_t *lowpass, mediate_filter_t *highp
 
   m_lowBinomial->apply(&(lowpass->binomial));
   m_highBinomial->apply(&(highpass->binomial));
+
+  m_lowSavitzky->apply(&(lowpass->savitzky));
+  m_highSavitzky->apply(&(highpass->savitzky));
 
 }
 
