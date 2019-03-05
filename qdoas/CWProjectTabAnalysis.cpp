@@ -26,6 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "CValidator.h"
 
 #include "constants.h"
+#include <stdio.h>
 
 static const int cStandardEditWidth = 75;
 
@@ -35,6 +36,13 @@ CWProjectTabAnalysis::CWProjectTabAnalysis(const mediate_project_analysis_t *pro
 {
   int index;
   QString tmpStr;
+
+      {
+ FILE *fp;
+ fp=fopen("toto.dat","a+t");
+ fprintf(fp,"Create analysis\n");
+ fclose(fp);
+      }
 
   QGridLayout *mainLayout = new QGridLayout(this);
   mainLayout->setSpacing(5);

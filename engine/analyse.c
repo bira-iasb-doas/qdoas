@@ -969,7 +969,7 @@ RC ANALYSE_XsInterpolation(FENO *pTabFeno, const double *newLambda,INDEX indexFe
       // Low-pass filtering of the original cross section
 
       if (!pTabFeno->hidden && pTabCross->filterFlag && (ANALYSE_plFilter->filterFunction!=NULL) &&
-          ((rc=FILTER_Vector(ANALYSE_plFilter,filtCross,filtCross,pTabFeno->NDET,PRJCT_FILTER_OUTPUT_LOW))!=0))
+          ((rc=FILTER_Vector(ANALYSE_plFilter,filtCross,filtCross,NULL,pTabFeno->NDET,PRJCT_FILTER_OUTPUT_LOW))!=0))
 
        break;
 
@@ -977,7 +977,7 @@ RC ANALYSE_XsInterpolation(FENO *pTabFeno, const double *newLambda,INDEX indexFe
 
       if ((pTabCross->IndOrthog!=ITEM_NONE) && (ANALYSE_phFilter->filterFunction!=NULL) &&
           ((!pTabFeno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((pTabFeno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
-          ((rc=FILTER_Vector(ANALYSE_phFilter,filtCross,filtCross,pTabFeno->NDET,PRJCT_FILTER_OUTPUT_HIGH_SUB))!=0))
+          ((rc=FILTER_Vector(ANALYSE_phFilter,filtCross,filtCross,NULL,pTabFeno->NDET,PRJCT_FILTER_OUTPUT_HIGH_SUB))!=0))
 
        break;
 
@@ -1208,13 +1208,13 @@ RC ANALYSE_XsConvolution(FENO *pTabFeno,double *newlambda,
 
        if  (rc ||
             (!pTabFeno->hidden && pTabCross->filterFlag && (ANALYSE_plFilter->filterFunction!=NULL) &&
-             ((rc=FILTER_Vector(ANALYSE_plFilter,pTabCross->vector,pTabCross->vector,n_wavel,PRJCT_FILTER_OUTPUT_LOW))!=ERROR_ID_NO)) ||
+             ((rc=FILTER_Vector(ANALYSE_plFilter,pTabCross->vector,pTabCross->vector,NULL,n_wavel,PRJCT_FILTER_OUTPUT_LOW))!=ERROR_ID_NO)) ||
 
             // High-pass filtering
 
             ((pTabCross->IndOrthog!=ITEM_NONE) && (ANALYSE_phFilter->filterFunction!=NULL) &&
              ((!pTabFeno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((pTabFeno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
-             ((rc=FILTER_Vector(ANALYSE_phFilter,pTabCross->vector,pTabCross->vector,n_wavel,PRJCT_FILTER_OUTPUT_HIGH_SUB))!=ERROR_ID_NO)) ||
+             ((rc=FILTER_Vector(ANALYSE_phFilter,pTabCross->vector,pTabCross->vector,NULL,n_wavel,PRJCT_FILTER_OUTPUT_HIGH_SUB))!=ERROR_ID_NO)) ||
 
             // Interpolation
 
@@ -1986,7 +1986,7 @@ RC ANALYSE_Function(double *spectrum_orig, double *reference, const double *Sigm
    // Filter real time only when fitting difference of resolution between spectrum and reference
 
    if ((Feno->analysisType==ANALYSIS_TYPE_FWHM_NLFIT) && (ANALYSE_plFilter->filterFunction!=NULL) &&
-       ((rc=FILTER_Vector(ANALYSE_plFilter,&spectrum_interpolated[LimMin],&spectrum_interpolated[LimMin],LimN,PRJCT_FILTER_OUTPUT_LOW))!=0)) {
+       ((rc=FILTER_Vector(ANALYSE_plFilter,&spectrum_interpolated[LimMin],&spectrum_interpolated[LimMin],NULL,LimN,PRJCT_FILTER_OUTPUT_LOW))!=0)) {
      rc=ERROR_SetLast("EndFunction",ERROR_TYPE_WARNING,ERROR_ID_ANALYSIS,analyseIndexRecord,"Filter");
      goto EndFunction;
     }
@@ -2054,7 +2054,7 @@ RC ANALYSE_Function(double *spectrum_orig, double *reference, const double *Sigm
        (((rc=VECTOR_Log(&spectrum_interpolated[LimMin],&spectrum_interpolated[LimMin],LimN,"ANALYSE_Function (Spec) "))!=0) ||
         ((ANALYSE_phFilter->filterFunction!=NULL) &&
          ((!Feno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((Feno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
-         ((rc=FILTER_Vector(ANALYSE_phFilter,&spectrum_interpolated[LimMin],&spectrum_interpolated[LimMin],LimN,PRJCT_FILTER_OUTPUT_HIGH_SUB))!=0))))
+         ((rc=FILTER_Vector(ANALYSE_phFilter,&spectrum_interpolated[LimMin],&spectrum_interpolated[LimMin],NULL,LimN,PRJCT_FILTER_OUTPUT_HIGH_SUB))!=0))))
 
     goto EndFunction;
 
@@ -2338,7 +2338,7 @@ RC ANALYSE_Function(double *spectrum_orig, double *reference, const double *Sigm
     // Filter real time only when fitting difference of resolution between spectrum and reference
 
     if ((Feno->analysisType==ANALYSIS_TYPE_FWHM_NLFIT) && (ANALYSE_plFilter->filterFunction!=NULL) &&
-        ((rc=FILTER_Vector(ANALYSE_plFilter,&reference_shifted[LimMin],&reference_shifted[LimMin],LimN,PRJCT_FILTER_OUTPUT_LOW))!=0))
+        ((rc=FILTER_Vector(ANALYSE_plFilter,&reference_shifted[LimMin],&reference_shifted[LimMin],NULL,LimN,PRJCT_FILTER_OUTPUT_LOW))!=0))
      {
       rc=ERROR_SetLast("EndFunction",ERROR_TYPE_WARNING,ERROR_ID_ANALYSIS,analyseIndexRecord,"Filter");
       goto EndFunction;
@@ -2366,7 +2366,7 @@ RC ANALYSE_Function(double *spectrum_orig, double *reference, const double *Sigm
         (((rc=VECTOR_Log(&reference_shifted[LimMin],&reference_shifted[LimMin],LimN,"ANALYSE_Function (Ref) "))!=0) ||
          ((ANALYSE_phFilter->filterFunction!=NULL) &&
           ((!Feno->hidden && ANALYSE_phFilter->hpFilterAnalysis) || ((Feno->hidden==1) && ANALYSE_phFilter->hpFilterCalib)) &&
-          ((rc=FILTER_Vector(ANALYSE_phFilter,&reference_shifted[LimMin],&reference_shifted[LimMin],LimN,PRJCT_FILTER_OUTPUT_HIGH_SUB))!=0))))
+          ((rc=FILTER_Vector(ANALYSE_phFilter,&reference_shifted[LimMin],&reference_shifted[LimMin],NULL,LimN,PRJCT_FILTER_OUTPUT_HIGH_SUB))!=0))))
 
      goto EndFunction;
 
@@ -2650,8 +2650,8 @@ RC ANALYSE_CurFitMethod(INDEX indexFenoColumn,  // for OMI
         (Feno->analysisType!=ANALYSIS_TYPE_FWHM_NLFIT) &&     // doesn't fit the resolution (FWHM) between the reference and the spectrum as a non linear parameter
         !Feno->hidden &&                                      // low pass filtering is disabled for calibration in order not to degrade the spectrum to calibrate
 
-        (((rc=FILTER_Vector(ANALYSE_plFilter,&SpecTrav[LimMin],&SpecTrav[LimMin],LimN,PRJCT_FILTER_OUTPUT_LOW))!=0) ||
-         ((rc=FILTER_Vector(ANALYSE_plFilter,&RefTrav[LimMin],&RefTrav[LimMin],LimN,PRJCT_FILTER_OUTPUT_LOW))!=0)))
+        (((rc=FILTER_Vector(ANALYSE_plFilter,&SpecTrav[LimMin],&SpecTrav[LimMin],NULL,LimN,PRJCT_FILTER_OUTPUT_LOW))!=0) ||
+         ((rc=FILTER_Vector(ANALYSE_plFilter,&RefTrav[LimMin],&RefTrav[LimMin],NULL,LimN,PRJCT_FILTER_OUTPUT_LOW))!=0)))
      {
       rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_ANALYSIS,analyseIndexRecord,"Filter");
       goto EndCurFitMethod;
@@ -2674,7 +2674,7 @@ RC ANALYSE_CurFitMethod(INDEX indexFenoColumn,  // for OMI
       hFilterSpecLog=1;
 
       if (((rc=VECTOR_Log(&SpecTrav[LimMin],&SpecTrav[LimMin],LimN,"ANALYSE_CurFitMethod (Ref) "))!=0) ||           // !!!
-          ((rc=FILTER_Vector(ANALYSE_phFilter,&SpecTrav[LimMin],&SpecTrav[LimMin],LimN,PRJCT_FILTER_OUTPUT_HIGH_SUB))!=0))        // !!!
+          ((rc=FILTER_Vector(ANALYSE_phFilter,&SpecTrav[LimMin],&SpecTrav[LimMin],NULL,LimN,PRJCT_FILTER_OUTPUT_HIGH_SUB))!=0))        // !!!
 
        goto EndCurFitMethod;
      }
@@ -2692,7 +2692,7 @@ RC ANALYSE_CurFitMethod(INDEX indexFenoColumn,  // for OMI
       hFilterRefLog=1;
 
       if (((rc=VECTOR_Log(&RefTrav[LimMin],&RefTrav[LimMin],LimN,"ANALYSE_CurFitMethod (Ref) "))!=0) ||
-          ((rc=FILTER_Vector(ANALYSE_phFilter,&RefTrav[LimMin],&RefTrav[LimMin],LimN,PRJCT_FILTER_OUTPUT_HIGH_SUB))!=0))
+          ((rc=FILTER_Vector(ANALYSE_phFilter,&RefTrav[LimMin],&RefTrav[LimMin],NULL,LimN,PRJCT_FILTER_OUTPUT_HIGH_SUB))!=0))
 
        goto EndCurFitMethod;
      }

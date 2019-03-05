@@ -233,6 +233,7 @@ void setMediateFilter(PRJCT_FILTER *pEngineFilter,const mediate_filter_t *pMedia
     case PRJCT_FILTER_TYPE_GAUSSIAN :                                           // gaussian filter
 
      pEngineFilter->fwhmWidth=(float)pMediateFilter->gaussian.fwhm;
+     pEngineFilter->filterNTimes=pMediateFilter->gaussian.iterations;
 
      if (hpFilterFlag)
       {

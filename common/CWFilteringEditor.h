@@ -25,6 +25,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QStackedWidget>
 #include <QLineEdit>
 #include <QSpinBox>
+#include <QRadioButton>
 
 #include "mediate_general.h"
 
@@ -50,7 +51,7 @@ class CWFilteringEditor : public QFrame
  private:
   QComboBox *m_lowCombo, *m_highCombo;
   QStackedWidget *m_lowStack, *m_highStack;
-  // widgets for the configuration of each filter (low and high). 
+  // widgets for the configuration of each filter (low and high).
 
   CWKaiserEdit *m_lowKaiser, *m_highKaiser;
   CWBoxcarTriangularBinomialEdit *m_lowBoxcar, *m_highBoxcar;
@@ -80,6 +81,8 @@ Q_OBJECT
 
  private:
     struct filter_usage m_state;
+    QRadioButton *m_subBtn;
+    QRadioButton *m_divBtn;
 };
 
 //--------------------------------------------------------------------------
@@ -139,7 +142,7 @@ class CWGaussianEdit : public QFrame
   void apply(struct filter_gaussian *d) const;
 
  private:
-  QLineEdit *m_fwhmEdit;
+  QSpinBox *m_fwhmEdit;
   QSpinBox *m_iterationsSpinBox;
   CWFilterUsageEdit *m_usageEdit;
 };

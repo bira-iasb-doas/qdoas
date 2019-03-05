@@ -2387,7 +2387,7 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
     if (hFilterFlag && pKurucz->solarFGap && (lambda[n_wavel-1]-lambda[0]+1!=n_wavel) &&
      (((rc=SPLINE_Vector(pKurucz->hrSolar.matrix[0],pKurucz->hrSolar.matrix[1],pKurucz->hrSolar.deriv2[1],pKurucz->hrSolar.nl,
                          pKurucz->lambdaF,pKurucz->solarF,n_wavel+2*pKurucz->solarFGap,pAnalysisOptions->interpol))!=0) ||
-      ((rc=FILTER_Vector(ANALYSE_phFilter,pKurucz->solarF,pKurucz->solarF,n_wavel+2*pKurucz->solarFGap,PRJCT_FILTER_OUTPUT_LOW))!=0) ||
+      ((rc=FILTER_Vector(ANALYSE_phFilter,pKurucz->solarF,pKurucz->solarF,NULL,n_wavel+2*pKurucz->solarFGap,PRJCT_FILTER_OUTPUT_LOW))!=0) ||
       ((rc=SPLINE_Deriv2(pKurucz->lambdaF,pKurucz->solarF,pKurucz->solarF2,n_wavel+2*pKurucz->solarFGap,"KURUCZ_Alloc (solarF) "))!=0)))
 
      goto EndKuruczAlloc;

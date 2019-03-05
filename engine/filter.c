@@ -394,11 +394,12 @@ RC FilterNeqRipple (PRJCT_FILTER *pFilter,double *Beta, double *Delta,double *dB
   double Kf, Eta, Be1, Be2, Gk, Dk, Geta;
   double Lam21, Pow1;
   double DNp;
+  double sum;
   RC rc;
 
   // Initializations
 
-
+  sum=(double)0.;
   rc=ERROR_ID_NO;
 
   Kf = (double) 1.8445;
@@ -415,13 +416,6 @@ RC FilterNeqRipple (PRJCT_FILTER *pFilter,double *Beta, double *Delta,double *dB
   pFilter->filterSize = Nterm+1;
 
   DNp = (double) Nterm;
-
-//  {
-//  	FILE *fp;
-//  	fp=fopen("toto.dat","a+t");
-//  	fprintf(fp,"Réiniti filterFunction %08X\n",(unsigned int) pFilter->filterFunction);
-//  	fclose(fp);
-//  }
 
   pFilter->filterFunction=NULL;
 
@@ -452,9 +446,23 @@ RC FilterNeqRipple (PRJCT_FILTER *pFilter,double *Beta, double *Delta,double *dB
           k = pFilter->filterSize - i + 2;
           j = k-1;
           pFilter->filterFunction[k] = pFilter->filterFunction[j];
+          sum+=pFilter->filterFunction[k];
        }
 
     pFilter->filterFunction[1] = (*Beta);
+
+    sum=2.*sum+pFilter->filterFunction[1];
+
+    // function normalization by its integral
+
+    if (sum==(double)0.)
+     rc=ERROR_SetLast("Neq_Ripple",ERROR_TYPE_FATAL,ERROR_ID_DIVISION_BY_0);
+    else
+     {
+      for (i=1;i<=pFilter->filterSize;i++)
+       pFilter->filterFunction[i]/=sum;
+     }
+
    }
 
   // Return
@@ -478,6 +486,8 @@ RC FilterNeqRipple (PRJCT_FILTER *pFilter,double *Beta, double *Delta,double *dB
 RC FilterSavitskyGolay(PRJCT_FILTER *pFilter,int filterWidth,int filterOrder) {
   int rc=ERROR_ID_NO;
   int lc=(filterWidth-1)/2;
+  double sum=(double)0.;
+
   pFilter->filterSize=lc+1;
   // linear system of "filterwidth" equations and "1+filterOrder" unknowns:
   double **poly_matrix = MEMORY_AllocDMatrix(__func__, "pinv", 1, filterWidth, 1, filterOrder+1);
@@ -487,11 +497,11 @@ RC FilterSavitskyGolay(PRJCT_FILTER *pFilter,int filterWidth,int filterOrder) {
 
   struct linear_system *filter_system = NULL; // allocated later on
 
-  if (poly_matrix == NULL || pinv == NULL || pFilter->filterFunction == NULL) { 
+  if (poly_matrix == NULL || pinv == NULL || pFilter->filterFunction == NULL) {
     rc = ERROR_ID_ALLOC;
     goto cleanup;
   }
-  
+
   // Build the matrix of polynomial components:
   for (int j=0;j<=filterOrder;j++)
     for (int i=-lc;i<=lc;i++)
@@ -510,7 +520,22 @@ RC FilterSavitskyGolay(PRJCT_FILTER *pFilter,int filterWidth,int filterOrder) {
 
   for (int i=1; i<=pFilter->filterSize; ++i){
     pFilter->filterFunction[i] = pinv[lc+i][1];
+    if (i>1)
+     sum+=pFilter->filterFunction[i];
   }
+
+  sum=2.*sum+pFilter->filterFunction[1];
+
+      // function normalization by its integral
+
+  if (sum==(double)0.)
+   rc=ERROR_SetLast("FilterSavitskyGolay",ERROR_TYPE_FATAL,ERROR_ID_DIVISION_BY_0);
+  else
+   {
+    for (int i=1;i<=pFilter->filterSize;i++)
+     pFilter->filterFunction[i]/=sum;
+   }
+
 
  cleanup:
   LINEAR_free(filter_system);
@@ -760,13 +785,14 @@ RC FilterConv(PRJCT_FILTER *pFilter,double *Input,double *Output,int Size)
 //               outputType       type of filtering to apply (high or low)
 //
 // OUTPUT        output           the filtered vector
+//               tmpVector       the filtered vector (for high pass vector, filtered vector before subtraction or division)
 //
 // RETURN        ERROR_ID_ALLOC if buffer allocation failed,
 //               return code of the filtering function if any
 //               0 on success
 // -----------------------------------------------------------------------------
 
-RC FILTER_Vector(PRJCT_FILTER *pFilter,double *Input,double *Output,int Size,int outputType)
+RC FILTER_Vector(PRJCT_FILTER *pFilter,double *Input,double *Output,double *tmpVector,int Size,int outputType)
  {
   // Declarations
 
@@ -781,6 +807,10 @@ RC FILTER_Vector(PRJCT_FILTER *pFilter,double *Input,double *Output,int Size,int
 
   if (Size>0)
    {
+    if (tmpVector!=NULL)
+     for (i=0;i<Size;i++)
+      tmpVector[i]=(double)0.;
+
     if ((tempVector=(double *)MEMORY_AllocDVector("FILTER_vector ","tempVector",0,Size-1))==NULL)
      rc=ERROR_ID_ALLOC;
     else
@@ -791,6 +821,9 @@ RC FILTER_Vector(PRJCT_FILTER *pFilter,double *Input,double *Output,int Size,int
 
       if (i==pFilter->filterNTimes)
        {
+        if (tmpVector!=NULL)
+         memcpy(tmpVector,tempVector,sizeof(double)*Size);
+
         if (outputType==PRJCT_FILTER_OUTPUT_LOW)
          memcpy(Output,tempVector,sizeof(double)*Size);
         else if (outputType==PRJCT_FILTER_OUTPUT_HIGH_SUB)

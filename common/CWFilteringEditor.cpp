@@ -24,7 +24,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QGroupBox>
 #include <QLabel>
 #include <QCheckBox>
-#include <QRadioButton>
 #include <QFontMetrics>
 
 #include "CWFilteringEditor.h"
@@ -33,6 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "constants.h"
 
 #include "debugutil.h"
+#include <stdio.h>
 
 CWFilteringEditor::CWFilteringEditor(const mediate_filter_t *lowpass,
 				     const mediate_filter_t *highpass,
@@ -94,7 +94,6 @@ CWFilteringEditor::CWFilteringEditor(const mediate_filter_t *lowpass,
   lowLayout->addWidget(m_lowStack);
   lowLayout->addStretch(1);
 
-
   // High Pass Filter
   QGroupBox *highGroup = new QGroupBox("High Pass Filter", this);
   QVBoxLayout *highLayout = new QVBoxLayout(highGroup);
@@ -129,6 +128,7 @@ CWFilteringEditor::CWFilteringEditor(const mediate_filter_t *lowpass,
   m_highCombo->addItem("Triangular Filter", QVariant(PRJCT_FILTER_TYPE_TRIANGLE));
 
   // savitzky-golay
+
   m_highSavitzky = new CWSavitzkyGolayEdit(&(highpass->savitzky), highPassUsage);
   m_highStack->addWidget(m_highSavitzky);
   m_highCombo->addItem("Savitzky-Golay Filter", QVariant(PRJCT_FILTER_TYPE_SG));
@@ -138,9 +138,9 @@ CWFilteringEditor::CWFilteringEditor(const mediate_filter_t *lowpass,
   m_highCombo->addItem("Odd-Even Correction", QVariant(PRJCT_FILTER_TYPE_ODDEVEN));
 
   // binomial
-  m_highBinomial = new CWBoxcarTriangularBinomialEdit(&(highpass->binomial), highPassUsage);
-  m_highStack->addWidget(m_highBinomial);
-  m_highCombo->addItem("Binomial Filter", QVariant(PRJCT_FILTER_TYPE_BINOMIAL));
+   m_highBinomial = new CWBoxcarTriangularBinomialEdit(&(highpass->binomial), highPassUsage);
+   m_highStack->addWidget(m_highBinomial);
+   m_highCombo->addItem("Binomial Filter", QVariant(PRJCT_FILTER_TYPE_BINOMIAL));
 
   // high pass group organisation
   highLayout->addWidget(m_highCombo);
@@ -192,8 +192,8 @@ void CWFilteringEditor::reset(const mediate_filter_t *lowpass, const mediate_fil
   m_lowTriangular->reset(&(lowpass->triangular));
   m_highTriangular->reset(&(highpass->triangular));
 
-  m_lowBinomial->reset(&(lowpass->binomial));
-  m_highBinomial->reset(&(highpass->binomial));
+   m_lowBinomial->reset(&(lowpass->binomial));
+   m_highBinomial->reset(&(highpass->binomial));
 
   m_lowSavitzky->reset(&(lowpass->savitzky));
   m_highSavitzky->reset(&(highpass->savitzky));
@@ -223,7 +223,6 @@ void CWFilteringEditor::apply(mediate_filter_t *lowpass, mediate_filter_t *highp
 
   m_lowSavitzky->apply(&(lowpass->savitzky));
   m_highSavitzky->apply(&(highpass->savitzky));
-
 }
 
 
@@ -259,17 +258,19 @@ CWFilterUsageEdit::CWFilterUsageEdit(const struct filter_usage *d, CWFilteringEd
       QHBoxLayout *layout = new QHBoxLayout(this);
       layout->setMargin(0);
       layout->addStretch(1); // push right
-      QRadioButton *subBtn = new QRadioButton("Subtract", this);
-      layout->addWidget(subBtn);
-      QRadioButton *divBtn = new QRadioButton("Divide", this);
-      layout->addWidget(divBtn);
-      if (m_state.divide)
-	divBtn->setChecked(true);
-      else
-	subBtn->setChecked(true);
+      m_subBtn = new QRadioButton("Subtract", this);
+      layout->addWidget(m_subBtn);
+      m_divBtn = new QRadioButton("Divide", this);
+      layout->addWidget(m_divBtn);
+
       // connections ...
-      connect(subBtn, SIGNAL(toggled(bool)), this, SLOT(slotSubtractToggled(bool)));
-      connect(divBtn, SIGNAL(toggled(bool)), this, SLOT(slotDivideToggled(bool)));
+      connect(m_subBtn, SIGNAL(toggled(bool)), this, SLOT(slotSubtractToggled(bool)));
+      connect(m_divBtn, SIGNAL(toggled(bool)), this, SLOT(slotDivideToggled(bool)));
+
+      if (d->divide)
+       m_divBtn->setChecked(true);
+      else
+       m_subBtn->setChecked(true);
     }
     break;
   case CWFilteringEditor::None:
@@ -283,6 +284,9 @@ void CWFilterUsageEdit::reset(const struct filter_usage *d)
   slotFittingStateChanged(d->fittingFlag ? Qt::Checked : Qt::Unchecked);
 
   bool checkDiv = (d->divide != 0);
+
+  if (m_state.divide!=d->divide)
+   m_divBtn->toggle();
 
   slotDivideToggled(checkDiv);
   slotSubtractToggled(!checkDiv);
@@ -306,13 +310,13 @@ void CWFilterUsageEdit::slotFittingStateChanged(int state)
 void CWFilterUsageEdit::slotSubtractToggled(bool checked)
 {
   if (checked)
-    m_state.divide = 0;
+   m_state.divide = 0;
 }
 
 void CWFilterUsageEdit::slotDivideToggled(bool checked)
 {
   if (checked)
-    m_state.divide = 1;
+   m_state.divide = 1;
 }
 
 
@@ -337,7 +341,7 @@ CWKaiserEdit::CWKaiserEdit(const struct filter_kaiser *d, CWFilteringEditor::Usa
 
   m_cutoffEdit = new QLineEdit(this);
   m_cutoffEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 100.0, 4, m_cutoffEdit));
-  m_cutoffEdit->setFixedWidth(60);
+  m_cutoffEdit->setFixedWidth(160);
 
   mainLayout->addWidget(m_cutoffEdit, row, 1, Qt::AlignLeft);
   ++row;
@@ -347,7 +351,7 @@ CWKaiserEdit::CWKaiserEdit(const struct filter_kaiser *d, CWFilteringEditor::Usa
 
   m_toleranceEdit = new QLineEdit(this);
   m_toleranceEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 100.0, 4, m_toleranceEdit));
-  m_toleranceEdit->setFixedWidth(60);
+  m_toleranceEdit->setFixedWidth(160);
 
   mainLayout->addWidget(m_toleranceEdit, row, 1, Qt::AlignLeft);
   ++row;
@@ -358,7 +362,7 @@ CWKaiserEdit::CWKaiserEdit(const struct filter_kaiser *d, CWFilteringEditor::Usa
 
   m_passbandEdit = new QLineEdit(this);
   m_passbandEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 100.0, 4, m_passbandEdit));
-  m_passbandEdit->setFixedWidth(60);
+  m_passbandEdit->setFixedWidth(160);
 
   mainLayout->addWidget(m_passbandEdit, row, 3, Qt::AlignLeft);
   ++row;
@@ -368,7 +372,7 @@ CWKaiserEdit::CWKaiserEdit(const struct filter_kaiser *d, CWFilteringEditor::Usa
 
   m_iterationsSpinBox = new QSpinBox(this);
   m_iterationsSpinBox->setRange(1, cMaxIterations);
-  m_iterationsSpinBox->setFixedWidth(60);
+  m_iterationsSpinBox->setFixedWidth(160);
 
   mainLayout->addWidget(m_iterationsSpinBox, row, 3, Qt::AlignLeft);
   ++row;
@@ -448,9 +452,9 @@ void CWBoxcarTriangularBinomialEdit::init(int filterWidth, int nIterations, cons
   mainLayout->addWidget(new QLabel("Width (pixels)", this), row, 0, cLabelAlign);
 
   m_widthSpinBox = new QSpinBox(this);
-  m_widthSpinBox->setRange(1, 99);
+  m_widthSpinBox->setRange(1, 999);
   m_widthSpinBox->setSingleStep(2);
-  m_widthSpinBox->setFixedWidth(60);
+  m_widthSpinBox->setFixedWidth(160);
 
   mainLayout->addWidget(m_widthSpinBox, row, 1, Qt::AlignLeft);
   ++row;
@@ -460,7 +464,7 @@ void CWBoxcarTriangularBinomialEdit::init(int filterWidth, int nIterations, cons
 
   m_iterationsSpinBox = new QSpinBox(this);
   m_iterationsSpinBox->setRange(1, cMaxIterations);
-  m_iterationsSpinBox->setFixedWidth(60);
+  m_iterationsSpinBox->setFixedWidth(160);
 
   mainLayout->addWidget(m_iterationsSpinBox, row, 1, Qt::AlignLeft);
   ++row;
@@ -532,9 +536,14 @@ CWGaussianEdit::CWGaussianEdit(const struct filter_gaussian *d, CWFilteringEdito
   // row 0
   mainLayout->addWidget(new QLabel("FWHM (pixels)", this), row, 0, cLabelAlign);
 
-  m_fwhmEdit = new QLineEdit(this);
-  m_fwhmEdit->setValidator(new CDoubleFixedFmtValidator(0.0001, 100.0, 4, m_fwhmEdit));
-  m_fwhmEdit->setFixedWidth(60);
+//   m_fwhmEdit = new QLineEdit(this);
+//   m_fwhmEdit->setValidator(new CDoubleFixedFmtValidator(5, 999.0, 4, m_fwhmEdit));
+//   m_fwhmEdit->setFixedWidth(160);
+
+  m_fwhmEdit = new QSpinBox(this);
+  m_fwhmEdit->setRange(1, 999);
+  m_fwhmEdit->setSingleStep(2);
+  m_fwhmEdit->setFixedWidth(160);
 
   mainLayout->addWidget(m_fwhmEdit, row, 1, Qt::AlignLeft);
   ++row;
@@ -544,7 +553,7 @@ CWGaussianEdit::CWGaussianEdit(const struct filter_gaussian *d, CWFilteringEdito
 
   m_iterationsSpinBox = new QSpinBox(this);
   m_iterationsSpinBox->setRange(1, cMaxIterations);
-  m_iterationsSpinBox->setFixedWidth(60);
+  m_iterationsSpinBox->setFixedWidth(160);
 
   mainLayout->addWidget(m_iterationsSpinBox, row, 1, Qt::AlignLeft);
   ++row;
@@ -563,8 +572,9 @@ void CWGaussianEdit::reset(const struct filter_gaussian *d)
 {
   QString tmpStr;
 
-  m_fwhmEdit->validator()->fixup(tmpStr.setNum(d->fwhm));
-  m_fwhmEdit->setText(tmpStr);
+//   m_fwhmEdit->validator()->fixup(tmpStr.setNum(d->fwhm));
+//   m_fwhmEdit->setText(tmpStr);
+  m_fwhmEdit->setValue((int)d->fwhm);
   m_iterationsSpinBox->setValue(d->iterations);
 
   m_usageEdit->reset(&(d->usage));
@@ -576,7 +586,7 @@ void CWGaussianEdit::apply(struct filter_gaussian *d) const
   double tmp;
 
   tmp = m_fwhmEdit->text().toDouble(&ok);
-  d->fwhm = ok ? tmp : 0.0;
+  d->fwhm = ok ? tmp : 0;
 
   d->iterations = m_iterationsSpinBox->value();
   m_usageEdit->apply(&(d->usage));
@@ -594,9 +604,9 @@ CWSavitzkyGolayEdit::CWSavitzkyGolayEdit(const struct filter_savitzky_golay *d, 
   mainLayout->addWidget(new QLabel("Width (pixels)", this), row, 0, cLabelAlign);
 
   m_widthSpinBox = new QSpinBox(this);
-  m_widthSpinBox->setRange(1, 99);
+  m_widthSpinBox->setRange(1, 999);
   m_widthSpinBox->setSingleStep(2);
-  m_widthSpinBox->setFixedWidth(60);
+  m_widthSpinBox->setFixedWidth(160);
 
   mainLayout->addWidget(m_widthSpinBox, row, 1, Qt::AlignLeft);
   ++row;
@@ -607,7 +617,7 @@ CWSavitzkyGolayEdit::CWSavitzkyGolayEdit(const struct filter_savitzky_golay *d, 
   m_orderSpinBox = new QSpinBox(this);
   m_orderSpinBox->setRange(2, 10);
   m_orderSpinBox->setSingleStep(2);
-  m_orderSpinBox->setFixedWidth(60);
+  m_orderSpinBox->setFixedWidth(160);
 
   mainLayout->addWidget(m_orderSpinBox, row, 1, Qt::AlignLeft);
   ++row;
@@ -617,7 +627,7 @@ CWSavitzkyGolayEdit::CWSavitzkyGolayEdit(const struct filter_savitzky_golay *d, 
 
   m_iterationsSpinBox = new QSpinBox(this);
   m_iterationsSpinBox->setRange(1, cMaxIterations);
-  m_iterationsSpinBox->setFixedWidth(60);
+  m_iterationsSpinBox->setFixedWidth(160);
 
   mainLayout->addWidget(m_iterationsSpinBox, row, 1, Qt::AlignLeft);
   ++row;
@@ -646,6 +656,7 @@ void CWSavitzkyGolayEdit::apply(struct filter_savitzky_golay *d) const
   d->width = m_widthSpinBox->value();
   d->order = m_orderSpinBox->value();
   d->iterations = m_iterationsSpinBox->value();
+
   m_usageEdit->apply(&(d->usage));
 }
 

@@ -333,7 +333,7 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
   SLIT *pSlitConv,*pSlitDConv;                                                  // pointers to the convolution and deconvolution slit function parts of the engine context
 
   char windowTitle[MAX_ITEM_TEXT_LEN],pageTitle[MAX_ITEM_TEXT_LEN];
-  double lambdaMin,lambdaMax,slitParam[NSFP],slitParamD[NSFP],slitWidth;
+  double lambdaMin,lambdaMax,slitParam[NSFP],slitParamD[NSFP],slitWidth,*tmpVector;
 
   int slitType,slitType2,deconvFlag,dispConv;
   int lowFilterType,highFilterType,nFilter,i;
@@ -364,6 +364,7 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
 
   slitType=pSlitConv->slitType;
   slitType2=pSlitDConv->slitType;
+  tmpVector=NULL;
 
   // Filtering
 
@@ -406,7 +407,8 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
 
   if (!(rc=XSCONV_LoadCalibrationFile(pXsnew,pEngineContext->calibrationFile,nFilter)) &&
      (((lowFilterType==PRJCT_FILTER_TYPE_NONE) && (highFilterType==PRJCT_FILTER_TYPE_NONE)) ||
-      ((pEngineContext->filterVector=(double *)MEMORY_AllocDVector("mediateConvolutionCalculate","filterVector",0,pXsnew->nl-1))!=NULL)) &&
+     (((pEngineContext->filterVector=(double *)MEMORY_AllocDVector("mediateConvolutionCalculate","filterVector",0,pXsnew->nl-1))!=NULL) &&
+      ((tmpVector=(double *)MEMORY_AllocDVector("mediateConvolutionCalculate","tmpVector",0,pXsnew->nl-1))!=NULL))) &&
       ((pEngineContext->convolutionType==CONVOLUTION_TYPE_NONE) ||
      (!(rc=XSCONV_LoadSlitFunction(XSCONV_slitMatrix,&pEngineContext->slitConv,&slitParam[0],&slitType)) &&
 
@@ -498,11 +500,11 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
 
       if ((lowFilterType!=PRJCT_FILTER_TYPE_NONE) && (pEngineContext->filterVector!=NULL) && !rc &&
         (((lowFilterType==PRJCT_FILTER_TYPE_ODDEVEN) && !(rc=FILTER_OddEvenCorrection(pXsnew->matrix[0],pXsnew->matrix[1],pEngineContext->filterVector,pXsnew->nl))) ||
-         ((lowFilterType!=PRJCT_FILTER_TYPE_ODDEVEN) && !(rc=FILTER_Vector(plFilter,pEngineContext->filterVector,pEngineContext->filterVector,pXsnew->nl,PRJCT_FILTER_OUTPUT_LOW)))) && dispConv)
+         ((lowFilterType!=PRJCT_FILTER_TYPE_ODDEVEN) && !(rc=FILTER_Vector(plFilter,pEngineContext->filterVector,pEngineContext->filterVector,NULL,pXsnew->nl,PRJCT_FILTER_OUTPUT_LOW)))) && dispConv)
        {
        	plot_data_t spectrumData[2];
 
-       	sprintf(windowTitle,(pEngineContext->convolutionType!=CONVOLUTION_TYPE_NONE)?"Spectrum after convolution and low-pass filtering":"Spectrum after interpolation and low-pass filtering");
+       	sprintf(windowTitle,"Spectrum after low-pass filtering");
 
         mediateAllocateAndSetPlotData(&spectrumData[0],"Convoluted spectrum before low pass filtering",pXsnew->matrix[0]+nFilter,pXsnew->matrix[1]+nFilter,pXsnew->nl-2*nFilter,Line);
         mediateAllocateAndSetPlotData(&spectrumData[1],"Convoluted spectrum after low pass filtering",pXsnew->matrix[0]+nFilter,pEngineContext->filterVector+nFilter,pXsnew->nl-2*nFilter,Line);
@@ -517,15 +519,24 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
       // -------------------
 
       if ((highFilterType!=PRJCT_FILTER_TYPE_NONE) && (highFilterType!=PRJCT_FILTER_TYPE_ODDEVEN) && (pEngineContext->filterVector!=NULL) && !rc &&
-         !(rc=FILTER_Vector(phFilter,pEngineContext->filterVector,pEngineContext->filterVector,pXsnew->nl,PRJCT_FILTER_OUTPUT_HIGH_SUB+phFilter->filterAction)) && dispConv)
+         !(rc=FILTER_Vector(phFilter,pEngineContext->filterVector,pEngineContext->filterVector,tmpVector,pXsnew->nl,phFilter->filterAction)) && dispConv)
        {
-       	plot_data_t spectrumData[1];
+       	plot_data_t spectrumData[2];
 
-       	sprintf(windowTitle,(pEngineContext->convolutionType!=CONVOLUTION_TYPE_NONE)?"Spectrum after convolution, low-pass and high-pass filtering":"Spectrum after interpolation, low-pass and high-pass filtering");
+        sprintf(windowTitle,"Spectrum after high-pass filtering");
+
+        mediateAllocateAndSetPlotData(&spectrumData[0],windowTitle,pXsnew->matrix[0]+nFilter,pXsnew->matrix[1]+nFilter,pXsnew->nl-2*nFilter,Line);
+        mediateAllocateAndSetPlotData(&spectrumData[1],windowTitle,pXsnew->matrix[0]+nFilter,tmpVector+nFilter,pXsnew->nl-2*nFilter,Line);
+
+        mediateResponsePlotData(0,spectrumData,2,Spectrum,forceAutoScale,windowTitle,"Wavelength (nm)","",responseHandle);
+        mediateResponseLabelPage(0,pageTitle,"",responseHandle);
+        mediateReleasePlotData(&spectrumData[0]);
+
+       	sprintf(windowTitle,"Spectrum after %s",(phFilter->filterAction==PRJCT_FILTER_OUTPUT_HIGH_SUB)?"subtraction":"division");
 
         mediateAllocateAndSetPlotData(&spectrumData[0],windowTitle,pXsnew->matrix[0]+nFilter,pEngineContext->filterVector+nFilter,pXsnew->nl-2*nFilter,Line);
-        mediateResponsePlotData(0,spectrumData,1,Spectrum,forceAutoScale,windowTitle,"Wavelength (nm)","",responseHandle);
-        mediateResponseLabelPage(0,pageTitle,"",responseHandle);
+        mediateResponsePlotData(1,spectrumData,1,Spectrum,forceAutoScale,windowTitle,"Wavelength (nm)","",responseHandle);
+        mediateResponseLabelPage(1,pageTitle,"",responseHandle);
         mediateReleasePlotData(&spectrumData[0]);
        }
 
@@ -561,6 +572,9 @@ RC mediateConvolutionCalculate(void *engineContext,void *responseHandle)
     MEMORY_ReleaseDVector("mediateConvolutionCalculate","FILTER_function",phFilter->filterFunction,1);
     phFilter->filterFunction=NULL;
    }
+
+  if (tmpVector!=NULL)
+   MEMORY_ReleaseDVector("mediateConvolutionCalculate","tmpVector",tmpVector,0);
 
   // Return
 
@@ -853,7 +867,7 @@ RC mediateRingCalculate(void *engineContext,void *responseHandle)
          *slitLambda,*slitVector,*slitDeriv2,                                   // substitution vectors for slit function
          *slitLambda2,*slitVector2,*slitDeriv22,                                // substitution vectors for slit function
          *ringLambda,*ringVector,                                               // substitution vectors for ring cross section
-          temp,                                                                 // approximate average temperature in °K for scattering
+          temp,                                                                 // approximate average temperature in ï¿½K for scattering
           slitParam[NSFP];                                                      // gaussian full width at half maximum
 
   MATRIX_OBJECT  xsSolar,xsSolarConv,xsSlit[NSFP],xsRing,*pSlit,*pSlit2;// solar spectrum and slit function
