@@ -68,6 +68,8 @@
 #define NEXT_DOUBLE "%lf%*[^0-9.-+\n]"
 #define COMMENT_LINE " %1[*;#]%*[^\n]\n"
 
+int test_matrix=0;
+
 // ==================
 // BUFFERS PROCESSING
 // ==================
@@ -229,6 +231,79 @@ RC MATRIX_Copy(MATRIX_OBJECT *pTarget,MATRIX_OBJECT *pSource, const char *callin
 // FILES PROCESSING
 // ================
 
+    double ScientificToDouble(char *in_String) {
+    	// Loop Variables
+    	int        Counter       = 0;
+    	int        Length        = strlen(in_String) + 1;
+    	// Flags and signs
+    	int        NegativeFlag  = 0;
+    	int        DecimalFlag   = 0;
+    	int        ExponentSign  = 0;  // -1 = Negative, 0 = None, 1 = Positive
+    	// Numerical Data
+    	int        Exponent      = 0;
+    	double     FinalDivision = 1.;
+    	double     Digits        = 0.;
+
+    	// Loop per each character. Ignore anything weird.
+    	for (;Counter < Length; Counter++) {
+    		// Depending on the current character
+    		switch (in_String[Counter]) {
+    			// On any digit
+    			case '0': case '5':
+    			case '1': case '6':
+    			case '2': case '7':
+    			case '3': case '8':
+    			case '4': case '9':
+    				// If we haven't reached an exponent yet ("e")
+    				if (ExponentSign == 0) {
+    					// Adjust the final division if a decimal was encountered
+    					if (DecimalFlag) FinalDivision *= (double)10.;
+    					// Add a digit to our main number
+    					Digits = (Digits * 10.) + (in_String[Counter] - '0');
+    				// If we passed an "e" at some point
+    				} else {
+    					// Add a digit to our exponent
+    					Exponent = (Exponent * 10) + (in_String[Counter] - '0');
+    				}
+    				break;
+    			// On a negative sign
+    			case '-':
+    				// If we passed an 'e'
+    				if (ExponentSign > 0)
+    					// The exponent sign will be negative
+    					ExponentSign = -1;
+    				// Otherwise we are still dealing with the main number
+    				else
+    					// Set the negative flag. We will negate the main number later.
+    					NegativeFlag = 1;
+    				break;
+    			// If we encounter some kind of "e"
+    			case 'e': case 'E':
+    				// Set the exponent flag
+    				ExponentSign = 1;
+    				break;
+    			// If we encounter a period
+    			case '.':
+    				// Set the decimal flag. We will start tracking decimal depth.
+    				DecimalFlag = 1;
+    				break;
+    			// We gladly accept all sorts of additional garbage.
+    			default:
+    				break;
+    		}
+    	}
+    	// If the negative flag is set, negate the main number
+    	if (NegativeFlag)
+    		Digits = -Digits;
+
+    	// If the exponent is supposed to be negative, negate it now
+    	if (ExponentSign < 0)
+    		Exponent = 0 - Exponent;
+
+    	// Return the calculated result of our observations
+    	return ((double)Digits / (double)FinalDivision) * (double)(pow((double)10.0f, (double)Exponent));
+    }
+
 int MatrixNextDouble(FILE *fp,double *dvalue)
  {
  	// Declarations
@@ -243,13 +318,13 @@ int MatrixNextDouble(FILE *fp,double *dvalue)
 
  	for (nc=0,isdouble=0,oldc=' ';((c=fgetc(fp))!=EOF) && nc<MAX_ITEM_TEXT_LEN;)
  	 {
- 	 	if ((c==EOF) || (c=='\n') || ((c==' ') && (oldc!=' ')) || (((c=='\t') || (c=='\r')) && (nc>0)))
+ 	 	if ((c==EOF) || (c=='\n') || ((c==' ') && (oldc!=' ')) || ((c=='\t') && (nc>0)))
  	 	 {
  	 	  if (nc>0)
  	 	   isdouble=((c==EOF) || (c=='\n'))?-1:1;
  	 	  break;
  	 	 }
- 	 	else if ((c!=' ') && (c!='\t') && (c!='\r'))
+ 	 	else if ((c!=' ') && (c!='\t'))
  	 	 {
  	 	 	if (!strchr("0123456789+-eE.",c))
  	 	   break;
@@ -259,9 +334,9 @@ int MatrixNextDouble(FILE *fp,double *dvalue)
 
  	 	oldc=c;
  	 }
- 	 
+
   if (nc<MAX_ITEM_TEXT_LEN)
- 	 *dvalue=(double)atof(item);
+ 	 *dvalue=(double)ScientificToDouble(item);
 
  	// return
 
@@ -305,6 +380,7 @@ RC MATRIX_Load(const char *fileName,MATRIX_OBJECT *pMatrix,
            tempValue;                                                           // a value of the matrix to load
   FILE    *fp;                                                                  // file pointer
   RC       rc;                                                                  // return code
+  double firstCalib;
 
   // Debugging
 
@@ -322,6 +398,7 @@ RC MATRIX_Load(const char *fileName,MATRIX_OBJECT *pMatrix,
 
   nlMin=nl;
   ncMin=nc;
+  firstCalib=(double)0.;
   rc=ERROR_ID_NO;
 
   xMin=min(xmin,xmax);
@@ -340,7 +417,7 @@ RC MATRIX_Load(const char *fileName,MATRIX_OBJECT *pMatrix,
   else {
     // The function has to determine the number of lines and columns
     if (!nl || !nc) {
-      char c[2];
+      char c[2000];
       while (fscanf(fp, COMMENT_LINE, c) == 1) {
         // skip spaces and comment lines (assumed to start with character ';', '#' or '*')
       }
@@ -348,7 +425,7 @@ RC MATRIX_Load(const char *fileName,MATRIX_OBJECT *pMatrix,
       // Determine the number of columns
 
       nc = 0;
-      double firstCalib=(double)0.;
+      firstCalib=(double)0.;
       int rcNextDouble;
 
       while ((rcNextDouble=MatrixNextDouble(fp,&tempValue))!=0)
@@ -359,7 +436,7 @@ RC MATRIX_Load(const char *fileName,MATRIX_OBJECT *pMatrix,
        	if (rcNextDouble<0)
        	 break;
        }
-       
+
    // in each iteration of the loop, read a number
    //   while (fscanf(fp, NEXT_DOUBLE, &tempValue) == 1) {
    //     if (!nc)
@@ -385,9 +462,7 @@ RC MATRIX_Load(const char *fileName,MATRIX_OBJECT *pMatrix,
           ++nl;
         }
       }
-
     }
-
 
     // File read out
 
@@ -405,13 +480,14 @@ RC MATRIX_Load(const char *fileName,MATRIX_OBJECT *pMatrix,
       fseek(fp,0L,SEEK_SET);
 
       for (i=0; i<nl && !rc;) {
-        char c[2];
+        char c[2000];
         while (fscanf(fp, COMMENT_LINE, c) == 1) {
           // skip spaces and comment lines (assumed to start with character ';', '#' or '*')
         }
 
         // read first column
         int n_read = fscanf(fp,"%lf",&tempValue);
+
         if (n_read != 1) {
           rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_BAD_LENGTH,fullPath);
         } else if ( (xMin==xMax) || ((tempValue>=xMin)&&(tempValue<=xMax)) ) {
@@ -457,11 +533,11 @@ RC MATRIX_Load(const char *fileName,MATRIX_OBJECT *pMatrix,
 
       if (allocateDeriv2)
         for (j=1; (j<nc) && !rc; ++j)
-        rc=SPLINE_Deriv2(((double *)matrix[0]),
-                         ((double *)matrix[j]),
-                         ((double *)deriv2[j]),
-                         pMatrix->nl,
-                         callingFunction);
+         rc=SPLINE_Deriv2(((double *)matrix[0]),
+                          ((double *)matrix[j]),
+                          ((double *)deriv2[j]),
+                          pMatrix->nl,
+                          callingFunction);
      }
    }
 

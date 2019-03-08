@@ -37,13 +37,6 @@ CWProjectTabAnalysis::CWProjectTabAnalysis(const mediate_project_analysis_t *pro
   int index;
   QString tmpStr;
 
-      {
- FILE *fp;
- fp=fopen("toto.dat","a+t");
- fprintf(fp,"Create analysis\n");
- fclose(fp);
-      }
-
   QGridLayout *mainLayout = new QGridLayout(this);
   mainLayout->setSpacing(5);
 
