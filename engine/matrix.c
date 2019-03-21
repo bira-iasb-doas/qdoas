@@ -318,10 +318,10 @@ int MatrixNextDouble(FILE *fp,double *dvalue)
 
  	for (nc=0,isdouble=0,oldc=' ';((c=fgetc(fp))!=EOF) && nc<MAX_ITEM_TEXT_LEN;)
  	 {
- 	 	if ((c==EOF) || (c=='\n') || ((c==' ') && (oldc!=' ')) || ((c=='\t') && (nc>0)))
+ 	 	if ((c==EOF) || (c=='\n') || (c==0x0D) || (c==0x0A) || ((c==' ') && (oldc!=' ')) || ((c=='\t') && (nc>0)))
  	 	 {
  	 	  if (nc>0)
- 	 	   isdouble=((c==EOF) || (c=='\n'))?-1:1;
+ 	 	   isdouble=((c==EOF) || (c=='\n') || (c==0x0D) || (c==0x0A))?-1:1;
  	 	  break;
  	 	 }
  	 	else if ((c!=' ') && (c!='\t'))

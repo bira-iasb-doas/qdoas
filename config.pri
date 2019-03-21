@@ -2,7 +2,7 @@
 # General Configuration for ALL applications
 #----------------------------------------------
 
-CODE_GENERATION = release      # debug or release
+CODE_GENERATION = staticlib release      # debug or release
 CONFIG += release
 
 QMAKE_CFLAGS += -g -std=gnu99 -Wall -Wextra -pedantic \
@@ -19,7 +19,7 @@ win64 {
   QDOAS_VERSION = "$${QDOAS_VERSION}_x86_64"
 }
 
-DEFINES += QDOAS_VERSION="\"\\\"$${QDOAS_VERSION}\\\"\"" QDOAS_DATE="\"\\\"05 March 2019\\\"\""
+DEFINES += QDOAS_VERSION="\"\\\"$${QDOAS_VERSION}\\\"\"" QDOAS_DATE="\"\\\"21 March 2019 (r1879)\\\"\""
 
 LIBS += -L../mediator -lmediator -L../engine -lengine -L../common -lcommon
 DEPENDPATH += ../common ../engine ../mediator
@@ -82,34 +82,36 @@ mxe {
 }
 
 caro {
-  QWT_LINKAGE     = qwtstatic        # qwtstatic or qwtdll
-  QWT_INC_PATH    = C:/Qwt-6.1.0/src
-  QWT_LIB_PATH    = C:/Qwt-6.1.0/lib
+  QWT_LINKAGE     = qwtdll        # qwtstatic or qwtdll
+  QWT_INC_PATH    = C:/Qwt-6.1.3/src
+  QWT_LIB_PATH    = C:/Qwt-6.1.3/lib
   QWT_LIB         = qwt
   QWT_LIB_VERSION =
-  CODA_LIB_PATH   = D:/My_Applications/QDOAS/winlibs/coda/lib
+  CODA_LIB_PATH   = c:/My_Applications/QDOAS/winlibs/coda/lib
   CODA_LIB        = coda
 
   QT += core gui svg
 
-  DEFINES += QT_NODLL
+  # DEFINES += QT_NODLL
 
-  INCLUDEPATH += C:/Qwt-6.1.0/src
-  INCLUDEPATH += D:/My_Applications/QDOAS/winlibs/hdfeos/include
-  INCLUDEPATH += D:/My_Applications/QDOAS/winlibs/hdfeos5/include
-  INCLUDEPATH += D:/My_Applications/QDOAS/winlibs/hdf/include
-  INCLUDEPATH += D:/My_Applications/QDOAS/winlibs/hdf5/include
-  INCLUDEPATH += D:/My_Applications/QDOAS/winlibs/netCDF/include
-  INCLUDEPATH += D:/My_Applications/QDOAS/winlibs
-  INCLUDEPATH += D:/My_Applications/QDOAS/winlibs/coda/include
+  INCLUDEPATH += C:/Qwt-6.1.3/src
+  INCLUDEPATH += C:/My_Libraries/HDF/hdfeos2_19/hdfeos2.19/hdfeos/include
+  INCLUDEPATH += C:/My_Libraries/HDF/hdfeos5_1_15/hdfeos5.1.15/hdfeos5/include
+  INCLUDEPATH += C:/My_Libraries/HDF/CMake-hdf-4.2.12/hdf-4.2.12/hdf/src
+  INCLUDEPATH += C:/My_Libraries/HDF/CMake-hdf-4.2.12/hdf-4.2.12/mfhdf/libsrc
+  INCLUDEPATH += C:/My_Libraries/HDF/CMake-hdf5-1.10.0-patch1/hdf5-1.10.0-patch1/src
+  INCLUDEPATH += C:/My_Libraries/HDF/CMake-hdf5-1.10.0-patch1/hdf5-1.10.0-patch1/c++/src
+  INCLUDEPATH += C:/My_Libraries/HDF/netcdf-4.6.0/include
+  INCLUDEPATH += C:/My_Satellites_Activities/Programs/coda-2.20/bin
+  INCLUDEPATH += c:/My_Applications/QDOAS/winlibs
 
-  HDFEOS_LIB_PATH  = D:/My_Applications/QDOAS/winlibs/hdfeos/lib
-  HDFEOS5_LIB_PATH = D:/My_Applications/QDOAS/winlibs/hdfeos5/lib
-  HDF_LIB_PATH     = D:/My_Applications/QDOAS/winlibs/hdf/lib
-  MFHDF_LIB_PATH   = D:/My_Applications/QDOAS/winlibs/hdf/lib
-  HDF5_LIB_PATH    = D:/My_Applications/QDOAS/winlibs/hdf5/lib
-  NETCDF_LIB_PATH  = D:/My_Applications/QDOAS/winlibs/netcdf/lib
-  GSL_LIB_PATH  = D:/My_Applications/QDOAS/winlibs/gsl/lib
+  HDFEOS_LIB_PATH  = c:/My_Applications/QDOAS/winlibs/hdfeos/lib
+  HDFEOS5_LIB_PATH = c:/My_Applications/QDOAS/winlibs/hdfeos5/lib
+  HDF_LIB_PATH     = c:/My_Applications/QDOAS/winlibs/hdf/lib
+  MFHDF_LIB_PATH   = c:/My_Applications/QDOAS/winlibs/hdf/lib
+  HDF5_LIB_PATH    = c:/My_Applications/QDOAS/winlibs/hdf5/lib
+  NETCDF_LIB_PATH  = c:/My_Applications/QDOAS/winlibs/netcdf/lib
+  GSL_LIB_PATH  = c:/My_Applications/QDOAS/winlibs/gsl/lib
 
   CODE_GENERATION = release # Override because debug is broken
 }
@@ -231,8 +233,11 @@ compute {
 hpc {
   LIBS -= -lgslcblas
   LIBS += -latlas -lgfortran
+  INCLUDEPATH += /space/hpc-apps/bira/18/linalg/include64
+  INCLUDEPATH += /space/hpc-apps/bira/17/doas/include
+  INCLUDEPATH += /space/hpc-apps/bira/18/hdf-netcdf/include64
   INSTALL_PREFIX = /space/hpc-apps/bira/doas
-  QDOASLIBS = $$INSTALL_PREFIX/lib /space/hpc-apps/bira/17/base/lib64 /space/hpc-apps/bira/17/linalg/lib64 /space/hpc-apps/bira/17/hdf-netcdf/lib64 /space/hpc-apps/bira/17/doas/lib
+  QDOASLIBS = $$INSTALL_PREFIX/lib /space/hpc-apps/bira/18/base/lib64 /space/hpc-apps/bira/18/linalg/lib64 /space/hpc-apps/bira/18/hdf-netcdf/lib64 /space/hpc-apps/bira/17/doas/lib
   QMAKE_LIBDIR += $$QDOASLIBS
   QMAKE_RPATHDIR += $$QDOASLIBS
 }
