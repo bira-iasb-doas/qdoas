@@ -142,6 +142,8 @@ using std::set;
     vector<short> sci;                                                          //!< \details Scan index
     vector<short> zbi;                                                          //!< \details Zenith before index
     vector<short> zai;                                                          //!< \details Zenith after index
+
+    float stationLon;
    };
 
 // ================
@@ -184,6 +186,8 @@ static metadata FRM4DOAS_Read_Metadata(size_t number_of_records)
   location_group.getVar("latitude",start,count1,1,(float)-1.,lat);
   location_group.getVar("longitude",start,count1,1,(float)-1.,lon);
   location_group.getVar("altitude",start,count1,1,(float)-1.,alt);
+
+  result.stationLon=lon[0];
 
   // Get metadata variables
 
@@ -266,6 +270,8 @@ RC FRM4DOAS_Set(ENGINE_CONTEXT *pEngineContext)
     pEngineContext->fileInfo.startDate.da_day=(char)dt[0][2];
     pEngineContext->fileInfo.startDate.da_mon=(char)dt[0][1];
     pEngineContext->fileInfo.startDate.da_year=dt[0][0];
+
+    THRD_localShift=current_metadata.stationLon/15.;
    }
   catch (std::runtime_error& e)
    {

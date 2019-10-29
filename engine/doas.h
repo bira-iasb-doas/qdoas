@@ -69,10 +69,6 @@ extern "C" {
 
 #define STOP      ITEM_NONE
 
-#define DOAS_PI     (double) 3.14159265358979323846
-#define PI2         (double) 6.28318530717958647692
-#define PIDEMI      (double) 1.57079632679489661923
-
 typedef struct _prjctAnlys PRJCT_ANLYS;
 typedef struct _prjctKurucz PRJCT_KURUCZ;
 typedef struct _prjctUsamp PRJCT_USAMP;
@@ -110,6 +106,7 @@ extern PRJCT_USAMP  *pUsamp;
 
 static inline bool is_satellite(enum _prjctInstrFormat format) {
   return (format==PRJCT_INSTR_FORMAT_GDP_BIN ||
+          format==PRJCT_INSTR_FORMAT_GEMS ||
           format==PRJCT_INSTR_FORMAT_GOME1_NETCDF ||
           format==PRJCT_INSTR_FORMAT_SCIA_PDS ||
           format==PRJCT_INSTR_FORMAT_OMI ||

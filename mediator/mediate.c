@@ -40,7 +40,9 @@
 
 #include "omi_read.h"
 #include "tropomi_read.h"
+#include "gome1netcdf_read.h"
 #include "apex_read.h"
+#include "gems_read.h"
 #include "mfc-read.h"
 
 int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHandle)
@@ -308,7 +310,7 @@ int mediateRequestDisplaySpecInfo(void *engineContext,int page,void *responseHan
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Rainbow flag","%d",pRecord->gome2.rainbowFlag);
    }
 
-  if (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_BIRA_AIRBORNE)
+  if ((pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_BIRA_AIRBORNE) || (pInstrumental->readOutFormat==PRJCT_INSTR_FORMAT_BIRA_MOBILE))
    {
     if (pSpectra->fieldsFlag[PRJCT_RESULTS_UAV_SERVO_BYTE_SENT])
      mediateResponseCellInfo(page,indexLine++,indexColumn,responseHandle,"Servo position byte sent","%d",(int)pRecord->uavBira.servoSentPosition);
@@ -394,7 +396,7 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
 
    fileName=pEngineContext->fileInfo.fileName;
 
-   if (ANALYSE_plotRef) {
+   if (ANALYSE_plotRef && (ANALYSE_swathSize>1)) {
     mediateResponseRetainPage(plotPageRef,responseHandle);
    }
    if (ANALYSE_plotKurucz) {
@@ -415,6 +417,7 @@ void mediateRequestPlotSpectra(ENGINE_CONTEXT *pEngineContext,void *responseHand
      case PRJCT_INSTR_FORMAT_SCIA_PDS:
      case PRJCT_INSTR_FORMAT_GOME2:
      case PRJCT_INSTR_FORMAT_OMI:
+     case PRJCT_INSTR_FORMAT_GEMS:
        y_units = "photons / (nm s cm<sup>2</sup>)";
        break;
      case PRJCT_INSTR_FORMAT_TROPOMI:
@@ -955,7 +958,7 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       // ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_BIRA_MOBILE :                                                              // BIRA MOBILE
 
-      NDET[0]=2048;                                                                                     // size of the detector
+      NDET[0]=(pMediateInstrumental->biramobile.detectorSize)?pMediateInstrumental->biramobile.detectorSize:2048;  // size of the detector
 
       pEngineInstrumental->offsetFlag=pMediateInstrumental->biramobile.straylight;
       pEngineInstrumental->lambdaMin=pMediateInstrumental->biramobile.lambdaMin;
@@ -965,9 +968,10 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->biramobile.transmissionFunctionFile);    // instrumental function file
 
       break;
+      // ----------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_BIRA_AIRBORNE :                                                              // BIRA AIRBORNE
 
-      NDET[0]=2048;                                                                                     // size of the detector
+      NDET[0]=(pMediateInstrumental->biraairborne.detectorSize)?pMediateInstrumental->biraairborne.detectorSize:2048;  // size of the detector
 
       pEngineInstrumental->offsetFlag=pMediateInstrumental->biraairborne.straylight;
       pEngineInstrumental->lambdaMin=pMediateInstrumental->biraairborne.lambdaMin;
@@ -986,6 +990,8 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 
       strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->apex.calibrationFile);
       strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->apex.transmissionFunctionFile);
+
+      OMI_TrackSelection(pMediateInstrumental->apex.trackSelection,pEngineInstrumental->use_row);
 
       break;
     case PRJCT_INSTR_FORMAT_RASAS :                                                                 // Format RASAS (INTA)
@@ -1059,6 +1065,18 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
 
       pEngineInstrumental->gomenetcdf.bandType=pMediateInstrumental->gdpnetcdf.bandType;
       pEngineInstrumental->gomenetcdf.pixelType=pMediateInstrumental->gdpnetcdf.pixelType;
+
+      if (pEngineInstrumental->gomenetcdf.pixelType==PRJCT_INSTR_GOME1_PIXEL_BACKSCAN)
+       pEngineInstrumental->use_row[3]=true;
+      else if (pEngineInstrumental->gomenetcdf.pixelType==PRJCT_INSTR_GOME1_PIXEL_GROUND)
+       pEngineInstrumental->use_row[0]=
+       pEngineInstrumental->use_row[1]=
+       pEngineInstrumental->use_row[2]=true;
+      else
+       pEngineInstrumental->use_row[0]=
+       pEngineInstrumental->use_row[1]=
+       pEngineInstrumental->use_row[2]=
+       pEngineInstrumental->use_row[3]=true;
 
       break;
       // ---------------------------------------------------------------------------
@@ -1229,6 +1247,21 @@ void setMediateProjectInstrumental(PRJCT_INSTRUMENTAL *pEngineInstrumental,const
       strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->frm4doas.transmissionFunctionFile); // instrumental function file
 
       break;
+      // ----------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_GEMS :
+
+      for (int i=0; i<MAX_SWATHSIZE; ++i) {
+        NDET[i] = GEMS_INIT_LENGTH;
+        pEngineInstrumental->use_row[i]=false;
+      }                                                                                    // Could be reduced by Set function
+
+      strcpy(pEngineInstrumental->calibrationFile,pMediateInstrumental->gems.calibrationFile);     // calibration file
+      strcpy(pEngineInstrumental->instrFunction,pMediateInstrumental->gems.transmissionFunctionFile);     // instrumental function file
+
+      OMI_TrackSelection(pMediateInstrumental->gems.trackSelection,pEngineInstrumental->use_row);
+
+      break;
+      // ----------------------------------------------------------------------------
     }
  }
 
@@ -1259,6 +1292,7 @@ void setMediateProjectOutput(PRJCT_RESULTS *pEngineOutput,const mediate_project_
    // Declarations
 
    strcpy(pEngineOutput->path,pMediateOutput->path);                            // path for results and fits files
+   strcpy(pEngineOutput->newCalibPath,pMediateOutput->newCalibPath);            // path for calibrated irradiances (run calib for satellites)
    strcpy(pEngineOutput->fluxes,pMediateOutput->flux);                          // fluxes
 
    // strcpy(pEngineOutput->cic,pMediateOutput->colourIndex);                      // color indexes    -> not used anymore
@@ -1335,6 +1369,8 @@ int mediateRequestSetProject(void *engineContext,
    // Transfer projects options from the mediator to the engine
 
    strncpy(pEngineProject->project_name, project->project_name, PROJECT_NAME_BUFFER_LENGTH-1);
+   for(unsigned int i=0; i<MAX_SWATHSIZE; ++i)
+     pEngineContext->project.instrumental.use_row[i]=true;
 
    setMediateProjectDisplay(&pEngineProject->spectra,&project->display);
    setMediateProjectSelection(&pEngineProject->spectra,&project->selection);
@@ -1363,7 +1399,6 @@ int mediateRequestSetProject(void *engineContext,
       for (int i=0;i<project->export_spectra.selection.nSelected;i++)
        fieldsFlag[project->export_spectra.selection.selected[i]]=1;
     }
-
 
    // Allocate buffers requested by the project
 
@@ -1600,14 +1635,19 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
    INDEX indexKurucz,indexWindow;
    ENGINE_CONTEXT *pEngineContext;                                               // engine context
    PRJCT_INSTRUMENTAL *pInstrumental;
-   const mediate_analysis_window_t *pAnalysisWindows;                                  // pointer to the current analysis window from the user interface
+   const mediate_analysis_window_t *pAnalysisWindows;                            // pointer to the current analysis window from the user interface
    mediate_analysis_window_t calibWindows;                                       // pointer to the calibration parameters
    FENO *pTabFeno;                                                               // pointer to the description of an analysis window
-   int indexFeno,indexFenoColumn;                                              // browse analysis windows
+   int indexFeno,indexFenoColumn;                                                // browse analysis windows
+   int n_wavel_temp1, n_wavel_temp2;                                             // temporary spectral channel
    MATRIX_OBJECT hr_solar_temp; // to preload high res solar spectrum
    RC rc;                                                                        // return code
 
    // Initializations
+
+   #if defined(__DEBUG_) && __DEBUG_
+   DEBUG_Start(ENGINE_dbgFile,"mediateRequestSetAnalysisWindows",DEBUG_FCTTYPE_MEM,15,DEBUG_DVAR_YES,0);
+    #endif
 
    lambdaMin=1000;
    lambdaMax=0;
@@ -1635,6 +1675,8 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
    KURUCZ_indexLine=1;
    rc=ANALYSE_SetInit(pEngineContext);
 
+   n_wavel_temp1 = 0;
+   n_wavel_temp2 = 0;
    // if the user wants to write output to a file, check if the path is valid before starting analysis
    if ( (THRD_id==THREAD_TYPE_ANALYSIS && pEngineContext->project.asciiResults.analysisFlag) ||
         (THRD_id==THREAD_TYPE_KURUCZ && pEngineContext->project.asciiResults.calibFlag) ) {
@@ -1649,21 +1691,36 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
      break;
    case PRJCT_INSTR_FORMAT_GOME1_NETCDF:
      ANALYSE_swathSize = 4;   // the number of pixel types
-     for (int i =0; i< ANALYSE_swathSize; ++i)
-       pInstrumental->use_row[i] = true;
-
+     if (strlen(analysisWindows[0].refOneFile))
+       rc = GOME1NETCDF_InitRef(analysisWindows[0].refOneFile,&n_wavel_temp1,pEngineContext);
+     if (strlen(analysisWindows[0].refTwoFile))
+       rc = GOME1NETCDF_InitRef(analysisWindows[0].refTwoFile,&n_wavel_temp2,pEngineContext);
      break;
-
+// TODO: generalize for different analysis windows TROPOMI and APEX
    case PRJCT_INSTR_FORMAT_TROPOMI:
-     rc = tropomi_init(analysisWindows[0].refOneFile,pEngineContext);
+     pEngineContext->radAsRefFlag=0;
+     if (strlen(analysisWindows[0].refOneFile)){
+       rc = tropomi_init(analysisWindows[0].refOneFile,pEngineContext,&n_wavel_temp1);
+     } else {
+        rc=ERROR_SetLast(__func__,ERROR_TYPE_FATAL,ERROR_ID_FILE_AUTOMATIC);
+     }
+     if (strlen(analysisWindows[0].refTwoFile)){
+       pEngineContext->radAsRefFlag=1;
+       rc = tropomi_init(analysisWindows[0].refTwoFile,pEngineContext,&n_wavel_temp2);
+     }
      break;
    case PRJCT_INSTR_FORMAT_OMPS:
      ANALYSE_swathSize = 36;
      for (int i =0; i< ANALYSE_swathSize; ++i)
        pInstrumental->use_row[i] = true;
      break;
+   case PRJCT_INSTR_FORMAT_GEMS:
+     ANALYSE_swathSize=28;
+     break;
+     // TO SEE LATER WHAT IS NECESSARY FOR THIS FORMAT rc = gems_init(analysisWindows[0].refOneFile,pEngineContext);              // !!! GEMS : if fixed format, just initialize the ANALYSE_swathSize
+     break;
    case PRJCT_INSTR_FORMAT_APEX:
-     rc = apex_init(analysisWindows[0].refOneFile,pEngineContext);
+     rc = apex_init(analysisWindows[0].refOneFile,pEngineContext,1,0,0);
      break;
    default:
      // for all non-imager instruments
@@ -1679,9 +1736,8 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
    for (indexFenoColumn=0;(indexFenoColumn<ANALYSE_swathSize) && !rc;indexFenoColumn++) {
 
      // check if we have to skip this column
-     if (!pEngineContext->project.instrumental.use_row[indexFenoColumn]) {
+     if (!pEngineContext->project.instrumental.use_row[indexFenoColumn])
        continue;
-     }
 
      NFeno=0;
 
@@ -1694,6 +1750,8 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
        pAnalysisWindows=(!pTabFeno->hidden)? &analysisWindows[indexFeno-1]: &calibWindows;
 
        pTabFeno->NDET=NDET[indexFenoColumn];
+       pTabFeno->n_wavel_ref1=n_wavel_temp1;
+       pTabFeno->n_wavel_ref2=n_wavel_temp2;
        const int n_wavel = pTabFeno->NDET;
 
        if ((pTabFeno->hidden<2) && ((THRD_id==THREAD_TYPE_ANALYSIS) || (pTabFeno->hidden==1))) {
@@ -1711,6 +1769,10 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
            strcpy(pTabFeno->ref2,pAnalysisWindows->refTwoFile);
 
            pTabFeno->resolFwhm=pAnalysisWindows->resolFwhm;
+           pTabFeno->lambda0=pAnalysisWindows->lambda0;
+
+           if (fabs(pTabFeno->lambda0)<EPSILON)
+            pTabFeno->lambda0=(double)0.5*(pAnalysisWindows->fitMinWavelength+pAnalysisWindows->fitMaxWavelength);
 
            if ((pTabFeno->refSpectrumSelectionMode=pAnalysisWindows->refSpectrumSelection)==ANLYS_REF_SELECTION_MODE_AUTOMATIC) {
                if (((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_ASCII) && is_maxdoas(pEngineContext->project.instrumental.readOutFormat)) ||
@@ -1823,26 +1885,24 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
 
                (!pTabFeno->gomeRefFlag || !(rc=FIT_PROPERTIES_alloc(__func__,&pTabFeno->fit_properties)))
                ))) {
-
            if (pTabFeno->hidden==1) {
              indexKurucz=NFeno;
            } else {
              useUsamp+=pTabFeno->useUsamp;
              xsToConvolute+=pTabFeno->xsToConvolute;
              xsToConvoluteI0+=pTabFeno->xsToConvoluteI0;
-             pTabFeno->lambda0=(double)(pAnalysisWindows->fitMinWavelength+pAnalysisWindows->fitMaxWavelength)*0.5;
 
              if (pTabFeno->gomeRefFlag || pEngineContext->refFlag) {
                memcpy(pTabFeno->Lambda,pTabFeno->LambdaRef,sizeof(double)*n_wavel);
                memcpy(pTabFeno->LambdaK,pTabFeno->LambdaRef,sizeof(double)*n_wavel);
 
-               if (pTabFeno->LambdaRef[n_wavel-1]-pTabFeno->Lambda[0]+1!=n_wavel)
+               if (pTabFeno->LambdaRef[n_wavel-1]-pTabFeno->Lambda[0]+1!=n_wavel){
                  rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef,indexFenoColumn);
+               }
              }
            }
 
            ANALYSE_SetAnalysisType(indexFenoColumn);
-
            if (!pTabFeno->hidden) {
              lambdaMin=min(lambdaMin,pTabFeno->LambdaRef[0]);
              lambdaMax=max(lambdaMax,pTabFeno->LambdaRef[n_wavel-1]);
@@ -1907,9 +1967,8 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
 
          if ((pSlitOptions->slitFunction.slitType==SLIT_TYPE_NONE) && pTabFeno->xsToConvolute)
            rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_CONVOLUTION);
-         else if (pTabFeno->xsToConvolute && /* pTabFeno->useEtalon && */ (pTabFeno->gomeRefFlag || pEngineContext->refFlag) &&
-                  ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,ANALYSIS_slitMatrix,ANALYSIS_slitParam,pSlitOptions->slitFunction.slitType,indexFenoColumn,pSlitOptions->slitFunction.slitWveDptFlag))!=0))
-
+         else if ((pTabFeno->gomeRefFlag || pEngineContext->refFlag) &&         // test on pTabFeno->xsToConvolute done in ANALYSE_XsConvolution (molecular ring done in this function for both convolution and interpolation)
+                 ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,ANALYSIS_slitMatrix,ANALYSIS_slitParam,pSlitOptions->slitFunction.slitType,indexFenoColumn,pSlitOptions->slitFunction.slitWveDptFlag))!=0))
            break;
        }
 
@@ -1918,6 +1977,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
        //                            Run Analysis and wavelength calibration is different from None at least for one spectral window
        //
        // Apply the calibration procedure on the reference spectrum if the wavelength calibration is different from None at least for one spectral window
+
        if ((THRD_id==THREAD_TYPE_KURUCZ) || useKurucz) {
          rc=KURUCZ_Alloc(&pEngineContext->project,pEngineContext->buffers.lambda,indexKurucz,lambdaMin,lambdaMax,indexFenoColumn, &hr_solar_temp);
 
@@ -1952,6 +2012,7 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
 
  handle_errors:
 
+//   GEMS_CloseReferences();
    MATRIX_Free(&hr_solar_temp, __func__);
 
    if (rc!=ERROR_ID_NO) {
@@ -1959,6 +2020,11 @@ int mediateRequestSetAnalysisWindows(void *engineContext,
    } else if (imager_err) {
      ERROR_DisplayMessage(responseHandle);
    }
+
+   #if defined(__DEBUG_) && __DEBUG_
+   DEBUG_Stop("mediateRequestSetAnalysisWindows");
+   #endif
+
    return (rc!=ERROR_ID_NO)?-1:0;    // supposed that an error at the level of the load of projects stops the current session
  }
 
@@ -2071,10 +2137,9 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
 
    pProject=&pEngineContext->project;
    pRecord=&pEngineContext->recordInfo;
-   outputFlag=(!pEngineContext->project.asciiResults.successFlag &&
-
+   outputFlag=
     (((THRD_id==THREAD_TYPE_KURUCZ) && pProject->asciiResults.calibFlag) ||
-     ((THRD_id==THREAD_TYPE_ANALYSIS) && pProject->asciiResults.analysisFlag)))?1:0;
+     ((THRD_id==THREAD_TYPE_ANALYSIS) && pProject->asciiResults.analysisFlag))?1:0;
 
    inc=1;
    geoFlag=1;
@@ -2110,6 +2175,7 @@ int mediateRequestNextMatchingSpectrum(ENGINE_CONTEXT *pEngineContext,void *resp
 
      // read the 'next' record
      if ((rc=EngineReadFile(pEngineContext,rec,0,0))!=ERROR_ID_NO) {
+
        // reset the rc based on the severity of the failure - for non fatal errors keep searching
        rc = ERROR_DisplayMessage(responseHandle);
      } else if ( (pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) &&

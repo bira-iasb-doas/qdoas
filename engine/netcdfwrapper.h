@@ -41,6 +41,7 @@ public:
   NetCDFGroup(int id=0, const std::string& groupName ="") :  groupid(id), name(groupName) {};
 
   bool hasVar(const std::string& varName) const;
+//  bool hasGrp(const std::string& grpName) const;
   int varID(const std::string& varName) const;
   int numDims(const std::string& varName) const;
   int numDims(int varid) const;

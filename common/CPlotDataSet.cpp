@@ -45,6 +45,9 @@ CXYPlotData::~CXYPlotData()
 {
   delete [] m_xData;
   delete [] m_yData;
+
+  m_xData=NULL;
+  m_yData=NULL;
 }
 
 //----------------------------------------------------

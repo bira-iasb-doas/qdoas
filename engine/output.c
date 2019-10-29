@@ -1933,9 +1933,6 @@ static void OutputSaveRecord(const ENGINE_CONTEXT *pEngineContext,INDEX indexFen
     {
       int index_record = outputNbRecords++;
 
-      for(unsigned int i=0; i<output_num_fields; i++) {
-        save_analysis_data(&output_data_analysis[i], index_record, pEngineContext, indexFenoColumn);
-      }
       outputRecords[index_record].specno = pEngineContext->indexRecord;
       outputRecords[index_record].year=(int)pRecordInfo->present_datetime.thedate.da_year;
       outputRecords[index_record].month=(int)pRecordInfo->present_datetime.thedate.da_mon;
@@ -1943,12 +1940,19 @@ static void OutputSaveRecord(const ENGINE_CONTEXT *pEngineContext,INDEX indexFen
       outputRecords[index_record].longit=(float)pRecordInfo->longitude;
       outputRecords[index_record].latit=(float)pRecordInfo->latitude;
 
-      outputRecords[index_record].i_crosstrack = pRecordInfo->i_crosstrack; // (outputRecords[index_record].specno-1) % n_crosstrack; //specno is 1-based
-      outputRecords[index_record].i_alongtrack = pRecordInfo->i_alongtrack; // (outputRecords[index_record].specno-1) / n_crosstrack;
-
-      if (THRD_id==THREAD_TYPE_KURUCZ)
+      if ((pRecordInfo->i_crosstrack!=ITEM_NONE) && pEngineContext->project.instrumental.use_row[pRecordInfo->i_crosstrack])
        {
-
+        for(unsigned int i=0; i<output_num_fields; i++) {
+          save_analysis_data(&output_data_analysis[i], index_record, pEngineContext, indexFenoColumn);
+        }
+         
+        outputRecords[index_record].i_crosstrack = pRecordInfo->i_crosstrack; // (outputRecords[index_record].specno-1) % n_crosstrack; //specno is 1-based
+        outputRecords[index_record].i_alongtrack = pRecordInfo->i_alongtrack; // (outputRecords[index_record].specno-1) / n_crosstrack;
+       }
+      else
+       {
+        outputRecords[index_record].i_crosstrack = ITEM_NONE; // (outputRecords[index_record].specno-1) % n_crosstrack; //specno is 1-based
+        outputRecords[index_record].i_alongtrack = ITEM_NONE;
        }
     }
  }
@@ -2056,8 +2060,6 @@ RC OutputBuildFileName(const ENGINE_CONTEXT *pEngineContext,char *outputPath)
   int dirFlag;
   RC rc=ERROR_ID_NO;
 
-  const OUTPUT_INFO* pOutput=&outputRecords[0];
-
   // Build the complete output path
   strcpy(outputPath,pEngineContext->outputPath);
 
@@ -2123,8 +2125,11 @@ RC OutputBuildFileName(const ENGINE_CONTEXT *pEngineContext,char *outputPath)
     }
 
     // Build output file name
-    if ( pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS)
+    if ((pProject->instrumental.readOutFormat==PRJCT_INSTR_FORMAT_SCIA_PDS) && (outputRecords!=NULL) && (outputNbRecords>0))
+     {
+      const OUTPUT_INFO* pOutput=&outputRecords[0];
       sprintf(fileNameStart,"SCIA_%d%02d%02d_%05d",pOutput->year,pOutput->month,pOutput->day,pEngineContext->recordInfo.satellite.orbit_number);
+     }
     else {
       sprintf(fileNameStart,"%s",inputFileName);
 
@@ -2210,7 +2215,6 @@ void output_write_data(const bool selected_records[]) {
 RC output_write_automatic_file(const bool selected_records[], int year, int month, int site_index, const ENGINE_CONTEXT *pEngineContext ) {
   char filename[MAX_ITEM_TEXT_LEN] = {0};
   OutputBuildSiteFileName(pEngineContext,filename,year, month, site_index);
-
   RC rc=open_output_file(pEngineContext,filename);
   if ( !rc ) {
     output_write_data(selected_records);
@@ -2328,7 +2332,7 @@ RC OUTPUT_FlushBuffers(ENGINE_CONTEXT *pEngineContext)
   // select records for output according to date/site
   bool selected_records[outputNbRecords];
 
-  rc=OutputBuildFileName(pEngineContext,outputFileName);
+ rc=OutputBuildFileName(pEngineContext,outputFileName);
 
  if (((THRD_id==THREAD_TYPE_EXPORT) || pResults->analysisFlag || pResults->calibFlag)
      && outputNbRecords

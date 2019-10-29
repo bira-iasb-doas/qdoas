@@ -24,6 +24,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QVBoxLayout>
 #include <QFileDialog>
 #include <QTextStream>
+#include <QAbstractItemView>
+#include <QAction>
+#include <QMenu>
+#include <QModelIndex>
 
 #include "CWAnalysisWindowDoasTables.h"
 #include "CWorkSpace.h"
@@ -32,64 +36,24 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include "constants.h"
 
 #include "debugutil.h"
+#include <stdio.h>
 
 //------------------------------------------------------------
 
 static const int cStandardRowHeight = 24;
 
 CWMoleculesDiffOrthoCombo::CWMoleculesDiffOrthoCombo(const QString &excludedSymbol, const QStringList &symbols, QWidget *parent) :
-  CDoasTableColumnComboBox(parent),
-  m_excludedSymbol(excludedSymbol)
+  CDoasTableColumnComboBox(ANLYS_COMBO_DIFF_ORTHO,excludedSymbol,parent),
+  m_symbols(symbols),
+  m_menu(NULL)
 {
-  // populate with the standard items
-  addItem("None");
-  addItem("Differential XS");
+ 	// m_ComboBox = new QComboBox(this);
+ 	setMinimumWidth(180);
 
-  QStringList::const_iterator it = symbols.begin();
-  while (it != symbols.end()) {
-    if (*it != m_excludedSymbol)
-      addItem(*it);
-    ++it;
-  }
-}
-
-void CWMoleculesDiffOrthoCombo::slotSymbolListChanged(const QStringList &symbols)
-{
-  // if an initial value is set, then try and select it ...
-  QString text = m_pendingInitial.isNull() ? currentText() : m_pendingInitial;
-
-  // remove all but the first two items
-  int index = count();
-  while (index > 2)
-    removeItem(--index);
-
-  QStringList::const_iterator it = symbols.begin();
-  while (it != symbols.end()) {
-    if (*it != m_excludedSymbol)
-      addItem(*it);
-    ++it;
-  }
-
-  // try and reselect ...
-  index = findText(text);
-  if (index != -1) {
-    setCurrentIndex(index);
-    if (text == m_pendingInitial)
-      m_pendingInitial = QString(); // has been set ...
-  }
-}
-
-void CWMoleculesDiffOrthoCombo::initialSelection(const QString &text)
-{
-  // sets the initial value, which might not yet be in the list ...
-
-  int index = findText(text);
-  if (index != -1) {
-    setCurrentIndex(index); // exists .. just set it
-  }
-  else {
-    m_pendingInitial = text; // set it and try again later (in slotSymbolListChanged)
-  }
+ 	addItem("None");
+ 	addItem("Differential XS");
+ 	addItem("Orthogonalize to ...");
+ 	addItem("Subtract from ...");
 }
 
 CMoleculeDoasTableColumnDiffOrtho::CMoleculeDoasTableColumnDiffOrtho(const QString &label, CDoasTable *owner, int columnWidth) :
@@ -105,7 +69,7 @@ QVariant CMoleculeDoasTableColumnDiffOrtho::getCellData(int rowIndex) const
   if (p) {
     const QComboBox *tmp = dynamic_cast<const QComboBox*>(p);
     if (tmp)
-      return QVariant(tmp->currentText());
+     return QVariant(tmp->currentText());
   }
 
   return QVariant();
@@ -121,6 +85,8 @@ QWidget* CMoleculeDoasTableColumnDiffOrtho::createCellWidget(const QVariant &cel
   const QStringList &symbolList = p->symbolList();
   QString excludedSymbol = symbolList.value(rowCount()); // the last entry
 
+             // !!!!   should create a list of symbols involved in subtraction operation
+
   CWMoleculesDiffOrthoCombo *tmp = new CWMoleculesDiffOrthoCombo(excludedSymbol, symbolList);
 
   tmp->initialSelection(cellData.toString());
@@ -133,13 +99,76 @@ QWidget* CMoleculeDoasTableColumnDiffOrtho::createCellWidget(const QVariant &cel
 
   return tmp;
 }
+// -------------------------------
+
+CWMoleculesCorrectionCombo::CWMoleculesCorrectionCombo(const QString &excludedSymbol, const QStringList &symbols, QWidget *parent) :
+  CDoasTableColumnComboBox(ANLYS_COMBO_CORRECTION,excludedSymbol,parent),
+  m_symbols(symbols),
+  m_menu(NULL)
+{
+ 	// m_ComboBox = new QComboBox(this);
+ 	setMinimumWidth(220);
+
+ 	addItem("None");
+ 	addItem("Slope");
+ 	addItem("Pukite");
+ 	addItem("Mol. ring ...");
+ 	// addItem("Slope+Mol. ring ...");
+}
+
+CMoleculeDoasTableColumnCorrection::CMoleculeDoasTableColumnCorrection(const QString &label, CDoasTable *owner, int columnWidth) :
+  CDoasTableColumn(label, owner, columnWidth)
+{
+  setViewportBackgroundColour(QColor(0xFFFFFFFF));
+  setCellBorders(1,1);
+}
+
+QVariant CMoleculeDoasTableColumnCorrection::getCellData(int rowIndex) const
+{
+  const QWidget *p = getWidget(rowIndex);
+  if (p) {
+    const QComboBox *tmp = dynamic_cast<const QComboBox*>(p);
+    if (tmp)
+     return QVariant(tmp->currentText());
+  }
+
+  return QVariant();
+}
+
+QWidget* CMoleculeDoasTableColumnCorrection::createCellWidget(const QVariant &cellData)
+{
+  // this is called when adding a new row
+
+  CWMoleculesDoasTable *p = dynamic_cast<CWMoleculesDoasTable*>(owner());
+  assert (p != NULL);
+
+  const QStringList &symbolList = p->symbolList();
+  QString excludedSymbol = symbolList.value(rowCount()); // the last entry
+
+             // !!!!   should create a list of symbols involved in subtraction operation
+
+  CWMoleculesCorrectionCombo *tmp = new CWMoleculesCorrectionCombo(excludedSymbol, symbolList);
+
+  tmp->initialSelection(cellData.toString());
+
+  connect(tmp, SIGNAL(currentIndexChanged(const QString&)), tmp, SLOT(slotTextChanged(const QString&)));
+  connect(tmp, SIGNAL(signalTextChanged(const QWidget*,const QVariant&)),
+	  this, SLOT(slotCellDataChanged(const QWidget*,const QVariant&)));
+  connect(p, SIGNAL(signalSymbolListChanged(const QStringList &)),
+	  tmp, SLOT(slotSymbolListChanged(const QStringList &)));
+
+  return tmp;
+}
+
+
+
 
 CWMoleculesDoasTable::CWMoleculesDoasTable(const QString &label, int columnWidth,
 					   int headerHeight, QWidget *parent) :
   CDoasTable(label, headerHeight, parent),
   m_selectedRow(-1)
 {
-  CMoleculeDoasTableColumnDiffOrtho *tmp = new CMoleculeDoasTableColumnDiffOrtho("Diff/Ortho", this, columnWidth);
+  CMoleculeDoasTableColumnDiffOrtho *tmp = new CMoleculeDoasTableColumnDiffOrtho("Subtract/Orthog", this, 180);
   addColumn(tmp);                            // columnIndex = 0
 
   QStringList comboItems;
@@ -148,7 +177,11 @@ CWMoleculesDoasTable::CWMoleculesDoasTable(const QString &label, int columnWidth
 
   comboItems.clear();
   comboItems << "None" << "SZA only" << "Climatology" << "Wavelength";
+
   createColumnCombo("AMF", 120, comboItems); // columnIndex = 2
+
+  CMoleculeDoasTableColumnCorrection *tmp2 = new CMoleculeDoasTableColumnCorrection("Correction", this, 200);
+  addColumn(tmp2);                            // columnIndex = 0
 
   createColumnCheck("Fit disp.", 60);
   createColumnCheck("Filter", 60);           // columnIndex = 4
@@ -165,13 +198,54 @@ void CWMoleculesDoasTable::populate(const cross_section_list_t *data)
 {
   int row = 0;
   const struct anlyswin_cross_section *d = &(data->crossSection[0]);
+  char str[100];
 
   while (row < data->nCrossSection) {
     QList<QVariant> initialValues;
 
-    initialValues.push_back(QString(d->orthogonal));
+    strcpy(str,d->orthogonal);
+
+    if (d->subtractFlag)
+     {
+      if (!strlen(d->subtract))
+       strcpy(str,"Subtract from ...");
+      else if (!strncasecmp(d->subtract,"Subtract from",strlen("subtract from")))
+       strcpy(str,d->subtract);
+      else
+       sprintf(str,"Subtract from %s",d->subtract);
+     }
+    else if (!strlen(d->orthogonal))
+     strcpy(str,"Orthogonalize to ...");
+    else if (strncasecmp(d->orthogonal,"None",4) && strncasecmp(d->orthogonal,"Differential XS",15))
+     sprintf(str,"Orthogonalize to %s",d->orthogonal);
+    else
+     strcpy(str,d->orthogonal);
+
+    initialValues.push_back(QString(str));
     initialValues.push_back(mapCrossTypeToComboString(d->crossType));
     initialValues.push_back(mapAmfTypeToComboString(d->amfType));
+
+    if (d->correctionType==ANLYS_CORRECTION_TYPE_MOLECULAR_RING)
+     {
+      if (!strlen(d->molecularRing))
+       strcpy(str,"Mol. ring ...");
+      else
+       sprintf(str,"Mol. ring (%s)",d->molecularRing);
+
+      initialValues.push_back(QString(str));
+     }
+    else if (d->correctionType==ANLYS_CORRECTION_TYPE_MOLECULAR_RING_SLOPE)
+     {
+      if (!strlen(d->molecularRing))
+       strcpy(str,"Slope+Mol. ring ...");
+      else
+       sprintf(str,"Slope+Mol. ring (%s)",d->molecularRing);
+
+      initialValues.push_back(QString(str));
+     }
+    else
+     initialValues.push_back(mapCorrectionTypeToComboString(d->correctionType));
+
     initialValues.push_back(d->requireFit);
     initialValues.push_back(d->requireFilter);
     initialValues.push_back(d->constrainedCc);
@@ -191,14 +265,31 @@ void CWMoleculesDoasTable::populate(const cross_section_list_t *data)
   }
 }
 
-void CWMoleculesDoasTable::apply(cross_section_list_t *data) const
+bool CWMoleculesDoasTable::apply(cross_section_list_t *data) const
 {
-  int row = 0;
+  int row;
+  int col;
   struct anlyswin_cross_section *d = &(data->crossSection[0]);
+  QStringList subtractFrom;
+  QString ortho,subtract;
+  QString text;
+  bool brc;     // Boolean return code
+
+  brc=true;
 
   data->nCrossSection = rowCount();
 
-  while (row < data->nCrossSection) {
+  // Make a list with symbols used in subtraction operations to detect subtractions in cascade
+
+  for (row=0;row < data->nCrossSection;row++)
+   {
+    QList<QVariant> state = getCellData(row);
+    text=QString(state.at(0).toString());
+    if (text.startsWith("Subtract from"))
+     subtractFrom << m_symbols.at(row).toLocal8Bit().data();
+   }
+
+  for (row=0;row < data->nCrossSection;row++) {
 
     QList<QVariant> state = getCellData(row);
 
@@ -210,28 +301,113 @@ void CWMoleculesDoasTable::apply(cross_section_list_t *data) const
     else
       *(d->crossSectionFile) = '\0';
 
-    strcpy(d->orthogonal, state.at(0).toString().toLocal8Bit().data());
-    d->crossType = mapComboStringToCrossType(state.at(1).toString());
-    d->amfType = mapComboStringToAmfType(state.at(2).toString());
+    col=0;
+
+    text=QString(state.at(col++).toString());
+    d->subtractFlag=false;
+
+    if (text.startsWith("Orthogonalize to ...") || text.startsWith("Subtract from ..."))
+     {
+      QMessageBox::warning((QWidget*)this, "No cross section specified", "\"Orthogonalize to\" and \"Subtract from\" options need that a cross section is specified.  Option replaced by None.");
+      strcpy(d->orthogonal,"None");
+      brc=false;
+     }
+    else if ((text=="None") || (text=="Differential XS"))
+     strcpy(d->orthogonal,text.toLatin1().data());
+    else
+     {
+      QStringList tokens = text.split( " " );
+      QString xs = tokens.value( tokens.length() - 1 );
+
+      if (((mapComboStringToCorrectionType(state.at(3).toString())==ANLYS_CORRECTION_TYPE_SLOPE) ||
+           (mapComboStringToCorrectionType(state.at(3).toString())==ANLYS_CORRECTION_TYPE_PUKITE)) &&
+          (text.startsWith("Orthogonalize to") || text.startsWith("Subtract from")))
+       {
+        QMessageBox::warning((QWidget*)this,"Incompatible options", QString::fromStdString(d->symbol)+QString::fromStdString(" \"Orthogonalize to/Subtract from\" options not compatible with Pukite correction"));
+        brc=false;
+       }
+
+      else if (text.startsWith("Orthogonalize to"))
+       strcpy(d->orthogonal,xs.toLatin1().data());
+      else if (text.startsWith("Subtract from"))
+       {
+        d->subtractFlag=true;
+        strcpy(d->subtract,xs.toLatin1().data());
+
+        if (subtractFrom.contains(xs.toLatin1().data()))
+         {
+          QMessageBox::warning((QWidget*)this, "Subtractions in cascade not allowed",QString::fromStdString("Symbol ")+QString::fromStdString(xs.toLatin1().data())+QString::fromStdString(" already used in a subtraction operation"));
+          brc=false;
+         }
+       }
+     }
+
+    d->crossType = mapComboStringToCrossType(state.at(col++).toString());
+    d->amfType = mapComboStringToAmfType(state.at(col++).toString());
 
     if (m_amfFilename.at(row).length() < (int)sizeof(d->amfFile))
       strcpy(d->amfFile, m_amfFilename.at(row).toLocal8Bit().data());
     else
       *(d->amfFile) = '\0';
 
-    d->requireFit = state.at(3).toBool() ? 1 : 0;
-    d->requireFilter = state.at(4).toBool() ? 1 : 0;
-    d->constrainedCc = state.at(5).toBool() ? 1 : 0;
-    d->requireCcFit = state.at(6).toBool() ? 1 : 0;
-    d->initialCc = state.at(7).toDouble();
-    d->deltaCc = state.at(8).toDouble();
-    d->ccIo = state.at(9).toDouble();
-    d->ccMin = state.at(10).toDouble();
-    d->ccMax = state.at(11).toDouble();
+    int correctionIndex=col++;
+    text=QString(state.at(correctionIndex).toString());
+
+    if (text.startsWith("Mol. ring ..."))
+     {
+      QMessageBox::warning((QWidget*)this, "No cross section specified", "\"Mol. ring\" option need that a cross section is specified.  Option replaced by None.");
+      d->correctionType=ANLYS_CORRECTION_TYPE_NONE;
+      strcpy(d->molecularRing,"None");
+      brc=false;
+     }
+    else if (text.startsWith("Slope+Mol. ring ..."))
+     {
+      QMessageBox::warning((QWidget*)this, "No cross section specified", "\"Slope + Molecular ring\" option need that a cross section is specified.  Option replaced by None.");
+      d->correctionType=ANLYS_CORRECTION_TYPE_NONE;
+      strcpy(d->molecularRing,"None");
+      brc=false;
+     }
+    else if ((text=="None") || (text=="Slope") || (text=="Pukite"))
+     d->correctionType = mapComboStringToCorrectionType(state.at(correctionIndex).toString());
+    else if (text.startsWith("Mol. ring"))
+     {
+      QStringList tokens = text.split( " " );
+      QString xs = tokens.value( tokens.length() - 1 );
+
+      d->correctionType=ANLYS_CORRECTION_TYPE_MOLECULAR_RING;
+      sscanf(xs.toLatin1().data(),"(%[^)])",d->molecularRing);
+     }
+    else if (text.startsWith("Slope+Mol. ring"))
+     {
+      QStringList tokens = text.split( " " );
+      QString xs = tokens.value( tokens.length() - 1 );
+
+      d->correctionType=ANLYS_CORRECTION_TYPE_MOLECULAR_RING_SLOPE;
+      sscanf(xs.toLatin1().data(),"(%[^)])",d->molecularRing);
+     }
+
+    d->requireFit = state.at(col++).toBool() ? 1 : 0;
+    d->requireFilter = state.at(col++).toBool() ? 1 : 0;
+    d->constrainedCc = state.at(col++).toBool() ? 1 : 0;
+    d->requireCcFit = state.at(col++).toBool() ? 1 : 0;
+    d->initialCc = state.at(col++).toDouble();
+    d->deltaCc = state.at(col++).toDouble();
+    d->ccIo = state.at(col++).toDouble();
+    d->ccMin = state.at(col++).toDouble();
+    d->ccMax = state.at(col++).toDouble();
+
+    // if ((d->crossType==ANLYS_CROSS_ACTION_CONVOLUTE_RING) && ((d->correctionType==ANLYS_CORRECTION_TYPE_SLOPE) || (d->correctionType==ANLYS_CORRECTION_TYPE_PUKITE)))
+    //  {
+    //   QMessageBox::warning((QWidget*)this, "Incompatible options","Convolve Ring and Slope/Pukite corrections are not compatible");
+    //   brc=false;
+    //  }
 
     ++d;
-    ++row;
   }
+
+ // Return
+
+ return brc;
 }
 
 void CWMoleculesDoasTable::addRow(int height, const QString &label, QList<QVariant> &cellData,
@@ -260,10 +436,10 @@ void CWMoleculesDoasTable::addRow(int height, const QString &label, QList<QVaria
   m_csFilename << QString();  // add an empty string ...
   m_amfFilename << QString(); // add an empty string ...
 
-  emit signalSymbolListChanged(m_symbols);
-
   // really create the new row ...
   CDoasTable::addRow(height, label, cellData);
+
+  emit signalSymbolListChanged(m_symbols);
 
   // is the symbol the name of a previous analysis window ??
   // This is really awkward .... TODO
@@ -331,7 +507,6 @@ QString CWMoleculesDoasTable::mapAmfTypeToComboString(int type)
   switch (type) {
   case ANLYS_AMF_TYPE_SZA: return QString("SZA only"); break;
   case ANLYS_AMF_TYPE_CLIMATOLOGY: return QString("Climatology"); break;
-  case ANLYS_AMF_TYPE_WAVELENGTH: return QString("Wavelength"); break;
   }
 
   return QString("None");
@@ -344,6 +519,28 @@ int CWMoleculesDoasTable::mapComboStringToAmfType(const QString &str)
   if (str == "Wavelength") return ANLYS_AMF_TYPE_WAVELENGTH;
 
   return ANLYS_AMF_TYPE_NONE;
+}
+
+QString CWMoleculesDoasTable::mapCorrectionTypeToComboString(int type)
+{
+  switch (type) {
+  case ANLYS_CORRECTION_TYPE_SLOPE: return QString("Slope"); break;
+  case ANLYS_CORRECTION_TYPE_PUKITE: return QString("Pukite"); break;
+  case ANLYS_CORRECTION_TYPE_MOLECULAR_RING: return QString("Mol. ring ..."); break;
+  case ANLYS_CORRECTION_TYPE_MOLECULAR_RING_SLOPE: return QString("Slope/Mol. ring ..."); break;
+  }
+
+  return QString("None");
+}
+
+int CWMoleculesDoasTable::mapComboStringToCorrectionType(const QString &str)
+{
+	 if (str == "Slope") return ANLYS_CORRECTION_TYPE_SLOPE;
+  if (str == "Pukite") return ANLYS_CORRECTION_TYPE_PUKITE;
+  if (str == "Mol. ring ...") return ANLYS_CORRECTION_TYPE_MOLECULAR_RING;
+  if (str == "Slope/Mol. ring ...") return ANLYS_CORRECTION_TYPE_MOLECULAR_RING_SLOPE;
+
+  return ANLYS_CORRECTION_TYPE_NONE;
 }
 
 void CWMoleculesDoasTable::slotLockSymbol(const QString &symbol, const QObject *holder)
@@ -391,15 +588,15 @@ void CWMoleculesDoasTable::cellDataChanged(int row, int column, const QVariant &
     m_rowLocks.replace(row, m_symbols.indexOf(cellData.toString())); // sets/releases/clears internal locks
   }
   else if (column == 1) {
-    setCellEnabled(row, 9, (cellData.toString() == "Convolve Io"));
+    setCellEnabled(row, 10, (cellData.toString() == "Convolve Io"));
   }
-  else if (column == 5) {
+  else if (column == 6) {
     // contrained CC
     bool enable = !cellData.toBool();
 
-    setCellEnabled(row, 6, enable);
     setCellEnabled(row, 7, enable);
     setCellEnabled(row, 8, enable);
+    setCellEnabled(row, 9, enable);
   }
 }
 
@@ -443,7 +640,20 @@ void CWMoleculesDoasTable::slotInsertRow()
     if (index == -1) {
       // a free symbol ...
       freeSymbols << *it;
-      filter.append(*it).append(" (").append(*it).append("_*.xs*);;");
+      QString symbol_name=*it;
+
+      // if the name of the symbol contains parenthesis (for example, slope and pukite), the selection is made on the symbol within parenthesis
+      // Use only Slope* and Pukite* filters
+
+      if (symbol_name.startsWith("Slope") || symbol_name.startsWith("Pukite"))
+       {
+        if (symbol_name.startsWith("Slope"))
+         filter.append(*it).append(" (Slope*.xs*);;");
+        if (symbol_name.startsWith("Pukite"))
+         filter.append(*it).append(" (Pukite*.xs*);;");
+       }
+      else
+       filter.append(*it).append(" (").append(*it).append("_*.xs*);;");
     }
     ++it;
   }
@@ -475,6 +685,7 @@ void CWMoleculesDoasTable::slotInsertRow()
 	  // NOTE: initialized with default values here ...
 	  initialValues.push_back(QString("None"));
 	  initialValues.push_back(QString("Interpolate"));                             // cross type should be set to interpolate by default
+	  initialValues.push_back(QString("None"));
 	  initialValues.push_back(QString("None"));
 	  initialValues.push_back(true);
 	  initialValues.push_back(true);                                               // Require filter should be initialized at true !!!
@@ -562,7 +773,7 @@ void CWMoleculesDoasTable::slotAmfFileName()
 
 void CWMoleculesDoasTable::slotFitColumnCheckable(int state)
 {
-  setColumnEnabled(3, (state == Qt::Checked));
+  setColumnEnabled(4, (state == Qt::Checked));
 }
 
 //------------------------------------------------------------
@@ -625,8 +836,8 @@ void CWNonLinearParametersDoasTable::populate(const struct anlyswin_nonlinear *d
   initialValues.push_back(data->off2FlagErrStore);
   addRow(cStandardRowHeight, "Offset (Order 2)", initialValues);
 
-  initialValues.clear();  
-  
+  initialValues.clear();
+
   // Com
   initialValues.push_back(data->comFlagFit);
   initialValues.push_back(data->comInitial);
@@ -856,30 +1067,25 @@ CWShiftAndStretchDoasTable::CWShiftAndStretchDoasTable(const QString &label,
   m_specialSymbols << "Spectrum" << "Ref";
   m_freeSymbols = m_specialSymbols;
 
-  QStringList comboItems;
-  comboItems << "None" << "1st Order" << "2nd Order";
+  QStringList orderItems, shiftItems;
+  shiftItems << "Do not fit" << "Non linear"; // << "Linear";
+  orderItems << "None" << "1st Order" << "2nd Order";
 
   // columns
-  createColumnCheck("Shift fit", 60);                 // column 0
-  createColumnCombo("Stretch fit", 90, comboItems);
-  createColumnCombo("Scaling fit", 90, comboItems);   // column 2
+  createColumnCombo("Shift fit", 90, shiftItems);
+  createColumnCombo("Stretch fit", 90, orderItems);
 
   createColumnCheck("Sh store", 60);   // column 3
   createColumnCheck("St store", 60);
-  createColumnCheck("Sc store", 60);   // column 5
   createColumnCheck("Err store", 60);
 
   createColumnEdit("Sh Init (nm)", 80);
   createColumnEdit("St Init", 80);
   createColumnEdit("St Init (2)", 80);
-  createColumnEdit("Sc Init", 80);
-  createColumnEdit("Sc Init (2)", 80);
 
   createColumnEdit("Sh Delta (nm)", 80);
   createColumnEdit("St Delta", 80);
   createColumnEdit("St Delta (2)", 80);
-  createColumnEdit("Sc Delta", 80);
-  createColumnEdit("Sc Delta (2)", 80);
 
   createColumnEdit("Sh min (nm)", 80);
   createColumnEdit("Sh max (nm)", 80);
@@ -894,26 +1100,20 @@ void CWShiftAndStretchDoasTable::populate(const shift_stretch_list_t *data)
     QString label;
     QList<QVariant> initialValues;
 
-    initialValues.push_back(d->shFit);
+    initialValues.push_back(mapShiftToComboString(d->shFit));
     initialValues.push_back(mapOrderToComboString(d->stFit));
-    initialValues.push_back(mapOrderToComboString(d->scFit));
 
     initialValues.push_back(d->shStore);
     initialValues.push_back(d->stStore);
-    initialValues.push_back(d->scStore);
     initialValues.push_back(d->errStore);
 
     initialValues.push_back(d->shInit);
     initialValues.push_back(d->stInit);
     initialValues.push_back(d->stInit2);
-    initialValues.push_back(d->scInit);
-    initialValues.push_back(d->scInit2);
 
     initialValues.push_back(d->shDelta);
     initialValues.push_back(d->stDelta);
     initialValues.push_back(d->stDelta2);
-    initialValues.push_back(d->scDelta);
-    initialValues.push_back(d->scDelta2);
 
     initialValues.push_back(d->shMin);
     initialValues.push_back(d->shMax);
@@ -940,6 +1140,7 @@ void CWShiftAndStretchDoasTable::populate(const shift_stretch_list_t *data)
 void CWShiftAndStretchDoasTable::apply(shift_stretch_list_t *data) const
 {
   int row = 0;
+  int col;
   struct anlyswin_shift_stretch *d = &(data->shiftStretch[0]);
 
   data->nShiftStretch = rowCount();
@@ -958,29 +1159,25 @@ void CWShiftAndStretchDoasTable::apply(shift_stretch_list_t *data) const
 
     QList<QVariant> state = getCellData(row);
 
-    d->shFit = state.at(0).toBool() ? 1 : 0;
-    d->stFit = mapComboStringToOrder(state.at(1).toString());
-    d->scFit = mapComboStringToOrder(state.at(2).toString());
+    col=0;
 
-    d->shStore = state.at(3).toBool() ? 1 : 0;
-    d->stStore = state.at(4).toBool() ? 1 : 0;
-    d->scStore = state.at(5).toBool() ? 1 : 0;
-    d->errStore = state.at(6).toBool() ? 1 : 0;
+    d->shFit = mapComboStringToShift(state.at(col++).toString());
+    d->stFit = mapComboStringToOrder(state.at(col++).toString());
 
-    d->shInit = state.at(7).toDouble();
-    d->stInit = state.at(8).toDouble();
-    d->stInit2 = state.at(9).toDouble();
-    d->scInit = state.at(10).toDouble();
-    d->scInit2 = state.at(11).toDouble();
+    d->shStore = state.at(col++).toBool() ? 1 : 0;
+    d->stStore = state.at(col++).toBool() ? 1 : 0;
+    d->errStore = state.at(col++).toBool() ? 1 : 0;
 
-    d->shDelta = state.at(12).toDouble();
-    d->stDelta = state.at(13).toDouble();
-    d->stDelta2 = state.at(14).toDouble();
-    d->scDelta = state.at(15).toDouble();
-    d->scDelta2 = state.at(16).toDouble();
+    d->shInit = state.at(col++).toDouble();
+    d->stInit = state.at(col++).toDouble();
+    d->stInit2 = state.at(col++).toDouble();
 
-    d->shMin = state.at(17).toDouble();
-    d->shMax = state.at(18).toDouble();
+    d->shDelta = state.at(col++).toDouble();
+    d->stDelta = state.at(col++).toDouble();
+    d->stDelta2 = state.at(col++).toDouble();
+
+    d->shMin = state.at(col++).toDouble();
+    d->shMax = state.at(col++).toDouble();
 
     ++d;
     ++row;
@@ -1051,6 +1248,26 @@ void CWShiftAndStretchDoasTable::contextMenuEvent(QContextMenuEvent *e)
   modifyAction->setEnabled(m_selectedRow != -1);
 
   menu.exec(e->globalPos()); // a slot will do the rest
+}
+
+QString CWShiftAndStretchDoasTable::mapShiftToComboString(int shiftFit)
+{
+  switch (shiftFit) {
+  case ANLYS_SHIFT_TYPE_NONE: return QString("Do not fit"); break;
+  case ANLYS_SHIFT_TYPE_NONLINEAR: return QString("Non linear"); break;
+  // case ANLYS_SHIFT_TYPE_LINEAR: return QString("Linear"); break;
+  }
+
+  return QString("None");
+}
+
+int CWShiftAndStretchDoasTable::mapComboStringToShift(const QString &str)
+{
+  if (str == "Do not fit") return ANLYS_SHIFT_TYPE_NONE;
+  if (str == "Non linear") return ANLYS_SHIFT_TYPE_NONLINEAR;
+  // if (str == "Linear") return ANLYS_SHIFT_TYPE_LINEAR;
+
+  return ANLYS_SHIFT_TYPE_NONE;
 }
 
 QString CWShiftAndStretchDoasTable::mapOrderToComboString(int order)
@@ -1131,20 +1348,14 @@ void CWShiftAndStretchDoasTable::slotInsertRow()
 
       QList<QVariant> initialValues;
       // defaults ...
-      initialValues.push_back(QVariant(true));
       initialValues.push_back(QVariant("None"));
       initialValues.push_back(QVariant("None"));
       initialValues.push_back(QVariant(false));
       initialValues.push_back(QVariant(false));
       initialValues.push_back(QVariant(false));
-      initialValues.push_back(QVariant(false));
       initialValues.push_back(QVariant(0.0));
       initialValues.push_back(QVariant(0.0));
       initialValues.push_back(QVariant(0.0));
-      initialValues.push_back(QVariant(0.0));
-      initialValues.push_back(QVariant(0.0));
-      initialValues.push_back(QVariant(0.001));
-      initialValues.push_back(QVariant(0.001));
       initialValues.push_back(QVariant(0.001));
       initialValues.push_back(QVariant(0.001));
       initialValues.push_back(QVariant(0.001));

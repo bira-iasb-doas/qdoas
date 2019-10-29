@@ -3,6 +3,9 @@
 
 #include "comdefs.h"
 
+extern double RadToDeg;
+extern double DegToRad;
+
 double  ZEN_NbSec     ( struct date *today, struct time *now, int flag);
 double  ZEN_FNTdiz    ( double NbreJours, double *ObsLong, double *ObsLat,double *pAzimuth );
 double  ZEN_FNCrtjul  ( double *NbreSec );

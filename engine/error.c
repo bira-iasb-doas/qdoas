@@ -103,7 +103,7 @@ ERROR_TABLE errorTable[]=
   { ERROR_ID_ALLOCMATRIX               , "matrix allocation error (%s, %d:%d x %d:%d)"                                                                        },
   { ERROR_ID_BUFFER_FULL               , "the buffer of %s is full"                                                                                           },
   { ERROR_ID_COMMANDLINE               , "syntax error in command line"                                                                                       },
-  { ERROR_ID_MEDIATE                   , "Error with field \"%s\" - %s"                                                                                           },
+  { ERROR_ID_MEDIATE                   , "Error with field \"%s\" - %s"                                                                                       },
   { ERROR_ID_SWATHSIZE                 , "This file contains %d detector rows, but this version of Qdoas can only handle %d" },
 
   // File
@@ -186,7 +186,7 @@ ERROR_TABLE errorTable[]=
   { ERROR_ID_FWHM_INCOMPATIBLE_OPTIONS , "Incompatible options (fit of the slit function in Kurucz and fwhm correction)"                                      },
   { ERROR_ID_OUT_OF_RANGE              , "%s is out of %d..%d range"                                                                                          },
   { ERROR_ID_FILE_AUTOMATIC            , "No automatic reference selection can be perform on this type of file"                                               },
-  { ERROR_ID_REFERENCE_SELECTION, "Can't find spectra matching automatic reference criteria%s" },
+  { ERROR_ID_REFERENCE_SELECTION       , "Can't find spectra matching automatic reference criteria%s"                                                         },
   { ERROR_ID_NO_REF                    , "No reference spectrum found for %s in file %s"                                                                      },
   { ERROR_ID_VZA_REF                   , "No reference spectrum matching criteria for VZA bin [%.1f - %.1f]." },
   { ERROR_ID_REF_ALIGNMENT             , "Impossible to align reference spectrum in %s analysis window"                                                       },
@@ -194,18 +194,17 @@ ERROR_TABLE errorTable[]=
   { ERROR_ID_NO_RESULT_PREVIOUS_WINDOW , "Cannot use result from previous analysis window for molecule %s in analysis window %s: can't find the same cross section file" },
   { ERROR_ID_IMAGER_CALIB              , "Calibration failed for detector row %d"},
   { ERROR_ID_L1WAVELENGTH              , "Error in L1 wavelength calibration for record %d"},
-
+  { ERROR_ID_PUKITE                    , "Missing Pukite cross section (%s(%s)), order %d"                                                                    },
 
   { ERROR_ID_GDP_BANDINDEX             , "The specified band is not present in the file %s"                                                                   },
   { ERROR_ID_PDS                       , "[%s] failed for %s PDS file"                                                                                        },
   { ERROR_ID_BEAT                      , "[%s] failed (file %s, error %s)"                                                                                    },
   { ERROR_ID_OMI_SWATH                 , "[%s] swath not present in %s"                                                                                       },
-  { ERROR_ID_OMI_REF                   , "Couldn't load reference spectrum"                                                              },
-  { ERROR_ID_OMI_REFSIZE               , "%s and spectra swaths do not have the same size"                                                            },
+  { ERROR_ID_OMI_REF                   , "Couldn't load reference spectrum"                                                                                   },
+  { ERROR_ID_OMI_REFSIZE               , "%s and spectra swaths do not have the same size"                                                                    },
   { ERROR_ID_FILE_FORMAT               , "File format is unknown"                                                                                             },
   { ERROR_ID_OMI_PIXELQF               , "Spectrum rejected based on pixels quality flags"                                                                    },
-  { ERROR_ID_HDFEOS                    , "[%s] %s%s"
-  },
+  { ERROR_ID_HDFEOS                    , "[%s] %s%s"},
   { ERROR_ID_HDFEOS5_SWATH             , "Could not create swath %s in file %s" },
   { ERROR_ID_HDFEOS5_FILE_EXISTS       , "Can not write to existing HDF-EOS5 file %s" },
   { ERROR_ID_HDFEOS5_DEFFIELD          , "HDF-EOS5: error creating field %s" },

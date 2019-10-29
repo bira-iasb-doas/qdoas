@@ -155,24 +155,26 @@ NetCDFFile& NetCDFFile::operator=(NetCDFFile &&other) {
 static int openNetCDF(const string &filename, int mode) {
   int groupid;
 
-  int rc;
+  int rc=NC_NOERR;
 
   /* Change chunk cache. */
 
-  if ((mode==NC_NOWRITE) &&
+  if ((mode!=NC_NOWRITE) ||
      ((rc=nc_set_chunk_cache(NEW_CACHE_SIZE, NEW_CACHE_NELEMS,
           NEW_CACHE_PREEMPTION))==NC_NOERR))
+   {
 
-   rc = nc_open(filename.c_str(), mode, &groupid);
+    rc = nc_open(filename.c_str(), mode, &groupid);
 
-  if (rc != NC_NOERR && mode != NC_NOWRITE) {
-    // file doesn't exist or is not a valid NetCDF file and we are in write mode
-    rc = nc_create(filename.c_str(), NC_NETCDF4, &groupid);
-  }
-  if (rc == NC_NOERR) {
-    return groupid;
-  } else {
-    throw std::runtime_error("Error opening netCDF file '" + filename + "'");
+    if (rc != NC_NOERR && mode != NC_NOWRITE) {
+      // file doesn't exist or is not a valid NetCDF file and we are in write mode
+      rc = nc_create(filename.c_str(), NC_NETCDF4, &groupid);
+    }
+    if (rc == NC_NOERR) {
+      return groupid;
+    } else {
+      throw std::runtime_error("Error opening netCDF file '" + filename + "'");
+    }
   }
 }
 
@@ -250,7 +252,8 @@ int NetCDFGroup::defVar(const string& name, const vector<string>& dimnames, nc_t
 }
 
 void NetCDFGroup::defVarChunking(int varid, int storage, size_t *chunksizes) {
-  if (nc_def_var_chunking(groupid, varid, storage, chunksizes) != NC_NOERR) {
+  int rc;
+  if ((rc=nc_def_var_chunking(groupid, varid, storage, chunksizes)) != NC_NOERR) {
     throw std::runtime_error("Error setting variable chunking for '" + varName(varid) + "' in group '" + name + "'");
   }
 }

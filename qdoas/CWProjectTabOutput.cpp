@@ -101,9 +101,6 @@ CWProjectTabOutput::CWProjectTabOutput(const mediate_project_output_t *propertie
   m_calibrationCheck = new QCheckBox("Calibration");
   checkLayout->addWidget(m_calibrationCheck, 1, 0);
 
-  // m_newcalibCheck = new QCheckBox("New calibration");
-  // checkLayout->addWidget(m_newcalibCheck, 2, 0);
-
   m_referenceCheck = new QCheckBox("Reference info");
   checkLayout->addWidget(m_referenceCheck, 2, 0); // !!! 3, 0 if use newcalib
 

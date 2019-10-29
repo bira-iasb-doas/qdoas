@@ -1,26 +1,50 @@
-/* Copyright (C) 2017 Royal Belgian Institute for Space Aeronomy
- * (BIRA-IASB)
- *
- * BIRA-IASB
- * Ringlaan 3 Avenue Circulaire
- * 1180 Uccle
- * Belgium
- * qdoas@aeronomie.be
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or (at
- * your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
- */
+
+//  ----------------------------------------------------------------------------
+//! \addtogroup DOAS
+//! Mathematical functions of the DOAS engine
+//! @{
+//!
+//! \file      linear_system.c
+//! \brief     Solves the linear part of the Beer-Lambert's law
+//! \details   During a long time, SVD (singular value decomposition) was the
+//!            solution used to solve the linear part of the Beer-Lambert equation.
+//!            Now, both solutions are implemented : SVD and QR decomposition.
+//! \authors   \n
+//! \date
+//! \copyright QDOAS is distributed under GNU General Public License
+//!
+//! @}
+//  ----------------------------------------------------------------------------
+//
+//  QDOAS is a cross-platform application developed in QT for DOAS retrieval
+//  (Differential Optical Absorption Spectroscopy).
+//
+//  The QT version of the program has been developed jointly by the Belgian
+//  Institute for Space Aeronomy (BIRA-IASB) and the Science and Technology
+//  company (S[&]T) - Copyright (C) 2007
+//
+//      BIRA-IASB
+//      Belgian Institute for Space Aeronomy
+//      Avenue Circulaire, 3
+//      1180     UCCLE
+//      BELGIUM
+//      qdoas@aeronomie.be
+//
+//  This program is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU General Public License
+//  as published by the Free Software Foundation; either version 2
+//  of the License, or (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program; if not, write to the Free Software Foundation,
+//  Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+//
+//  ----------------------------------------------------------------------------
 
 #include <assert.h>
 #include <stdbool.h>
@@ -53,6 +77,11 @@ struct linear_system {
 };
 
 struct linear_system*LINEAR_alloc(int m, int n, enum linear_fit_mode mode) {
+ 
+#if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionBegin((char *)__func__,DEBUG_FCTTYPE_APPL|DEBUG_FCTTYPE_MEM);
+#endif
+  
   struct linear_system *s = malloc(sizeof(*s));
   s->norms = malloc(n * sizeof(*s->norms));
   s->m = m;
@@ -80,6 +109,10 @@ struct linear_system*LINEAR_alloc(int m, int n, enum linear_fit_mode mode) {
     break;
   }
 
+  #if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionStop((char *)__func__,0);
+  #endif
+  
   return s;
 }
 
@@ -109,6 +142,10 @@ struct linear_system *LINEAR_from_matrix(const double * const *a, int m, int n, 
 void LINEAR_free(struct linear_system *s) {
   if (s == NULL)
     return;
+  
+#if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionBegin((char *)__func__,DEBUG_FCTTYPE_APPL|DEBUG_FCTTYPE_MEM);
+#endif
 
   switch(s->mode) {
   case DECOMP_SVD:
@@ -124,6 +161,10 @@ void LINEAR_free(struct linear_system *s) {
 
   free(s->norms);
   free(s);
+  
+  #if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionStop((char *)__func__,0);
+  #endif
 }
 
 void LINEAR_set_column(struct linear_system *s, int n, const double *values) {
@@ -137,6 +178,7 @@ void LINEAR_set_column(struct linear_system *s, int n, const double *values) {
     for (int i=0; i<s->m; ++i) {
       gsl_matrix_set(s->decomposition.qr.A,i, n-1, values[1+i]);
     }
+      gsl_vector_view colj = gsl_matrix_column(s->decomposition.qr.A, n-1);
     break;
   }
 }
@@ -193,7 +235,9 @@ int LINEAR_decompose(struct linear_system *s, double *sigmasquare, double **cova
       gsl_vector_view colj = gsl_matrix_column(s->decomposition.qr.A, j);
       s->norms[j]=0.;
       for (int i=0; i<s->m; ++i) {
+        
         s->norms[j] += gsl_vector_get(&colj.vector, i)*gsl_vector_get(&colj.vector, i);
+//        if (i>=s->m-6) printf("j:%d  s->norms[%d]=%lf\n",j,i,s->norms[j]);
       }
       if (s->norms[j] == 0.)
         return ERROR_SetLast(__func__, ERROR_TYPE_WARNING, ERROR_ID_NORMALIZE);
@@ -306,6 +350,10 @@ void LINEAR_pinv(const struct linear_system *s, double **pinv) {
 
 int LINEAR_fit_poly(int num_eqs, int poly_order, const double *a, const double *sigma, const double *b, double *x) {
 
+#if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionBegin((char *)__func__,DEBUG_FCTTYPE_APPL|DEBUG_FCTTYPE_MEM);
+#endif
+  
   const int num_unknowns=1+poly_order;
   struct linear_system *linsys = NULL; //allocated later
   double **A = MEMORY_AllocDMatrix(__func__, "A",1, num_eqs, 1, 1+poly_order);
@@ -354,5 +402,14 @@ int LINEAR_fit_poly(int num_eqs, int poly_order, const double *a, const double *
   LINEAR_free(linsys);
   free(b_sigma);
 
+  #if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionStop((char *)__func__,rc);
+  #endif
+  
   return rc;
 }
+
+double LINEAR_GetNorm(const struct linear_system *s,int indexNorm)
+ {
+  return s->norms[indexNorm];
+ }

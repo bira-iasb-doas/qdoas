@@ -380,7 +380,7 @@ RC DEBUG_FunctionBegin(char *fctName,MASK fctType)
   rc=ERROR_ID_NO;
 
   // Register the function in the dedicated stack
-
+  
   if (debugFlag)                                                                // the debug mode is previously open (DEBUG_Start)
    {
     if (debugNFct==DEBUG_MAX_LEVELS)                                            // the maximum number of functions to register is reached (DEBUG_Start)
@@ -450,6 +450,8 @@ RC DEBUG_FunctionBegin(char *fctName,MASK fctType)
 
         fclose(fp);
        }
+      //else
+      // DEBUG_Print("--- %s %d %d %d %d %d\n",fctName,debugFlag,debugNFct,fctLevel,debugFctLevelMax,(fctType&debugFctMask));
      }
 
     debugNFct++;                                                                // in debug mode, increment the number of functions anyway
@@ -660,7 +662,7 @@ RC DEBUG_Stop(char *callingFct)
   // Initialization
 
   rc=ERROR_ID_NO;
-
+  
   // The debug mode is not open
 
   if (!debugFlag)

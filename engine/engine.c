@@ -95,6 +95,8 @@
 #include "apex_read.h"
 #include "mfc-read.h"
 #include "spectrum_files.h"
+//#include "gems_read.h"
+#include "output_netcdf.h"
 
 #include "coda.h"
 
@@ -713,8 +715,13 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
      case PRJCT_INSTR_FORMAT_BIRA_AIRBORNE :
        rc=AIRBORNE_Set(pEngineContext,pFile->specFp);
        break;
+       // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_APEX :
        rc=apex_set(pEngineContext);
+       break;
+       // ---------------------------------------------------------------------------
+     case PRJCT_INSTR_FORMAT_GEMS :
+//       rc=GEMS_Set(pEngineContext);
        break;
        // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_MFC :
@@ -776,7 +783,8 @@ RC EngineSetFile(ENGINE_CONTEXT *pEngineContext,const char *fileName,void *respo
        break;
        // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_GOME1_NETCDF :
-       rc=GOME1NETCDF_Set(pEngineContext);
+       if (!(rc=GOME1NETCDF_Set(pEngineContext)) &&  (THRD_id!=THREAD_TYPE_SPECTRA) && (THRD_id!=THREAD_TYPE_EXPORT) && (THRD_id!=THREAD_TYPE_NONE))
+        rc=GOME1NETCDF_LoadAnalysis(pEngineContext,responseHandle);
        break;
        // ---------------------------------------------------------------------------
      case PRJCT_INSTR_FORMAT_SCIA_PDS :
@@ -869,7 +877,17 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
    pRecord->maxdoas.measurementType=PRJCT_INSTR_MAXDOAS_TYPE_ZENITH;
 
    pEngineContext->indexRecord=indexRecord;  // !!! for the output
-   pRecord->i_alongtrack=(indexRecord-1)/ANALYSE_swathSize;
+
+   if (ANALYSE_swathSize>1)
+    {
+     pRecord->i_alongtrack=ITEM_NONE;
+     pRecord->i_crosstrack=ITEM_NONE;
+    }
+   else
+    {
+     pRecord->i_alongtrack=(indexRecord-1)/ANALYSE_swathSize;
+     pRecord->i_crosstrack=0;
+    }
 
    switch((int)pEngineContext->project.instrumental.readOutFormat)
     {
@@ -921,6 +939,10 @@ RC EngineReadFile(ENGINE_CONTEXT *pEngineContext,int indexRecord,int dateFlag,in
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_APEX :
       pRecord->rc=apex_read(pEngineContext,indexRecord);
+      break;
+      // ---------------------------------------------------------------------------
+    case PRJCT_INSTR_FORMAT_GEMS :
+//      pRecord->rc=GEMS_Read(pEngineContext,indexRecord);
       break;
       // ---------------------------------------------------------------------------
     case PRJCT_INSTR_FORMAT_MFC :
@@ -1059,6 +1081,10 @@ RC EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *sp
    int resetFlag;
    RC rc;
 
+//    #if defined(__DEBUG_) && __DEBUG_
+//    DEBUG_Start(ENGINE_dbgFile,(char *)"BrowseSpectra",DEBUG_FCTTYPE_MEM,15,DEBUG_DVAR_YES,0);
+//    #endif
+
    // Initializations
 
    resetFlag=(!pEngineContext->mfcDoasisFlag || (THRD_id!=THREAD_TYPE_ANALYSIS) || !pEngineContext->recordInfo.mfcDoasis.nFiles || (MFC_SearchForCurrentFileIndex(pEngineContext)==ITEM_NONE))?1:0;
@@ -1119,17 +1145,22 @@ RC EngineRequestBeginBrowseSpectra(ENGINE_CONTEXT *pEngineContext,const char *sp
 
    // in browsing mode, do initialisation:
    // (otherwise this is done in mediateRequestSetAnalysisWindows
-   if (THRD_id == THREAD_TYPE_SPECTRA || THRD_id == THREAD_TYPE_EXPORT) {
-     switch(pEngineContext->project.instrumental.readOutFormat) {
-     case PRJCT_INSTR_FORMAT_APEX:
-       rc = apex_init(pEngineContext->fileInfo.fileName,pEngineContext);
+   if (THRD_id == THREAD_TYPE_SPECTRA || THRD_id == THREAD_TYPE_EXPORT)
+    {
+     switch(pEngineContext->project.instrumental.readOutFormat)
+      {
+       // -----------------------------------------------------------------------
+       case PRJCT_INSTR_FORMAT_APEX:
+        rc = apex_init(pEngineContext->fileInfo.fileName,pEngineContext,1,0,0);
        break;
-     default:
+       // -----------------------------------------------------------------------
+       default:
        break;
-     }
-   }
+       // -----------------------------------------------------------------------
+      }
+    }
 
-   return rc;
+  return rc;
  }
 
 // -----------------------------------------------------------------------------
@@ -1174,13 +1205,25 @@ RC EngineRequestEndBrowseSpectra(ENGINE_CONTEXT *pEngineContext)
         MEMORY_ReleaseDVector(__func__,"timeDec",pRef->timeDec,0);
        pRef->timeDec=NULL;
       }
+
+/*     if (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GEMS)
+      {
+       gems_clean();
+       if (THRD_id==THREAD_TYPE_KURUCZ) // && output file is specified
+        netcdf_close_calib();
+      }*/
     }
 
    // Close the files
 
    EngineCloseFile(&pEngineContext->fileInfo);
 
-   // Retrun
+//   #if defined(__DEBUG_) && __DEBUG_
+//   DEBUG_FunctionStop((char *)"BrowseSpectra",rc);
+//   #endif
+
+
+   // Return
 
    return rc;
  }
@@ -1729,7 +1772,6 @@ RC EngineSZASetRefIndexes(ENGINE_CONTEXT *pEngineContext,FENO *pTabFeno)
      pTabFeno->indexRefMorning=pRef->refIndexes[pTabFeno->indexRefMorning];
     if (pTabFeno->indexRefAfternoon!=ITEM_NONE)
      pTabFeno->indexRefAfternoon=pRef->refIndexes[pTabFeno->indexRefAfternoon];
-
    }
 
   // Return
@@ -2125,7 +2167,7 @@ RC EngineNewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
          pTime=&ENGINE_contextRef.recordInfo.present_datetime.thetime;
 
          if (pTabFeno->refMaxdoasSelectionMode==ANLYS_MAXDOAS_REF_SZA)
-          sprintf(string,"Selected ref (%d, SZA %.2f)",pTabFeno->indexRef,ENGINE_contextRef.recordInfo.Zm);
+          sprintf(string,"Selected ref (%d, SZA %.2f)",pTabFeno->indexRef,pTabFeno->Zm);
          else if (pTabFeno->indexRef!=ITEM_NONE)
           sprintf(string,"Selected ref (%d)",pTabFeno->indexRef);
          else if ((pTabFeno->indexRefScanBefore!=ITEM_NONE) && (pTabFeno->indexRefScanAfter!=ITEM_NONE))

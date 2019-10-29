@@ -102,6 +102,12 @@ typedef unsigned int MASK,SZ_LEN;
 #define MAX_ITEM_NAME_LEN                       127                             // name of a symbol
 #define MAX_ITEM_DESC_LEN                       255                             // description of a symbol
 
+// Math constants
+
+#define DOAS_PI     (double) 3.14159265358979323846
+#define PI2         (double) 6.28318530717958647692
+#define PIDEMI      (double) 1.57079632679489661923
+
 // Other constants definitions
 
 #define ITEM_NONE                              (int)-1                          // default value for an index or a return code out of range
@@ -237,7 +243,7 @@ SHORT_DATE;
 
 // High-level math functions
 
-#define ERROR_ID_SVD_ILLCONDITIONED           1101                             // ill-conditionned matrix
+#define ERROR_ID_SVD_ILLCONDITIONED           1101                              // ill-conditionned matrix
 #define ERROR_ID_SVD_ARG                       1102                             // bad arguments
 #define ERROR_ID_SPLINE                        1110                             // spline interpolation requests increasing absissae
 #define ERROR_ID_VOIGT                         1111                             // Voigt function failed
@@ -260,7 +266,7 @@ SHORT_DATE;
 #define ERROR_ID_FWHM_INCOMPATIBLE_OPTIONS     1261                             // Can't apply fitting of slit function parameters with calibration and resolution correction
 #define ERROR_ID_OUT_OF_RANGE                  1270                             // field is out of range
 #define ERROR_ID_FILE_AUTOMATIC                1280                             // no automatic reference selection can be performed on this type of file
-#define ERROR_ID_REFERENCE_SELECTION 1281 // can't find (enough) spectra matching automatic reference criteria
+#define ERROR_ID_REFERENCE_SELECTION           1281                             // can't find (enough) spectra matching automatic reference criteria
 #define ERROR_ID_REF_ALIGNMENT                 1285                             // problem with the alignment of the reference spectrum in one analysis window
 #define ERROR_ID_NO_REF                        1290                             // no reference file found in the specified file
 #define ERROR_ID_VZA_REF                       1291                             // no reference for this vza bin.
@@ -268,6 +274,7 @@ SHORT_DATE;
 #define ERROR_ID_NO_RESULT_PREVIOUS_WINDOW     1296                             // when using result from previous window as fixed column value: cannot link molecule with a molecule from a previous analysis window
 #define ERROR_ID_IMAGER_CALIB                  1297                             // calibration error for imager row
 #define ERROR_ID_L1WAVELENGTH                  1298                             // L1 wavelength calibration incorrect
+#define ERROR_ID_PUKITE                        1299                             // missing pukite cross section
 
 // Specific file format
 
@@ -308,18 +315,18 @@ SHORT_DATE;
 #define __DEBUG_DOAS_DATA_         0                                            // load data
 #define __DEBUG_DOAS_OUTPUT_       0                                            // output
 #define __DEBUG_DOAS_FILE_         0                                            // file
-#define __DEBUG_DOAS_CONFIG_       0                                            // config
+#define __DEBUG_DOAS_CONFIG_       1                                            // config
 
 // Types of functions to debug
 
-#define  DEBUG_FCTTYPE_ALL    0xFF
-#define  DEBUG_FCTTYPE_MEM    0x01                                              // memory allocation
-#define  DEBUG_FCTTYPE_GUI    0x02                                              // user interface
-#define  DEBUG_FCTTYPE_MATH   0x04                                              // math function
-#define  DEBUG_FCTTYPE_APPL   0x08                                              // application related
-#define  DEBUG_FCTTYPE_UTIL   0x10                                              // utility function
-#define  DEBUG_FCTTYPE_FILE   0x20                                              // file management
-#define  DEBUG_FCTTYPE_CONFIG 0x40                                              // check the config
+#define  DEBUG_FCTTYPE_ALL     0xFF
+#define  DEBUG_FCTTYPE_MEM     0x01                                              // memory allocation
+#define  DEBUG_FCTTYPE_GUI     0x02                                              // user interface
+#define  DEBUG_FCTTYPE_MATH    0x04                                              // math function
+#define  DEBUG_FCTTYPE_APPL    0x08                                              // application related
+#define  DEBUG_FCTTYPE_UTIL    0x10                                              // utility function
+#define  DEBUG_FCTTYPE_FILE    0x20                                              // file management
+#define  DEBUG_FCTTYPE_CONFIG  0x40                                              // check the config
 
 // Authorize the debugging double type variables allocated by MEMORY_AllocDVector or MEMORY_AllocDMatrix
 

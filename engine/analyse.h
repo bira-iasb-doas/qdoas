@@ -59,6 +59,8 @@ enum _wrkSymbolType
   WRK_SYMBOL_SPECTRUM
  };
 
+#pragma pack(push,1)
+
 struct _wrkSymbol {
   char        type,                           // type of symbol
                 symbolName[MAX_STR_LEN+1],      // name of symbol
@@ -71,22 +73,25 @@ struct _wrkSymbol {
 typedef struct _crossReference
  {
   int    Comp,                                                                  // index of component in WrkSpace list
-         crossAction,                                                           // action to process on cross section before analysis
+         crossAction,                                                           // action (interpolation, convolution) to process on cross section before analysis
+         crossCorrection,                                                       // correction to apply on cross section before analysis (the result of the correction shall be submitted to action)
          IndSvdA,                                                               // index of column in SVD matrix
          IndSvdP,                                                               // index of column in SVD matrix
          IndOrthog,                                                             // order in orthogonal base
+         IndSubtract,                                                           // index of the cross section from which to subtract the current one
          FitConc,                                                               // flag set if concentration is to be fit (non linear method) or modified (linear method)
          FitFromPrevious,                                                       // flag set if the value of the concentration has to be retrieved from a previous window
          FitParam,                                                              // flag set if non linear parameter (other than shift or stretch) is to be fit
          FitShift,                                                              // flag set if shift is to be fit
          FitStretch,                                                            // flag set if stretch order 1 is to be fit
          FitStretch2,                                                           // flag set if stretch order 2 is to be fit
-         FitScale,                                                              // flag set if a scaling factor order 1 is to be fit
-         FitScale2,                                                             // flag set if a scaling factor order 2 is to be fit
          TypeStretch,                                                           // order of stretch to fit
-         TypeScale;                                                             // order of scaling factor to fit
+         isPukite,                                                              // 0 if not a Pukiter term, 1 if Pukite term to calculate, 2 if Pukite term as pre-convolved XS
+         indexPukite1,                                                          // index of the cross section to use for Pukite1
+         indexPukite2,                                                          // index of the cross section to use for Pukite2
+         molecularCrossIndex;                                                   // index of the cross section to use for molecular correction
 
-  char display,                                                               // flag set if fit is to be displayed
+  int    display,                                                                 // flag set if fit is to be displayed
          amfType,                                                               // type of AMF
          filterFlag;                                                            // flag set if symbol is to be filteres
 
@@ -97,8 +102,6 @@ typedef struct _crossReference
          InitShift,                                                             // initial shift
          InitStretch,                                                           // initial stretch order 1
          InitStretch2,                                                          // initial stretch order 2
-         InitScale,                                                             // initial scaling factor order 1
-         InitScale2,                                                            // initial scaling factor order 2
          DeltaConc,                                                             // step for concentration
          DeltaParam,                                                            // step for non linear parameter
          DeltaShift,                                                            // step for shift
@@ -113,14 +116,17 @@ typedef struct _crossReference
          MinConc,                                                               // minimum value for the concentration if fitted
          MaxConc,                                                               // maximum value for the concentration if fitted
         *vector,                                                                // copy of vector
-        *Deriv2;                                                                // second derivative
+        *Deriv2,                                                                // second derivative
+        *vectorBackup,                                                          // backup of the vector (in the case the original one is modified during the process; for example, molecular ring)
+        *Deriv2Backup,                                                          // backup of the second derivative (in the case the original one is modified during the process; for example molecular ring)
+        *molecularCrossSection;                                                 // for molecular ring, sigma-sigma_RRS (cross section minus cross section convolved with Raman)
 } CROSS_REFERENCE;
 
 // Results
 // -------
 /*! Fit results for a fitted cross section. */
 struct _crossResults {
-  char  StoreParam,               // flag set if non linear parameter is to be written into output file
+  char   StoreParam,               // flag set if non linear parameter is to be written into output file
          StoreShift,                // flag set if shift is to be written into output file
          StoreStretch,              // flag set if stretch order 1 is to be written into output file
          StoreScale,                // flag set if scaling factor order 1 is to be written into output file
@@ -200,13 +206,20 @@ struct _feno {
   int             useEtalon;                                                    // flag set if etalon reference is used
   int             xsToConvolute;                                                // flag set if high resolution cross sections to convolute real time
   int             xsToConvoluteI0;
+  int             xsPukite;
 
   double         *LambdaRef,                                                    // absolute reference wavelength scale
                  *LambdaK,                                                      // new wavelength scale after Kurucz
                  *Lambda,                                                       // wavelength scale to use for analysis
+                 *LambdaRadAsRef1,                                              // wavelength scale to use for RadAsRef
+                 *LambdaRadAsRef2,                                              // wavelength scale to use for RadAsRef
+                 *Deriv2RadAsRef1,                                              // second derivatives to interpolate RadAsRef
+                 *Deriv2RadAsRef2,                                              // second derivatives to interpolate RadAsRef
                  *Sref,                                                         // reference spectrum
                  *SrefSigma,                                                    // error on reference spectrum
                  *SrefEtalon,                                                   // etalon reference spectrum
+                 *SrefRadAsRef1,                                                // RadAsRef reference spectrum
+                 *SrefRadAsRef2,                                                // RadAsRef reference spectrum
                   Shift,                                                        // shift found when aligning etalon on reference
                   Stretch,                                                      // stretch order 1 found when aligning etalon on reference
                   Stretch2,                                                     // stretch order 2 found when aligning etalon on reference
@@ -221,6 +234,7 @@ struct _feno {
   CROSS_RESULTS   TabCrossResults[MAX_FIT];                                     // results stored per symbol in previous list
   bool           *spikes;                                                       // spikes[i] is true if the residual at pixel i has a spike
   bool           *omiRejPixelsQF;                                               // rejPixelsQF[i] is true if the pixel i is rejected based on pixels QF (OMI only)
+  bool            useRefRow;                                                    // flag for using or skipping row in a reference file, 1 if use
   int             NTabCross;                                                    // number of elements in the two previous lists
   INDEX           indexSpectrum,                                                // index of raw spectrum in symbol cross reference
                   indexReference,                                               // index of reference spectrum in symbol cross reference
@@ -249,19 +263,26 @@ struct _feno {
   int             bandType;
   double          refLatMin,refLatMax;
   double          refLonMin,refLonMax;
-  int             NDET;
+  int             NDET,
+                  n_wavel_ref1,
+                  n_wavel_ref2;
   int             gomeRefFlag;
   int             mfcRefFlag;
   RC              rcKurucz;
   int             SvdPDeb,SvdPFin,Dim,LimMin,LimMax,LimN;
   int             rc;
-  enum linear_offset_mode linear_offset_mode;
+  enum            linear_offset_mode linear_offset_mode;
   int             longPathFlag;                                                 // for Anoop
   INDEX           indexRefOmi;
-  int             newrefFlag;
+  int             newrefFlag,
+                  useRadAsRef1,                                                 // flag ascertaining that refone is used for RadAsRef, 1 if so
+                  useRadAsRef2;                                                 // flag ascertaining that reftwo is used for RadAsRef, 1 if so
   double          preshift;
-  double          lambda0;
+  double          lambda0;                                                      // wavelength at the spectral window center (output and used for MMF)
+  double          lambda0_pukite;                                               // selected wavelength for the normalization of cross sections when Pukite terms are calculated (by default, wavelength at the spectral window center)
+  int             molecularCorrection;
 };
+#pragma pack(pop)
 
 extern FENO         **TabFeno,*Feno;
 

@@ -61,7 +61,7 @@ Q_OBJECT
 
  private:
   QComboBox *m_calibrationCombo;
-  QLineEdit *m_fitMinEdit, *m_fitMaxEdit,*m_resolEdit;
+  QLineEdit *m_fitMinEdit, *m_fitMaxEdit,*m_resolEdit,*m_lambda0Edit;
   QCheckBox *m_spectrumCheck, *m_polyCheck, *m_fitsCheck;
   QCheckBox *m_residualCheck, *m_predefCheck, *m_ratioCheck;
 

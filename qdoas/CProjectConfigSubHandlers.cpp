@@ -5,7 +5,6 @@
 #include "CProjectConfigTreeNode.h"
 
 #include "constants.h"
-
 #include "debugutil.h"
 
 const char *STR_IGNORE = "IGNORE";
@@ -710,6 +709,8 @@ bool CProjectInstrumentalSubHandler::start(const QXmlAttributes &atts)
     m_instrumental->format = PRJCT_INSTR_FORMAT_BIRA_MOBILE;
   else if (str == "apex")
     m_instrumental->format = PRJCT_INSTR_FORMAT_APEX;
+  else if (str == "gems")
+    m_instrumental->format = PRJCT_INSTR_FORMAT_GEMS;
   else if (str == "mfc")
     m_instrumental->format = PRJCT_INSTR_FORMAT_MFC;
   else if (str == "mfcstd")
@@ -1226,6 +1227,35 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
 	return postErrorMessage("Instrument Function  Filename too long");
     }
   }
+  else if (element == "apex") {
+    QString str = atts.value("trackSelection");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < (int)sizeof(m_instrumental->apex.trackSelection))
+	strcpy(m_instrumental->apex.trackSelection, str.toLocal8Bit().data());
+      else
+	return postErrorMessage("Track selection string too long");
+    }
+
+
+    str = atts.value("calib");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < sizeof(m_instrumental->tropomi.calibrationFile))
+	strcpy(m_instrumental->tropomi.calibrationFile, str.toLocal8Bit().data());
+      else
+	return postErrorMessage("Calibration Filename too long");
+    }
+
+    str = atts.value("instr");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < sizeof(m_instrumental->tropomi.instrFunctionFile))
+	strcpy(m_instrumental->tropomi.instrFunctionFile, str.toLocal8Bit().data());
+      else
+	return postErrorMessage("Instrument Function  Filename too long");
+    }
+  }
   else if (element == "gome2") { // GOME2
     helperLoadGome2(atts, &(m_instrumental->gome2));
   }
@@ -1236,16 +1266,64 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
     return helperLoadMinimum(atts, &(m_instrumental->mkzy));
   }
   else if (element == "biraairborne") {  // BIRA AIRBORNE
+    QString str;
+
     m_instrumental->biraairborne.straylight = (atts.value("straylight") == "true") ? 1 : 0;
     m_instrumental->biraairborne.lambdaMin = atts.value("lambda_min").toDouble();
     m_instrumental->biraairborne.lambdaMax = atts.value("lambda_max").toDouble();
-    return helperLoadMinimum(atts, &(m_instrumental->biraairborne));
+
+    m_instrumental->biraairborne.detectorSize = atts.value("size").toInt();
+
+    if (!m_instrumental->biraairborne.detectorSize)
+     m_instrumental->biraairborne.detectorSize=2048;
+
+    str = atts.value("calib");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < sizeof(m_instrumental->biraairborne.calibrationFile))
+	      strcpy(m_instrumental->biraairborne.calibrationFile, str.toLocal8Bit().data());
+      else
+	      return postErrorMessage("Calibration Filename too long");
+    }
+
+    str = atts.value("instr");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < sizeof(m_instrumental->biraairborne.transmissionFunctionFile))
+	      strcpy(m_instrumental->biraairborne.transmissionFunctionFile, str.toLocal8Bit().data());
+      else
+	      return postErrorMessage("Instrument Function  Filename too long");
+    }
   }
   else if (element == "biramobile") {  // BIRA MOBILE
+    QString str;
+
     m_instrumental->biramobile.straylight = (atts.value("straylight") == "true") ? 1 : 0;
     m_instrumental->biramobile.lambdaMin = atts.value("lambda_min").toDouble();
     m_instrumental->biramobile.lambdaMax = atts.value("lambda_max").toDouble();
-    return helperLoadMinimum(atts, &(m_instrumental->biramobile));
+
+    m_instrumental->biramobile.detectorSize = atts.value("size").toInt();
+
+    if (!m_instrumental->biramobile.detectorSize)
+     m_instrumental->biramobile.detectorSize=2048;
+
+    str = atts.value("calib");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < sizeof(m_instrumental->biramobile.calibrationFile))
+	      strcpy(m_instrumental->biramobile.calibrationFile, str.toLocal8Bit().data());
+      else
+	      return postErrorMessage("Calibration Filename too long");
+    }
+
+    str = atts.value("instr");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < sizeof(m_instrumental->biramobile.transmissionFunctionFile))
+	      strcpy(m_instrumental->biramobile.transmissionFunctionFile, str.toLocal8Bit().data());
+      else
+	      return postErrorMessage("Instrument Function  Filename too long");
+    }
   }
   else if (element == "oceanoptics") { // OCEAN OPTICS
     QString str;
@@ -1271,6 +1349,36 @@ bool CProjectInstrumentalSubHandler::start(const QString &element, const QXmlAtt
 	strcpy(m_instrumental->oceanoptics.transmissionFunctionFile, str.toLocal8Bit().data());
       else
 	return postErrorMessage("Instrument Function  Filename too long");
+    }
+  }
+    else if (element == "gems") {
+     QString str;
+    str = atts.value("trackSelection");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < (int)sizeof(m_instrumental->gems.trackSelection))
+        strcpy(m_instrumental->gems.trackSelection, str.toLocal8Bit().data());
+      else
+        return postErrorMessage("Track selection string too long");
+    }
+
+
+    str = atts.value("calib");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < sizeof(m_instrumental->gems.calibrationFile))
+        strcpy(m_instrumental->gems.calibrationFile, str.toLocal8Bit().data());
+      else
+        return postErrorMessage("Calibration Filename too long");
+    }
+
+    str = atts.value("instr");
+    if (!str.isEmpty()) {
+      str = m_master->pathExpand(str);
+      if (str.length() < sizeof(m_instrumental->gems.transmissionFunctionFile))
+        strcpy(m_instrumental->gems.transmissionFunctionFile, str.toLocal8Bit().data());
+      else
+        return postErrorMessage("Instrument Function  Filename too long");
     }
   }
   else if (element == "frm4doas") { // FRM4DOAS netCDF

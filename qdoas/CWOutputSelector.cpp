@@ -152,8 +152,8 @@ CWOutputSelector::CWOutputSelector(const data_select_list_t *d, QWidget *parent)
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_SPIKES,                 "Pixels with spikes in residual"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_SERVO_BYTE_SENT,    "Servo position byte sent"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_SERVO_BYTE_RECEIVED,"Servo position byte received"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_INSIDE_TEMP,        "Inside Temperature (�C)"));
-  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_OUTSIDE_TEMP,       "Outside Temperature (�C)"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_INSIDE_TEMP,        "Inside Temperature (deg C)"));
+  m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_OUTSIDE_TEMP,       "Outside Temperature (deg C)"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_PRESSURE,           "Pressure (hPa)"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_HUMIDITY,           "Humidity"));
   m_availableList->addItem(new CWOutputFieldItem(PRJCT_RESULTS_UAV_DEWPOINT,           "Dewpoint"));
@@ -487,6 +487,7 @@ void getValidFieldFlags(int *validFlags, int instrument,int selectorOrigin)
       validFlags[PRJCT_RESULTS_ENDGPSTIME]=1;
       validFlags[PRJCT_RESULTS_VIEW_ELEVATION]=1;
       validFlags[PRJCT_RESULTS_VIEW_AZIMUTH]=1;
+      validFlags[PRJCT_RESULTS_UAV_INSIDE_TEMP]=1;
      }
     break;
  // ----------------------------------------------------------------------------
@@ -705,7 +706,21 @@ void getValidFieldFlags(int *validFlags, int instrument,int selectorOrigin)
      }
 
  // ----------------------------------------------------------------------------
+
    case PRJCT_INSTR_FORMAT_APEX :
+     {
+       validFlags[PRJCT_RESULTS_INDEX_ALONGTRACK]=1;
+       validFlags[PRJCT_RESULTS_INDEX_CROSSTRACK]=1;
+       validFlags[PRJCT_RESULTS_LONGIT]=1;
+       validFlags[PRJCT_RESULTS_LATIT]=1;
+       validFlags[PRJCT_RESULTS_VIEW_ZENITH]=1;
+       validFlags[PRJCT_RESULTS_VIEW_AZIMUTH]=1;
+     }
+     break;
+
+ // ----------------------------------------------------------------------------
+
+   case PRJCT_INSTR_FORMAT_GEMS :
      {
        validFlags[PRJCT_RESULTS_INDEX_ALONGTRACK]=1;
        validFlags[PRJCT_RESULTS_INDEX_CROSSTRACK]=1;
@@ -723,7 +738,7 @@ void getValidFieldFlags(int *validFlags, int instrument,int selectorOrigin)
       validFlags[PRJCT_RESULTS_VIEW_ELEVATION]=1;
       validFlags[PRJCT_RESULTS_VIEW_AZIMUTH]=1;                                 // not present in all measurements]=1; but could be in the next future
       validFlags[PRJCT_RESULTS_STARTDATE]=1;
-      validFlags[PRJCT_RESULTS_ENDDATE]=1;      
+      validFlags[PRJCT_RESULTS_ENDDATE]=1;
       validFlags[PRJCT_RESULTS_STARTTIME]=1;
       validFlags[PRJCT_RESULTS_ENDTIME]=1;
       validFlags[PRJCT_RESULTS_LONGIT]=1;

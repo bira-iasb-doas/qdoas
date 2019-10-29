@@ -62,6 +62,7 @@ typedef struct commands
   QList<QString> filenames;
   QList<QString> xmlCommands;
   QString outputDir;
+  QString calibDir;
 } commands_t;
 
 //-------------------------------------------------------------------
@@ -76,9 +77,9 @@ int batchProcess(commands_t *cmd);
 
 int batchProcessQdoas(commands_t *cmd);
 int readConfigQdoas(commands_t *cmd, QList<const CProjectConfigItem*> &projectItems);
-int analyseProjectQdoas(const CProjectConfigItem *projItem, const QString &outputDir, const QList<QString> &filenames);
-int analyseProjectQdoas(const CProjectConfigItem *projItem, const QString &outputDir);
-int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *projItem, const QString &outputDir,
+int analyseProjectQdoas(const CProjectConfigItem *projItem, const QString &outputDir, const QString &calibDir, const QList<QString> &filenames);
+int analyseProjectQdoas(const CProjectConfigItem *projItem, const QString &outputDir,const QString &calibDir);
+int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *projItem, const QString &outputDir,const QString &calibDir,
 			       CBatchEngineController *controller);
 int analyseProjectQdoasFile(void *engineContext, CBatchEngineController *controller, const QString &filename);
 int analyseProjectQdoasTreeNode(void *engineContext, CBatchEngineController *controller, const CProjectConfigTreeNode *node);
@@ -212,6 +213,18 @@ enum RunMode parseCommandLine(int argc, char **argv, commands_t *cmd)
 	}
 
       }
+      else if (!strcmp(argv[i], "-new_irrad")) { // filename ...
+        if (++i < argc && argv[i][0] != '-')
+                 {
+    calibSaveSwitch=1;
+          cmd->calibDir=argv[i];
+          }
+        else {
+          runMode = Error;
+          std::cout << "Option '-new_irrad' requires an argument (filename)." << std::endl;
+        }
+
+      }
  else if (!strcmp(argv[i],"-xml"))
 	 if (++i < argc && argv[i][0] != '-')
 	 	 {
@@ -250,6 +263,9 @@ enum RunMode parseCommandLine(int argc, char **argv, commands_t *cmd)
 
     ++i;
   }
+  
+  if ((runMode==None) && calibSaveSwitch && !calibSwitch)
+   std::cout << "Warning : -new_irrad switch to use only with -k option; ignored " << std::endl;
 
   // consistency checks ??
 
@@ -326,14 +342,15 @@ enum BatchTool requiredBatchTool(const QString &filename)
 void showUsage()
 {
   std::cout << "doas_cl -c <config file> [-a/-k <project name>] [-o <output>] [-f <file>]..." << std::endl << std::endl;
-  std::cout << "    -c <config file>  : A QDoas, convolution, [ring or usamp] config file." << std::endl;
-  std::cout << "                        The tool to invoke is determined from the type of" << std::endl;
-  std::cout << "                        configuration file specified;" << std::endl << std::endl;
-  std::cout << "    -a <project name> : for QDoas, run analysis on the specified project" << std::endl;
-  std::cout << "    -k <project name> : for QDoas, run calibration on the specified project" << std::endl << std::endl;
-  std::cout << "    -v                : verbose on (default is off)" << std::endl << std::endl;
-  std::cout << "    -xml <path=value> : advanced option to replace the values of some options " << std::endl;
-  std::cout << "                        in the configuration file by new ones." << std::endl;
+  std::cout << "    -c <config file>    : A QDoas, convolution, [ring or usamp] config file." << std::endl;
+  std::cout << "                          The tool to invoke is determined from the type of" << std::endl;
+  std::cout << "                          configuration file specified;" << std::endl << std::endl;
+  std::cout << "    -a <project name>   : for QDoas, run analysis on the specified project" << std::endl;
+  std::cout << "    -k <project name>   : for QDoas, run calibration on the specified project" << std::endl << std::endl;
+  std::cout << "    -new_irrad <output> : for QDoas, run calibration, GEMS measurements, calibrated irradiances file" << std::endl << std::endl;
+  std::cout << "    -v                  : verbose on (default is off)" << std::endl << std::endl;
+  std::cout << "    -xml <path=value>   : advanced option to replace the values of some options " << std::endl;
+  std::cout << "                          in the configuration file by new ones." << std::endl;
   std::cout << "------------------------------------------------------------------------------" << std::endl;
   std::cout << "doas_cl is a tool of QDoas, a product jointly developed by BIRA-IASB and S[&]T" << std::endl;
   std::cout << "version: " << cQdoasVersionString << std::endl ;
@@ -367,7 +384,7 @@ int batchProcessQdoas(commands_t *cmd)
 
 	const CProjectConfigItem *p = projectItems.takeFirst();
 
-	retCode = analyseProjectQdoas(p, cmd->outputDir, cmd->filenames);
+	retCode = analyseProjectQdoas(p, cmd->outputDir, cmd->calibDir,cmd->filenames);
 
 	delete p;
       }
@@ -379,7 +396,7 @@ int batchProcessQdoas(commands_t *cmd)
       // all projects ... all files ...
       const CProjectConfigItem *p = projectItems.takeFirst();
 
-      retCode = analyseProjectQdoas(p, cmd->outputDir);
+      retCode = analyseProjectQdoas(p, cmd->outputDir,cmd->calibDir);
 
       delete p;
     }
@@ -485,7 +502,7 @@ int readConfigQdoas(commands_t *cmd, QList<const CProjectConfigItem*> &projectIt
 }
 
 
-int analyseProjectQdoas(const CProjectConfigItem *projItem, const QString &outputDir, const QList<QString> &filenames)
+int analyseProjectQdoas(const CProjectConfigItem *projItem, const QString &outputDir, const QString &calibDir, const QList<QString> &filenames)
 {
   QString fileFilter="*.*";
   void *engineContext;
@@ -493,7 +510,7 @@ int analyseProjectQdoas(const CProjectConfigItem *projItem, const QString &outpu
 
   CBatchEngineController *controller = new CBatchEngineController;
 
-  retCode = analyseProjectQdoasPrepare(&engineContext, projItem, outputDir, controller);
+  retCode = analyseProjectQdoasPrepare(&engineContext, projItem, outputDir, calibDir, controller);
 
   if (retCode)
     return retCode;
@@ -526,14 +543,14 @@ int analyseProjectQdoas(const CProjectConfigItem *projItem, const QString &outpu
   return retCode;
 }
 
-int analyseProjectQdoas(const CProjectConfigItem *projItem, const QString &outputDir)
+int analyseProjectQdoas(const CProjectConfigItem *projItem, const QString &outputDir,const QString &calibDir)
 {
   void *engineContext;
   int retCode;
 
   CBatchEngineController *controller = new CBatchEngineController;
 
-  retCode = analyseProjectQdoasPrepare(&engineContext, projItem, outputDir, controller);
+  retCode = analyseProjectQdoasPrepare(&engineContext, projItem, outputDir, calibDir, controller);
 
   if (retCode)
     return retCode;
@@ -555,7 +572,7 @@ int analyseProjectQdoas(const CProjectConfigItem *projItem, const QString &outpu
   return retCode;
 }
 
-int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *projItem, const QString &outputDir,
+int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *projItem, const QString &outputDir,const QString &calibDir,
 			       CBatchEngineController *controller)
 {
   CWorkSpace *ws = CWorkSpace::instance();
@@ -577,6 +594,11 @@ int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *p
   }
 
   projectData.output.newcalibFlag=calibSaveSwitch;
+  
+  if (!calibDir.isEmpty() && calibDir.size() < FILENAME_BUFFER_LENGTH-1) {
+    // override the output directory
+    strcpy(projectData.output.newCalibPath, calibDir.toLocal8Bit().data());
+  }
 
   // create engine
   if (mediateRequestCreateEngineContext(engineContext, msgResp) != 0) {
@@ -621,7 +643,6 @@ int analyseProjectQdoasPrepare(void **engineContext, const CProjectConfigItem *p
 
       ++awIt;
     }
-
     if (mediateRequestSetAnalysisWindows(*engineContext, nWindows, awDataList, (!calibSwitch)?THREAD_TYPE_ANALYSIS:THREAD_TYPE_KURUCZ, msgResp) != 0) {
       msgResp->process(controller);
       delete msgResp;

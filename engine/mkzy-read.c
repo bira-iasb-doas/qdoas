@@ -902,7 +902,7 @@ RC MKZY_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
           pTabFeno->Decomp=1;
 
           if (((rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef,0))!=ERROR_ID_NO) ||
-              (!pKuruczOptions->fwhmFit && pTabFeno->xsToConvolute &&
+              (!pKuruczOptions->fwhmFit &&
               ((rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,ANALYSIS_slitMatrix,ANALYSIS_slitParam,pSlitOptions->slitFunction.slitType,0,pSlitOptions->slitFunction.slitWveDptFlag))!=ERROR_ID_NO)))
 
            goto EndMKZY_LoadAnalysis;

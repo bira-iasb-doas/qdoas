@@ -76,6 +76,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
 
 // ================
 // GLOBAL VARIABLES
@@ -150,7 +151,6 @@ void *MEMORY_AllocBuffer(const char *callingFunctionName, const char *bufferName
 
   if ((totalSize<=0) || ((pBuffer=(char *)malloc(totalSize))==NULL))
    ERROR_SetLast(callingFunctionName,ERROR_TYPE_FATAL,ERROR_ID_ALLOC,bufferName,itemNumber,itemSize);
-
   else if (memoryStack!=NULL)
    {
     // Control the number of objects already allocated
@@ -247,8 +247,9 @@ void MEMORY_ReleaseBuffer(const char *callingFunctionName, const char *bufferNam
 
     // remove object from the stack
 
-    if (indexObjects<0)
+    if (indexObjects<0){
      ERROR_SetLast(callingFunctionName,ERROR_TYPE_DEBUG,ERROR_ID_MEMORY_RELEASE,bufferName,pBuffer);
+    }
     else
      {
       pMemory=&memoryStack[indexObjects];
@@ -264,8 +265,9 @@ void MEMORY_ReleaseBuffer(const char *callingFunctionName, const char *bufferNam
 
   // Release the allocated object anyway
 
-  if (pBuffer!=NULL)
+  if (pBuffer!=NULL){
    free(pBuffer);
+  }
 
   // Debugging
 

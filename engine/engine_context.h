@@ -212,6 +212,7 @@ PRJCT_RESULTS_FIELDS;
 
 struct _prjctAsciiResults {
   char path[MAX_ITEM_TEXT_LEN];                                                 // path for results and fits files
+  char newCalibPath[MAX_ITEM_TEXT_LEN];                                         // path for calibrated irradiances
   int   analysisFlag,calibFlag,newcalibFlag,
         referenceFlag,dirFlag,fileNameFlag,successFlag;                         // store results in ascii format
   char fluxes[MAX_ITEM_TEXT_LEN];                                               // fluxes
@@ -665,6 +666,7 @@ struct _engineContext
   int     n_alongtrack, n_crosstrack;
 
   int     refFlag;
+  int     radAsRefFlag;
 
   CALIB_FENO        calibFeno;                                                  // transfer of wavelength calibration options from the project mediator to the analysis mediator
    const char   *outputPath;                                                           // pointer to the output path (from export or output part of the project)

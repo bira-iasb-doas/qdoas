@@ -679,7 +679,7 @@ static inline void get_rms(struct output_field *this_field, double *rms, const E
   *rms = (!pTabFeno->rc)?pTabFeno->RMS:QDOAS_FILL_DOUBLE;
 }
 
-static inline void get_rms_calib(struct output_field *this_field, int *rms, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
+static inline void get_rms_calib(struct output_field *this_field, double *rms, const ENGINE_CONTEXT *pEngineContext __attribute__ ((unused)), int indexFenoColumn, int index_calib) {
   *rms = KURUCZ_buffers[indexFenoColumn].KuruczFeno[this_field->index_feno].rms[index_calib];
 }
 

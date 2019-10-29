@@ -55,6 +55,7 @@ bool CAnalysisWindowSubHandler::start(const QXmlAttributes &atts)
   d->fitMinWavelength = atts.value("min").toDouble();
   d->fitMaxWavelength = atts.value("max").toDouble();
   d->resolFwhm=(!atts.value("resol_fwhm").isEmpty())?atts.value("resol_fwhm").toDouble():0.5;
+  d->lambda0=(!atts.value("lambda0").isEmpty())?atts.value("lambda0").toDouble():0.5*(d->fitMinWavelength+d->fitMaxWavelength);
 
   // MUST have a valid name
   return !m_item->name().isEmpty();
@@ -200,10 +201,24 @@ bool CAnalysisWindowCrossSectionSubHandler::start(const QXmlAttributes &atts)
       return postErrorMessage("missing symbol (or name too long)");
 
     str = atts.value("ortho");
-    if (!str.isEmpty() && str.length() < (int)sizeof(d->orthogonal))
+
+    if (str.isEmpty())
+     strcpy(d->orthogonal,"");
+    else if (str.length() < (int)sizeof(d->orthogonal))
       strcpy(d->orthogonal, str.toLocal8Bit().data());
     else
-      return postErrorMessage("missing ortho (or name too long)");
+       return postErrorMessage("ortho name too long");
+
+    str = atts.value("subtract");
+
+    if (str.isEmpty())
+     strcpy(d->subtract,"");
+    else if (str.length() < (int)sizeof(d->subtract))
+      strcpy(d->subtract, str.toLocal8Bit().data());
+    else
+      return postErrorMessage("subtract name too long");
+
+    d->subtractFlag=(atts.value("subtract_flag") == "true") ? 1 : 0;
 
     str = atts.value("cstype");
     if (str == "interp") d->crossType = ANLYS_CROSS_ACTION_INTERPOLATE;
@@ -219,6 +234,16 @@ bool CAnalysisWindowCrossSectionSubHandler::start(const QXmlAttributes &atts)
              (str == "wave1") || (str == "wave2") || (str == "wave3"))          // for compatibility with previous versions (wavelength 1, 2, 3)
      d->amfType = ANLYS_AMF_TYPE_WAVELENGTH;
     else d->amfType = ANLYS_AMF_TYPE_NONE;
+
+    str = atts.value("corrtype");
+    if (str == "slope") d->correctionType = ANLYS_CORRECTION_TYPE_SLOPE;
+    else if (str == "pukite") d->correctionType = ANLYS_CORRECTION_TYPE_PUKITE;
+    else if (str == "molecular_ring") d->correctionType = ANLYS_CORRECTION_TYPE_MOLECULAR_RING;
+    else if (str == "molecular_ring_slope") d->correctionType = ANLYS_CORRECTION_TYPE_MOLECULAR_RING_SLOPE;
+    else d->correctionType = ANLYS_CORRECTION_TYPE_NONE;
+
+    str = atts.value("molecular_xs");
+    strcpy(d->molecularRing,str.toLocal8Bit().data());
 
     d->requireFit = (atts.value("fit") == "true") ? 1 : 0;
     d->requireFilter = (atts.value("filter") == "true") ? 1 : 0;
@@ -418,34 +443,28 @@ bool CAnalysisWindowShiftStretchSubHandler::start(const QXmlAttributes &atts)
     QString str;
     struct anlyswin_shift_stretch *d = &(m_d->shiftStretch[m_d->nShiftStretch]);
 
-    d->shFit = ((atts.value("shfit") == "true") || (atts.value("shfit")=="nonlinear"))? 1 : 0;
+    str=atts.value("shfit");
+
+    if ((str=="true") || (str=="nonlinear")) d->shFit=ANLYS_SHIFT_TYPE_NONLINEAR;
+  //  else if (str=="linear") d->shFit=ANLYS_SHIFT_TYPE_LINEAR;
+    else d->shFit=ANLYS_SHIFT_TYPE_NONE;
 
     str = atts.value("stfit");
     if (str == "1st") d->stFit = ANLYS_STRETCH_TYPE_FIRST_ORDER;
     else if (str == "2nd") d->stFit = ANLYS_STRETCH_TYPE_SECOND_ORDER;
     else d->stFit = ANLYS_STRETCH_TYPE_NONE;
 
-    str = atts.value("scfit");
-    if (str == "1st") d->scFit = ANLYS_STRETCH_TYPE_FIRST_ORDER;
-    else if (str == "2nd") d->scFit = ANLYS_STRETCH_TYPE_SECOND_ORDER;
-    else d->scFit = ANLYS_STRETCH_TYPE_NONE;
-
     d->shStore = (atts.value("shstr") == "true") ? 1 : 0;
     d->stStore = (atts.value("ststr") == "true") ? 1 : 0;
-    d->scStore = (atts.value("scstr") == "true") ? 1 : 0;
     d->errStore = (atts.value("errstr") == "true") ? 1 : 0;
 
     d->shInit = atts.value("shini").toDouble();
     d->stInit = atts.value("stini").toDouble();
     d->stInit2 = atts.value("stini2").toDouble();
-    d->scInit = atts.value("scini").toDouble();
-    d->scInit2 = atts.value("scini2").toDouble();
 
     if (fabs((double)(d->shDelta = atts.value("shdel").toDouble()  ))<EPSILON) d->shDelta  =(double)1.e-3;
     if (fabs((double)(d->stDelta = atts.value("stdel").toDouble()  ))<EPSILON) d->stDelta  =(double)1.e-3;
     if (fabs((double)(d->stDelta2 = atts.value("stdel2").toDouble()))<EPSILON) d->stDelta2 =(double)1.e-3;
-    if (fabs((double)(d->scDelta = atts.value("scdel").toDouble()  ))<EPSILON) d->scDelta  =(double)1.e-3;
-    if (fabs((double)(d->scDelta2 = atts.value("scdel2").toDouble()))<EPSILON) d->scDelta2=(double)1.e-3;
 
     d->shMin = atts.value("shmin").toDouble();
     d->shMax = atts.value("shmax").toDouble();

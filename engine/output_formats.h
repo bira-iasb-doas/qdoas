@@ -19,10 +19,10 @@ extern "C" {
     NETCDF,
     LAST_OUTPUT_FORMAT = NETCDF
   };
-  
+
   enum output_format output_get_format(const char *fileext);
   extern const char *output_file_extensions[]; // defined in output.c
-  
+
 #if defined(_cplusplus) || defined(__cplusplus)
 }
 #endif

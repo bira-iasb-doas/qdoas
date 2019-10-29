@@ -26,6 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QComboBox>
 #include <QListWidget>
 #include <QDialog>
+#include <QMenu>
 
 #include "mediate_analysis_window.h"
 #include "CDoasTable.h"
@@ -35,25 +36,67 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //----------------------------------------------------------------------
 // specialised columns for molecules (Cross Sections) ...
 
+
 class CWMoleculesDiffOrthoCombo : public CDoasTableColumnComboBox
 {
 Q_OBJECT
  public:
   CWMoleculesDiffOrthoCombo(const QString &excludedSymbol, const QStringList &symbols, QWidget *parent = 0);
 
-  void initialSelection(const QString &text);
+  // void initialSelection(const QString &text);
+  // bool eventFilter(QObject *o, QEvent *e);
+  // int GetIndex(QString text);
 
  public slots:
-  void slotSymbolListChanged(const QStringList &symbols);
+  // void slotSymbolListChanged(const QStringList &symbols);
+  // void list_context_menu(QPoint pos);
+
 
  private:
-  QString m_excludedSymbol, m_pendingInitial;
+  QString m_pendingInitial;
+  QStringList m_symbols;
+  QMenu *m_menu;
 };
 
 class CMoleculeDoasTableColumnDiffOrtho : public CDoasTableColumn
 {
  public:
   CMoleculeDoasTableColumnDiffOrtho(const QString &label, CDoasTable *owner, int width);
+
+  virtual QVariant getCellData(int rowIndex) const;
+  virtual void setCellData(int, const QVariant& v) { }; // do nothing
+
+ protected:
+  virtual QWidget* createCellWidget(const QVariant &cellData);
+};
+//----------------------------------------------------------------------
+// specialised columns for molecules (Cross Sections) ...
+
+
+class CWMoleculesCorrectionCombo : public CDoasTableColumnComboBox
+{
+Q_OBJECT
+ public:
+  CWMoleculesCorrectionCombo(const QString &excludedSymbol, const QStringList &symbols, QWidget *parent = 0);
+
+  // void initialSelection(const QString &text);
+  // bool eventFilter(QObject *o, QEvent *e);
+  // int GetIndex(QString text);
+
+ public slots:
+  // void slotSymbolListChanged(const QStringList &symbols);
+  // void list_context_menu(QPoint pos);
+
+ private:
+  QString m_excludedSymbol, m_pendingInitial;
+  QStringList m_symbols;
+  QMenu *m_menu;
+};
+
+class CMoleculeDoasTableColumnCorrection : public CDoasTableColumn
+{
+ public:
+  CMoleculeDoasTableColumnCorrection(const QString &label, CDoasTable *owner, int width);
 
   virtual QVariant getCellData(int rowIndex) const;
   virtual void setCellData(int, const QVariant& v) { }; // do nothing
@@ -69,7 +112,7 @@ Q_OBJECT
   CWMoleculesDoasTable(const QString &label, int columnWidth, int headerHeight = 24, QWidget *parent = 0);
 
   void populate(const cross_section_list_t *d);
-  void apply(cross_section_list_t *d) const;
+  bool apply(cross_section_list_t *d) const;
 
   void addRow(int height, const QString &label, QList<QVariant> &cellData,
 	      const QString &csFilename, const QString &amfFilename);
@@ -90,11 +133,13 @@ Q_OBJECT
   static int mapComboStringToCrossType(const QString &str);
   static QString mapAmfTypeToComboString(int type);
   static int mapComboStringToAmfType(const QString &str);
+  static QString mapCorrectionTypeToComboString(int type);
+  static int mapComboStringToCorrectionType(const QString &str);
 
  public slots:
   void slotLockSymbol(const QString &symbol, const QObject *holder);
   void slotUnlockSymbol(const QString &symbol, const QObject *holder);
-  
+
   void slotInsertRow();
   void slotRemoveRow();
   void slotChangeCrossSectionFileName();
@@ -170,6 +215,8 @@ Q_OBJECT
   virtual void contextMenuEvent(QContextMenuEvent *e);
 
  private:
+  static QString mapShiftToComboString(int shiftFit);
+  static int mapComboStringToShift(const QString &str);
   static QString mapOrderToComboString(int order);
   static int mapComboStringToOrder(const QString &str);
 
@@ -232,7 +279,7 @@ Q_OBJECT
   // prevent manual add/remove
   virtual void addRow(int height, const QString &label, QList<QVariant> &cellData);
   virtual void removeRow(int rowIndex);
-  
+
  public slots:
   void slotSymbolListChanged(const QStringList &symbols);
 

@@ -216,9 +216,13 @@ extern "C" {
   {
     char symbol[SYMBOL_NAME_BUFFER_LENGTH];
     char crossSectionFile[FILENAME_BUFFER_LENGTH];    /* the cross section filename */
-    char orthogonal[SYMBOL_NAME_BUFFER_LENGTH];       /* a symbol or predefined constant */
+    char orthogonal[SYMBOL_NAME_BUFFER_LENGTH];       /* a symbol or predefined constant; add 20 characters for othogonal to/subtract from */
+    char subtract[SYMBOL_NAME_BUFFER_LENGTH];
+    int subtractFlag;
     int crossType;
     int amfType;
+    int correctionType;
+    char molecularRing[SYMBOL_NAME_BUFFER_LENGTH];
     char amfFile[FILENAME_BUFFER_LENGTH];
     int requireFit;
     int requireFilter;
@@ -325,21 +329,15 @@ struct anlyswin_linear
     char symbol[MAX_AW_SHIFT_STRETCH][SYMBOL_NAME_BUFFER_LENGTH];
     int shFit;
     int stFit;
-    int scFit;
     int shStore;
     int stStore;
-    int scStore;
     int errStore;
     double shInit;
     double stInit;
     double stInit2;
-    double scInit;
-    double scInit2;
     double shDelta;
     double stDelta;
     double stDelta2;
-    double scDelta;
-    double scDelta2;
     double shMin;
     double shMax;
   };

@@ -105,4 +105,6 @@ int LINEAR_fit_poly(int num_eqs, int poly_order, const double *a, const double *
 // calculate Moore-Penrose pseudo-inverse
 void LINEAR_pinv(const struct linear_system *s, double **m);
 
+double LINEAR_GetNorm(const struct linear_system *s,int indexNorm);
+
 #endif

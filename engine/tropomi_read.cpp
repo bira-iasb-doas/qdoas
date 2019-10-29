@@ -25,6 +25,7 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <map>
 #include <set>
 #include <tuple>
 #include <stdexcept>
@@ -53,6 +54,8 @@ extern "C" {
 using std::string;
 using std::vector;
 using std::set;
+using std::stringstream;
+using std::map;
 
 // create an array {"BAND1", "BAND2", ... } in same order as the
 // tropomiSpectralBand enum:
@@ -64,8 +67,14 @@ const char* band_names[] = {
 
 static const size_t MAX_GROUNDPIXEL = 450;
 
+//static map<string,vector<vector<double>>> reference_matrix;
+//static map<string,vector<vector<double>>> reference_wavelengths;
+
 namespace {
   // The following struct types are for internal use only.
+
+  static map<string,vector<vector<double>>> reference_radiance;
+  static map<string,vector<vector<double>>> reference_wavelength;
 
   // irradiance reference
   struct refspec {
@@ -135,6 +144,7 @@ static size_t size_groundpixel; // number of detector rows (i.e. cross-track)
 
 static time_t reference_time; // since orbit start date
 static vector<float> delta_time; // number of milliseconds after reference_time
+static string current_filename="";
 
 // replace by functions using QDateTime?
 static void getDate(int delta_t, struct datetime *date_time, int *pMs) {
@@ -201,7 +211,7 @@ static geodata read_geodata(const NetCDFGroup& geo_group, size_t n_scanline, siz
   // variable, the vector in which we want to store the data, and the
   // size of each element
   using std::ref;
-  std::array<std::tuple<const string, vector<double>&, size_t>, 8> geovars {
+  std::array<std::tuple<const string, vector<double>&, size_t>, 11> geovars {
     make_tuple("solar_zenith_angle", ref(result.sza), 1),
       make_tuple("viewing_zenith_angle", ref(result.vza), 1),
       make_tuple("solar_azimuth_angle", ref(result.saa), 1),
@@ -209,7 +219,10 @@ static geodata read_geodata(const NetCDFGroup& geo_group, size_t n_scanline, siz
       make_tuple("latitude", ref(result.lat), 1),
       make_tuple("longitude", ref(result.lon), 1),
       make_tuple("longitude_bounds", ref(result.lon_bounds), 4),
-      make_tuple("latitude_bounds", ref(result.lat_bounds), 4)};
+      make_tuple("latitude_bounds", ref(result.lat_bounds), 4),
+      make_tuple("satellite_longitude", ref(result.sat_lon), 1),
+      make_tuple("satellite_latitude", ref(result.sat_lat), 1),
+      make_tuple("satellite_altitude", ref(result.sat_alt), 1)};
 
   for (auto& var : geovars) {
     const string& name =std::get<0>(var);
@@ -222,13 +235,6 @@ static geodata read_geodata(const NetCDFGroup& geo_group, size_t n_scanline, siz
     geo_group.getVar(name, start, count, target.data() );
   }
 
-  const size_t start[] = {0, 0 };
-  const size_t count[] = {1, n_scanline };
-
-  geo_group.getVar("satellite_longitude",start,count,2,(double)0.,result.sat_lon);
-  geo_group.getVar("satellite_latitude",start,count,2,(double)0.,result.sat_lat);
-  geo_group.getVar("satellite_altitude",start,count,2,(double)0.,result.sat_alt);
-
   return result;
 }
 
@@ -237,6 +243,7 @@ int tropomi_set(ENGINE_CONTEXT *pEngineContext) {
   int rc = 0;
   try {
     current_file = NetCDFFile(pEngineContext->fileInfo.fileName);
+    current_filename=pEngineContext->fileInfo.fileName;
 
     current_band = band_names[pEngineContext->project.instrumental.tropomi.spectralBand];
 
@@ -294,13 +301,11 @@ static void get_geodata(RECORD_INFO *pRecord, const geodata& geo, int record) {
     pRecord->satellite.cornerlons[i] = lon_bounds[record-1][i];
     pRecord->satellite.cornerlats[i] = lat_bounds[record-1][i];
   }
-
-  const size_t indexScanline = (record - 1) / size_groundpixel;
-
-  pRecord->satellite.longitude = geo.sat_lon[indexScanline];
-  pRecord->satellite.latitude = geo.sat_lat[indexScanline];
-  pRecord->satellite.altitude = geo.sat_lat[indexScanline];
+  pRecord->satellite.longitude = geo.sat_lon[record-1];
+  pRecord->satellite.latitude = geo.sat_lat[record-1];
+  pRecord->satellite.altitude = geo.sat_alt[record-1];
 }
+
 
 int tropomi_read(ENGINE_CONTEXT *pEngineContext,int record) {
 
@@ -319,7 +324,7 @@ int tropomi_read(ENGINE_CONTEXT *pEngineContext,int record) {
 
   if (THRD_id==THREAD_TYPE_ANALYSIS) {
      // in analysis mode, variables must have been initialized by tropomi_init()
-    assert(irradiance_reference.size() == ANALYSE_swathSize);
+    assert(irradiance_reference.size() == ANALYSE_swathSize);// || radiance_reference.size() == ANALYSE_swathSize);
     n_wavel = NDET[indexPixel];
 
     const refspec& ref = irradiance_reference.at(indexPixel);
@@ -338,6 +343,7 @@ int tropomi_read(ENGINE_CONTEXT *pEngineContext,int record) {
 
   vector<double> rad(size_spectral);
   vector<double> rad_noise(size_spectral);
+
   try {
     obsGroup.getVar("radiance", start, count, rad.data() );
     obsGroup.getVar("radiance_noise", start, count, rad_noise.data() );
@@ -439,22 +445,53 @@ vector<refspec> loadReference(const string& filename, const string& band) {
   return result;
 }
 
-int tropomi_init(const char *ref_filename, ENGINE_CONTEXT *pEngineContext) {
+static vector<vector<double>> loadRadAsRef(const NetCDFFile& filename, const char *variable) {
+  // get dimensions:
+  const size_t size_pixel = filename.dimLen("col_dim");
+  const size_t nlambda = filename.dimLen("spectral_dim");
 
+  vector<vector<double>> result(size_pixel);
+  for(size_t i=0; i<size_pixel; ++i) {
+    vector<double>& ref_pixel = result[i];
+    ref_pixel.resize(nlambda);
+
+    // the matrix has dimensions
+    // (pixel, spectral_channel)
+    size_t start[] = {i, 0};
+    size_t count[] = {1, nlambda};
+
+    filename.getVar(variable, start, count, ref_pixel.data());
+
+  }
+
+  return result;
+}
+
+int tropomi_init(const char *ref_filename, ENGINE_CONTEXT *pEngineContext,int* n_wavel_temp) {
+
+  NetCDFFile refFile(ref_filename);
   RC rc = ERROR_ID_NO;
   try {
-    irradiance_reference = loadReference(ref_filename,
+    if (!pEngineContext->radAsRefFlag){
+      irradiance_reference = loadReference(ref_filename,
                                       band_names[pEngineContext->project.instrumental.tropomi.spectralBand]);
+    }
   } catch(std::runtime_error& e) {
     rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, e.what());
   }
 
-  ANALYSE_swathSize = irradiance_reference.size();
+  if (pEngineContext->radAsRefFlag){
+     ANALYSE_swathSize = refFile.dimLen("col_dim");
+  } else {
+     ANALYSE_swathSize = irradiance_reference.size();
+  }
 
   for(int i=0; i<ANALYSE_swathSize; ++i) {
-    NDET[i] = irradiance_reference[i].lambda.size();
-    if (NDET[i] != 0) {
-      pEngineContext->project.instrumental.use_row[i] = true;
+    if (pEngineContext->radAsRefFlag){
+       *n_wavel_temp = refFile.dimLen("spectral_dim");
+    } else {
+       NDET[i] = irradiance_reference[i].lambda.size();
+       *n_wavel_temp = NDET[i];
     }
   }
 
@@ -471,13 +508,13 @@ static string basename(const string& filename) {
 }
 
 // Find all radiance files for the current band from the same day.
-static vector<NetCDFFile> get_reference_orbits(const std::string& input_file, enum tropomiSpectralBand band, const std::string& reference_dir = "") {
-  vector<NetCDFFile> l1files;
+static int get_reference_orbits(const bool *use_row,const std::string& input_file, enum tropomiSpectralBand band, const std::string& reference_dir = "") {
+  int nfiles=0;
   reference_orbit_files.clear();
 
   dir_iter reference_orbit_iter;
   if (!reference_dir.empty()) {
-    reference_orbit_iter = dir_iter(reference_dir);
+    reference_orbit_iter = dir_iter(reference_dir);  // TO FIX : should be reference_dir/YYYY/MM/DD
   } else {
     // Find other radiance files for this day.  This code is specific
     // for the way Tropomi files are stored at BIRA:
@@ -488,11 +525,23 @@ static vector<NetCDFFile> get_reference_orbits(const std::string& input_file, en
     // ("/../../.."), and recursively search for files up to 3 levels
     // deep.  We assume the directories we traverse in this way will
     // contain no unwanted files matching our search pattern.
+
     auto pathsep = input_file.find_last_of('/');
-    const string daily_dir = ((pathsep != string::npos) ? input_file.substr(0, pathsep) : string(".")) + "/../../..";
+    const string daily_dir = ((pathsep != string::npos) ? input_file.substr(0, pathsep) : string(".")); // !!! + "/../../..";
     // recursively search daily_dir, three levels deep
-    reference_orbit_iter = dir_iter(daily_dir, 3);
+    reference_orbit_iter = dir_iter(daily_dir, 1);   // !!! 3
+   }
+
+  int first_row=ITEM_NONE;
+
+  for (int row=0; row <ANALYSE_swathSize; ++row) {
+   if (!use_row[row]) continue;
+   first_row=row;
+   break;
   }
+
+  if (first_row==ITEM_NONE)
+   return 0;
 
   // We want filenames matching "S5P*L1B_RA_BD<n>*.nc")
   string product("L1B_RA_BD");
@@ -504,24 +553,76 @@ static vector<NetCDFFile> get_reference_orbits(const std::string& input_file, en
     if (!basename(f).compare(0,3,"S5P")
         && f.find(product) != string::npos
         && !f.compare(f.length() -3, 3, ".nc")) {
-      NetCDFFile orbit(f);
-      NetCDFGroup obsGroup(orbit.getGroup(current_band + "_RADIANCE/STANDARD_MODE/OBSERVATIONS"));
 
-      const size_t orbit_spectral = obsGroup.dimLen("spectral_channel");
-      const size_t orbit_groundpixel = obsGroup.dimLen("ground_pixel");
-      if (orbit_groundpixel != size_groundpixel || orbit_spectral != size_spectral) {
-        // If this orbit doesn't have same number of groundpixels or
-        // spectral pixels as current file: skip it (we don't want to
-        // mix different modes in the reference spectrum)
-        continue;
-      }
-      l1files.push_back(std::move(orbit));
-      reference_orbit_files.push_back(basename(f));
+      int use_file=0;
+      // !!! std::cout << "try : " << basename(f) << std::endl;
+
+      for (int win=0; win!=NFeno; ++win)
+       {
+        const FENO *pTabFeno = &TabFeno[first_row][win];  // config is the same whatever the row
+
+        if (!pTabFeno->hidden && !use_file)
+         {
+          float t1,t2,tmp,orbit_t1,orbit_t2;
+
+          t1=13.5-pTabFeno->refLonMin/15.-1.;
+          t2=13.5-pTabFeno->refLonMax/15.+1.;
+
+          if (t1>t2)
+           {
+            tmp=t1;
+            t1=t2;
+            t2=tmp;
+           }
+
+          if (t1<0.)
+           t1+=24.;
+          if (t2<0.)
+           t2+=24.;
+          if (t1>24.)
+           t1-=24.;
+          if (t2>24.)
+           t2-=24.;
+
+          stringstream ss(basename(f));   // convert file name to stringstream
+          vector <string> tokens;         // vector of string to save tokens
+          string tt;
+
+          while(getline(ss,tt,'_'))
+            tokens.push_back(tt);
+
+          orbit_t1=std::stof(tokens[5].substr(9,2))+std::stof(tokens[5].substr(11,2))/60.+std::stof(tokens[5].substr(13,2))/3600.-1.;
+          orbit_t2=std::stof(tokens[6].substr(9,2))+std::stof(tokens[6].substr(11,2))/60.+std::stof(tokens[6].substr(13,2))/60.+1.;
+
+          if (orbit_t1<0.)
+           orbit_t1=0.;
+          if (orbit_t2<0.)
+           orbit_t2=0.;
+          if (orbit_t1>24.)
+           orbit_t1=24.;
+          if (orbit_t2>24.)
+           orbit_t2=24.;
+
+          if (((t1<=t2) && (((orbit_t1>=t1) && (orbit_t1<=t2)) || ((orbit_t2>=t1) && (orbit_t2<=t2)))) ||
+              ((t1>t2) && ((orbit_t1>=t1) || (orbit_t2>=t1) || (orbit_t1<=t2) || (orbit_t2<=t2))))
+           {
+            // !!! std::cout << __func__ << " " << basename(f) << std::endl;
+            reference_orbit_files.push_back(f);
+
+            // !!! std::cout << " OK " << basename(f) << " t1-t2 " << t1 << " - " << t2 << " orbit1-orbit2 " << orbit_t1 << " - " << orbit_t2 << std::endl;
+            use_file=1;
+            nfiles++;
+           }
+         }
+
+       }
     }
   }
-  return l1files;
-}
 
+  // !!! std::cout << "Number of files : " << nfiles << std::endl;
+  return nfiles;
+}
+//
 // check if an earthshine observation matches selection criteria to
 // include it in the earthshine reference.
 static bool use_as_reference(double lon, double lat, double sza, const FENO *pTabFeno) {
@@ -581,18 +682,29 @@ std::pair<size_t,size_t> get_window_limits(const FENO *pTabFeno, const vector<fl
 // and keep a list of references to the data in this cache for every
 // analysis window.  We use std::set to store the cache, because
 // references to elements of a std::set stay valid as the set grows.
-static vector<std::array<vector<earth_ref>, MAX_GROUNDPIXEL>> find_matching_spectra(const vector<NetCDFFile>& orbit_files,
+static vector<std::array<vector<earth_ref>, MAX_GROUNDPIXEL>> find_matching_spectra(ENGINE_CONTEXT *pEngineContext,const int nfiles,
                                                                              set<vector<float>>& cache) {
   assert(size_groundpixel <= MAX_GROUNDPIXEL);
   vector<std::array<vector<earth_ref>, MAX_GROUNDPIXEL>> result(NFeno);
-  for (const auto & orbit : orbit_files) {
+
+  for (const string & fname : reference_orbit_files) {
+
+    NetCDFFile orbit(fname);
+    string bname=basename(fname);
+
+    // !!! old loop from Thomas; the problem is that it is difficult to come back to the file name
+    // for (const auto & orbit : orbit_files) {
 
     // 1. read "nominal wavelength" for each row:
     std::array<const vector<float>*, MAX_GROUNDPIXEL> nominal_wavelengths { nullptr };
     NetCDFGroup instrGroup(orbit.getGroup(current_band + "_RADIANCE/STANDARD_MODE/INSTRUMENT"));
     NetCDFGroup obsGroup(orbit.getGroup(current_band + "_RADIANCE/STANDARD_MODE/OBSERVATIONS"));
 
+    const size_t orbit_spectral = obsGroup.dimLen("spectral_channel");
+    const size_t orbit_groundpixel = obsGroup.dimLen("ground_pixel");
     const size_t orbit_scanline = obsGroup.dimLen("scanline");
+
+    if (orbit_groundpixel != size_groundpixel || orbit_spectral != size_spectral) continue;
 
     for(size_t i=0; i<size_groundpixel; ++i) {
       vector<float> wl(size_spectral);
@@ -602,6 +714,7 @@ static vector<std::array<vector<earth_ref>, MAX_GROUNDPIXEL>> find_matching_spec
       const auto& wavelengths = *cache.insert(wl).first;
       nominal_wavelengths[i] = &wavelengths;
     }
+
     const auto orbit_fill_wavelengths = instrGroup.getFillValue<float>("nominal_wavelength");
     const auto orbit_fill_spectra = obsGroup.getFillValue<float>("radiance");
     const auto orbit_fill_errors = obsGroup.getFillValue<float>("radiance_noise");
@@ -614,16 +727,17 @@ static vector<std::array<vector<earth_ref>, MAX_GROUNDPIXEL>> find_matching_spec
     // start and  count arguments for variables with observation dimensions (i.e. scanline x row):
     const size_t start_obs[] = {0, 0, 0};
     const size_t count_obs[] = {1, orbit_scanline, size_groundpixel };
+
     NetCDFGroup geo_group(orbit.getGroup(current_band + "_RADIANCE/STANDARD_MODE/GEODATA"));
     geo_group.getVar("latitude", start_obs, count_obs, lats.data());
     geo_group.getVar("longitude", start_obs, count_obs, lons.data());
     geo_group.getVar("solar_zenith_angle", start_obs, count_obs, szas.data());
     obsGroup.getVar("ground_pixel_quality", start_obs, count_obs, ground_pixel_quality.data());
 
-    auto latitudes = reinterpret_cast<const float (*)[size_groundpixel]>(lats.data());
-    auto longitudes = reinterpret_cast<const float (*)[size_groundpixel]>(lons.data());
-    auto szangles = reinterpret_cast<const float (*)[size_groundpixel]>(szas.data());
-    auto groundpixelqualityflags = reinterpret_cast<const unsigned char (*)[size_groundpixel]>(ground_pixel_quality.data());
+    auto latitudes = reinterpret_cast<float (*)[size_groundpixel]>(lats.data());
+    auto longitudes = reinterpret_cast<float (*)[size_groundpixel]>(lons.data());
+    auto szangles = reinterpret_cast<float (*)[size_groundpixel]>(szas.data());
+    auto groundpixelqualityflags = reinterpret_cast<unsigned char (*)[size_groundpixel]>(ground_pixel_quality.data());
     const static unsigned char groundpixel_quality_mask = SOLAR_ECLIPSE | DESCENDING | NIGHT
       | GEO_BOUNDARY_CROSSING | GEOLOCATION_ERROR; // filter everything except SUN_GLINT_POSSIBLE
 
@@ -632,15 +746,21 @@ static vector<std::array<vector<earth_ref>, MAX_GROUNDPIXEL>> find_matching_spec
     for (size_t row=0; row != size_groundpixel; ++row) {
       for (int win=0; win!=NFeno; ++win) {
         const FENO *pTabFeno = &TabFeno[row][win];
-        if (pTabFeno->hidden) continue; // skip Kurucz calibration windows
+        if (pTabFeno->hidden || (!pEngineContext->project.instrumental.use_row[row])) continue; // skip Kurucz calibration windows
         window_limits.at(win).at(row) = get_window_limits(pTabFeno, *nominal_wavelengths.at(row), row);
       }
     }
 
+    int found=0;
+
     // 3. read radiance & error for matching spectra
     vector<unsigned char> spec_quality(size_spectral); // Temporary buffer for spectral_channel_quality flags
     for (size_t scan=0; scan != orbit_scanline; ++scan) {
+
       for (size_t row=0; row != size_groundpixel; ++row) {
+
+        if (!pEngineContext->project.instrumental.use_row[row]) continue;
+
         // start and count indices to read along spectral dimension
         // for one observation:
         const size_t start[] = {0, scan, row, 0};
@@ -696,19 +816,35 @@ static vector<std::array<vector<earth_ref>, MAX_GROUNDPIXEL>> find_matching_spec
                 vector<float> spec(size_spectral), err(size_spectral);
                 obsGroup.getVar("radiance", start, count, spec.data() );
                 obsGroup.getVar("radiance_noise", start, count, err.data() );
+
+//                 std::cout << "; scan " << scan << " row " << row << " lat " << lat << " long " << lon << " sza " << sza << std::endl;
+//                 for (auto i = spec.begin(); i != spec.end(); ++i)
+//                    std::cout << *i << ' ';
+//                 std::cout << std::endl;
+
                 i_spec = cache.insert(std::move(spec)).first;
                 i_err = cache.insert(std::move(err)).first;
+
               }
+
+              // std::cout << "assert" << std::endl;
               // At this point, i_spec and i_err must point to valid elements of our cache.
+
+
               assert(i_spec != cache.end() && i_err != cache.end());
-              result[win][row].push_back(earth_ref( *nominal_wavelengths.at(row), *i_spec, *i_err,
-                                                    orbit_fill_wavelengths, orbit_fill_spectra, orbit_fill_errors));
+              result[win][row].push_back(earth_ref( *(nominal_wavelengths[row]), *i_spec, *i_err,
+                                                  orbit_fill_wavelengths, orbit_fill_spectra, orbit_fill_errors));
+              found=1;
             }
+
           }
         }
       }
     }
+
+    orbit.close();
   }
+
   return result;
 }
 
@@ -719,7 +855,7 @@ static void sum_refs(vector<double>& sum, vector<double>& variance, const vector
   std::fill(variance.begin(), variance.end(), 0.);
 
   // We need temporary buffers to copy the reference spectra,
-  // excluding fill values, and to hold the interpolated spectra,
+  // excluding fill values, and t9o hold the interpolated spectra,
   // before we ad them to the sum.
   vector<double> tempspec, templambda, temperr, derivs;
   vector<double> interpspec(wavelength_grid.size()), interperr(wavelength_grid.size());
@@ -755,70 +891,157 @@ static void sum_refs(vector<double>& sum, vector<double>& variance, const vector
 }
 
 int tropomi_prepare_automatic_reference(ENGINE_CONTEXT *pEngineContext, void *responseHandle) {
-  std::cout << __func__ << ", with DLR reference file" << std::endl;
 
-  NetCDFFile dlr_ref("/bira-iasb/projects/DOAS/Projects/TROPOMI/fromDLR/20171215/20171212-20171213_newHCHOxs2_onlyearthshine/AUX_BGXXXX/NRTI/2017/12/S5P_NRTI_AUX_BGHCHO_20171212T090530_20171214T005819_20171214T163345.nc");
-  auto product = dlr_ref.getGroup("PRODUCT");
+  // A radiance reference for Tropomi is created, either
+  //
+  // - from the L1B radiance files found in the "reference orbit
+  //   directory" configured in the "instrumental" tab of projet
+  //   properties, or
+  //
+  // - if no directory is configured, from L1B radiance files found
+  //   for the same day as the file we are currently processing (based
+  //   on an assumed standard directory layout).
 
-  vector<double> dlr_ref_radiance(9000);
-  vector<double> dlr_ref_lambda(9000);
-  vector<double> dlr_ref_derivs(9000);
-  size_t start_dlr[] = {0,0};
-  size_t count_dlr_wavel[] = {9000};
-  size_t count_dlr_ref[] = {1, 9000};
-  product.getVar("earthshine_reference_wavelength", start_dlr,  count_dlr_wavel, dlr_ref_lambda.data());
-  for (size_t row = 0; row!=size_groundpixel; ++row) {
-    if (!pEngineContext->project.instrumental.use_row[row]) continue;
-    const int n_wavel = NDET[row];
-    vector<double> reference(n_wavel);
-    start_dlr[0] = row;
-    product.getVar("earthshine_reference_radiance", start_dlr, count_dlr_ref, dlr_ref_radiance.data());
+  // First, check if we have already created the automatic reference
+  // (possible when processing multiple input files in one go).
 
-    int rc = SPLINE_Deriv2(dlr_ref_lambda.data(), dlr_ref_radiance.data(), dlr_ref_derivs.data(), 9000, __func__);
-    if (rc) throw(std::runtime_error("Error interpolating DLR earthshine reference spectrum."));
+  if (// If we are using a manual reference directory, the reference
+      // is the same for all input files, and we can just check if a
+      // reference has been created (-> check if reference_orbit_files
+      // is not empty)
+    (strlen(pEngineContext->project.instrumental.tropomi.reference_orbit_dir)
+     && !reference_orbit_files.empty()) ||
+    (// If we are using daily references, check if the orbit we are
+     // processing is in the list of orbits for which the current
+     // earthshine ref is valid.
+     std::find(reference_orbit_files.begin(), reference_orbit_files.end(),
+               pEngineContext->fileInfo.fileName) != reference_orbit_files.end())) {
 
-    const auto& wavelength_grid = irradiance_reference.at(row).lambda;
-    assert(n_wavel == wavelength_grid.size());
-    SPLINE_Vector(dlr_ref_lambda.data(), dlr_ref_radiance.data(), dlr_ref_derivs.data(), 9000,
-                  wavelength_grid.data(), reference.data(), wavelength_grid.size(), SPLINE_CUBIC);
+    // In these cases, we don't have to do anything
+    return ERROR_ID_NO;
+  }
 
-    for(int window=0; window < NFeno; ++window) {
-      FENO *pTabFeno = &TabFeno[row][window];
-      if (pTabFeno->hidden || !pTabFeno->refSpectrumSelectionMode == ANLYS_REF_SELECTION_MODE_AUTOMATIC) continue;
+  // If we reach this point, we must create a new reference spectrum
+  try {
+    set<vector<float>> cache;
+    auto earth_spectra = find_matching_spectra(pEngineContext,get_reference_orbits(pEngineContext->project.instrumental.use_row,
+                                                                                   pEngineContext->fileInfo.fileName,
+                                                                                   pEngineContext->project.instrumental.tropomi.spectralBand,
+                                                                                   pEngineContext->project.instrumental.tropomi.reference_orbit_dir), cache);
 
-      assert(std::equal(wavelength_grid.begin(), wavelength_grid.end(), pTabFeno->LambdaRef));
-      for (size_t i=0; i!=reference.size(); ++i) {
-        pTabFeno->Sref[i]=reference[i];
-        pTabFeno->SrefSigma[i]=1;
-        VECTOR_NormalizeVector(pTabFeno->Sref-1,n_wavel,&pTabFeno->refNormFact, __func__); // TODO: check if SrefSigma should be divided by same factor, or if this normalization is accounted for everywhere.
+    vector<double> wavelength_grid, sum, variance;
+    for (size_t row = 0; row!=size_groundpixel; ++row) {
+      const int n_wavel=NDET[row];
+      wavelength_grid.resize(n_wavel);
+      sum.resize(wavelength_grid.size());
+      variance.resize(wavelength_grid.size());
+
+      for(int window=0; window < NFeno; ++window) {
+        FENO *pTabFeno = &TabFeno[row][window];
+        if (!pTabFeno->useRefRow) continue;
+        if (pTabFeno->hidden || !pTabFeno->refSpectrumSelectionMode == ANLYS_REF_SELECTION_MODE_AUTOMATIC) continue;
+        const vector<earth_ref>& refs = earth_spectra[window][row];
+//        if (!(rc=tropomi_get_reference(pTabFeno->ref2,row,pTabFeno->LambdaRef,pTabFeno->Sref,pTabFeno->SrefSigma,&n_wavel,0))){
+           if (refs.size()) {
+             for (size_t i=0; i!=wavelength_grid.size(); ++i) {
+               wavelength_grid[i] = pTabFeno->LambdaRef[i];
+             }
+             sum_refs(sum, variance, refs, wavelength_grid);
+             for (size_t i=0; i!=sum.size(); ++i) {
+               pTabFeno->Sref[i]=sum[i]/refs.size();
+               pTabFeno->SrefSigma[i]=std::sqrt(variance[i])/refs.size();
+             }
+
+             VECTOR_NormalizeVector(pTabFeno->Sref-1,n_wavel,&pTabFeno->refNormFact, __func__);
+           }
+//        }
       }
     }
+
+    // Create reference description string for output, and emit
+    // warning message for those rows/analysis windows for which no
+    // reference could be created:
+
+    int firstRow=ITEM_NONE;
+    for(int window=0; window!= NFeno; ++ window) {
+      vector<size_t> failed_rows; // per analysis window, rows for which no reference was found
+      for(size_t row=0; row!=size_groundpixel; ++row) {
+        FENO *pTabFeno = &TabFeno[row][window];
+        if (!pTabFeno->useRefRow) continue;
+
+        // Don't write error messages when automatic reference is not used:
+        if (pTabFeno->hidden || !pEngineContext->project.instrumental.use_row[row] || (pTabFeno->refSpectrumSelectionMode != ANLYS_REF_SELECTION_MODE_AUTOMATIC)) continue;
+
+        if (firstRow==ITEM_NONE)
+         firstRow=row;
+
+        const vector<earth_ref>& refs = earth_spectra[window][row];
+        std::stringstream desc;
+        desc << refs.size() << " radiances used";
+        free(pTabFeno->ref_description);
+        pTabFeno->ref_description = strdup(desc.str().c_str());
+        if (!refs.size())
+          failed_rows.push_back(row);
+      }
+      if (!failed_rows.empty() && (firstRow!=ITEM_NONE)) {
+        // For each analysis window, emit one warning message with the rows for which no reference was found.
+        std::stringstream ss;
+        ss << "Analysis window " << TabFeno[firstRow][window].windowName << ": cannot find radiance reference spectra for rows ";
+        for (auto ir=failed_rows.begin(); ir!=failed_rows.end(); ++ir) {
+          ss << *ir;
+          if (ir != failed_rows.end() -1)
+            ss << ", ";
+        }
+        mediateResponseErrorMessage(__func__, ss.str().c_str(), WarningEngineError, responseHandle);
+      }
+    }
+
+  } catch (std::runtime_error e) {
+    return ERROR_SetLast(__func__, ERROR_TYPE_WARNING, ERROR_ID_TROPOMI_REF, pEngineContext->fileInfo.fileName, 0, e.what()); // TODO: more specific error message
   }
   for (size_t row = 0; row!= size_groundpixel; ++row) {
     if (!pEngineContext->project.instrumental.use_row[row]) continue;
     int rc = ANALYSE_AlignReference(pEngineContext,2,responseHandle,row);
     if (rc) return rc;
   }
+
   return ERROR_ID_NO;
 }
 
-int tropomi_get_reference(const char *filename, int pixel,
-                          double *lambda, double *spectrum, double *sigma, int *n_wavel) {
+int tropomi_get_reference(const char *filename, int pixel, double *lambda, double *spectrum, double *sigma, int n_wavel, const int radAsRef) {
   int rc = ERROR_ID_NO;
 
+  auto& radiance_reference = reference_radiance[filename];
+  auto& wavelength_reference = reference_wavelength[filename];
+
   try {
-    const refspec& r = irradiance_reference.at(pixel);
+    if (radAsRef){
+       NetCDFFile refFile(filename);
+       radiance_reference = loadRadAsRef(refFile,"reference_radiance");
+       wavelength_reference = loadRadAsRef(refFile,"reference_wavelength");
+       if (!radiance_reference.size() || !wavelength_reference.size())
+         return ERROR_SetLast(__func__, ERROR_TYPE_WARNING, ERROR_ID_REF_DATA, pixel);
 
-    if (!r.irradiance.size() )
-      return ERROR_SetLast(__func__, ERROR_TYPE_WARNING, ERROR_ID_REF_DATA, pixel);
+//       *n_wavel = radiance_reference.size();
 
-    *n_wavel = r.irradiance.size();
+       for (size_t i = 0; i < n_wavel; ++i) {
+         lambda[i] = wavelength_reference.at(pixel)[i];
+         spectrum[i] = radiance_reference.at(pixel)[i];
+       }
+    } else {
+       const refspec& r = irradiance_reference.at(pixel);
+       if (!r.irradiance.size() )
+         return ERROR_SetLast(__func__, ERROR_TYPE_WARNING, ERROR_ID_REF_DATA, pixel);
 
-    for (size_t i = 0; i < r.irradiance.size(); ++i) {
-      lambda[i] = r.lambda[i];
-      spectrum[i] = r.irradiance[i];
-      sigma[i] = r.sigma[i];
+//       *n_wavel = r.irradiance.size();
+
+       for (size_t i = 0; i < n_wavel; ++i) {
+         lambda[i] = r.lambda[i];
+         spectrum[i] = r.irradiance[i];
+         sigma[i] = r.sigma[i];
+       }
     }
+
   } catch(std::runtime_error& e) {
     rc = ERROR_SetLast(__func__, ERROR_TYPE_WARNING, ERROR_ID_TROPOMI_REF, filename, pixel, e.what());
   }
@@ -827,15 +1050,21 @@ int tropomi_get_reference(const char *filename, int pixel,
 }
 
 int tropomi_get_orbit_date(int *orbit_year, int *orbit_month, int *orbit_day) {
-  std::istringstream orbit_start(current_file.getAttText("time_coverage_start"));
-  // time_coverage_start is formatted as "YYYY-MM-DD"
-  char tmp; // to skip "-" chars
-  orbit_start >> *orbit_year >> tmp >> *orbit_month >> tmp >> *orbit_day;
-  return  orbit_start.good() ? 0 : 1;
+  if (current_filename!="")
+   {
+    std::istringstream orbit_start(current_file.getAttText("time_coverage_start"));
+    // time_coverage_start is formatted as "YYYY-MM-DD"
+    char tmp; // to skip "-" chars
+    orbit_start >> *orbit_year >> tmp >> *orbit_month >> tmp >> *orbit_day;
+    return  orbit_start.good() ? 0 : 1;
+   }
+  else
+   return(0);
 }
 
 void tropomi_cleanup(void) {
   current_file.close();
+  current_filename="";
 
   current_geodata = geodata();
   current_band = "";

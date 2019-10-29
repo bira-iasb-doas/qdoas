@@ -1,6 +1,8 @@
 #ifndef VECTOR_H
 #define VECTOR_H
 
+#include "comdefs.h"
+
 void   VECTOR_Init(double *vector,double value,int dim);
 int    VECTOR_Equal(const double *vector1, const double *vector2,int dim,double error);
 double VECTOR_Max(double *vector,int dim);

@@ -1,7 +1,7 @@
 #ifndef FILTER_H
 #define FILTER_H
 
-#include "doas.h"
+#include "comdefs.h"
 
 void realft(double *source,double *buffer,int nn,int sens);
 

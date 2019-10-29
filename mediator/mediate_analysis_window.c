@@ -48,6 +48,9 @@ void initializeMediateAnalysisWindow(mediate_analysis_window_t *d)
   d->cloudFractionMax=(double)1.;
 
   d->resolFwhm=(double)0.5;
+  d->fitMinWavelength=
+  d->fitMaxWavelength=
+  d->lambda0=(double)0.;
 
   d->refNs=1;
   d->refSpectrumSelectionScanMode=ANLYS_MAXDOAS_REF_SCAN_AFTER;
@@ -87,19 +90,14 @@ void initializeMediateAnalysisWindow(mediate_analysis_window_t *d)
 
   for (i=0;i<MAX_AW_SHIFT_STRETCH;i++)
    {
-   	d->shiftStretchList.shiftStretch[i].shFit=1;
+   	d->shiftStretchList.shiftStretch[i].shFit=ANLYS_SHIFT_TYPE_NONLINEAR;
 
     d->shiftStretchList.shiftStretch[i].shInit=
     d->shiftStretchList.shiftStretch[i].stInit=
-    d->shiftStretchList.shiftStretch[i].stInit2=
-    d->shiftStretchList.shiftStretch[i].scInit=
-    d->shiftStretchList.shiftStretch[i].scInit2=(double)0.;
+    d->shiftStretchList.shiftStretch[i].stInit2=(double)0.;
 
     d->shiftStretchList.shiftStretch[i].shDelta=
-    d->shiftStretchList.shiftStretch[i].stDelta=
-    d->shiftStretchList.shiftStretch[i].stDelta2=
-    d->shiftStretchList.shiftStretch[i].scDelta=
-    d->shiftStretchList.shiftStretch[i].scDelta2=(double)1.e-3;
+    d->shiftStretchList.shiftStretch[i].stDelta=(double)1.e-3;
 
     d->shiftStretchList.shiftStretch[i].shMin=
     d->shiftStretchList.shiftStretch[i].shMax=(double)0.;

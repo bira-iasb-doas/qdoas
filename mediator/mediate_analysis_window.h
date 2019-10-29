@@ -47,6 +47,7 @@ extern "C" {
     double fitMinWavelength;
     double fitMaxWavelength;
     double resolFwhm;
+    double lambda0;
     double refSzaCenter;
     double refSzaDelta;
     double refMinLongitude;

@@ -1924,7 +1924,7 @@ RC GOME2_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle) {
 
         rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef,0);
         if (rc) goto EndGOME2_LoadAnalysis;
-        if ( (!pKuruczOptions->fwhmFit || !pTabFeno->useKurucz) && pTabFeno->xsToConvolute) {
+        if ( (!pKuruczOptions->fwhmFit || !pTabFeno->useKurucz)) {
           rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,ANALYSIS_slitMatrix,ANALYSIS_slitParam,pSlitOptions->slitFunction.slitType,0,pSlitOptions->slitFunction.slitWveDptFlag);
         }
         if (rc) goto EndGOME2_LoadAnalysis;

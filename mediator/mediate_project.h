@@ -356,6 +356,12 @@ extern "C" {
     char trackSelection[TRACK_SELECTION_LENGTH];
   };
 
+  struct instrumental_apex {
+    char calibrationFile[FILENAME_BUFFER_LENGTH];
+    char transmissionFunctionFile[FILENAME_BUFFER_LENGTH];
+    char trackSelection[TRACK_SELECTION_LENGTH];
+  };
+
   struct instrumental_oceanoptics {
     int  detectorSize;
     char calibrationFile[FILENAME_BUFFER_LENGTH];
@@ -390,6 +396,21 @@ extern "C" {
     char transmissionFunctionFile[FILENAME_BUFFER_LENGTH];
   };
 
+  struct instrumental_avantes
+  {
+    int  detectorSize;
+    int  straylight;
+    double lambdaMin,lambdaMax;
+    char calibrationFile[FILENAME_BUFFER_LENGTH];
+    char transmissionFunctionFile[FILENAME_BUFFER_LENGTH];
+  };
+
+  struct instrumental_gems {
+    char calibrationFile[FILENAME_BUFFER_LENGTH];
+    char transmissionFunctionFile[FILENAME_BUFFER_LENGTH];
+    char trackSelection[TRACK_SELECTION_LENGTH];
+  };
+
   typedef struct mediate_project_instrumental
    {
     int format;
@@ -418,11 +439,12 @@ extern "C" {
     struct instrumental_tropomi tropomi;
     struct instrumental_gome2 gome2;
     struct instrumental_minimum mkzy;
-    struct instrumental_minimum biraairborne;
-    struct instrumental_minimum biramobile;
-    struct instrumental_minimum apex;
+    struct instrumental_avantes biraairborne;
+    struct instrumental_avantes biramobile;
+    struct instrumental_apex apex;
     struct instrumental_oceanoptics oceanoptics;
     struct instrumental_frm4doas frm4doas;
+    struct instrumental_gems gems;
    }
   mediate_project_instrumental_t;
 
@@ -457,6 +479,7 @@ extern "C" {
     double bandWidth;
     char colourIndex[COLOUR_INDEX_BUFFER_LENGTH]; // colour index is the ratio of two fluxes
     char path[FILENAME_BUFFER_LENGTH];
+    char newCalibPath[FILENAME_BUFFER_LENGTH];  // path for calibrated irradiances (satellites)
     /* result field flags. A list of PRJCT_RESULTS_ASCII_*** ... */
     data_select_list_t selection;
   } mediate_project_output_t;

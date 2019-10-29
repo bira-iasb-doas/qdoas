@@ -1,12 +1,42 @@
 
 //  ----------------------------------------------------------------------------
+//! \addtogroup Convolution
+//! @{
+//!
+//! \file      ring.c
+//! \brief     Raman convolution
+//! \details   This module was initially created in WinDOAS to calculate ring
+//!            cross section using functions provided by Kelly Chance.\n
+//!            In 2007, with the implementation of QDOAS, the code has been
+//!            revisited for a better separation between the engine and the
+//!            user interface.\n
+//!            This module contains now only the functions for Raman convolution
+//!            while mediate_xsconv.c maintains the ring tool user interface.
+//!
+//! \authors   Original functions come from Kelly Chance's Fortran 77 program.\n
+//!            See : "Ring effect studies : Rayleigh scattering, including molecular
+//!            parameters for rotational Raman scattering and the Franhofer
+//!            spectrum, K.Chance and R.J.D.Spurr, Applied optics, Vol. 36,
+//!            Issue 21, pp. 5224-5230 (1997)"\n
+//!            They have been adapted and improved for QDOAS by Caroline FAYT/Michel Van Roozendael
+//! \date      1998 : initial functions provided from Kelly Chance and converted from Fortran
+//! \date      2007 : separation between the engine and the user interface with QDOAS
+//! \date      2010 : improve the performance for the calculation of normalised Ring cross-sections
+//! \date      2018 : create a separate raman_convolution function to also convolve cross sections for molecular ring
+//! \copyright QDOAS is distributed under GNU General Public License
+//!
+//! @}
+//  ----------------------------------------------------------------------------
 //
-//  Product/Project   :  QDOAS
-//  Module purpose    :  RING EFFECT
-//  Name of module    :  RING.C
-//  Creation date     :  1998
-//  Modified          :  13 January 2010 by MVR to allow fast calculation of
-//                       normalised Ring cross-sections
+//  =========
+//  FUNCTIONS
+//  =========
+//
+//  raman_n2 - N2 Raman function
+//  raman_o2 - O2 Raman function
+//
+//  raman_convolution : convolve a cross section with Raman effect
+//  ----------------------------------------------------------------------------
 //
 //  QDOAS is a cross-platform application developed in QT for DOAS retrieval
 //  (Differential Optical Absorption Spectroscopy).
@@ -37,47 +67,11 @@
 //  Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 //
 //  ----------------------------------------------------------------------------
-//  FUNCTIONS
-//
-//  ================
-//  RING CALCULATION
-//  ================
-//
-//  raman_n2 - N2 Raman function
-//  raman_o2 - O2 Raman function
-//  RingHeader - write options in the file header
-//  Ring - build a ring cross section
-//
-//  =====================================
-//  RING EFFECT PANEL MESSAGES PROCESSING
-//  =====================================
-//
-//  RingTypeMolecular - show/hide fields to create a molecular ring XS (obsolete function)
-//  RingDlgInit - WM_INIT message processing;
-//  RingOK - OK command processing;
-//  RingCommand - WM_COMMAND message processing;
-//
-//  RING_WndProc - Dispatch messages from ring effect tool panel;
-//
-//  =======================
-//  PROGRESS BAR PROCESSING
-//  =======================
-//
-//  RingProgressInit - WM_INITDIALOG message processing;
-//  RingProgressUser - WM_USER message processing (update progress bar on user message);
-//  RING_ProgressWndProc - dispatch messages from progress bar panel;
-//
-//  =============================
-//  CONFIGURATION FILE MANAGEMENT
-//  =============================
-//
-//  RING_ResetConfiguration - reset Ring options
-//  RING_LoadConfiguration - load data and input files needed for building a ring cross section;
-//  RING_SaveConfiguration - save data needed for building a ring effect cross section;
-//  ----------------------------------------------------------------------------
 //  REMARK
 //
 //  This program has been traducted from Kelly Chance's Fortran 77 program, April 1997
+//
+//  Below, comments from 1997 :
 //
 //  It calculates the Ring effect for pure Raman scattering of
 //  the Fraunhofer spectrum plus the contribution from interference by
@@ -88,7 +82,7 @@
 //  correction for saturation in the terrestrial absorption:
 //  exp (-tau) = 1-tau+tau**2/2 + ....).
 //
-//  Ringspec, Ring2, and Ring 3 are the Fraunhofer only, 1st terrestrial
+//  Ringspec, Ring2, and Ring3 are the Fraunhofer only, 1st terrestrial
 //  correction, and 2nd terrestrial correction. Provision is made for
 //  trimming the ends of the spectrum to account for the convolution with
 //  the slit function. For GOME calculations, for example, an extra 5 nm on
@@ -110,15 +104,22 @@
 //  Reference :
 //
 //  Ring effect studies : Rayleigh scattering, including molecular parameters for rotational
-//  Raman scattering and the Franhofer spectrum, K.Chance and R.J.D.Spurr, Applied optics (in press)
+//  Raman scattering and the Franhofer spectrum, K.Chance and R.J.D.Spurr, Applied optics,
+//  Vol. 36, Issue 21, pp. 5224-5230 (1997)
 //  ----------------------------------------------------------------------------
-
 
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
 
 #include "engine_xsconv.h"
+#include "vector.h"
+#include "spline.h"
+#include "raman.h"
+
+#include <string.h>
+#include <stdlib.h>
+#include <math.h>
 
 // =================
 // N2 RAMAN FUNCTION
@@ -128,7 +129,7 @@
 
 #define N2_STAT  31    // size of n2 statistical data
 
-static double n2stat_1[N2_STAT]=
+static double nodoxygen_n2stat_1[N2_STAT]=
  {
   (double)  0., (double)  1., (double)  2., (double)  3., (double)  4., (double)  5.,
   (double)  6., (double)  7., (double)  8., (double)  9., (double) 10., (double) 11.,
@@ -138,7 +139,7 @@ static double n2stat_1[N2_STAT]=
   (double) 30.
  };
 
-static double n2stat_2[N2_STAT]=
+static double nodoxygen_n2stat_2[N2_STAT]=
  {
   (double) 6., (double) 3., (double) 6., (double) 3., (double) 6., (double) 3.,
   (double) 6., (double) 3., (double) 6., (double) 3., (double) 6., (double) 3.,
@@ -148,7 +149,7 @@ static double n2stat_2[N2_STAT]=
   (double) 6.
  };
 
-static double n2stat_3[N2_STAT]=
+static double nodoxygen_n2stat_3[N2_STAT]=
  {
   (double)    0.0000, (double)    3.9791, (double)   11.9373, (double)   23.8741, (double)   39.7892,
   (double)   59.6821, (double)   83.5521, (double)  111.3983, (double)  143.2197, (double)  179.0154,
@@ -161,7 +162,7 @@ static double n2stat_3[N2_STAT]=
 
 // Rotation Raman line-specific parameters
 
-static double n2term[N2_SIZE]=
+static double nodoxygen_n2term[N2_SIZE]=
  {
   (double) 1290.7963, (double) 1191.6766, (double) 1096.4948, (double) 1005.2540, (double) 917.9574,
   (double)  834.6081, (double)  755.2090, (double)  679.7628, (double)  608.2722, (double) 540.7395,
@@ -175,7 +176,7 @@ static double n2term[N2_SIZE]=
   (double)  917.9574, (double) 1005.2540, (double) 1096.4948
  };
 
-static double n2plactel[N2_SIZE]=
+static double nodoxygen_n2plactel[N2_SIZE]=
  {
   (double) 3.601e-1, (double) 3.595e-1, (double) 3.589e-1, (double) 3.581e-1, (double) 3.573e-1,
   (double) 3.565e-1, (double) 3.555e-1, (double) 3.544e-1, (double) 3.532e-1, (double) 3.519e-1,
@@ -189,7 +190,7 @@ static double n2plactel[N2_SIZE]=
   (double) 3.922e-1, (double) 3.915e-1, (double) 3.908e-1
  };
 
-static double n2deg[N2_SIZE]=
+static double nodoxygen_n2deg[N2_SIZE]=
  {
   (double) 25., (double) 24., (double) 23., (double) 22., (double) 21.,
   (double) 20., (double) 19., (double) 18., (double) 17., (double) 16.,
@@ -203,7 +204,7 @@ static double n2deg[N2_SIZE]=
   (double) 21., (double) 22., (double) 23.
  };
 
-static double n2nuc[N2_SIZE]=
+static double nodoxygen_n2nuc[N2_SIZE]=
  {
   (double) 3., (double) 6., (double) 3., (double) 6., (double) 3., (double) 6.,
   (double) 3., (double) 6., (double) 3., (double) 6., (double) 3., (double) 6.,
@@ -216,13 +217,14 @@ static double n2nuc[N2_SIZE]=
  };
 
 // -----------------------------------------------------------------------------
-// FUNCTION      raman_n2
+// FUNCTION raman_n2
 // -----------------------------------------------------------------------------
-// PURPOSE       N2 Raman function
-//
-// INPUT         temp : temperature
-//
-// OUTPUT        N2 cross section
+//!
+//! \fn      void raman_n2(double temp,double *n2xsec)
+//! \details N2 Raman function
+//! \param   [in]  temp   : temperature (usually 250K)
+//! \param   [out] n2xsec : N2 cross section
+//!
 // -----------------------------------------------------------------------------
 
 void raman_n2(double temp,double *n2xsec)
@@ -241,15 +243,15 @@ void raman_n2(double temp,double *n2xsec)
   // Calculate partition function
 
   for (qn2=(double)0.,i=0;i<N2_STAT;i++)
-   qn2+=(n2stat_1[i]*2.+1.)*n2stat_2[i]*exp(emult*n2stat_3[i]);
+   qn2+=(nodoxygen_n2stat_1[i]*2.+1.)*nodoxygen_n2stat_2[i]*exp(emult*nodoxygen_n2stat_3[i]);
 
   // Calculate population fractions for rotational Raman lines and
   // the cross sections (in cm2 * 1.e48), except for gamma**2/lambda**4
 
   for (i=0;i<N2_SIZE;i++)
    {
-    n2frac=(n2deg[i]*2.+1.)*n2nuc[i]*exp(emult*n2term[i])/qn2;
-    n2xsec[i]=prefix*n2frac*n2plactel[i];
+    n2frac=(nodoxygen_n2deg[i]*2.+1.)*nodoxygen_n2nuc[i]*exp(emult*nodoxygen_n2term[i])/qn2;
+    n2xsec[i]=prefix*n2frac*nodoxygen_n2plactel[i];
    }
  }
 
@@ -261,7 +263,7 @@ void raman_n2(double temp,double *n2xsec)
 
 #define O2_STAT   54    // size of o2 statistical data
 
-static double o2stat_1[O2_STAT]=
+static double nodoxygen_o2stat_1[O2_STAT]=
  {
   (double)  0., (double)  2., (double)  1., (double)  2., (double)  4., (double)  3., (double)  4.,
   (double)  6., (double)  5., (double)  8., (double)  6., (double)  7., (double) 10., (double)  8.,
@@ -273,7 +275,7 @@ static double o2stat_1[O2_STAT]=
   (double) 32., (double) 33., (double) 36., (double) 34., (double) 35.
  };
 
-static double o2stat_2[O2_STAT]=
+static double nodoxygen_o2stat_2[O2_STAT]=
  {
   (double)    0.0000, (double)    2.0843, (double)    3.9611, (double)   16.2529, (double)   16.3876, (double)  18.3372,
   (double)   42.2001, (double)   42.2240, (double)   44.2117, (double)   79.5646, (double)   79.6070, (double)  81.5805,
@@ -289,7 +291,7 @@ static double o2stat_2[O2_STAT]=
 
 // Rotation Raman line-specific parameters
 
-static double o2term[O2_SIZE]=
+static double nodoxygen_o2term[O2_SIZE]=
  {
   (double) 1606.3533, (double) 1608.0710, (double) 1605.8064, (double) 1420.7672, (double) 1422.5020,
   (double) 1420.2552, (double) 1246.4518, (double) 1248.2040, (double) 1245.9750, (double) 1083.4356,
@@ -330,7 +332,7 @@ static double o2term[O2_SIZE]=
   (double) 1422.5020, (double) 1420.7672, (double) 1605.8064, (double) 1608.0710, (double) 1606.3533
  };
 
-static double o2plactel[O2_SIZE]=
+static double nodoxygen_o2plactel[O2_SIZE]=
  {
   (double) 3.630e-1, (double) 3.630e-1, (double) 3.637e-1, (double) 3.622e-1, (double) 3.622e-1,
   (double) 3.630e-1, (double) 3.613e-1, (double) 3.613e-1, (double) 3.622e-1, (double) 3.602e-1,
@@ -371,7 +373,7 @@ static double o2plactel[O2_SIZE]=
   (double) 3.861e-1, (double) 3.868e-1, (double) 3.855e-1, (double) 3.855e-1, (double) 3.861e-1
  };
 
-static double o2deg[O2_SIZE]=
+static double nodoxygen_o2deg[O2_SIZE]=
  {
   (double) 32., (double) 33., (double) 34., (double) 30., (double) 31., (double) 32., (double) 28.,
   (double) 29., (double) 30., (double) 26., (double) 27., (double) 28., (double) 24., (double) 25.,
@@ -403,13 +405,14 @@ static double o2deg[O2_SIZE]=
  };
 
 // -----------------------------------------------------------------------------
-// FUNCTION      raman_o2
+// FUNCTION raman_o2
 // -----------------------------------------------------------------------------
-// PURPOSE       O2 Raman function
-//
-// INPUT         temp : temperature
-//
-// OUTPUT        N2 cross section
+//!
+//! \fn      void raman_o2(double temp,double *o2xsec)
+//! \details O2 Raman function
+//! \param   [in]  temp   : temperature (usually 250K)
+//! \param   [out] o2xsec : O2 cross section
+//!
 // -----------------------------------------------------------------------------
 
 void raman_o2(double temp,double *o2xsec)
@@ -428,15 +431,15 @@ void raman_o2(double temp,double *o2xsec)
   // Calculate partition function
 
   for (qo2=(double)0.,i=0;i<O2_STAT;i++)
-   qo2+=(double)(o2stat_1[i]*2.+1.)*exp(emult*o2stat_2[i]);
+   qo2+=(double)(nodoxygen_o2stat_1[i]*2.+1.)*exp(emult*nodoxygen_o2stat_2[i]);
 
   // Calculate population fractions for rotational Raman lines and
   // the cross sections (in cm2 * 1.e48), except for gamma**2/lambda**4
 
   for (i=0;i<O2_SIZE;i++)
    {
-    o2frac=(o2deg[i]*2.+1.)*exp(emult*o2term[i])/qo2;
-    o2xsec[i]=prefix*o2frac*o2plactel[i];
+    o2frac=(nodoxygen_o2deg[i]*2.+1.)*exp(emult*nodoxygen_o2term[i])/qo2;
+    o2xsec[i]=prefix*o2frac*nodoxygen_o2plactel[i];
    }
  }
 
@@ -444,7 +447,7 @@ void raman_o2(double temp,double *o2xsec)
 // MAIN FUNCTION
 // =============
 
-double n2pos[N2_SIZE]=
+double nodoxygen_n2pos[N2_SIZE]=
  {
   (double) -194.3015, (double) -186.4226, (double) -178.5374, (double) -170.6459, (double) -162.7484,
   (double) -154.8453, (double) -146.9368, (double) -139.0233, (double) -131.1049, (double) -123.1819,
@@ -458,7 +461,7 @@ double n2pos[N2_SIZE]=
   (double)  178.5374, (double)  186.4226, (double)  194.3015
  };
 
-double o2pos[O2_SIZE]=
+double nodoxygen_o2pos[O2_SIZE]=
  {
   (double) -185.5861, (double) -185.5690, (double) -185.5512, (double) -174.3154, (double) -174.2980,
   (double) -174.2802, (double) -163.0162, (double) -162.9980, (double) -162.9809, (double) -151.6906,
@@ -499,5 +502,125 @@ double o2pos[O2_SIZE]=
   (double)  185.5690, (double)  185.5861, (double)  196.7919, (double)  196.8100, (double)  196.8269
  };
 
+// -----------------------------------------------------------------------------
+// FUNCTION raman_convolution
+// -----------------------------------------------------------------------------
+//!
+//! \fn      RC raman_convolution(double *xsLambda,double *xsVector,double *xsDeriv2,double *xsConv,int n,double temp,int normalizeFlag)
+//! \details Convolution by Raman effect
+//
+//! \param   [in]  xsLambda : the wavelength calibration grid
+//! \param   [in]  xsVector : the cross section to convolve
+//! \param   [in]  xsDeriv2 : the second derivative
+//! \param   [in]  n        : the size of the cross section grid
+//! \param   [in]  temp     : temperature (usually : 250K)
+//!
+//! \param   [out] xsConv   : the cross section convolved with Raman effect
+//!
+//! \return  ERROR_ID_NO on success\n
+//!          ERROR_ID_ALLOC if the allocation of a buffer failed\n
+//!          return code returned by a called function on error
+//!
+// -----------------------------------------------------------------------------
 
+RC raman_convolution(double *xsLambda,double *xsVector,double *xsDeriv2,double *xsConv,int n,double temp,int normalizeFlag)
+ {
+  // Declarations
 
+  double *n2xref,*o2xref,                                                       // rotational Raman spectra
+          gamman2,sigprimen2,n2xsec,sign2,sumn2xsec,                            // n2 working variables
+          gammao2,sigprimeo2,o2xsec,sigo2,sumo2xsec,                            // o2 working variables
+          sigsq,lambda,lambda1e7,solar,nodoxygen_n2posj,nodoxygen_o2posj,                           // other working variables
+          newXs;                                                                // output value
+
+  INDEX   i,j;                                                                  // indexes for loops and arrays
+  RC      rc;                                                                   // return code
+
+  // Initializations
+
+  o2xref=NULL;
+  rc=ERROR_ID_NO;
+
+  // Buffers allocation
+
+  if (((n2xref=(double *)MEMORY_AllocDVector("raman_convolution","n2xref",0,N2_SIZE-1))==NULL) ||
+      ((o2xref=(double *)MEMORY_AllocDVector("raman_convolution","o2xref",0,O2_SIZE-1))==NULL))
+
+   rc=ERROR_ID_ALLOC;
+
+  else
+   {
+    // Set up the rotational Raman spectra
+
+    raman_n2(temp,n2xref);
+    raman_o2(temp,o2xref);
+
+    VECTOR_Init(xsConv,(double)0.,n);
+
+    // Add up Ring contributions over wavelengths and lines; remember that
+    // the change in photon energy is opposite that of the molecule
+
+    for (i=0;(i<n) && !rc;i++)
+     {
+      lambda=(double)xsLambda[i];
+      lambda1e7=(double)1.e7/lambda;
+      sumn2xsec=(double)0.;
+      sumo2xsec=(double)0.;
+
+      sigsq = (double) 1.e6/(lambda*lambda);
+      gamman2 = (double) -0.601466 + 238.557 / (186.099 - sigsq);
+      gammao2 = (double) 0.07149 + 45.9364 / (48.2716 - sigsq);
+
+      gamman2*=gamman2;   // gamman2 <- gamman2**2;
+      gammao2*=gammao2;   // gammao2 <- gammao2**2;
+
+      for (j=0;(j<N2_SIZE) && !rc;j++)
+       {
+        nodoxygen_n2posj=nodoxygen_n2pos[j];
+        sigprimen2=(double) lambda1e7+nodoxygen_n2posj;
+        sign2=(double)1.e7/sigprimen2;
+
+        sigprimen2 *= sigprimen2;       // **2
+        sigprimen2 *= sigprimen2;       // **4
+
+        n2xsec=n2xref[j]*sigprimen2*gamman2;
+        sumn2xsec+=n2xsec;
+
+        if (!(rc=SPLINE_Vector(xsLambda,xsVector,xsDeriv2,n,&sign2,&newXs,1,SPLINE_CUBIC)))
+         xsConv[i]+=newXs*n2xsec;
+       }
+
+      for (j=0;(j<O2_SIZE) && !rc;j++)
+       {
+        nodoxygen_o2posj=nodoxygen_o2pos[j];
+        sigprimeo2 = (double) lambda1e7+nodoxygen_o2posj;
+        sigo2=(double)1.e7/sigprimeo2;
+
+        sigprimeo2 *= sigprimeo2;       // **2
+        sigprimeo2 *= sigprimeo2;       // **4
+
+        o2xsec=o2xref[j]*sigprimeo2*gammao2;
+        sumo2xsec+=o2xsec;
+
+        if (!(rc=SPLINE_Vector(xsLambda,xsVector,xsDeriv2,n,&sigo2,&newXs,1,SPLINE_CUBIC)))
+         xsConv[i]+=newXs*o2xsec;
+       }
+
+      // normalization
+
+      if (normalizeFlag)
+       xsConv[i]/=(sumn2xsec+sumo2xsec);
+     }
+   }
+
+  // Release allocated buffers
+
+  if (n2xref!=NULL)
+   MEMORY_ReleaseDVector("raman_convolution","n2xref",n2xref,0);
+  if (o2xref!=NULL)
+   MEMORY_ReleaseDVector("raman_convolution","o2xref",o2xref,0);
+
+  // Return
+
+  return rc;
+ }

@@ -90,21 +90,6 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
 
   topLayout->addWidget(refSelectGroup);
 
-  // resol
-
-  QGroupBox *resolGroup = new QGroupBox("Ref. Resol", this);
-  QGridLayout *resolLayout=new QGridLayout(resolGroup);
-  resolLayout->setMargin(3);
-  resolLayout->setSpacing(0);
-  resolLayout->addWidget(new QLabel("FWHM (nm) ", resolGroup), 0, 0);
-  m_resolEdit = new QLineEdit(resolGroup);
-  m_resolEdit->setFixedWidth(cDoubleEditWidth);
-  m_resolEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 999.0, 3, m_resolEdit));
-  resolLayout->addWidget(m_resolEdit, 0, 1);
-  resolLayout->addWidget(new QLabel("", resolGroup), 1, 0);
-
-  topLayout->addWidget(resolGroup);
-
   // fitting interval
   QGroupBox *fitIntervalGroup = new QGroupBox("Fitting Interval", this);
   QGridLayout *fitIntervalLayout = new QGridLayout(fitIntervalGroup);
@@ -142,6 +127,25 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   displayLayout->addWidget(m_fitsCheck, 2, 1);
 
   topLayout->addWidget(displayGroup);
+
+  // Other options
+
+  QGroupBox *optionsGroup = new QGroupBox("Other options", this);
+  QGridLayout *optionsLayout=new QGridLayout(optionsGroup);
+  optionsLayout->setMargin(3);
+  optionsLayout->setSpacing(0);
+  optionsLayout->addWidget(new QLabel("Ref. Resol FWHM (nm) ", optionsGroup), 0, 0);
+  m_resolEdit = new QLineEdit(optionsGroup);
+  m_resolEdit->setFixedWidth(cDoubleEditWidth);
+  m_resolEdit->setValidator(new CDoubleFixedFmtValidator(0.0, 999.0, 3, m_resolEdit));
+  optionsLayout->addWidget(m_resolEdit, 0, 1);
+  optionsLayout->addWidget(new QLabel("Lambda0", optionsGroup), 1, 0);
+  m_lambda0Edit = new QLineEdit(optionsGroup);
+  m_lambda0Edit->setFixedWidth(cDoubleEditWidth);
+  m_lambda0Edit->setValidator(new CDoubleFixedFmtValidator(0.0, 999.0, 3, m_lambda0Edit));
+  optionsLayout->addWidget(m_lambda0Edit, 1, 1);
+
+  topLayout->addWidget(optionsGroup);
 
   topLayout->addStretch(1);
 
@@ -420,6 +424,7 @@ CWAnalysisWindowPropertyEditor::CWAnalysisWindowPropertyEditor(const QString &pr
   m_fitMinEdit->setText(tmpStr.setNum(d->fitMinWavelength));
   m_fitMaxEdit->setText(tmpStr.setNum(d->fitMaxWavelength));
   m_resolEdit->setText(tmpStr.setNum(d->resolFwhm));
+  m_lambda0Edit->setText(tmpStr.setNum(d->lambda0));
 
   m_spectrumCheck->setChecked(d->requireSpectrum ? Qt::Checked : Qt::Unchecked);
   m_polyCheck->setChecked(d->requirePolynomial ? Qt::Checked : Qt::Unchecked);
@@ -486,6 +491,7 @@ bool CWAnalysisWindowPropertyEditor::actionOk(void)
 
   const mediate_project_t *p = CWorkSpace::instance()->findProject(m_projectName);
   mediate_analysis_window_t *d = CWorkSpace::instance()->findAnalysisWindow(m_projectName, m_analysisWindowName);
+  bool brc=true;
 
   if (d) {
 
@@ -498,6 +504,7 @@ bool CWAnalysisWindowPropertyEditor::actionOk(void)
     d->fitMaxWavelength = m_fitMaxEdit->text().toDouble();
 
     d->resolFwhm = m_resolEdit->text().toDouble();
+    d->lambda0 = m_lambda0Edit->text().toDouble();
 
     d->requireSpectrum = (m_spectrumCheck->checkState() == Qt::Checked) ? 1 : 0;
     d->requirePolynomial = (m_polyCheck->checkState() == Qt::Checked) ? 1 : 0;
@@ -538,7 +545,23 @@ bool CWAnalysisWindowPropertyEditor::actionOk(void)
     for (int i=0; i < d->crossSectionList.nCrossSection; ++i)
       ws->decrementUseCount(d->crossSectionList.crossSection[i].symbol);
 
-    m_moleculesTab->apply(&(d->crossSectionList));
+    if (d->lambda0<(double)1e-3)
+     {
+      char str[300];
+      QString tmpStr;
+      d->lambda0=(d->fitMinWavelength+d->fitMaxWavelength)*0.5;
+      m_lambda0Edit->setText(tmpStr.setNum(d->lambda0));
+      sprintf(str,"lambda0 automatically initialized at wavelength of the center of the spectral window %g",d->lambda0);
+      QMessageBox::warning((QWidget*)this, "lambda0", str);
+     }
+    else if ((d->lambda0<d->fitMinWavelength) || (d->lambda0>d->fitMaxWavelength))
+     {
+      QMessageBox::warning((QWidget*)this, "lambda0", "lambda0 out of the spectral window range");
+      brc=false;
+     }
+
+    if (brc)
+     brc=m_moleculesTab->apply(&(d->crossSectionList));
 
     for (int i=0; i < d->crossSectionList.nCrossSection; ++i)
       ws->incrementUseCount(d->crossSectionList.crossSection[i].symbol);
@@ -554,13 +577,14 @@ bool CWAnalysisWindowPropertyEditor::actionOk(void)
     m_projectName.clear();
     ws->modifiedProjectProperties(updateBlock);
     m_projectName = updateBlock;
-
-    return true;
   }
+ else
+  brc=false;
+
 
   // Project not found ... TODO
 
-  return false;
+  return brc;
 }
 
 void CWAnalysisWindowPropertyEditor::actionHelp(void)
@@ -587,17 +611,24 @@ void CWAnalysisWindowPropertyEditor::projectPropertiesChanged()
 
   if (d) {
     // enable/disable filtering
-    m_moleculesTab->setColumnEnabled(4, (d->lowpass.mode != PRJCT_FILTER_TYPE_NONE));
+    m_moleculesTab->setColumnEnabled(5, (d->lowpass.mode != PRJCT_FILTER_TYPE_NONE));
 
     bool analysisEnabled = (d->output.analysisFlag != 0);
 
     // non-linear ... TODO
 
     // enable/disable shift+stretch store columns
+                                                                                // Check also for calibFlag !!!!
+    // m_linearTab->setColumnEnabled(1, analysisEnabled);                       // polynomial class not a CDoasTable ???
+    // m_linearTab->setColumnEnabled(2, analysisEnabled);
+
+    m_nonLinearTab->setColumnEnabled(3, analysisEnabled);
+    m_nonLinearTab->setColumnEnabled(4, analysisEnabled);
+
+
+    m_shiftAndStretchTab->setColumnEnabled(2, analysisEnabled);                 // !!! DANGEROUS TO USE NUMERICAL INDEX FOR COLUMNS
     m_shiftAndStretchTab->setColumnEnabled(3, analysisEnabled);
     m_shiftAndStretchTab->setColumnEnabled(4, analysisEnabled);
-    m_shiftAndStretchTab->setColumnEnabled(5, analysisEnabled);
-    m_shiftAndStretchTab->setColumnEnabled(6, analysisEnabled);
 
     // enable/disable the output table
     m_outputTab->setEnabled(analysisEnabled);

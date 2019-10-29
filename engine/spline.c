@@ -96,7 +96,7 @@ RC SPLINE_Deriv2(const double *X, const double *Y,double *Y2,int n,const char *c
   // Debugging
 
 #if defined(__DEBUG_) && __DEBUG_ && defined(__DEBUG_DOAS_SHIFT_) && __DEBUG_DOAS_SHIFT_
-  DEBUG_FunctionBegin("SPLINE_Deriv2",DEBUG_FCTTYPE_MATH);
+  DEBUG_FunctionBegin("SPLINE_Deriv2",DEBUG_FCTTYPE_MATH|DEBUG_FCTTYPE_MEM);
 #endif
 
   // Initializations
@@ -105,9 +105,9 @@ RC SPLINE_Deriv2(const double *X, const double *Y,double *Y2,int n,const char *c
   rc=ERROR_ID_NO;
 
   // Temporary buffer allocation
-
-  if ((u=(double *)MEMORY_AllocDVector("SPLINE_Deriv2","u",0,n-1))==NULL)
+  if ((u=(double *)MEMORY_AllocDVector("SPLINE_Deriv2","u",0,n-1))==NULL){
    rc=ERROR_ID_ALLOC;
+   }
   else
    {
     // consider lower boundary :

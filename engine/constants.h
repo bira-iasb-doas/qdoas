@@ -145,6 +145,14 @@ enum _filesTypesSpectra {
 // DEFINITIONS
 // -----------
 
+enum _crossDiffOrtho {
+  ANLYS_DIFFORTHO_NONE,
+  ANLYS_DIFFORTHO_DIFFERENTIAL_XS,
+  ANLYS_DIFFORTHO_ORTHOGONALIZATION,
+  ANLYS_DIFFORTHO_SUBTRACTION,
+  ANLYS_DIFFORTHO_MAX
+};
+
 enum _polynomeTypes {
   ANLYS_POLY_TYPE_NONE,
   ANLYS_POLY_TYPE_0,
@@ -158,6 +166,13 @@ enum _polynomeTypes {
   ANLYS_POLY_TYPE_8,
   ANLYS_POLY_TYPE_MAX
 };
+
+enum _shiftTypes
+ {
+  ANLYS_SHIFT_TYPE_NONE,
+  ANLYS_SHIFT_TYPE_NONLINEAR
+  // ANLYS_SHIFT_TYPE_LINEAR
+ };
 
 enum _stretchTypes {
   ANLYS_STRETCH_TYPE_NONE,
@@ -181,6 +196,21 @@ enum _amfTypes {
   ANLYS_AMF_TYPE_CLIMATOLOGY,
   ANLYS_AMF_TYPE_WAVELENGTH,
   ANLYS_AMF_TYPE_MAX
+};
+
+enum _correctionTypes {
+  ANLYS_CORRECTION_TYPE_NONE,
+  ANLYS_CORRECTION_TYPE_SLOPE,
+  ANLYS_CORRECTION_TYPE_PUKITE,
+  ANLYS_CORRECTION_TYPE_MOLECULAR_RING,
+  ANLYS_CORRECTION_TYPE_MOLECULAR_RING_SLOPE,
+  ANLYS_CORRECTION_TYPE_MAX
+};
+
+enum _moleculesCombo {
+  ANLYS_COMBO_NONE,
+  ANLYS_COMBO_DIFF_ORTHO,
+  ANLYS_COMBO_CORRECTION
 };
 
 // Analysis tab pages description
@@ -369,6 +399,7 @@ enum _prjctInstrFormat {
   PRJCT_INSTR_FORMAT_OMPS,                                                      // 28 OMPS
   PRJCT_INSTR_FORMAT_FRM4DOAS_NETCDF,                                           // 29 netCDF format for FRM4DOAS
   PRJCT_INSTR_FORMAT_GOME1_NETCDF,                                              // 30 netCDF format for GOME1
+  PRJCT_INSTR_FORMAT_GEMS,                                                      // 31 GEMS format (Geostationary Environment Monitoring Spectrometer onboard GEO-KOMPSAT-2B geostationary satellite)
   PRJCT_INSTR_FORMAT_MAX
 };
 

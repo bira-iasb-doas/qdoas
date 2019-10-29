@@ -229,19 +229,24 @@ CWProjectTabInstrumental::CWProjectTabInstrumental(const mediate_project_instrum
   m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_MKZY, index));
 
   // bira airborne
-  m_biraairborneEdit = new CWInstrMinimumEdit(&(instr->biraairborne));
+  m_biraairborneEdit = new CWInstrAvantesEdit(&(instr->biraairborne));
   index = m_formatStack->addWidget(m_biraairborneEdit);
   m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_BIRA_AIRBORNE, index));
 
   // bira mobile
-  m_biramobileEdit = new CWInstrMinimumEdit(&(instr->biramobile));
+  m_biramobileEdit = new CWInstrAvantesEdit(&(instr->biramobile));
   index = m_formatStack->addWidget(m_biramobileEdit);
   m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_BIRA_MOBILE, index));
 
   // apex
-  m_apexEdit = new CWInstrMinimumEdit(&(instr->apex));
+  m_apexEdit = new CWInstrApexEdit(&(instr->apex));
   index = m_formatStack->addWidget(m_apexEdit);
   m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_APEX, index));
+
+  // GEMS
+  m_gemsEdit = new CWInstrGemsEdit(&(instr->gems));
+  index = m_formatStack->addWidget(m_gemsEdit);
+  m_instrumentToStackIndexMap.insert(std::map<int,int>::value_type(PRJCT_INSTR_FORMAT_GEMS, index));
 
   // ocean optics
   m_oceanOpticsEdit = new CWInstrOceanOpticsEdit(&(instr->oceanoptics));
@@ -305,12 +310,14 @@ void CWProjectTabInstrumental::apply(mediate_project_instrumental_t *instr) cons
   m_omiEdit->apply(&(instr->omi));
   m_ompsEdit->apply();
   m_tropomiEdit->apply(&(instr->tropomi));
+  m_apexEdit->apply(&(instr->apex));
   m_gome2Edit->apply(&(instr->gome2));
   m_mkzyEdit->apply(&(instr->mkzy));
   m_biraairborneEdit->apply(&(instr->biraairborne));
   m_biramobileEdit->apply(&(instr->biramobile));
   m_oceanOpticsEdit->apply(&(instr->oceanoptics));
   m_frm4doasEdit->apply(&(instr->frm4doas));
+  m_gemsEdit->apply(&(instr->gems));
 }
 
 void CWProjectTabInstrumental::slotInstrumentChanged(int instrument)
@@ -1223,7 +1230,7 @@ CWInstrFrm4doasEdit::CWInstrFrm4doasEdit(const struct instrumental_frm4doas *d, 
   m_spectralTypeCombo->addItem("Direct sun", QVariant(PRJCT_INSTR_MAXDOAS_TYPE_DIRECTSUN));
   m_spectralTypeCombo->addItem("Almucantar", QVariant(PRJCT_INSTR_MAXDOAS_TYPE_ALMUCANTAR));
   gridLayout->addWidget(m_spectralTypeCombo, row, 1);
-  ++row;  
+  ++row;
 
   // files
   helperConstructCalInsFileWidgets(gridLayout, row,
@@ -1244,7 +1251,7 @@ CWInstrFrm4doasEdit::CWInstrFrm4doasEdit(const struct instrumental_frm4doas *d, 
 
   int index = m_spectralTypeCombo->findData(QVariant(d->spectralType));
   if (index != -1)
-    m_spectralTypeCombo->setCurrentIndex(index);  
+    m_spectralTypeCombo->setCurrentIndex(index);
 
   // straylight bias
   m_strayLightConfig->setChecked(d->straylight ? true : false);
@@ -1258,7 +1265,64 @@ void CWInstrFrm4doasEdit::apply(struct instrumental_frm4doas *d) const
   d->detectorSize = m_detSizeEdit->text().toInt();
 
   // spectral type
-  d->spectralType = m_spectralTypeCombo->itemData(m_spectralTypeCombo->currentIndex()).toInt();  
+  d->spectralType = m_spectralTypeCombo->itemData(m_spectralTypeCombo->currentIndex()).toInt();
+
+  // files
+  strcpy(d->calibrationFile, m_fileOneEdit->text().toLocal8Bit().data());
+  strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLocal8Bit().data());
+
+  d->straylight = m_strayLightConfig->isChecked() ? 1 : 0;
+  d->lambdaMin = m_strayLightConfig->getLambdaMin();
+  d->lambdaMax = m_strayLightConfig->getLambdaMax();
+}
+
+//--------------------------------------------------------------------------
+
+CWInstrAvantesEdit::CWInstrAvantesEdit(const struct instrumental_avantes *d, QWidget *parent) :
+  CWAllFilesEdit(parent),
+  m_strayLightConfig(new StrayLightConfig(Qt::Horizontal, this))
+{
+  QString tmpStr;
+  int row = 0;
+  QVBoxLayout *mainLayout = new QVBoxLayout(this);
+  //  QHBoxLayout *groupLayout = new QHBoxLayout;
+  QGridLayout *gridLayout = new QGridLayout;
+
+  mainLayout->addWidget(m_strayLightConfig);
+
+  gridLayout->addWidget(new QLabel("Detector Size", this), row, 0, Qt::AlignRight);             // detector size label
+  m_detSizeEdit = new QLineEdit(this);
+  m_detSizeEdit->setFixedWidth(cStandardEditWidth);
+  m_detSizeEdit->setValidator(new QIntValidator(0, 8192, m_detSizeEdit));
+  gridLayout->addWidget(m_detSizeEdit, row, 1, Qt::AlignLeft);
+
+  ++row;
+
+  // files
+  helperConstructCalInsFileWidgets(gridLayout, row,
+				   d->calibrationFile, sizeof(d->calibrationFile),
+				   d->transmissionFunctionFile, sizeof(d->transmissionFunctionFile));
+
+  mainLayout->addLayout(gridLayout);
+  mainLayout->addStretch(1);
+
+  // initialise the values
+
+  // detector size
+  tmpStr.setNum(d->detectorSize);
+  m_detSizeEdit->validator()->fixup(tmpStr);
+  m_detSizeEdit->setText(tmpStr);
+
+  // straylight bias
+  m_strayLightConfig->setChecked(d->straylight ? true : false);
+  m_strayLightConfig->setLambdaMin(d->lambdaMin);
+  m_strayLightConfig->setLambdaMax(d->lambdaMax);
+}
+
+void CWInstrAvantesEdit::apply(struct instrumental_avantes *d) const
+{
+  // detector size
+  d->detectorSize = m_detSizeEdit->text().toInt();
 
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toLocal8Bit().data());
@@ -2009,6 +2073,40 @@ void CWInstrTropomiEdit::apply(struct instrumental_tropomi *pInstrTropomi) const
 
 //--------------------------------------------------------
 
+CWInstrApexEdit::CWInstrApexEdit(const struct instrumental_apex *pInstrApex, QWidget *parent) : CWCalibInstrEdit(parent) {
+
+  QVBoxLayout *mainLayout = new QVBoxLayout(this);
+  QGridLayout *gridLayout = new QGridLayout;
+
+  mainLayout->addLayout(gridLayout);
+
+  int row = 0;
+
+  // Track selection
+  gridLayout->addWidget(new QLabel("Row selection", this), row, 0);
+  m_trackSelection = new QLineEdit(this);
+  gridLayout->addWidget(m_trackSelection, row, 1);
+  ++row;
+
+  helperConstructCalInsFileWidgets(gridLayout, row,
+				   pInstrApex->calibrationFile, sizeof(pInstrApex->calibrationFile),
+				   pInstrApex->transmissionFunctionFile, sizeof(pInstrApex->transmissionFunctionFile));
+
+		m_trackSelection->setText(QString(pInstrApex->trackSelection));
+}
+
+void CWInstrApexEdit::apply(struct instrumental_apex *pInstrApex) const
+{
+  strcpy(pInstrApex->calibrationFile, m_fileOneEdit->text().toLocal8Bit().data());
+  strcpy(pInstrApex->transmissionFunctionFile, m_fileTwoEdit->text().toLocal8Bit().data());
+
+  // Track selection
+
+  strcpy(pInstrApex->trackSelection, m_trackSelection->text().toLocal8Bit().data());
+}
+
+//--------------------------------------------------------
+
 CWInstrOmpsEdit::CWInstrOmpsEdit(QWidget *parent) :
   CWCalibInstrEdit(parent) { }
 
@@ -2073,6 +2171,37 @@ void CWInstrOceanOpticsEdit::apply(struct instrumental_oceanoptics *d) const
   // files
   strcpy(d->calibrationFile, m_fileOneEdit->text().toLocal8Bit().data());
   strcpy(d->transmissionFunctionFile, m_fileTwoEdit->text().toLocal8Bit().data());
+}
+
+//--------------------------------------------------------
+
+CWInstrGemsEdit::CWInstrGemsEdit(const struct instrumental_gems *pInstrGems, QWidget *parent) : CWCalibInstrEdit(parent) {
+
+  QVBoxLayout *mainLayout = new QVBoxLayout(this);
+  QGridLayout *gridLayout = new QGridLayout;
+
+  mainLayout->addLayout(gridLayout);
+
+  int row = 0;
+
+  // Track selection
+  gridLayout->addWidget(new QLabel("Row selection", this), row, 0);
+  m_trackSelection = new QLineEdit(this);
+  gridLayout->addWidget(m_trackSelection, row, 1);
+  ++row;
+
+  helperConstructCalInsFileWidgets(gridLayout, row,
+				   pInstrGems->calibrationFile, sizeof(pInstrGems->calibrationFile),
+				   pInstrGems->transmissionFunctionFile, sizeof(pInstrGems->transmissionFunctionFile));
+
+		m_trackSelection->setText(QString(pInstrGems->trackSelection));
+}
+
+void CWInstrGemsEdit::apply(struct instrumental_gems *pInstrGems) const
+{
+  strcpy(pInstrGems->calibrationFile, m_fileOneEdit->text().toLocal8Bit().data());
+  strcpy(pInstrGems->transmissionFunctionFile, m_fileTwoEdit->text().toLocal8Bit().data());
+  strcpy(pInstrGems->trackSelection, m_trackSelection->text().toLocal8Bit().data());
 }
 
 //--------------------------------------------------------

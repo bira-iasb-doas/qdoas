@@ -7,17 +7,20 @@
 
 #include "netcdfwrapper.h"
 #include "output_netcdf.h"
+
+extern "C" {
 #include "engine_context.h"
 #include "omi_read.h"
 #include "spectral_range.h"
 #include "fit_properties.h"
+}
 
 using std::string;
 using std::vector;
 using std::array;
 using std::map;
 
-static NetCDFFile output_file;
+static NetCDFFile output_file,output_file_calib;
 static NetCDFGroup output_group;
 
 static size_t n_alongtrack, n_crosstrack, n_calib;
@@ -64,6 +67,7 @@ static int get_dimid(const string& dim_name) {
 static void getDims(const struct output_field& thefield, vector<int>& dimids, vector<size_t>& chunksizes) {
   // for dimensions simply numbered "2, 3, ... 9"
   const array<const char*, 8> dim_names { { "2", "3", "4", "5", "6", "7", "8", "9" } };
+
 
   if (thefield.data_cols > 1) {
     assert(thefield.data_cols < 10);
@@ -150,7 +154,7 @@ static void define_variable(NetCDFGroup &group, const struct output_field& thefi
   getDims(thefield, dimids, chunksizes);
 
   const int varid = group.defVar(varname, dimids, getNCType(thefield.memory_type));
-  
+
   group.defVarChunking(varid, NC_CHUNKED, chunksizes.data());
   group.defVarDeflate(varid);
   group.defVarFletcher32(varid, NC_FLETCHER32);
@@ -329,6 +333,8 @@ void write_automatic_reference_info(const ENGINE_CONTEXT *pEngineContext, NetCDF
 // data belonging to that window
 void create_subgroups(const ENGINE_CONTEXT *pEngineContext,NetCDFGroup &group) {
 
+  int row;
+
   for (unsigned int i=0; i<calib_num_fields; ++i) {
     if (group.groupID(output_data_calib[i].windowname) < 0) {
       // group not yet created
@@ -337,9 +343,13 @@ void create_subgroups(const ENGINE_CONTEXT *pEngineContext,NetCDFGroup &group) {
     }
   }
 
+      for(row=0; row< ANALYSE_swathSize; row++ )
+       if (pEngineContext->project.instrumental.use_row[row])
+        break;
+
       for(int analysiswindow=0; analysiswindow < NFeno; ++analysiswindow)
        {
-        const FENO *pTabFeno = &TabFeno[0][analysiswindow];
+        const FENO *pTabFeno = &TabFeno[row][analysiswindow];
 
         if (!pTabFeno->hidden && (group.groupID(pTabFeno->windowName)<0))
          {
@@ -358,7 +368,7 @@ void create_subgroups(const ENGINE_CONTEXT *pEngineContext,NetCDFGroup &group) {
           for (int i=0;i<pTabFeno->NTabCross;i++)
            {
             pTabCross=(CROSS_REFERENCE *)&pTabFeno->TabCross[i];
-            
+
             if ((pTabCross->IndSvdA>0) && (WorkSpace[pTabCross->Comp].type==WRK_SYMBOL_CROSS))
              subgroup.putAttr(WorkSpace[pTabCross->Comp].symbolName,WorkSpace[pTabCross->Comp].crossFileName);
            }
@@ -368,9 +378,10 @@ void create_subgroups(const ENGINE_CONTEXT *pEngineContext,NetCDFGroup &group) {
    for (unsigned int i=0; i<output_num_fields; ++i) {
     if (output_data_analysis[i].windowname &&
         group.groupID(output_data_analysis[i].windowname) < 0) {
+
       group.defGroup(output_data_analysis[i].windowname);
-    } 
-  } 
+    }
+  }
 }
 
 RC netcdf_open(const ENGINE_CONTEXT *pEngineContext, const char *filename) {
@@ -382,14 +393,25 @@ RC netcdf_open(const ENGINE_CONTEXT *pEngineContext, const char *filename) {
     n_alongtrack = pEngineContext->n_alongtrack;
 
     n_calib = 0;
-    for (int firstrow = 0; firstrow<ANALYSE_swathSize; firstrow++) {
-      // look up the number of calibration windows by searching the first valid entry in KURUCZ_buffers[]
-      if (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI ||
-          pEngineContext->project.instrumental.use_row[firstrow] ) {
-        n_calib = KURUCZ_buffers[firstrow].Nb_Win;
-        break;
-      }
-    }
+    if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_OMI) &&
+        (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_TROPOMI) &&
+        (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GOME1_NETCDF))
+        n_calib = KURUCZ_buffers[0].Nb_Win;
+    else if ((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_OMI) ||
+        (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_TROPOMI)) {
+       for (int firstrow = 0; firstrow<ANALYSE_swathSize; firstrow++)
+         // look up the number of calibration windows by searching the first valid entry in KURUCZ_buffers[]
+         if (pEngineContext->project.instrumental.use_row[firstrow]) {
+           n_calib = KURUCZ_buffers[firstrow].Nb_Win;
+           break;
+         }
+        }
+    else // for GOME1_NETCDF format we use second index 1, because 0 is for calibration
+       for (int firstrow = 0; firstrow<ANALYSE_swathSize; firstrow++)
+         if (TabFeno[firstrow][1].useRefRow) {
+           n_calib = KURUCZ_buffers[firstrow].Nb_Win;
+           break;
+         }
 
     // Now that we know n_alongtrack, n_crosstrack and n_calib, we can
     // initialize the map of dimension sizes:
@@ -514,7 +536,7 @@ static void write_buffer(const struct output_field *thefield, const bool selecte
   vector<T> buffer(n_alongtrack * n_crosstrack * ncols * dimension, fill);
 
   for (int record=0; record < num_records; ++record) {
-    if (selected[record]) {
+    if (selected[record] && (recordinfo[record].i_crosstrack!=ITEM_NONE) && (recordinfo[record].i_alongtrack!=ITEM_NONE)) {
 
       int i_crosstrack = recordinfo[record].i_crosstrack; // (recordinfo[record].specno-1) % n_crosstrack; //specno is 1-based
       int i_alongtrack = recordinfo[record].i_alongtrack; // (recordinfo[record].specno-1) / n_crosstrack;
@@ -561,7 +583,7 @@ void write_buffer<const char*>(const struct output_field *thefield, const bool s
   vector<const char*> buffer(n_alongtrack * n_crosstrack * ncols, fill.c_str());
 
   for (int record=0; record < num_records; ++record) {
-    if (selected[record]) {
+    if (selected[record] && (recordinfo[record].i_crosstrack!=ITEM_NONE) && (recordinfo[record].i_alongtrack!=ITEM_NONE)) {
 
       int i_crosstrack = recordinfo[record].i_crosstrack; // (recordinfo[record].specno-1) % n_crosstrack; //specno is 1-based
       int i_alongtrack = recordinfo[record].i_alongtrack; // (recordinfo[record].specno-1) / n_crosstrack;
@@ -633,4 +655,85 @@ RC netcdf_allow_file(const char *filename, const PRJCT_RESULTS *results) {
     rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, e.what());
   }
   return rc;
+}
+
+RC netcdf_create_calib_var(const char *varname,vector<int>& dimids,vector<size_t>& chunksizes)
+ {
+  try
+   {
+    const int varid = output_file_calib.defVar(varname, dimids, NC_DOUBLE);
+
+    output_file_calib.defVarChunking(varid, NC_CHUNKED, chunksizes.data());
+    output_file_calib.defVarDeflate(varid);
+    output_file_calib.defVarFletcher32(varid, NC_FLETCHER32);
+
+
+    output_file_calib.putAttr("_FillValue", QDOAS_FILL_DOUBLE, varid);
+   }
+  catch (std::runtime_error& e)
+   {
+    printf("Impossible to create variable %s\n",varname);
+    return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, e.what() );
+   }
+
+  return 0;
+ }
+
+RC netcdf_save_calib(double *lambda,double *reference,int indexFenoColumn,int n_wavel)
+ {
+  const size_t start[] = {indexFenoColumn, 0};
+  const size_t count[] = {1, n_wavel};
+
+  try
+   {
+    output_file_calib.putVar("reference_wavelength", start, count, lambda);
+    output_file_calib.putVar("reference_radiance", start, count, reference);
+   }
+  catch (std::runtime_error& e)
+   {
+    return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, e.what() );
+   }
+
+  return 0;
+ }
+
+RC netcdf_open_calib(const ENGINE_CONTEXT *pEngineContext, const char *filename,int col_dim,int spectral_dim) {
+  vector<int> dimids;
+  vector<size_t>chunksizes;
+
+  try {
+    // Open the file in writing mode
+
+    output_file_calib = NetCDFFile(filename + string(output_file_extensions[NETCDF]), NC_WRITE );
+
+    // Create attributes
+
+    time_t curtime = time(NULL);
+    output_file_calib.putAttr("created",string(ctime(&curtime) ) );
+    output_file_calib.putAttr("description","Solar irradiances with grid corrected by QDOAS");
+    output_file_calib.putAttr("title","Solar irradiances with grid corrected by QDOAS");
+
+    // Create dimensions
+
+    dimids.push_back(output_file_calib.defDim("col_dim",col_dim));
+    dimids.push_back(output_file_calib.defDim("spectral_dim",spectral_dim));
+
+    // Create variables
+
+    chunksizes.push_back(std::min<size_t>(100, pEngineContext->n_crosstrack));
+
+    chunksizes.push_back(std::min<size_t>(100, pEngineContext->n_alongtrack));
+
+    netcdf_create_calib_var("reference_wavelength",dimids,chunksizes);
+    netcdf_create_calib_var("reference_radiance",dimids,chunksizes);
+
+  } catch (std::runtime_error& e) {
+    output_file_calib.close();
+    return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, e.what() );
+  }
+  return 0;
+}
+
+void netcdf_close_calib() {
+  output_file_calib.close();
 }

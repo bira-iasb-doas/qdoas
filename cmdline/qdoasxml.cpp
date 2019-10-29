@@ -445,6 +445,16 @@ RC ParseInstrumental(QStringList &xmlFields,int xmlFieldN,int startingField,QStr
          strcpy(newProjectProperties.instrumental.tropomi.trackSelection,pXmlValue->toLocal8Bit().constData());
         }
       }
+     else if (xmlFields.at(indexField)=="apex")
+      {
+       if (indexField+1>=xmlFieldN)
+        std::cout << "apex attribute is missing" << std::endl;
+       else if (xmlFields.at(indexField+1)=="trackSelection")
+        {
+         std::cout << "project/instrumental/apex/trackSelection : " << newProjectProperties.instrumental.apex.trackSelection << " replaced by " << pXmlValue->toLocal8Bit().constData() << std::endl;
+         strcpy(newProjectProperties.instrumental.apex.trackSelection,pXmlValue->toLocal8Bit().constData());
+        }
+      }
      else if (xmlFields.at(indexField)=="gome2")
       std::cout << "project/instrumental/gome2 field can not be changed yet" << std::endl;
      else if (xmlFields.at(indexField)=="mkzy")
@@ -594,6 +604,8 @@ RC ParseAnalysisWindow(QStringList &xmlFields,int xmlFieldN,int startingField,QS
             AnalysisWindowApplyDouble(awList,&windowName,pXmlKey,pXmlValue,&newAnalysisProperties,&newAnalysisProperties.fitMaxWavelength);
           else if (xmlFields.at(indexField)=="resol_fwhm")
             AnalysisWindowApplyDouble(awList,&windowName,pXmlKey,pXmlValue,&newAnalysisProperties,&newAnalysisProperties.resolFwhm);
+          else if (xmlFields.at(indexField)=="lambda0")
+            AnalysisWindowApplyDouble(awList,&windowName,pXmlKey,pXmlValue,&newAnalysisProperties,&newAnalysisProperties.lambda0);
           else if (xmlFields.at(indexField)=="display")
             std::cout << "project/analysis_window/display fields can not be changed" << std::endl;
           else if (xmlFields.at(indexField)=="refsel")

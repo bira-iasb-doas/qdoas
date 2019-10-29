@@ -437,6 +437,9 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   case PRJCT_INSTR_FORMAT_APEX:
     fprintf(fp, "\"apex\"");
     break;
+  case PRJCT_INSTR_FORMAT_GEMS:
+    fprintf(fp, "\"gems\"");
+    break;
   case PRJCT_INSTR_FORMAT_OCEAN_OPTICS:
     fprintf(fp, "\"oceanoptics\"");
     break;
@@ -976,6 +979,21 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   tmpStr = pathMgr->simplifyPath(QString(d->tropomi.instrFunctionFile));
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
 
+  fprintf(fp, "      <gems trackSelection=\"%s\"",d->gems.trackSelection);
+  tmpStr = pathMgr->simplifyPath(QString(d->apex.calibrationFile));
+  fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
+
+  tmpStr = pathMgr->simplifyPath(QString(d->apex.transmissionFunctionFile));
+  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
+
+  // apex
+  fprintf(fp, "      <apex trackSelection=\"%s\"",d->apex.trackSelection);
+  tmpStr = pathMgr->simplifyPath(QString(d->gems.calibrationFile));
+  fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
+
+  tmpStr = pathMgr->simplifyPath(QString(d->gems.transmissionFunctionFile));
+  fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
+
   // gome2
   fprintf(fp, "      <gome2 type=");
   switch (d->gome2.bandType) {
@@ -1016,7 +1034,7 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
 
   // biraairborne
-  fprintf(fp, "      <biraairborne straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"",
+  fprintf(fp, "      <biraairborne size=\"%d\" straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"",d->biraairborne.detectorSize,
     (d->biraairborne.straylight ? sTrue : sFalse),d->biraairborne.lambdaMin,d->biraairborne.lambdaMax);
   tmpStr = pathMgr->simplifyPath(QString(d->biraairborne.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
@@ -1025,7 +1043,7 @@ void CQdoasConfigWriter::writePropertiesInstrumental(FILE *fp, const mediate_pro
   fprintf(fp, " instr=\"%s\" />\n", tmpStr.toUtf8().constData());
 
   // biramobile
-  fprintf(fp, "      <biramobile straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"",
+  fprintf(fp, "      <biramobile size=\"%d\" straylight=\"%s\" lambda_min=\"%g\" lambda_max=\"%g\"",d->biramobile.detectorSize,
     (d->biramobile.straylight ? sTrue : sFalse),d->biramobile.lambdaMin,d->biramobile.lambdaMax);
   tmpStr = pathMgr->simplifyPath(QString(d->biramobile.calibrationFile));
   fprintf(fp, " calib=\"%s\"", tmpStr.toUtf8().constData());
@@ -1241,7 +1259,7 @@ void CQdoasConfigWriter::writeAnalysisWindows(FILE *fp, const QString &projectNa
 	else
 	  fprintf(fp, " refsel=\"file\"");
 
-	fprintf(fp, " min=\"%.3f\" max=\"%.3f\" resol_fwhm=\"%.3f\" >\n", properties->fitMinWavelength, properties->fitMaxWavelength, properties->resolFwhm);
+	fprintf(fp, " min=\"%.3f\" max=\"%.3f\" resol_fwhm=\"%.3f\" lambda0=\"%.3f\" >\n", properties->fitMinWavelength, properties->fitMaxWavelength, properties->resolFwhm,properties->lambda0);
 
 	fprintf(fp, "      <display spectrum=\"%s\" poly=\"%s\" fits=\"%s\" residual=\"%s\" predef=\"%s\" ratio=\"%s\" />\n",
 		(properties->requireSpectrum ? sTrue : sFalse),
@@ -1340,9 +1358,11 @@ void CQdoasConfigWriter::writeCrossSectionList(FILE *fp, const cross_section_lis
   fprintf(fp, "      <cross_sections>\n");
 
   while (j < data->nCrossSection) {
-    fprintf(fp, "        <cross_section sym=\"%s\" ortho=\"%s\" cstype=",
+    fprintf(fp, "        <cross_section sym=\"%s\" ortho=\"%s\" subtract=\"%s\" subtract_flag=\"%s\" cstype=",
 	    d->symbol,
-	    d->orthogonal);
+	    d->orthogonal,
+	    d->subtract,
+	   (d->subtractFlag)?"true":"false");
 
     switch (d->crossType) {
     case ANLYS_CROSS_ACTION_INTERPOLATE:
@@ -1367,6 +1387,22 @@ void CQdoasConfigWriter::writeCrossSectionList(FILE *fp, const cross_section_lis
     default:
       fprintf(fp, "\"none\"");
     }
+
+    fprintf(fp, " corrtype=");
+    switch (d->correctionType) {
+    case ANLYS_CORRECTION_TYPE_SLOPE:
+      fprintf(fp, "\"slope\""); break;
+    case ANLYS_CORRECTION_TYPE_PUKITE:
+      fprintf(fp, "\"pukite\""); break;
+    case ANLYS_CORRECTION_TYPE_MOLECULAR_RING:
+      fprintf(fp, "\"molecular_ring\""); break;
+    case ANLYS_CORRECTION_TYPE_MOLECULAR_RING_SLOPE:
+      fprintf(fp, "\"molecular_ring_slope\""); break;
+    default:
+      fprintf(fp, "\"none\"");
+    }
+
+    fprintf(fp, " molecular_xs=\"%s\"",d->molecularRing);
 
     fprintf(fp, " fit=\"%s\" filter=\"%s\" cstrncc=\"%s\" ccfit=\"%s\" icc=\"%.3f\" dcc=\"%.3f\" ccio=\"%.3e\" ccmin=\"%.3e\" ccmax=\"%.3e\"",
 	    (d->requireFit ? sTrue : sFalse),
@@ -1458,32 +1494,26 @@ void CQdoasConfigWriter::writeShiftStretchList(FILE *fp, const shift_stretch_lis
 
   j = 0;
   while (j < data->nShiftStretch) {
-    fprintf(fp, "        <shift_stretch shfit=\"%s\" stfit=",
-	    (d->shFit ? sTrue : sFalse));
+    fprintf(fp, "        <shift_stretch shfit=\"%s\" ",
+            ((d->shFit==ANLYS_SHIFT_TYPE_NONLINEAR) /* ||
+             (d->shFit==ANLYS_SHIFT_TYPE_LINEAR) */ ) ? sTrue : sFalse);
+
+    fprintf(fp," stfit=");
     switch (d->stFit) {
     case ANLYS_STRETCH_TYPE_FIRST_ORDER: fprintf(fp, "\"1st\""); break;
     case ANLYS_STRETCH_TYPE_SECOND_ORDER: fprintf(fp, "\"2nd\""); break;
     default: fprintf(fp, "\"none\"");
     }
-    fprintf(fp, " scfit=");
-    switch (d->scFit) {
-    case ANLYS_STRETCH_TYPE_FIRST_ORDER: fprintf(fp, "\"1st\""); break;
-    case ANLYS_STRETCH_TYPE_SECOND_ORDER: fprintf(fp, "\"2nd\""); break;
-    default: fprintf(fp, "\"none\"");
-    }
-    fprintf(fp, " shstr=\"%s\" ststr=\"%s\" scstr=\"%s\" errstr=\"%s\"",
+    fprintf(fp, " shstr=\"%s\" ststr=\"%s\" errstr=\"%s\"",
 	    (d->shStore ? sTrue : sFalse),
 	    (d->stStore ? sTrue : sFalse),
-	    (d->scStore ? sTrue : sFalse),
 	    (d->errStore ? sTrue : sFalse));
-    fprintf(fp, " shini=\"%.3e\" stini=\"%.3e\" stini2=\"%.3e\" scini=\"%.3e\" scini2=\"%.3e\"",
+    fprintf(fp, " shini=\"%.3e\" stini=\"%.3e\" stini2=\"%.3e\"",
 	    d->shInit,
-	    d->stInit, d->stInit2,
-	    d->scInit, d->scInit2);
-    fprintf(fp, " shdel=\"%.4e\" stdel=\"%.4e\" stdel2=\"%.4e\" scdel=\"%.4e\" scdel2=\"%.4e\"",
+	    d->stInit, d->stInit2);
+    fprintf(fp, " shdel=\"%.4e\" stdel=\"%.4e\" stdel2=\"%.4e\"",
 	    d->shDelta,
-	    d->stDelta, d->stDelta2,
-	    d->scDelta, d->scDelta2);
+	    d->stDelta, d->stDelta2);
     fprintf(fp, " shmin=\"%.3e\" shmax=\"%.3e\" >\n",
 	    d->shMin, d->shMax);
 

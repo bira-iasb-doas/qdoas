@@ -573,10 +573,6 @@ static void get_ref_info(GOME1NETCDF_ORBIT_FILE *pOrbitFile)
 
   auto cloud_bs =  reinterpret_cast<const float(*)[pixelSize]>(pOrbitFile->backscan_clouddata.cloud_frac.data());
 
-//   {
-//     FILE *fp;
-//     fp=fopen("toto.dat","a+t");
-
   for (int i=0;i<pOrbitFile->specNumber;i++)
    {
     // Declarations
@@ -600,14 +596,10 @@ static void get_ref_info(GOME1NETCDF_ORBIT_FILE *pOrbitFile)
 
       pOrbitFile->refNum[pixelType]=pOrbitFile->refNum[pixelType]+1;
 
-  //    if (i>=970 && i<=990)
-  //     fprintf(fp,"+++ %d %d %d %g %g %g\n",(i+1),pixelType,pixelIndex,pRef->latitude,pRef->longitude,pRef->sza);
      }
    }
 
 
-  //   fclose(fp);
-  //  }
  }
 
 // -----------------------------------------------------------------------------
@@ -781,9 +773,9 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
          {
           band_group = pOrbitFile->current_file.getGroup(pOrbitFile->root_name+pOrbitFile->mode+gome1netcdf_bandName[selected_band]);
 
-          pEngineContext->project.instrumental.use_row[0]=
+/*          pEngineContext->project.instrumental.use_row[0]=
           pEngineContext->project.instrumental.use_row[1]=
-          pEngineContext->project.instrumental.use_row[2]=true;
+          pEngineContext->project.instrumental.use_row[2]=true; */
 
           if ((band_group.dimLen("time")!=1) || (band_group.dimLen("ground_pixel")!=3))
            pOrbitFile->rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_FORMAT, "Dimensions of ground pixels in the GOME1 netCDF file are not the expected ones");  // in case of error, capture the message
@@ -822,7 +814,7 @@ RC GOME1NETCDF_Set(ENGINE_CONTEXT *pEngineContext)
         if (pInstrumental->gomenetcdf.pixelType!=PRJCT_INSTR_GOME1_PIXEL_GROUND)     // if not ground pixels only
          {
           band_group = pOrbitFile->current_file.getGroup(pOrbitFile->root_name+pOrbitFile->mode_bs+gome1netcdf_bandName[selected_band]);
-          pEngineContext->project.instrumental.use_row[3]=true;
+//          pEngineContext->project.instrumental.use_row[3]=true;
 
           if ((band_group.dimLen("time")!=1) || (band_group.dimLen("ground_pixel")!=1))
            pOrbitFile->rc = ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_FILE_FORMAT, "Dimensions of backscan pixels in the GOME1 netCDF file are not the expected ones");  // in case of error, capture the message
@@ -1168,6 +1160,9 @@ RC GOME1NETCDF_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex)
     pRecordInfo->gome.pixelNumber=pOrbitFile->scanline_pixnum[recordNo-1];      // pixel number
     pRecordInfo->gome.pixelType=pixelType;                                      // pixel type
     pRecordInfo->i_crosstrack=pixelType;
+
+    if (!pEngineContext->project.instrumental.use_row[pixelType])
+      rc=ERROR_ID_FILE_RECORD;
    }
 
   // Release buffers
@@ -1314,10 +1309,6 @@ static void get_ref_info2(GOME1NETCDF_ORBIT_FILE *pOrbitFile,GOME1NETCDF_REF *re
 
   auto cloud_bs =  reinterpret_cast<const float(*)[pixelSize]>(pOrbitFile->backscan_clouddata.cloud_frac.data());
 
-  //  {
-  //   FILE *fp;
-  //   fp=fopen("toto.dat","a+t");
-
   for (int i=0;i<pOrbitFile->specNumber;i++)
    {
     // Declarations
@@ -1336,14 +1327,9 @@ static void get_ref_info2(GOME1NETCDF_ORBIT_FILE *pOrbitFile,GOME1NETCDF_REF *re
     pRef->longitude=(pixelType==3)?lon_bs[scanIndex][pixelIndex]:lon_gr[scanIndex][pixelIndex];
     pRef->cloudFraction=(pixelType==3)?cloud_bs[scanIndex][pixelIndex]:cloud_gr[scanIndex][pixelIndex];
 
-  //  if (i>=970 && i<=990)
-  //   fprintf(fp,"--- %d %d %d %g %g %g\n",(i+1),pixelType,pixelIndex,pRef->latitude,pRef->longitude,pRef->sza);
-
    }
 
 
-  //   fclose(fp);
-  //  }
  }
 
 static bool use_as_reference(GOME1NETCDF_REF *pRef,const FENO *feno)
@@ -1362,15 +1348,6 @@ static bool use_as_reference(GOME1NETCDF_REF *pRef,const FENO *feno)
 
   const bool match_sza = feno->refSZADelta <= EPSILON || (fabs(pRef->sza-feno->refSZA) <= feno->refSZADelta);
   const bool match_cloud = cloudDelta <= EPSILON || (pRef->cloudFraction>9.e36) || (pRef->cloudFraction >= feno->cloudFractionMin && pRef->cloudFraction <= feno->cloudFractionMax);
-
-  /* if (match_lat && match_lon && match_sza)
-   {
-    FILE *fp;
-    fp=fopen("toto.dat","a+t");
-    fprintf(fp,"%d %g %g %g\n",pRef->pixelType,pRef->latitude,pRef->longitude,pRef->sza);
-    fclose(fp);
-   } */
-
 
   return (match_lat && match_lon && match_sza && match_cloud);
  }
@@ -1391,14 +1368,6 @@ static int find_ref_spectra(struct ref_list *(*selected_spectra)[NUM_VZA_REFS], 
     GOME1NETCDF_ORBIT_FILE *pOrbitFile=&gome1netCDF_orbitFiles[i];
     size_t n_wavel = pOrbitFile->calibration.channel_size;
     GOME1NETCDF_REF *refList;
-
-   /* {
-      FILE *fp;
-      fp=fopen("toto.dat","a+t");
-      fprintf(fp,"%s\n",pOrbitFile->fileName);
-      fclose(fp);
-     } */
-
 
     if ((refList=(GOME1NETCDF_REF *)malloc(pOrbitFile->specNumber*sizeof(GOME1NETCDF_REF)))!=NULL)
      {
@@ -1421,13 +1390,6 @@ static int find_ref_spectra(struct ref_list *(*selected_spectra)[NUM_VZA_REFS], 
               && pTabFeno->useKurucz!=ANLYS_KURUCZ_SPEC
               && pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_AUTOMATIC
               && use_as_reference(&refList[j],pTabFeno) ) {
-
-              /* {
-                 FILE *fp;
-                 fp=fopen("toto.dat","a+t");
-                 fprintf(fp,"Found %d %d %d %d\n",i,j,analysis_window,pixel_type);
-                 fclose(fp);
-                } */
 
             if (ref == NULL) {
               // ref hasn't been initialized yet for another analysis window, so do that now:
@@ -1577,13 +1539,6 @@ RC GOME1NETCDF_NewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle) {
             // window.  At this point we just emit a warning (it's not a
             // problem until we *need* that during retrieval for that bin).
 
-          /*  {
-             FILE *fp;
-             fp=fopen("toto.dat","a+t");
-             fprintf(fp,"Not found %d %d\n",i,indexFenoColumn);
-             fclose(fp);
-            } */
-
   #define MESSAGE " for analysis window %s and VZA bin %d"
             const int length = strlen(MESSAGE) + strlen(pTabFeno->windowName) + strlen(TOSTRING(MAX_FENO));
             char tmp[length];
@@ -1594,21 +1549,7 @@ RC GOME1NETCDF_NewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle) {
            }
           struct reference *ref = &vza_refs[i][indexFenoColumn];
 
-        /*  {
-           FILE *fp;
-           fp=fopen("toto.dat","a+t");
-           fprintf(fp,"Average_ref_spectra %d %s\n",i,pTabFeno->windowName);
-           fclose(fp);
-          } */
-
           rc = average_ref_spectra(selected_spectra[i][indexFenoColumn], pTabFeno->LambdaRef, pTabFeno->NDET, ref);
-
-        /*  {
-           FILE *fp;
-           fp=fopen("toto.dat","a+t");
-           fprintf(fp,"Average_ref_spectra %d\n",rc);
-           fclose(fp);
-          } */
 
           if (rc != ERROR_ID_NO)
             goto cleanup;
@@ -1616,23 +1557,9 @@ RC GOME1NETCDF_NewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle) {
           // align ref w.r.t irradiance reference:
           double sigma_shift, sigma_stretch, sigma_stretch2; // not used here...
 
-        /*  {
-           FILE *fp;
-           fp=fopen("toto.dat","a+t");
-           fprintf(fp," ANALYSE_fit_shift_stretch %d %s\n",i,pTabFeno->windowName);
-           fclose(fp);
-          } */
-
           rc = ANALYSE_fit_shift_stretch(1, 0, pTabFeno->SrefEtalon, ref->spectrum,
                                          &ref->shift, &ref->stretch, &ref->stretch2,
                                          &sigma_shift, &sigma_stretch, &sigma_stretch2);
-
-  /* {
-   FILE *fp;
-   fp=fopen("toto.dat","a+t");
-   fprintf(fp,"ANALYSE_fit_shift_stretch %d\n",rc);
-   fclose(fp);
-  } */
 
        }
      }
@@ -1656,6 +1583,47 @@ RC GOME1NETCDF_NewRef(ENGINE_CONTEXT *pEngineContext,void *responseHandle) {
 
   return rc;
  }
+
+// -----------------------------------------------------------------------------
+// FUNCTION GOME1NETCDF_InitRef
+// -----------------------------------------------------------------------------
+//!
+//! \fn      RC GOME1NETCDF_InitRef(const char *reference_filename, ENGINE_CONTEXT *pEngineContext)
+//! \details Initiate the variables of the reference spectrum
+//! \param   [in]  reference_filename, pointer.\n
+//! \param   [in]  responseHandle  pEngineContext\n
+//! \return  ERROR_ID_FILE_END if the requested record number is not found\n
+//!          ERROR_ID_FILE_RECORD if the requested record doesn't satisfy current criteria (for example for the selection of the reference)\n
+//!          ERROR_ID_NO on success
+//!
+// -----------------------------------------------------------------------------
+
+int GOME1NETCDF_InitRef(const char *reference_filename, int *n_wavel_temp,ENGINE_CONTEXT *pEngineContext) {
+  try {
+    NetCDFFile reference_file(reference_filename);
+    int col_dim = reference_file.dimLen("col_dim");
+    int spectral_dim = reference_file.dimLen("spectral_dim");
+    if (ANALYSE_swathSize != col_dim) std::cout << "ERROR: swathSize != col_dim!" << std::endl;
+
+    if (reference_file.hasVar("use_row"))
+     {
+      vector<int> use_row(col_dim);
+      const size_t start[] = {0};
+      const size_t count[] = {col_dim};
+       reference_file.getVar("use_row", start, count, use_row.data());
+
+      for (int i=0; i< col_dim; ++i) {
+        pEngineContext->project.instrumental.use_row[i]=(bool)use_row[i];
+      }
+     }
+
+    *n_wavel_temp = spectral_dim;
+  } catch(std::runtime_error& e) {
+    return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF, e.what());
+  }
+  return ERROR_ID_NO;
+}
+
 
 // -----------------------------------------------------------------------------
 // FUNCTION GOME1NETCDF_LoadAnalysis
@@ -1686,81 +1654,85 @@ RC GOME1NETCDF_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
   if (rc || (pEngineContext->analysisRef.refAuto && ! gome1netCDF_loadReferenceFlag) )
     return rc;
 
-  int useUsamp=0,useKurucz=0;
+  int useUsamp=0,useKurucz=0,useRef2=0;
 
   // Browse analysis windows and load missing data
 
   for (int indexFenoColumn=0;(indexFenoColumn<ANALYSE_swathSize) && !rc;indexFenoColumn++) {
 
-   if (!pEngineContext->project.instrumental.use_row[indexFenoColumn]) continue;
-
    for (int indexFeno=0; indexFeno<NFeno && !rc; indexFeno++) {
      FENO *pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
      pTabFeno->NDET=n_wavel;
+     pTabFeno->rc = 0;
+
+     if (!pTabFeno->useRefRow) continue;
 
      // Load calibration and reference spectra
 
-     if (!pTabFeno->gomeRefFlag) { // use irradiance from L1B file
+     if (!pTabFeno->hidden && !pTabFeno->gomeRefFlag) {
+       // use irradiance from L1B file
+       GOME1NETCDF_Get_Irradiance(pOrbitFile,channel_index,pTabFeno->LambdaRef,pTabFeno->SrefEtalon);
 
-       GOME1NETCDF_Get_Irradiance(pOrbitFile,channel_index,pTabFeno->LambdaRef,pTabFeno->Sref);
+       // we consider ref1
+       if (!pTabFeno->useRadAsRef1 || // use the irradiance
+           !(rc=SPLINE_Vector(pTabFeno->LambdaRadAsRef1,pTabFeno->SrefRadAsRef1,pTabFeno->Deriv2RadAsRef1,pTabFeno->n_wavel_ref1,pTabFeno->LambdaRef,pTabFeno->SrefEtalon,n_wavel,SPLINE_CUBIC)))
+           // this is RadAsRef
+         rc = VECTOR_NormalizeVector(pTabFeno->SrefEtalon-1,pTabFeno->NDET,&pTabFeno->refNormFact,"GOME1NETCDF_LoadAnalysis (Reference) ");
 
-       if (!TabFeno[indexFenoColumn][indexFeno].hidden) {
-         rc = VECTOR_NormalizeVector(pTabFeno->Sref-1,pTabFeno->NDET,&pTabFeno->refNormFact,"GOME1NETCDF_LoadAnalysis (Reference) ");
+       if (!rc){
+         if ((pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_FILE) &&!strlen(pTabFeno->ref2))
+          memcpy(pTabFeno->Sref,pTabFeno->SrefEtalon,sizeof(double)*n_wavel);
+         else if ((pTabFeno->useRadAsRef2)) {
+          rc=SPLINE_Vector(pTabFeno->LambdaRadAsRef2,pTabFeno->SrefRadAsRef2,pTabFeno->Deriv2RadAsRef2,pTabFeno->n_wavel_ref2,pTabFeno->LambdaRef,pTabFeno->Sref,n_wavel,SPLINE_CUBIC);
+          if (rc == 0) rc=VECTOR_NormalizeVector(pTabFeno->Sref-1,n_wavel,&pTabFeno->refNormFact,"GOME1NETCDF_LoadAnalysis (Reference) ");
+         }
+        }
+       pTabFeno->useEtalon=pTabFeno->displayRef=1;
 
-         if (rc)
-           goto EndGOME1NETCDF_LoadAnalysis;
+       // Browse symbols
 
-         memcpy(pTabFeno->SrefEtalon,pTabFeno->Sref,sizeof(double) *pTabFeno->NDET);
-         pTabFeno->useEtalon=pTabFeno->displayRef=1;
+       for (int indexTabCross=0; indexTabCross<pTabFeno->NTabCross; indexTabCross++) {
+         CROSS_REFERENCE *pTabCross=&pTabFeno->TabCross[indexTabCross];
+         WRK_SYMBOL *pWrkSymbol=&WorkSpace[pTabCross->Comp];
 
-         // Browse symbols
+         // Cross sections and predefined vectors
 
-         for (int indexTabCross=0; indexTabCross<pTabFeno->NTabCross; indexTabCross++) {
-           CROSS_REFERENCE *pTabCross=&pTabFeno->TabCross[indexTabCross];
-           WRK_SYMBOL *pWrkSymbol=&WorkSpace[pTabCross->Comp];
-
-           // Cross sections and predefined vectors
-
-           if ((((pWrkSymbol->type==WRK_SYMBOL_CROSS) && (pTabCross->crossAction==ANLYS_CROSS_ACTION_NOTHING)) ||
-                ((pWrkSymbol->type==WRK_SYMBOL_PREDEFINED) &&
-                 ((indexTabCross==pTabFeno->indexCommonResidual) ||
-                  (((indexTabCross==pTabFeno->indexUsamp1) || (indexTabCross==pTabFeno->indexUsamp2)) && (pUsamp->method==PRJCT_USAMP_FILE))))) &&
-               ((rc=ANALYSE_CheckLambda(pWrkSymbol,pTabFeno->LambdaRef,pTabFeno->NDET)) !=ERROR_ID_NO))
-               {
-             goto EndGOME1NETCDF_LoadAnalysis;
-            }
+         if ((((pWrkSymbol->type==WRK_SYMBOL_CROSS) && (pTabCross->crossAction==ANLYS_CROSS_ACTION_NOTHING)) ||
+              ((pWrkSymbol->type==WRK_SYMBOL_PREDEFINED) &&
+               ((indexTabCross==pTabFeno->indexCommonResidual) ||
+                (((indexTabCross==pTabFeno->indexUsamp1) || (indexTabCross==pTabFeno->indexUsamp2)) && (pUsamp->method==PRJCT_USAMP_FILE)))))) {
+             rc=ANALYSE_CheckLambda(pWrkSymbol,pTabFeno->LambdaRef,pTabFeno->NDET);
          }
 
-         // Gaps : rebuild subwindows on new wavelength scale
+       // Gaps : rebuild subwindows on new wavelength scale
 
-         doas_spectrum *new_range = spectrum_new();
-         int DimL=0;
-         for (int indexWindow = 0; indexWindow < pTabFeno->fit_properties.Z; indexWindow++) {
-           int pixel_start = FNPixel(pTabFeno->LambdaRef,pTabFeno->fit_properties.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
-           int pixel_end = FNPixel(pTabFeno->LambdaRef,pTabFeno->fit_properties.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
+       doas_spectrum *new_range = spectrum_new();
+       int DimL=0;
+       for (int indexWindow = 0; indexWindow < pTabFeno->fit_properties.Z; indexWindow++) {
+         int pixel_start = FNPixel(pTabFeno->LambdaRef,pTabFeno->fit_properties.LFenetre[indexWindow][0],pTabFeno->NDET,PIXEL_AFTER);
+         int pixel_end = FNPixel(pTabFeno->LambdaRef,pTabFeno->fit_properties.LFenetre[indexWindow][1],pTabFeno->NDET,PIXEL_BEFORE);
 
-           spectrum_append(new_range, pixel_start, pixel_end);
+         spectrum_append(new_range, pixel_start, pixel_end);
 
-           DimL += pixel_end - pixel_start +1;
-         }
-
-         // Buffers allocation
-         FIT_PROPERTIES_free(__func__,&pTabFeno->fit_properties);
-         pTabFeno->fit_properties.DimL=DimL;
-         FIT_PROPERTIES_alloc(__func__,&pTabFeno->fit_properties);
-         // new spectral windows
-         pTabFeno->fit_properties.specrange = new_range;
-
-         rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef,indexFenoColumn);
-
-         if (rc) goto EndGOME1NETCDF_LoadAnalysis;
-
-         if ( (!pKuruczOptions->fwhmFit || !pTabFeno->useKurucz) && pTabFeno->xsToConvolute) {
-           rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,ANALYSIS_slitMatrix,ANALYSIS_slitParam,pSlitOptions->slitFunction.slitType,indexFenoColumn,pSlitOptions->slitFunction.slitWveDptFlag);
-         }
-
-         if (rc) goto EndGOME1NETCDF_LoadAnalysis;
+         DimL += pixel_end - pixel_start +1;
        }
+
+       // Buffers allocation
+       FIT_PROPERTIES_free(__func__,&pTabFeno->fit_properties);
+       pTabFeno->fit_properties.DimL=DimL;
+       FIT_PROPERTIES_alloc(__func__,&pTabFeno->fit_properties);
+       // new spectral windows
+       pTabFeno->fit_properties.specrange = new_range;
+
+       if (!rc) rc=ANALYSE_XsInterpolation(pTabFeno,pTabFeno->LambdaRef,indexFenoColumn);
+
+       if ( !rc && ((!pKuruczOptions->fwhmFit || !pTabFeno->useKurucz) && pTabFeno->xsToConvolute)) {
+         rc=ANALYSE_XsConvolution(pTabFeno,pTabFeno->LambdaRef,ANALYSIS_slitMatrix,ANALYSIS_slitParam,pSlitOptions->slitFunction.slitType,indexFenoColumn,pSlitOptions->slitFunction.slitWveDptFlag);
+       }
+
+       if (strlen(pTabFeno->ref2))
+        useRef2++;
+      }
      }
 
      memcpy(pTabFeno->LambdaK,pTabFeno->LambdaRef,sizeof(double) *pTabFeno->NDET);
@@ -1768,6 +1740,10 @@ RC GOME1NETCDF_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
      useUsamp+=pTabFeno->useUsamp;
      useKurucz+=pTabFeno->useKurucz;
+     if (rc != ERROR_ID_NO){
+        pTabFeno->rc = rc;
+        rc = ERROR_ID_NO;
+     }
    }
 
   // Wavelength calibration alignment
@@ -1796,8 +1772,11 @@ RC GOME1NETCDF_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle)
 
   // Automatic reference selection
 
-  if (gome1netCDF_loadReferenceFlag)
-   rc=GOME1NETCDF_NewRef(pEngineContext,responseHandle);
+   if ((THRD_id!=THREAD_TYPE_KURUCZ) &&
+      ( (gome1netCDF_loadReferenceFlag && !(rc=GOME1NETCDF_NewRef(pEngineContext,responseHandle))) || useRef2))
+    for (int indexFenoColumn=0;(indexFenoColumn<ANALYSE_swathSize) && !rc;indexFenoColumn++)
+      rc=ANALYSE_AlignReference(pEngineContext,2,responseHandle,indexFenoColumn); // 2 is for automatic mode
+
   if (!rc) gome1netCDF_loadReferenceFlag=0;
 
 EndGOME1NETCDF_LoadAnalysis:

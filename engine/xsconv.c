@@ -824,6 +824,7 @@ RC XSCONV_ConvertCrossSectionFile(MATRIX_OBJECT *pCross, double lambdaMin,double
      }
 
      // Recalculate second derivatives
+
      rc = SPLINE_Deriv2(pCross->matrix[0],pCross->matrix[1],pCross->deriv2[1],pCross->nl,"XSCONV_LoadCrossSectionFile");
    }
    return rc;

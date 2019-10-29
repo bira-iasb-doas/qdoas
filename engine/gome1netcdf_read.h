@@ -44,6 +44,7 @@ extern "C" {
   RC   GOME1NETCDF_Read(ENGINE_CONTEXT *pEngineContext,int recordNo,INDEX fileIndex);
   void GOME1NETCDF_Cleanup(void);
   int  GOME1NETCDF_get_orbit_date(int *orbit_year, int *orbit_month, int *orbit_day);
+  int GOME1NETCDF_InitRef(const char *reference_filename, int *n_wavel_temp, ENGINE_CONTEXT *pEngineContext);
   RC   GOME1NETCDF_LoadAnalysis(ENGINE_CONTEXT *pEngineContext,void *responseHandle);
 
 #ifdef __cplusplus

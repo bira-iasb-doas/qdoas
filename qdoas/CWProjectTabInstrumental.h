@@ -49,11 +49,15 @@ class CWInstrSciaEdit;
 class CWInstrOmiEdit;
 class CWInstrOmpsEdit;
 class CWInstrTropomiEdit;
+class CWInstrApexEdit;
 class CWInstrMfcEdit;
 class CWInstrMfcStdEdit;
 class CWInstrMfcbiraEdit;
 class CWInstrOceanOpticsEdit;
 class CWInstrFrm4doasEdit;
+class CWInstrAvantesEdit;
+class CWInstrApexEdit;
+class CWInstrGemsEdit;
 
 //--------------------------------------------------------------------------
 class CWProjectTabInstrumental : public QFrame
@@ -97,13 +101,14 @@ Q_OBJECT
   CWInstrOmiEdit *m_omiEdit;
   CWInstrOmpsEdit *m_ompsEdit;
   CWInstrTropomiEdit *m_tropomiEdit;
+  CWInstrApexEdit *m_apexEdit;
+  CWInstrGemsEdit *m_gemsEdit;
   CWInstrGome2Edit *m_gome2Edit;
   CWInstrMinimumEdit *m_mkzyEdit;
-  CWInstrMinimumEdit *m_biraairborneEdit;
-  CWInstrMinimumEdit *m_biramobileEdit;
-  CWInstrMinimumEdit *m_apexEdit;
   CWInstrOceanOpticsEdit *m_oceanOpticsEdit;
   CWInstrFrm4doasEdit *m_frm4doasEdit;
+  CWInstrAvantesEdit *m_biraairborneEdit;
+  CWInstrAvantesEdit *m_biramobileEdit;
   std::map<int,int> m_instrumentToStackIndexMap;
 };
 
@@ -453,6 +458,20 @@ class CWInstrTropomiEdit : public CWCalibInstrEdit
 
 //--------------------------------------------------------------------------
 
+class CWInstrApexEdit : public CWCalibInstrEdit
+{
+  Q_OBJECT
+ public:
+  CWInstrApexEdit(const struct instrumental_apex *d, QWidget *parent = 0);
+
+  void apply(struct instrumental_apex *d) const;
+
+ private:
+  QLineEdit *m_trackSelection;
+};
+
+//--------------------------------------------------------------------------
+
 class CWInstrOceanOpticsEdit : public CWCalibInstrEdit
 {
  public:
@@ -480,6 +499,37 @@ class CWInstrFrm4doasEdit : public CWAllFilesEdit
   QComboBox *m_spectralTypeCombo;
   StrayLightConfig *m_strayLightConfig;
 };
+
+//--------------------------------------------------------------------------
+
+class CWInstrAvantesEdit : public CWAllFilesEdit
+{
+ public:
+
+  CWInstrAvantesEdit(const struct instrumental_avantes *d, QWidget *parent = 0);
+
+  void apply(struct instrumental_avantes *d) const;
+
+ private:
+  QLineEdit *m_detSizeEdit;
+  StrayLightConfig *m_strayLightConfig;
+};
+
+//--------------------------------------------------------------------------
+
+class CWInstrGemsEdit : public CWCalibInstrEdit
+{
+  Q_OBJECT
+ public:
+  CWInstrGemsEdit(const struct instrumental_gems *d, QWidget *parent = 0);
+
+  void apply(struct instrumental_gems *d) const;
+
+ private:
+  QLineEdit *m_trackSelection;
+};
+
+//--------------------------------------------------------------------------
 
 #endif
 

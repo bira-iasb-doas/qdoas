@@ -362,10 +362,6 @@ char *CurfitError(char *string,INDEX indexError,double *p,double *deltap)
      strcpy(param,"Stretch");
     else if (pTabCross->FitStretch2==indexError)
      strcpy(param,"Stretch2");
-    else if (pTabCross->FitScale==indexError)
-     strcpy(param,"Scale");
-    else if (pTabCross->FitScale2==indexError)
-     strcpy(param,"Scale2");
     else if (pTabCross->FitParam==indexError)
      strcpy(param,"Predefined");
 
@@ -414,7 +410,7 @@ static RC CurfitNumDeriv(double *specX, double *srefX, const double *sigmaY, int
   RC       rc;                                                                  // return code
 
   #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionBegin(__func__,DEBUG_FCTTYPE_APPL);
+  DEBUG_FunctionBegin(__func__,DEBUG_FCTTYPE_APPL|DEBUG_FCTTYPE_MEM);
   #endif
 
   // Initializations
@@ -437,6 +433,7 @@ static RC CurfitNumDeriv(double *specX, double *srefX, const double *sigmaY, int
     // Evaluate function for Aj+Dj
 
     A[indexA]=Aj+Dj;
+
     if ((rc=ANALYSE_Function(specX,srefX,sigmaY,Yfit2,nY,P,A,indexFenoColumn,fitprops))>=THREAD_EVENT_STOP)
      goto EndNumDeriv;
 
@@ -457,6 +454,10 @@ static RC CurfitNumDeriv(double *specX, double *srefX, const double *sigmaY, int
 
   if (Yfit2!=NULL)
    MEMORY_ReleaseDVector(__func__,"Yfit2",Yfit2,0);
+
+#if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionStop((char *)__func__,rc);
+#endif
 
   return rc;
  }
@@ -527,9 +528,7 @@ static RC CurfitDerivFunc(double *specX, double *srefX, double *sigmaY,int nY, c
 
         ((TabCross[i].FitShift!=ITEM_NONE) && ((rc=CurfitNumDeriv(specX,srefX,sigmaY,nY, Yfit, P,A,deltaA,TabCross[i].FitShift,deriv,indexFenoColumn,fitprops))>=THREAD_EVENT_STOP)) ||
         ((TabCross[i].FitStretch!=ITEM_NONE) && ((rc=CurfitNumDeriv(specX,srefX,sigmaY,nY,Yfit, P,A,deltaA,TabCross[i].FitStretch,deriv,indexFenoColumn,fitprops))>=THREAD_EVENT_STOP)) ||
-        ((TabCross[i].FitStretch2!=ITEM_NONE) && ((rc=CurfitNumDeriv(specX,srefX,sigmaY,nY, Yfit, P,A,deltaA,TabCross[i].FitStretch2,deriv,indexFenoColumn,fitprops))>=THREAD_EVENT_STOP)) ||
-        ((TabCross[i].FitScale!=ITEM_NONE) && ((rc=CurfitNumDeriv(specX,srefX,sigmaY,nY,Yfit, P,A,deltaA,TabCross[i].FitScale,deriv,indexFenoColumn,fitprops))>=THREAD_EVENT_STOP)) ||
-        ((TabCross[i].FitScale2!=ITEM_NONE) && ((rc=CurfitNumDeriv(specX,srefX,sigmaY,nY, Yfit, P,A,deltaA,TabCross[i].FitScale2,deriv,indexFenoColumn,fitprops))>=THREAD_EVENT_STOP)))
+        ((TabCross[i].FitStretch2!=ITEM_NONE) && ((rc=CurfitNumDeriv(specX,srefX,sigmaY,nY, Yfit, P,A,deltaA,TabCross[i].FitStretch2,deriv,indexFenoColumn,fitprops))>=THREAD_EVENT_STOP)))
 
       return rc;
    }
@@ -626,7 +625,7 @@ RC Curfit(int     mode,                                                         
   RC rc = ERROR_ID_NO;
 
   #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_FunctionBegin(__func__,DEBUG_FCTTYPE_APPL);
+  DEBUG_FunctionBegin(__func__,DEBUG_FCTTYPE_APPL|DEBUG_FCTTYPE_MEM);
   #endif
 
   // Initializations
@@ -635,7 +634,6 @@ RC Curfit(int     mode,                                                         
 
   B=beta=NULL;
   alpha=array=deriv=NULL;
-
   chisqr=(double)0.;
 
   // Allocate needed vectors and matrices
@@ -763,7 +761,7 @@ RC Curfit(int     mode,                                                         
       if (chisq1<chisqr)
        *pLambda*=(double)10.;
       niter++;
-      
+
       if (niter> CURFIT_MAX_ITER)
        {
        	rc=ERROR_SetLast(__func__,ERROR_TYPE_WARNING,ERROR_ID_CONVERGENCE, CURFIT_MAX_ITER);

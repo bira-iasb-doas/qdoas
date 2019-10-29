@@ -26,11 +26,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QPalette>
 #include <QApplication>
 #include <QIntValidator>
+#include <QAbstractItemView>
+#include <QModelIndex>
+#include <QAction>
 
 #include "CDoasTable.h"
 #include "CValidator.h"
 
 #include "debugutil.h"
+#include "constants.h"
 
 CDoasTable::CDoasTable(const QString &label, int headerHeight, QWidget *parent) :
   QFrame(parent),
@@ -53,7 +57,7 @@ CDoasTable::CDoasTable(const QString &label, int headerHeight, QWidget *parent) 
 
   setMinimumSize(QSize(m_header->columnWidth() + m_sbThickness + m_centralWidth,
                        m_titleHeight + m_sbThickness + m_centralHeight));
-  
+
   m_hsb->setRange(0, 0);
   m_hsb->setValue(0);
 
@@ -82,7 +86,7 @@ int CDoasTable::rowIndexAtPosition(int yPixel) const
 
   int y = m_titleHeight;
   int index = m_header->rowOffset();
-  
+
   while (index < m_rowHeightList.count()) {
     y += m_rowHeightList.at(index); // limit for row index
     if (yPixel < y) break;
@@ -156,7 +160,7 @@ void CDoasTable::addRow(int rowHeight, const QString &label, QList<QVariant> &ce
   }
 
   m_header->addRow(rowHeight, label);
-  
+
   QList<QVariant>::const_iterator cdIt = cellData.begin();
   QList<CDoasTableColumn*>::iterator it = m_columnList.begin();
   while (it != m_columnList.end()) {
@@ -185,7 +189,7 @@ void CDoasTable::addRow(int rowHeight, const QString &label, QList<QVariant> &ce
 void CDoasTable::removeRow(int rowIndex)
 {
   if (rowIndex >= 0 && rowIndex < m_rowHeightList.count()) {
-    
+
     m_header->removeRow(rowIndex);
 
     QList<CDoasTableColumn*>::iterator it = m_columnList.begin();
@@ -211,7 +215,7 @@ void CDoasTable::setColumnOffset(int offset)
     CDoasTableColumn *tmp;
     int index = 0;
     int x = m_sbThickness + m_header->columnWidth();
-    
+
     while (index < m_columnList.count()) {
       tmp = m_columnList.at(index);
 
@@ -269,7 +273,7 @@ QList<QVariant> CDoasTable::getCellData(int rowIndex) const
       ++it;
     }
   }
-  
+
   return cellData;
 }
 
@@ -284,7 +288,7 @@ QVariant CDoasTable::getCellData(int rowIndex, int columnIndex) const
 void CDoasTable::setHeaderLabel(int rowIndex, const QString &label)
 {
   m_header->setLabel(rowIndex, label);
-  
+
 }
 
 void CDoasTable::setCellData(int rowIndex, int columnIndex, const QVariant &cellData)
@@ -328,12 +332,12 @@ void CDoasTable::updateCols(int wid, int hei) {
   m_centralHeight = hei - m_titleHeight - m_sbThickness;
 
   m_vsb->resize(m_sbThickness, m_titleHeight + m_centralHeight);
-  
+
   m_hsb->move(m_sbThickness, hei - m_sbThickness);
   m_hsb->resize(wid - m_sbThickness, m_sbThickness);
 
   // move the columns and resize them
-  
+
   m_header->setViewportHeight(m_centralHeight);
 
   CDoasTableColumn *tmp;
@@ -450,7 +454,7 @@ CDoasTableColumn::CDoasTableColumn(const QString &label, CDoasTable *owner, int 
   m_header->setFrameStyle(QFrame::Panel | QFrame::Raised);
   m_header->setLineWidth(2);
 
-  m_header->setMinimumSize(QSize(m_header->fontMetrics().boundingRect(label).width() 
+  m_header->setMinimumSize(QSize(m_header->fontMetrics().boundingRect(label).width()
                                  + 2*m_header->fontMetrics().averageCharWidth() ,
                                  m_owner->headerHeight()));
 
@@ -479,7 +483,7 @@ void CDoasTableColumn::setViewportHeight(int vpHeight)
   int index = m_rowOffset;
   while (index < m_widgetList.count()) {
     tmp = m_widgetList.at(index);
-    
+
     if (y < vpHeight) {
       tmp->move(m_xBorder, y + m_yBorder);
       tmp->show();
@@ -487,7 +491,7 @@ void CDoasTableColumn::setViewportHeight(int vpHeight)
     }
     else {
       tmp->hide();
-    }      
+    }
     ++index;
   }
 }
@@ -523,7 +527,7 @@ void CDoasTableColumn::layoutAndDisplay(void)
   int index = 0;
   while (index < m_widgetList.count()) {
     tmp = m_widgetList.at(index);
-    
+
     if (index < m_rowOffset) {
       tmp->hide();
     }
@@ -536,7 +540,7 @@ void CDoasTableColumn::layoutAndDisplay(void)
       else {
 	tmp->hide();
       }
-    }      
+    }
     ++index;
   }
 }
@@ -672,6 +676,7 @@ CDoasTableColumnHeader::CDoasTableColumnHeader(const QString &label, CDoasTable 
 
 void CDoasTableColumnHeader::addRow(int height, const QString &label) {
   CDoasTableColumn::addRow(height, QVariant(label));
+
   setLabel(rowCount()-1, label);
 }
 
@@ -714,12 +719,12 @@ void CDoasTableColumnHeader::setLabel(int rowIndex, const QString &label)
 
   owner()->headerChanged();
 }
-   
+
 void CDoasTableColumnHeader::setCellData(int rowIndex, const QVariant &cellData)
 {
   setLabel(rowIndex, cellData.toString());
 }
-   
+
 
 //-------------------------------------
 
@@ -855,9 +860,183 @@ QVariant CDoasTableColumnDoubleEdit::getCellData(int rowIndex) const
 
 //-------------------------------------
 
-CDoasTableColumnComboBox::CDoasTableColumnComboBox(QWidget *parent) :
-  QComboBox(parent)
+bool CDoasTableColumnComboBox::eventFilter(QObject *o, QEvent *e) {
+  if (e->type() == QEvent::MouseButtonRelease) {
+    if (static_cast<QMouseEvent*>(e)->button() == Qt::RightButton) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void CDoasTableColumnComboBox::list_context_menu(QPoint pos) {
+  QAbstractItemView* comboView = view();
+  QModelIndex index = comboView->indexAt(pos);
+  QAction *selectedItem;
+
+  int optionIndex=-1;
+
+  if ((m_type!=ANLYS_COMBO_NONE) && (m_menu!=NULL) && ((selectedItem=m_menu->exec(comboView->mapToGlobal(pos)))!=NULL) )
+   {
+
+    QString selectedText=selectedItem->text();;
+    char str[100];
+
+    if ((m_type==ANLYS_COMBO_DIFF_ORTHO) && ((optionIndex=index.row())>ANLYS_DIFFORTHO_DIFFERENTIAL_XS))
+     sprintf(str,"%s %s",((optionIndex==ANLYS_DIFFORTHO_ORTHOGONALIZATION)? "Orthogonalize to" : "Subtract from"),selectedText.toLatin1().data());
+    else if ((m_type==ANLYS_COMBO_CORRECTION) && ((optionIndex=index.row())==ANLYS_CORRECTION_TYPE_MOLECULAR_RING))
+     sprintf(str,"Mol. ring (%s)",selectedText.toLatin1().data());
+    else if ((m_type==ANLYS_COMBO_CORRECTION) && ((optionIndex=index.row())==ANLYS_CORRECTION_TYPE_MOLECULAR_RING_SLOPE))
+     sprintf(str,"Slope+Mol. ring (%s)",selectedText.toLatin1().data());
+
+    setItemText(optionIndex,str);
+   }
+}
+
+CDoasTableColumnComboBox::CDoasTableColumnComboBox(int type,const QString &excludedSymbol,QWidget *parent) :
+  QComboBox(parent),
+  m_excludedSymbol(excludedSymbol),
+  m_menu(NULL)
 {
+  m_type=type;
+
+  QAbstractItemView* comboView = view();
+  comboView->viewport()->installEventFilter(this);
+  comboView->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(comboView, SIGNAL(customContextMenuRequested(QPoint)),
+          this, SLOT(list_context_menu(QPoint)));
+
+}
+
+int CDoasTableColumnComboBox::GetIndexDiffOrtho(QString text)
+ {
+  int index;
+
+  index=-1;
+
+  if (text=="None")
+   index=ANLYS_DIFFORTHO_NONE;
+  else if (text=="Differential XS")
+   index=ANLYS_DIFFORTHO_DIFFERENTIAL_XS;
+  else if (text.startsWith("Orthogonalize to") || text.startsWith("Subtract from"))
+   {
+    QStringList tokens = text.split( " " );
+    QString xs = tokens.value( tokens.length() - 1 );
+
+    if (m_symbols.contains(xs))
+     index=(text.startsWith("Orthogonalize to"))?ANLYS_DIFFORTHO_ORTHOGONALIZATION:ANLYS_DIFFORTHO_SUBTRACTION;
+   }
+  else if (m_symbols.contains(text))
+   {
+    char str[100];
+
+    index=ANLYS_DIFFORTHO_ORTHOGONALIZATION;
+    sprintf(str,"Orthogonalize to %s",text.toLatin1().data());
+    text=QString(str);
+   }
+
+   if (index!=-1)
+    setItemText(index,text);
+
+   return index;
+ }
+
+int CDoasTableColumnComboBox::GetIndexCorrection(QString text)
+ {
+  int index;
+
+  index=-1;
+
+  if (text=="None")
+   index=ANLYS_CORRECTION_TYPE_NONE;
+  else if (text=="Slope")
+   index=ANLYS_CORRECTION_TYPE_SLOPE;
+  else if (text=="Pukite")
+   index=ANLYS_CORRECTION_TYPE_PUKITE;
+  else if (text.startsWith("Mol. ring") || text.startsWith("Slope+Mol. ring"))
+   {
+    QStringList tokens = text.split( " " );
+    QString xs = tokens.value( tokens.length() - 1 );
+    char str[100];
+
+    sscanf(xs.toLatin1().data(),"(%[^)])",str);
+
+    if (m_symbols.contains(QString(str)))
+     index=(text.startsWith("Mol. ring"))?ANLYS_CORRECTION_TYPE_MOLECULAR_RING:ANLYS_CORRECTION_TYPE_MOLECULAR_RING_SLOPE;
+   }
+  else if (m_symbols.contains(text))
+   {
+    char str[100];
+
+    index=ANLYS_CORRECTION_TYPE_MOLECULAR_RING;
+    sprintf(str,"Mol. ring (%s)",text.toLatin1().data());
+    text=QString(str);
+   }
+
+   if (index!=-1)
+    setItemText(index,text);
+
+   return index;
+ }
+
+int CDoasTableColumnComboBox::GetIndex(QString text)
+ {
+  if (m_type==ANLYS_COMBO_DIFF_ORTHO)
+   return(GetIndexDiffOrtho(text));
+  else if (m_type==ANLYS_COMBO_CORRECTION)
+   return(GetIndexCorrection(text));
+  else
+   return(-1);
+ }
+
+void CDoasTableColumnComboBox::slotSymbolListChanged(const QStringList &symbols)
+{
+  // if an initial value is set, then try and select it ...
+  QString text = m_pendingInitial.isNull() ? currentText() : m_pendingInitial;
+  int index;
+
+  m_symbols=symbols;
+
+  if (m_menu!=NULL)
+   {
+    delete(m_menu);
+    m_menu=NULL;
+   }
+
+  m_menu=new QMenu(this);
+
+  if (symbols.count())
+   {
+    QStringList::const_iterator it = symbols.begin();
+    while (it != symbols.end()) {
+      if (*it != m_excludedSymbol)
+       m_menu->addAction(*it);
+      ++it;
+    }
+   }
+
+  // try and reselect ...
+  index = GetIndex(text);
+
+  if (index != -1) {
+    setCurrentIndex(index);
+    if (text == m_pendingInitial)
+      m_pendingInitial = QString(); // has been set ...
+  }
+
+}
+
+void CDoasTableColumnComboBox::initialSelection(const QString &text)
+{
+  // sets the initial value, which might not yet be in the list ...
+
+  int index = GetIndex(text);
+  if (index != -1) {
+    setCurrentIndex(index); // exists .. just set it
+  }
+  else {
+    m_pendingInitial = text; // set it and try again later (in slotSymbolListChanged)
+  }
 }
 
 void CDoasTableColumnComboBox::slotTextChanged(const QString &newText)
@@ -878,7 +1057,7 @@ CDoasTableColumnCombo::CDoasTableColumnCombo(const QStringList &tags, const QStr
 
 QWidget* CDoasTableColumnCombo::createCellWidget(const QVariant &cellData)
 {
-  CDoasTableColumnComboBox *tmp = new CDoasTableColumnComboBox;
+  CDoasTableColumnComboBox *tmp = new CDoasTableColumnComboBox(ANLYS_COMBO_NONE);
 
   QStringList::iterator it = m_tags.begin();
   while (it != m_tags.end()) {
@@ -912,6 +1091,7 @@ QVariant CDoasTableColumnCombo::getCellData(int rowIndex) const
 void CDoasTableColumnCombo::setCellData(int rowIndex, const QVariant &cellData)
 {
   QWidget *p = getWidgetNonConst(rowIndex);
+
   if (p) {
     QComboBox *tmp = dynamic_cast<QComboBox*>(p);
     if (tmp) {

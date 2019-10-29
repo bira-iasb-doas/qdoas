@@ -106,8 +106,9 @@ void RESOURCE_Free(void)
   ANALYSE_Free();             // Analysis
   OUTPUT_Free();              // Output
 
+
   #if defined(__DEBUG_) && __DEBUG_
-  DEBUG_Start(ENGINE_dbgFile,"RESOURCE_Free > MEMORY_End",DEBUG_FCTTYPE_MEM,5,DEBUG_DVAR_NO,0);
+  DEBUG_Start(ENGINE_dbgFile,"RESOURCE_Free > MEMORY_End",DEBUG_FCTTYPE_MEM,5,DEBUG_DVAR_YES,0);
   MEMORY_End();
   DEBUG_Stop("RESOURCE_Free > MEMORY_End");
   #endif

@@ -45,7 +45,7 @@ CWSymbolEditor::CWSymbolEditor(const QString &symbolName, const QString &descrip
   m_symbolName->setMaxLength(SYMBOL_NAME_BUFFER_LENGTH - 1);
 
   // limit the possible input
-  m_symbolName->setValidator(new QRegExpValidator(QRegExp("[A-Za-z][A-Za-z0-9\\-_]*"), m_symbolName));
+  m_symbolName->setValidator(new QRegExpValidator(QRegExp("[A-Za-z][A-Za-z0-9()\\-_]*"), m_symbolName));
 
   if (modifying) {
     // can modify only the description - the enabled state of the symbolName edit is

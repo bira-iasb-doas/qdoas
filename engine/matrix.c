@@ -343,6 +343,39 @@ int MatrixNextDouble(FILE *fp,double *dvalue)
  	return isdouble;
  }
 
+void MATRIX_PassCommentLines(FILE *fp)
+ {
+      char c[2000];
+      while (fscanf(fp, COMMENT_LINE, c) == 1) {
+        // skip spaces and comment lines (assumed to start with character ';', '#' or '*')
+      }
+ }
+
+int MATRIX_GetColumnsNumbers(FILE *fp,double *pFirstValue)
+ {
+  // Determine the number of columns
+
+  int nc = 0;
+  double firstCalib=(double)0.,tempValue;
+  int rcNextDouble;
+
+  while ((rcNextDouble=MatrixNextDouble(fp,&tempValue))!=0)
+   {
+   	if (!nc)
+   	 firstCalib=tempValue;
+   	nc++;
+   	if (rcNextDouble<0)
+   	 break;
+   }
+
+  if (pFirstValue!=NULL)
+   *pFirstValue=firstCalib;
+
+  // Return
+
+  return nc;
+ }
+
 // -----------------------------------------------------------------------------
 // FUNCTION      MATRIX_Load
 // -----------------------------------------------------------------------------
@@ -417,42 +450,8 @@ RC MATRIX_Load(const char *fileName,MATRIX_OBJECT *pMatrix,
   else {
     // The function has to determine the number of lines and columns
     if (!nl || !nc) {
-      char c[2000];
-      while (fscanf(fp, COMMENT_LINE, c) == 1) {
-        // skip spaces and comment lines (assumed to start with character ';', '#' or '*')
-      }
-
-      // Determine the number of columns
-
-      nc = 0;
-      firstCalib=(double)0.;
-      int rcNextDouble;
-
-      while ((rcNextDouble=MatrixNextDouble(fp,&tempValue))!=0)
-       {
-       	if (!nc)
-       	 firstCalib=tempValue;
-       	nc++;
-       	if (rcNextDouble<0)
-       	 break;
-       }
-
-   // in each iteration of the loop, read a number
-   //   while (fscanf(fp, NEXT_DOUBLE, &tempValue) == 1) {
-   //     if (!nc)
-   //      firstCalib=tempValue;
-   //
-   //     ++nc;
-   //     char next = fgetc(fp); // look ahead to detect end of line
-   //     if ((next == 0x0D) || (next == 0x0A)) {
-   //       break;
-   //     } else { // put back the character we read
-   //       ungetc(next, fp);
-   //     }
-   //   }
-
-      //int n_scan = fscanf(fp, "%lf", &tempValue);
-      // int n_scan = fscanf(fp, NEXT_DOUBLE, &tempValue);
+      MATRIX_PassCommentLines(fp);
+      nc=MATRIX_GetColumnsNumbers(fp,&firstCalib);
       nl= ( (fabs(xMin-xMax)<EPSILON) || ((firstCalib>=xMin)&&(firstCalib<=xMax)) ) ? 1 : 0;
 
       // Determine the number of lines

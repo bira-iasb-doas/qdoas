@@ -35,7 +35,6 @@ static double radiance_fillvalue;
 static vector<vector<double> > load_reference_radiances(const NetCDFFile& reference_file) {
   vector<vector<double> > radiances(reference_file.dimLen("col_dim"));
   const size_t reference_spectral_dim = reference_file.dimLen("spectral_dim");
-
   for (size_t i=0; i<radiances.size(); ++i) {
     vector<double>& rad = radiances[i];
     rad.resize(reference_spectral_dim);
@@ -46,19 +45,32 @@ static vector<vector<double> > load_reference_radiances(const NetCDFFile& refere
   return radiances;
 }
 
-int apex_init(const char *reference_filename, ENGINE_CONTEXT *pEngineContext) {
+int apex_init(const char *reference_filename, ENGINE_CONTEXT *pEngineContext, const int check_size, const int idxColumn,int *useRow) {
   try {
     NetCDFFile reference_file(reference_filename);
     col_dim = reference_file.dimLen("col_dim");
     spectral_dim = reference_file.dimLen("spectral_dim");
     ANALYSE_swathSize = col_dim;
     for (size_t i=0; i< col_dim; ++i) {
-      pEngineContext->project.instrumental.use_row[i] = true;
-      if (spectral_dim > NDET[i])
-        return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF,
+      if (((pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_GOME1_NETCDF) ||
+           (pEngineContext->project.instrumental.readOutFormat==PRJCT_INSTR_FORMAT_TROPOMI)) &&
+          (check_size==2)) {
+         vector<int> use_row(col_dim);
+         const size_t start[] = {0};
+         const size_t count[] = {col_dim};
+         reference_file.getVar("use_row", start, count, use_row.data());
+         if (i==idxColumn){ 
+             *useRow = use_row[i];
+         }
+      } else if ((pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_GOME1_NETCDF) &&
+                (pEngineContext->project.instrumental.readOutFormat!=PRJCT_INSTR_FORMAT_TROPOMI)) {
+         pEngineContext->project.instrumental.use_row[i] = true;
+      }
+      if ((check_size == 1) && (spectral_dim > NDET[i]))
+         return ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF,
                              "spectral_dim too large. This version supports spectra of maximum length "
                              TOSTRING(APEX_INIT_LENGTH));
-      NDET[i] = spectral_dim;
+      if (check_size == 1) NDET[i] = spectral_dim;
     }
     init_filename = reference_filename;
   } catch(std::runtime_error& e) {
@@ -134,6 +146,10 @@ int apex_read(ENGINE_CONTEXT *pEngineContext, int record) {
   const size_t start[] = {i_alongtrack, i_crosstrack, 0};
   const size_t count[] = {1, 1, spectral_dim};
 
+  RECORD_INFO *pRecord = &pEngineContext->recordInfo;
+  pRecord->i_alongtrack=i_alongtrack;
+  pRecord->i_crosstrack=i_crosstrack;
+
   try {
     radiance_file.getVar("radiance", start, count, pEngineContext->buffers.spectrum);
   } catch(std::runtime_error& e) {
@@ -149,10 +165,9 @@ int apex_read(ENGINE_CONTEXT *pEngineContext, int record) {
   if (is_fill) { // only fill-values
     return ERROR_ID_FILE_RECORD; // "Spectrum doesn't match selection criteria"
   }
-
-  RECORD_INFO *pRecord = &pEngineContext->recordInfo;
-  pRecord->i_alongtrack=i_alongtrack;
-  pRecord->i_crosstrack=i_crosstrack;
+  else if (!pEngineContext->project.instrumental.use_row[i_crosstrack]) {
+    return ERROR_ID_FILE_RECORD;
+  }
 
   pRecord->latitude = radiance_file_data.lat.size() ? radiance_file_data.lat[record -1] : QDOAS_FILL_DOUBLE;
   pRecord->longitude = radiance_file_data.lon.size() ? radiance_file_data.lon[record-1] : QDOAS_FILL_DOUBLE;
@@ -201,3 +216,44 @@ void apex_clean() {
   reference_radiances.clear();
   spectral_dim = col_dim = row_dim = 0;
 }
+
+RC apex_load_file(char *filename,double *lambda, double *spectrum, int *n_wavel)
+ {
+   // Declarations
+   
+   RC rc;
+   
+   // Initializations
+   
+   rc=ERROR_ID_NO;
+   
+   try 
+    {
+      NetCDFFile reference_file(filename);
+      
+      col_dim = reference_file.dimLen("col_dim");
+      spectral_dim = reference_file.dimLen("spectral_dim");
+      
+      const size_t start[] = {0, 0, 0};
+      const size_t count[] = {1, 1, spectral_dim};
+      
+  vector<vector<double> > radiances(reference_file.dimLen("col_dim"));
+  const size_t reference_spectral_dim = reference_file.dimLen("spectral_dim");
+  for (size_t i=0; i<radiances.size(); ++i) {
+    vector<double>& rad = radiances[i];
+    rad.resize(reference_spectral_dim);
+    const size_t start[] = {i, 0};
+    const size_t count[] = {1, reference_spectral_dim};
+    reference_file.getVar("reference_radiance", start, count, rad.data());
+    } 
+   }
+   catch(std::runtime_error& e) 
+    {
+     rc=ERROR_SetLast(__func__, ERROR_TYPE_FATAL, ERROR_ID_NETCDF,
+                         (string { "Can not open reference file " } + filename ).c_str());
+    }
+    
+   // Return
+   
+   return rc;
+ }

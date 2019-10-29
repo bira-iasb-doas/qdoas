@@ -76,7 +76,6 @@
 #include "engine_context.h"
 #include "linear_system.h"
 
-#include "doas.h"
 #include "vector.h"
 #include "spline.h"
 

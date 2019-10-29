@@ -31,8 +31,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #include <QLineEdit>
 #include <QComboBox>
 #include <QCheckBox>
+#include <QPoint>
+#include <QMenu>
 
 #include <QResizeEvent>
+#include "constants.h"
 
 class CDoasTableColumn;
 class CDoasTableColumnHeader;
@@ -42,7 +45,7 @@ class CDoasTable : public QFrame
 Q_OBJECT
  public:
   CDoasTable(const QString &label, int headerHeight = 24, QWidget *parent = 0);
-  
+
   int headerHeight(void) const;
 
   void createColumnEdit(const QString &label, int columnWidth);                                 // strings
@@ -93,7 +96,7 @@ Q_OBJECT
 
  private:
   QScrollBar *m_hsb, *m_vsb;
-  
+
   int m_titleHeight, m_sbThickness, m_centralWidth, m_centralHeight;
 
   CDoasTableColumnHeader *m_header;
@@ -138,7 +141,7 @@ Q_OBJECT
   virtual void setCellData(int rowIndex, const QVariant &cellData) = 0;
   virtual QWidget* createCellWidget(const QVariant &cellData) = 0;
   void resizeWidgets(void);
-  
+
   void setViewportBackgroundColour(const QColor &c);
   void setCellBorders(int xB, int yB);
 
@@ -185,7 +188,7 @@ class CDoasTableColumnHeader : public CDoasTableColumn
 
  protected:
   virtual void setCellData(int rowIndex, const QVariant &cellData);
-  virtual QWidget* createCellWidget(const QVariant &cellData);  
+  virtual QWidget* createCellWidget(const QVariant &cellData);
 };
 
 class CDoasTableColumnLineEdit : public QLineEdit
@@ -222,7 +225,7 @@ class CDoasTableColumnIntEdit : public CDoasTableColumnEdit
 
  protected:
   virtual QWidget* createCellWidget(const QVariant &cellData);
-  
+
  private:
   int m_minimum, m_maximum;
 };
@@ -237,7 +240,7 @@ class CDoasTableColumnDoubleEdit : public CDoasTableColumnEdit
 
  protected:
   virtual QWidget* createCellWidget(const QVariant &cellData);
-  
+
  private:
   double m_minimum, m_maximum;
   int m_decimals;
@@ -247,13 +250,26 @@ class CDoasTableColumnComboBox : public QComboBox
 {
 Q_OBJECT
  public:
-  CDoasTableColumnComboBox(QWidget *parent = 0);
+  CDoasTableColumnComboBox(int type=ANLYS_COMBO_NONE,const QString &excludedSymbol= QString(),QWidget *parent = 0);
+  bool eventFilter(QObject *o, QEvent *e);
+  int GetIndexDiffOrtho(QString text);
+  int GetIndexCorrection(QString text);
+  int GetIndex(QString text);
+  void initialSelection(const QString &text);
 
  public slots:
   void slotTextChanged(const QString &newText);
+  void list_context_menu(QPoint pos);
+  void slotSymbolListChanged(const QStringList &symbols);
 
  signals:
   void signalTextChanged(const QWidget *src, const QVariant &cellData);
+
+ private:
+  QString m_excludedSymbol, m_pendingInitial;
+  QStringList m_symbols;
+  QMenu *m_menu;
+  int m_type;
 };
 
 class CDoasTableColumnCombo : public CDoasTableColumn

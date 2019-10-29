@@ -68,7 +68,7 @@
 // CONSTANTS DEFINITION
 // ====================
 
-#define IGNORED_BYTES 83
+#define IGNORED_BYTES 74
 
 // ====================
 // STRUCTURE DEFINITION
@@ -101,10 +101,12 @@ typedef struct _airborneData
 
   float         longitudeEnd,latitudeEnd,altitudeEnd;
   struct time   gpsTimeEnd;
-  float         pitch,roll,heading;                          // airborne
-  short         msBegin,msEnd;                               // airborne
+  float         pitch,roll,heading;                                             // airborne
+  short         msBegin,msEnd;                                                  // airborne
   float         viewAzim,viewElev;
   unsigned char useNexstarFlag;
+  unsigned char useTempFlag;                                                    // control of temperature (JFJ)
+  float         sza,saa;                                                        // solar zenith angle, solar azimuth angle
   char        ignoredBytes[IGNORED_BYTES];
  }
 AIRBORNE_DATA;

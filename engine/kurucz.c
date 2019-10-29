@@ -717,6 +717,10 @@ RC KuruczConvolveSolarSpectrum(MATRIX_OBJECT *pSolar,double *newlambda,int n_wav
   RC rc;
   KURUCZ *pKurucz;
 
+#if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionBegin((char *)__func__,DEBUG_FCTTYPE_APPL|DEBUG_FCTTYPE_MEM);
+#endif
+
   // Initializations
 
   pKurucz=&KURUCZ_buffers[indexFenoColumn];
@@ -807,6 +811,10 @@ RC KuruczConvolveSolarSpectrum(MATRIX_OBJECT *pSolar,double *newlambda,int n_wav
   for (i=0;i<NSFP;i++)
    MATRIX_Free(&slitMatrix[i],__func__);
 
+#if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionStop((char *)__func__,rc);
+#endif
+
   // Return
 
   return rc;
@@ -840,6 +848,10 @@ RC KuruczCalculatePreshift(double *calibratedLambda,double *calibratedRef,double
   int ishift,ishiftMin,nshift,nfuncEval,nrestart,imin,imax,nsmooth;
   double shiftIni,shiftMin,coefMin,varstep;
  	RC rc,rc2;
+
+#if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionBegin((char *)__func__,DEBUG_FCTTYPE_APPL|DEBUG_FCTTYPE_MEM);
+#endif
 
  	// Initialization
 
@@ -1025,6 +1037,10 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
   plot_data_t      *spectrumData;
   KURUCZ *pKurucz;
 
+#if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionBegin((char *)__func__,DEBUG_FCTTYPE_APPL|DEBUG_FCTTYPE_MEM);
+#endif
+
   // Initializations
 
   rc=ERROR_ID_NO;
@@ -1194,7 +1210,7 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
     // Global initializations
 
 #if defined(__DEBUG_) && __DEBUG_
-    DEBUG_Start(ENGINE_dbgFile,"Kurucz",DEBUG_FCTTYPE_MATH|DEBUG_FCTTYPE_APPL,5,DEBUG_DVAR_YES,0); // !debugResetFlag++);
+    // DEBUG_Start(ENGINE_dbgFile,"Kurucz",DEBUG_FCTTYPE_MATH|DEBUG_FCTTYPE_APPL,5,DEBUG_DVAR_YES,0); // !debugResetFlag++);
 #endif
 
     if (((rc=ANALYSE_SvdInit(&TabFeno[indexFenoColumn][pKurucz->indexKurucz], &subwindow_fit[indexWindow], n_wavel, Lambda))!=ERROR_ID_NO) ||
@@ -1214,9 +1230,8 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
       break;
 
 #if defined(__DEBUG_) && __DEBUG_
-    DEBUG_Stop("Kurucz");
+    // DEBUG_Stop("Kurucz");
 #endif
-
 
 
     // Fill A SVD system
@@ -1650,6 +1665,10 @@ RC KURUCZ_Spectrum(const double *oldLambda,double *newLambda,double *spectrum,co
 
   NDET[indexFenoColumn]=oldNDET;
 
+#if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionStop((char *)__func__,rc);
+#endif
+
   return rc;
 }
 
@@ -1679,6 +1698,10 @@ RC KURUCZ_ApplyCalibration(FENO *pTabFeno,double *newLambda,INDEX indexFenoColum
   const int n_wavel = NDET[indexFenoColumn];
   memset(slitMatrix,0,sizeof(MATRIX_OBJECT)*NSFP);
   rc=0;
+
+#if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionBegin((char *)__func__,DEBUG_FCTTYPE_APPL|DEBUG_FCTTYPE_MEM);
+#endif
 
   // Rebuild gaps
 
@@ -1752,7 +1775,7 @@ RC KURUCZ_ApplyCalibration(FENO *pTabFeno,double *newLambda,INDEX indexFenoColum
 
   if (!rc &&
      (((pTabFeno->rcKurucz=ANALYSE_XsInterpolation(pTabFeno,newLambda,indexFenoColumn))!=ERROR_ID_NO) ||
-       (pTabFeno->xsToConvolute && ((pTabFeno->useKurucz==ANLYS_KURUCZ_REF) || (pTabFeno->useKurucz==ANLYS_KURUCZ_SPEC)) &&
+     (((pTabFeno->useKurucz==ANLYS_KURUCZ_REF) || (pTabFeno->useKurucz==ANLYS_KURUCZ_SPEC)) &&
       ((pKuruczOptions->fwhmFit && (pKuruczOptions->fwhmType!=SLIT_TYPE_FILE) && ((pTabFeno->rcKurucz=ANALYSE_XsConvolution(pTabFeno,newLambda,slitMatrix,slitParam,pKuruczOptions->fwhmType,indexFenoColumn,1))!=ERROR_ID_NO)) ||
        (pKuruczOptions->fwhmFit && (pKuruczOptions->fwhmType==SLIT_TYPE_FILE) && ((pTabFeno->rcKurucz=ANALYSE_XsConvolution(pTabFeno,newLambda,slitMatrix,slitParam,pKuruczOptions->fwhmType,indexFenoColumn,1))!=ERROR_ID_NO)) ||
       (!pKuruczOptions->fwhmFit && ((pTabFeno->rcKurucz=ANALYSE_XsConvolution(pTabFeno,newLambda,ANALYSIS_slitMatrix,ANALYSIS_slitParam,pSlitOptions->slitFunction.slitType,indexFenoColumn,pSlitOptions->slitFunction.slitWveDptFlag))!=ERROR_ID_NO))))))
@@ -1763,6 +1786,10 @@ RC KURUCZ_ApplyCalibration(FENO *pTabFeno,double *newLambda,INDEX indexFenoColum
 
   for (i=0;i<NSFP;i++)
    MATRIX_Free(&slitMatrix[i],__func__);
+
+#if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionStop((char *)__func__,rc);
+#endif
 
   // Return
 
@@ -1809,6 +1836,10 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,int saveFlag,int gomeFla
 
   RC               rc;                                                          // return code
 
+#if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionBegin((char *)__func__,DEBUG_FCTTYPE_APPL|DEBUG_FCTTYPE_MEM);
+#endif
+
   // Initializations
 
   KURUCZ_indexLine=1;
@@ -1845,7 +1876,7 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,int saveFlag,int gomeFla
     pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
 
     if (!pTabFeno->hidden && ((pTabFeno->useKurucz==ANLYS_KURUCZ_REF) || (pTabFeno->useKurucz==ANLYS_KURUCZ_REF_AND_SPEC)) &&
-        (pTabFeno->gomeRefFlag==gomeFlag) &&
+        (pTabFeno->gomeRefFlag==gomeFlag) && (pTabFeno->useRefRow) &&
         ((!refFlag && (pTabFeno->useEtalon || (pTabFeno->refSpectrumSelectionMode==ANLYS_REF_SELECTION_MODE_FILE))) ||
          ((refFlag==1) && !pTabFeno->useEtalon))) {
       memcpy(reference,(pTabFeno->useEtalon)?pTabFeno->SrefEtalon:pTabFeno->Sref,sizeof(double)*pTabFeno->NDET);
@@ -1964,6 +1995,10 @@ RC KURUCZ_Reference(double *instrFunction,INDEX refFlag,int saveFlag,int gomeFla
   if (reference!=NULL)
    MEMORY_ReleaseDVector(__func__,"reference",reference,0);
 
+#if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionStop((char *)__func__,rc);
+#endif
+
   return rc;
 }
 
@@ -1995,6 +2030,10 @@ void KURUCZ_Init(int gomeFlag,INDEX indexFenoColumn) {
   KURUCZ *pKurucz;
   FENO *pTabFeno;
 
+#if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionBegin((char *)__func__,DEBUG_FCTTYPE_APPL|DEBUG_FCTTYPE_MEM);
+#endif
+
   // Initialization
 
   pKurucz=&KURUCZ_buffers[indexFenoColumn];
@@ -2006,7 +2045,7 @@ void KURUCZ_Init(int gomeFlag,INDEX indexFenoColumn) {
   for (int indexFeno=0;indexFeno<NFeno;indexFeno++) {
     pTabFeno=&TabFeno[indexFenoColumn][indexFeno];
 
-    if ((pTabFeno->gomeRefFlag==gomeFlag) &&
+    if ((pTabFeno->gomeRefFlag==gomeFlag) && (pTabFeno->useRefRow) &&
         (pKurucz->KuruczFeno[indexFeno].subwindow_fits!=NULL)) {
 
       for (indexWindow=0;indexWindow<nbWin;indexWindow++) {
@@ -2022,6 +2061,10 @@ void KURUCZ_Init(int gomeFlag,INDEX indexFenoColumn) {
       }
     }
   }
+
+#if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionStop((char *)__func__,0);
+#endif
 }
 
 // ----------------------------------------------------------------------------
@@ -2039,6 +2082,8 @@ void KURUCZ_Init(int gomeFlag,INDEX indexFenoColumn) {
 // RETURN          return code
 // ----------------------------------------------------------------------------
 
+// Note : lambdaMin, lambdaMax not really used
+
 RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,double lambdaMin,double lambdaMax,INDEX indexFenoColumn, const MATRIX_OBJECT *hr_solar)
  {
   // Declarations
@@ -2055,6 +2100,10 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
   double step;
   KURUCZ *pKurucz;
   RC rc;
+
+#if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionBegin((char *)__func__,DEBUG_FCTTYPE_MEM);
+#endif
 
   // Initializations
   const int n_wavel = NDET[indexFenoColumn];
@@ -2146,7 +2195,7 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
 
   for (indexWindow=0;indexWindow<Nb_Win;indexWindow++)
    {
-   	Lambda_max=(pKuruczOptions->divisionMode!=PRJCT_CALIB_WINDOWS_CUSTOM)?Lambda_min+Win_size:pKuruczOptions->customLambdaMax[indexWindow];
+    Lambda_max=(pKuruczOptions->divisionMode!=PRJCT_CALIB_WINDOWS_CUSTOM)?Lambda_min+Win_size:pKuruczOptions->customLambdaMax[indexWindow];
 
     pKurucz->lambdaMin[indexWindow]=Lambda_min;
     pKurucz->lambdaMax[indexWindow]=Lambda_max;
@@ -2399,6 +2448,10 @@ RC KURUCZ_Alloc(const PROJECT *pProject, const double *lambda,INDEX indexKurucz,
 
   EndKuruczAlloc :
 
+#if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionStop((char *)__func__,rc);
+#endif
+
   return rc;
  }
 
@@ -2415,6 +2468,10 @@ void KURUCZ_Free(void)
   INDEX indexWindow,indexParam,indexFeno,indexFenoColumn;
   KURUCZ_FENO *pKFeno;
   KURUCZ *pKurucz;
+
+#if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionBegin((char *)__func__,DEBUG_FCTTYPE_MEM);
+#endif
 
   for (indexFenoColumn=0;indexFenoColumn<ANALYSE_swathSize;indexFenoColumn++)
    {
@@ -2543,4 +2600,7 @@ void KURUCZ_Free(void)
     memset(pKurucz,0,sizeof(KURUCZ));
    }
 
+#if defined(__DEBUG_) && __DEBUG_
+  DEBUG_FunctionStop((char *)__func__,0);
+#endif
  }
