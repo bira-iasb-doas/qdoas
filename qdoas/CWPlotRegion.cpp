@@ -38,7 +38,7 @@ CWPlotRegion::CWPlotRegion(QWidget *parent) :
   setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 
   QLabel *splash = new QLabel;
-  splash->setPixmap(QPixmap(":/images/QDOAS_IcoTransparent2.png"));
+  splash->setPixmap(QPixmap(":/images/qdoas_atmospheric_toolbox.png"));
   splash->setAlignment(Qt::AlignCenter);
 
   setWidget(splash);

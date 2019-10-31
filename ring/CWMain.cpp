@@ -174,7 +174,7 @@ CWMain::CWMain(QWidget *parent) :
   m_properties = m_guiProperties;
 
   // icon
-  setWindowIcon(QIcon(QPixmap(":/icons/QDOAS_IcoTransparent.png")));
+  setWindowIcon(QIcon(QPixmap(":/icons/qdoas_atmospheric_toolbox_ico.png")));
 
   // get the window size from the settings
   resize(CPreferences::instance()->windowSize("RingTool", QSize(450,350)));

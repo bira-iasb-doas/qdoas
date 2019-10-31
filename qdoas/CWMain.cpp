@@ -320,7 +320,7 @@ CWMain::CWMain(QWidget *parent) :
   connect(m_stateMonitor, SIGNAL(signalStateChanged(bool)), this, SLOT(slotStateMonitorChanged(bool)));
 
   // icon
-  setWindowIcon(QIcon(QPixmap(":/icons/QDOAS_IcoTransparent.png")));
+  setWindowIcon(QIcon(QPixmap(":/icons/qdoas_atmospheric_toolbox_ico.png")));
 
   // get the window size from the settings
   resize(CPreferences::instance()->windowSize("Main", QSize(600,450)));
